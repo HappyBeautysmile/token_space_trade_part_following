@@ -1,0 +1,13 @@
+// sudo npm install -g typescript
+// npm install @tensorflow/tfjs
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "outDir": "../src",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+  }
+}
