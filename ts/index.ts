@@ -1,7 +1,7 @@
-import { BankAccount, Exchange, Order } from "./exchange";
+import { BankAccount, BuyOrder, Exchange, SellOrder } from "./exchange";
 
 var time = 0;
-var exchange = new Exchange();
+var exchange = new Exchange('iron');
 
 class Buyer {
   private timeRemaining: number;
@@ -14,15 +14,9 @@ class Buyer {
     this.timeRemaining -= deltaS;
     if (this.timeRemaining < 0) {
       this.timeRemaining += this.buyIntervalS;
-      const order = exchange.getBestBuyOrder('iron');
-      let bid = 1;
-      if (order !== null) {
-        bid = order.priceEach + 1;
-      }
-      if (bid <= this.maxBid) {
-        exchange.addBuyOrder(new Order(
-          'iron', 1, bid, this.bankAccount));
-      }
+      const myBuyPrice = exchange.getHighestBuyPrice() + 1;
+      exchange.placeBuyOrder(new BuyOrder(
+        1, myBuyPrice, this.bankAccount));
     }
   }
 }
@@ -35,25 +29,27 @@ for (let i = 0; i < 100; ++i) {
 
 const sellerAccount = new BankAccount(0);
 let factoryCount = 1;
+let inventory = 0;
 
-for (let step = 0; step < 5000; ++step) {
-  const demand = exchange.getBestBuyOrder('iron');
-  if (demand === null) {
-    exchange.addSellOrder(new Order('iron', factoryCount, 1, sellerAccount));
-  } else {
-    exchange.addSellOrder(
-      new Order('iron', factoryCount, demand.priceEach, sellerAccount));
+for (let step = 0; step < 20000; ++step) {
+  if (step % 10 === 0) {
+    inventory += factoryCount;
+  }
+  const demand = exchange.getHighestBuyPrice();
+  if (demand > 0) {
+    const numSold = exchange.sellWithLimit(
+      new SellOrder(inventory, 10, sellerAccount));
+    inventory -= numSold;
   }
   for (const b of buyers) {
     b.step(0.1);
   }
-  if (sellerAccount.getBalance() > 1000) {
-    console.log('New Factory Purchased.');
+  if (sellerAccount.getBalance() > 4000) {
     ++factoryCount;
-    sellerAccount.removeFunds(1000);
+    sellerAccount.removeFunds(4000);
   }
   if (step % 100 === 0) {
-    console.log(`${demand ? demand.priceEach : 'None'} balance: ${sellerAccount.getBalance()}`);
+    console.log(`Price: ${demand} balance: ${sellerAccount.getBalance()} inventory: ${inventory} factories: ${factoryCount}`);
   }
 }
 

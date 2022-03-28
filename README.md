@@ -15,7 +15,6 @@ Required packages:
 npm -D install three
 npm -D install --save-dev @types/three
 npm install html-webpack-plugin
-npm install -D three-csg-ts
 ```
 
 
