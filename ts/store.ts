@@ -1,7 +1,9 @@
 // A homogeneous collection of units.
 export class Store {
   private numberOfUnits = 0;
-  constructor(readonly itemName: string, private tonsPerUnit: number) {
+  constructor(readonly itemName: string, private tonsPerUnit: number,
+    initialUnits: number) {
+    this.numberOfUnits = initialUnits;
   }
 
   getNumberOfUnits() {
