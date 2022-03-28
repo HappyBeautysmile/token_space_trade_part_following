@@ -7,7 +7,7 @@
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Exchange = exports.Order = exports.BankAccount = void 0;
+exports.Exchange = exports.SellOrder = exports.BuyOrder = exports.BankAccount = void 0;
 class BankAccount {
     initialBalance;
     balance;
@@ -27,112 +27,127 @@ class BankAccount {
     getBalance() { return this.balance; }
 }
 exports.BankAccount = BankAccount;
-class Order {
-    item;
+// These two types are identical now.  We keep them like this so that
+// the compiler will do type checking and make sure we're not doing
+// something insane.
+class BuyOrder {
     quantity;
     priceEach;
     bankAccount;
-    constructor(item, quantity, priceEach, bankAccount) {
-        this.item = item;
+    constructor(quantity, priceEach, bankAccount) {
         this.quantity = quantity;
         this.priceEach = priceEach;
         this.bankAccount = bankAccount;
     }
 }
-exports.Order = Order;
-class OrderList {
-    type;
-    orders = [];
-    constructor(type) {
-        this.type = type;
+exports.BuyOrder = BuyOrder;
+class SellOrder {
+    quantity;
+    priceEach;
+    bankAccount;
+    constructor(quantity, priceEach, bankAccount) {
+        this.quantity = quantity;
+        this.priceEach = priceEach;
+        this.bankAccount = bankAccount;
     }
-    addOrder(order) {
-        // Otherwise put order on stack
-        this.orders.push(order);
-        this.orders.sort((a, b) => {
-            return a.priceEach - b.priceEach;
-        });
+}
+exports.SellOrder = SellOrder;
+class Exchange {
+    item;
+    constructor(item) {
+        this.item = item;
     }
-    popBestOrder() {
-        if (this.type === 'buy') {
-            for (let i = this.orders.length - 1; i >= 0; --i) {
-                const order = this.orders[i];
-                const value = order.priceEach * order.quantity;
-                if (value <= order.bankAccount.getBalance()) {
-                    return this.orders.splice(i, 1)[0];
+    buyOrders = [];
+    // If `update` is set to true, cancel the existing order and
+    // replace it with this one.
+    placeBuyOrder(buyOrder, update = true) {
+        if (update) {
+            for (let i = 0; i < this.buyOrders.length;) {
+                if (this.buyOrders[i].bankAccount === buyOrder.bankAccount) {
+                    this.buyOrders.splice(i, 1);
+                }
+                else {
+                    ++i;
                 }
             }
         }
-        else {
-            return this.orders.splice(0, 1)[0];
-        }
-        return null;
+        this.buyOrders.push(buyOrder);
     }
-    peekBestOrder() {
-        if (this.type === 'buy') {
-            return this.orders[this.orders.length - 1];
-        }
-        else {
-            return this.orders[0];
-        }
-    }
-    // Fills and order and returns the number of units sold
-    fill(order) {
-        const bestOrder = this.popBestOrder();
-        const itemCount = Math.min(order.quantity, bestOrder.quantity);
-        const value = itemCount * bestOrder.priceEach;
-        try {
-            if (this.type === 'buy') {
-                bestOrder.bankAccount.removeFunds(value);
-                order.bankAccount.addFunds(value);
+    // Removes any orders which cannot be filled because the
+    // buyer has insufficient funds.
+    cleanOrders() {
+        for (let i = 0; i < this.buyOrders.length;) {
+            const buyOrder = this.buyOrders[i];
+            if (buyOrder.priceEach * buyOrder.quantity > buyOrder.bankAccount.getBalance()) {
+                this.buyOrders.splice(i, 1);
             }
             else {
-                order.bankAccount.removeFunds(value);
-                bestOrder.bankAccount.addFunds(value);
+                ++i;
             }
-            if (itemCount < bestOrder.quantity) {
-                this.addOrder(new Order(bestOrder.item, bestOrder.quantity - itemCount, bestOrder.priceEach, bestOrder.bankAccount));
+        }
+    }
+    fillOrders(buy, sell) {
+        const numItems = Math.min(buy.quantity, sell.quantity);
+        const value = numItems * sell.priceEach;
+        buy.bankAccount.removeFunds(value);
+        sell.bankAccount.addFunds(value);
+        return numItems;
+    }
+    // Returns the highest price someone is currently bidding.
+    // Returns zero if there are no bids.
+    getHighestBuyPrice() {
+        let highest = 0;
+        for (const o of this.buyOrders) {
+            highest = Math.max(o.priceEach, highest);
+        }
+        return highest;
+    }
+    sellWithLimit(sell) {
+        if (this.buyOrders.length === 0) {
+            return 0;
+        }
+        this.cleanOrders();
+        // Sort buy orders with most expensive at the top.
+        this.buyOrders.sort((a, b) => {
+            return b.priceEach - a.priceEach;
+        });
+        if (this.buyOrders.length > 1) {
+            if (this.buyOrders[0].priceEach < this.buyOrders[1].priceEach) {
+                throw new Error("Bad sort!!!");
             }
-            return itemCount;
         }
-        catch (e) {
-            // Transaction failed.  Put the order back into the stack.
-            this.addOrder(bestOrder);
+        let numberForSale = sell.quantity;
+        let totalSold = 0;
+        while (this.buyOrders.length > 0) {
+            if (this.buyOrders[0].priceEach >= sell.priceEach) {
+                const buy = this.buyOrders.shift();
+                const numSold = this.fillOrders(buy, sell);
+                totalSold += numSold;
+                if (buy.quantity > numSold) {
+                    this.buyOrders.unshift(new BuyOrder(buy.quantity - numSold, buy.priceEach, buy.bankAccount));
+                }
+                if (numberForSale > numSold) {
+                    numberForSale -= numSold;
+                    if (numberForSale < 0) {
+                        throw new Error('Oversold!!!');
+                    }
+                    sell = new SellOrder(numberForSale, sell.priceEach, sell.bankAccount);
+                }
+                else {
+                    // Everything is sold.
+                    break;
+                }
+                if (numberForSale < 0) {
+                    throw new Error('Oversold!!!');
+                }
+            }
+            else {
+                // The highest bidding buyer won't pay the lowest sale price.
+                // So, there are no more possible matches.
+                break;
+            }
         }
-        return 0;
-    }
-}
-class Exchange {
-    sellOrders = new Map();
-    buyOrders = new Map();
-    addOrInsert(order, type, m) {
-        if (!m.has(order.item)) {
-            m.set(order.item, new OrderList(type));
-        }
-        m.get(order.item).addOrder(order);
-    }
-    addBuyOrder(buyOrder) {
-        // Fill the order if there is something less than or equal to buy price
-        const list = this.sellOrders.get(buyOrder.item);
-        if (list) {
-            const best = list.peekBestOrder();
-            if (best && list.peekBestOrder().priceEach <= buyOrder.priceEach) {
-                list.fill(buyOrder);
-                return;
-            } // Otherwise put order on stack
-        }
-        this.addOrInsert(buyOrder, 'buy', this.buyOrders);
-    }
-    addSellOrder(sellOrder) {
-        // Fill the order if there is something greater than or equal to sell price
-        // Otherwise put order on stack
-        this.addOrInsert(sellOrder, 'sell', this.sellOrders);
-    }
-    getBestBuyOrder(item) {
-        if (!this.buyOrders.has(item)) {
-            return null;
-        }
-        return this.buyOrders.get(item).peekBestOrder();
+        return totalSold;
     }
 }
 exports.Exchange = Exchange;
@@ -176,7 +191,7 @@ var __webpack_unused_export__;
 __webpack_unused_export__ = ({ value: true });
 const exchange_1 = __webpack_require__(253);
 var time = 0;
-var exchange = new exchange_1.Exchange();
+var exchange = new exchange_1.Exchange('iron');
 class Buyer {
     buyIntervalS;
     maxBid;
@@ -193,14 +208,8 @@ class Buyer {
         this.timeRemaining -= deltaS;
         if (this.timeRemaining < 0) {
             this.timeRemaining += this.buyIntervalS;
-            const order = exchange.getBestBuyOrder('iron');
-            let bid = 1;
-            if (order !== null) {
-                bid = order.priceEach + 1;
-            }
-            if (bid <= this.maxBid) {
-                exchange.addBuyOrder(new exchange_1.Order('iron', 1, bid, this.bankAccount));
-            }
+            const myBuyPrice = exchange.getHighestBuyPrice() + 1;
+            exchange.placeBuyOrder(new exchange_1.BuyOrder(1, myBuyPrice, this.bankAccount));
         }
     }
 }
@@ -210,24 +219,25 @@ for (let i = 0; i < 100; ++i) {
 }
 const sellerAccount = new exchange_1.BankAccount(0);
 let factoryCount = 1;
-for (let step = 0; step < 5000; ++step) {
-    const demand = exchange.getBestBuyOrder('iron');
-    if (demand === null) {
-        exchange.addSellOrder(new exchange_1.Order('iron', factoryCount, 1, sellerAccount));
+let inventory = 0;
+for (let step = 0; step < 20000; ++step) {
+    if (step % 10 === 0) {
+        inventory += factoryCount;
     }
-    else {
-        exchange.addSellOrder(new exchange_1.Order('iron', factoryCount, demand.priceEach, sellerAccount));
+    const demand = exchange.getHighestBuyPrice();
+    if (demand > 0) {
+        const numSold = exchange.sellWithLimit(new exchange_1.SellOrder(inventory, 10, sellerAccount));
+        inventory -= numSold;
     }
     for (const b of buyers) {
         b.step(0.1);
     }
-    if (sellerAccount.getBalance() > 1000) {
-        console.log('New Factory Purchased.');
+    if (sellerAccount.getBalance() > 4000) {
         ++factoryCount;
-        sellerAccount.removeFunds(1000);
+        sellerAccount.removeFunds(4000);
     }
     if (step % 100 === 0) {
-        console.log(`${demand ? demand.priceEach : 'None'} balance: ${sellerAccount.getBalance()}`);
+        console.log(`Price: ${demand} balance: ${sellerAccount.getBalance()} inventory: ${inventory} factories: ${factoryCount}`);
     }
 }
 //# sourceMappingURL=index.js.map
