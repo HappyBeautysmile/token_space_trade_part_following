@@ -1,4 +1,4 @@
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
 
@@ -6,7 +6,7 @@ var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 
-renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -30,26 +30,26 @@ camera.position.x = 10;
 
 let text = "";
 for (let x = -20; x < 20; x++) {
-    for (let y = -20; y < 20; y++) {
-        for (let z = -20; z < 20; z++) {
-            var distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
-            if (distance + Math.random() < 5) {
-                var geometry = new THREE.BoxGeometry(1, 1, 1);
-                var material = new THREE.MeshStandardMaterial({ color: 0x00ffff });
-                const loader = new GLTFLoader();
-                loader.load('Model/cube.glb', function (gltf) {
-                    cube = gltf.scene;
-                    cube.position.set(x, y, z);
-                    scene.add(cube);
-                }, undefined, function (error) {
-                    console.error(error);
-                });
-            }
-        }
+  for (let y = -20; y < 20; y++) {
+    for (let z = -20; z < 20; z++) {
+      var distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+      if (distance + Math.random() < 5) {
+        var geometry = new THREE.BoxGeometry(1, 1, 1);
+        var material = new THREE.MeshStandardMaterial({ color: 0x00ffff });
+        const loader = new GLTFLoader();
+        loader.load('Model/cube.glb', function (gltf) {
+          cube = gltf.scene;
+          cube.position.set(x, y, z);
+          scene.add(cube);
+        }, undefined, function (error) {
+          console.error(error);
+        });
+      }
     }
+  }
 }
 function render() {
-    requestAnimationFrame(render);
-    renderer.render(scene, camera);
+  requestAnimationFrame(render);
+  renderer.render(scene, camera);
 }
 render();
