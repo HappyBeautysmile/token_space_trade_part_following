@@ -15,37 +15,9 @@
   </style>
 </head>
 
-<body onload='render()'>
+<body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.js"></script>
-  <script>
-
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-    const light = new THREE.DirectionalLight('#fff', 1.0);
-    light.position.set(0, 10, 1);
-    scene.add(light);
-
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    for (let x = -10; x < -5; x++) {
-      for (let y = -10; y < -5; y++) {
-        for (let z = -10; z < -5; z++) {
-          const box = new THREE.Mesh(
-            new THREE.MeshStandardMaterial({ color: '#4cc3d9' }),
-            new THREE.BoxGeometry());
-          box.position.set(x, y, z);
-          scene.add(box);
-        }
-      }
-    }
-    render = () => {
-      requestAnimationFrame(render);
-      renderer.render(scene, camera);
-    };
-  </script>
+  <script src="Experimental.js" type="module"></script>
 </body>
 
 </html>
