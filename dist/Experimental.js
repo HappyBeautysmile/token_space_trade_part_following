@@ -1,4 +1,6 @@
-import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.118/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/jsm/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
 
@@ -28,6 +30,10 @@ camera.position.z = 40;
 camera.position.y = 2;
 camera.position.x = 10;
 
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 20, 0);
+controls.update();
+
 let text = "";
 for (let x = -20; x < 20; x++) {
   for (let y = -20; y < 20; y++) {
@@ -36,6 +42,9 @@ for (let x = -20; x < 20; x++) {
       if (distance + Math.random() < 5) {
         var geometry = new THREE.BoxGeometry(1, 1, 1);
         var material = new THREE.MeshStandardMaterial({ color: 0x00ffff });
+        // FYI: This is not going to scale well, but is fine for prototyping.
+        // HOWEVER: Don't just try pulling this outside the loop. That will get
+        // messy. Best to use an instanced object.
         const loader = new GLTFLoader();
         loader.load('Model/cube.glb', function (gltf) {
           cube = gltf.scene;
