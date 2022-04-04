@@ -34,53 +34,63 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 0, 0);
 controls.update();
 
-let text = "";
-for (let x = -20; x < 20; x++) {
-    for (let y = -20; y < 20; y++) {
-        for (let z = -20; z < 20; z++) {
-            var distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
-            if (distance + Math.random() * 1 < 5) {
-                var geometry = new THREE.BoxGeometry(1, 1, 1);
-                var material = new THREE.MeshStandardMaterial({ color: 0x00ffff });
-                // FYI: This is not going to scale well, but is fine for prototyping.
-                // HOWEVER: Don't just try pulling this outside the loop. That will get
-                // messy. Best to use an instanced object.
-                const loader = new GLTFLoader();
-                var filename = "";
-                const rand = Math.random();
-                if (rand < 0.90) {
-                    filename = 'Model/cube-tweek.glb';
-                }
-                // else if (rand < 0.7) {
-                //     filename = 'Model/cube-basic.glb';
-                // }
-                else if (rand < 0.95) {
-                    filename = 'Model/cube-gem.glb';
-                }
-                else {
-                    filename = 'Model/cube-glob.glb';
-                }
 
-                loader.load(filename, function (gltf) {
-                    cube = gltf.scene;
-                    cube.position.set(x, y, z);
-                    cube.rotation.x = randomAngle();
-                    cube.rotation.y = randomAngle();
-                    cube.rotation.z = randomAngle();
-
-                    scene.add(cube);
-                }, undefined, function (error) {
-                    console.error(error);
-                });
-            }
-        }
-    }
+async function loadModel(filename) {
+  return new Promise((resolve, reject) => {
+    const loader = new GLTFLoader();
+    loader.load(filename, function (gltf) {
+      resolve(gltf.scene);
+    }, undefined, function (error) {
+      reject(error);
+    });
+  });
 }
+
+async function buildAsteroid() {
+  let text = "";
+
+  const tweak = await loadModel('Model/cube-tweek.glb');
+  const gem = await loadModel('Model/cube-gem.glb');
+  const glob = await loadModel('Model/cube-glob.glb');
+
+  for (let x = -20; x < 20; x++) {
+    for (let y = -20; y < 20; y++) {
+      for (let z = -20; z < 20; z++) {
+        var distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+        if (distance + Math.random() * 1 < 5) {
+          const rand = Math.random();
+          let cube;
+          if (rand < 0.90) {
+            cube = tweak.clone();
+          }
+          // else if (rand < 0.7) {
+          //     filename = 'Model/cube-basic.glb';
+          // }
+          else if (rand < 0.95) {
+            cube = gem.clone();
+          }
+          else {
+            cube = glob.clone();
+          }
+          cube.position.set(x, y, z);
+          cube.rotation.x = randomAngle();
+          cube.rotation.y = randomAngle();
+          cube.rotation.z = randomAngle();
+
+          scene.add(cube);
+        }
+      }
+    }
+  }
+}
+
+buildAsteroid();
+
 function randomAngle() {
-    return Math.floor(Math.random() * 4) * Math.PI / 2;
+  return Math.floor(Math.random() * 4) * Math.PI / 2;
 }
 function render() {
-    requestAnimationFrame(render);
-    renderer.render(scene, camera);
+  requestAnimationFrame(render);
+  renderer.render(scene, camera);
 }
 render();
