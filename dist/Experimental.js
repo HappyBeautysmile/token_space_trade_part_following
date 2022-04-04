@@ -54,11 +54,11 @@ for (let x = -20; x < 20; x++) {
                 // else if (rand < 0.7) {
                 //     filename = 'Model/cube-basic.glb';
                 // }
-                // else if (rand < 0.8) {
-                //     filename = 'Model/cube-gem.glb';
-                // }
-                else {
+                else if (rand < 0.95) {
                     filename = 'Model/cube-gem.glb';
+                }
+                else {
+                    filename = 'Model/cube-glob.glb';
                 }
 
                 loader.load(filename, function (gltf) {
