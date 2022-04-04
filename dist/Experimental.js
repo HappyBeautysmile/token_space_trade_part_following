@@ -49,7 +49,7 @@ for (let x = -20; x < 20; x++) {
                 var filename = "";
                 const rand = Math.random();
                 if (rand < 0.90) {
-                    filename = 'Model/cube-basic.glb';
+                    filename = 'Model/cube-tweek.glb';
                 }
                 // else if (rand < 0.7) {
                 //     filename = 'Model/cube-basic.glb';
