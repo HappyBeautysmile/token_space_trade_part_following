@@ -73,9 +73,9 @@ export class BlockBuild {
     directionalLight.position.set(40, 2, 10);
     this.scene.add(directionalLight);
 
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
-    controls.target.set(0, 0, 0);
-    controls.update();
+    // const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // controls.target.set(0, 0, 0);
+    // controls.update();
 
     const tetra = new THREE.Mesh(
       new THREE.TetrahedronBufferGeometry(0.5),
