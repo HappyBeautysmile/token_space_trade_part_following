@@ -29,6 +29,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BlockBuild = exports.Hand = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const OrbitControls_1 = __webpack_require__(423);
+const VRButton_js_1 = __webpack_require__(652);
 class Hand extends THREE.Object3D {
     constructor(grip) {
         super();
@@ -70,9 +71,12 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.set(0, 1.7, 0);
+        this.camera.lookAt(0, 0, 0);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
+        document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
         const light = new THREE.AmbientLight(0x404040); // soft white light
         this.scene.add(light);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -51588,6 +51592,186 @@ class MapControls extends OrbitControls {
 
 		this.touches.ONE = three__WEBPACK_IMPORTED_MODULE_0__.TOUCH.PAN;
 		this.touches.TWO = three__WEBPACK_IMPORTED_MODULE_0__.TOUCH.DOLLY_ROTATE;
+
+	}
+
+}
+
+
+
+
+/***/ }),
+
+/***/ 652:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "VRButton": () => (/* binding */ VRButton)
+/* harmony export */ });
+class VRButton {
+
+	static createButton( renderer, options ) {
+
+		if ( options ) {
+
+			console.error( 'THREE.VRButton: The "options" parameter has been removed. Please set the reference space type via renderer.xr.setReferenceSpaceType() instead.' );
+
+		}
+
+		const button = document.createElement( 'button' );
+
+		function showEnterVR( /*device*/ ) {
+
+			let currentSession = null;
+
+			async function onSessionStarted( session ) {
+
+				session.addEventListener( 'end', onSessionEnded );
+
+				await renderer.xr.setSession( session );
+				button.textContent = 'EXIT VR';
+
+				currentSession = session;
+
+			}
+
+			function onSessionEnded( /*event*/ ) {
+
+				currentSession.removeEventListener( 'end', onSessionEnded );
+
+				button.textContent = 'ENTER VR';
+
+				currentSession = null;
+
+			}
+
+			//
+
+			button.style.display = '';
+
+			button.style.cursor = 'pointer';
+			button.style.left = 'calc(50% - 50px)';
+			button.style.width = '100px';
+
+			button.textContent = 'ENTER VR';
+
+			button.onmouseenter = function () {
+
+				button.style.opacity = '1.0';
+
+			};
+
+			button.onmouseleave = function () {
+
+				button.style.opacity = '0.5';
+
+			};
+
+			button.onclick = function () {
+
+				if ( currentSession === null ) {
+
+					// WebXR's requestReferenceSpace only works if the corresponding feature
+					// was requested at session creation time. For simplicity, just ask for
+					// the interesting ones as optional features, but be aware that the
+					// requestReferenceSpace call will fail if it turns out to be unavailable.
+					// ('local' is always available for immersive sessions and doesn't need to
+					// be requested separately.)
+
+					const sessionInit = { optionalFeatures: [ 'local-floor', 'bounded-floor', 'hand-tracking', 'layers' ] };
+					navigator.xr.requestSession( 'immersive-vr', sessionInit ).then( onSessionStarted );
+
+				} else {
+
+					currentSession.end();
+
+				}
+
+			};
+
+		}
+
+		function disableButton() {
+
+			button.style.display = '';
+
+			button.style.cursor = 'auto';
+			button.style.left = 'calc(50% - 75px)';
+			button.style.width = '150px';
+
+			button.onmouseenter = null;
+			button.onmouseleave = null;
+
+			button.onclick = null;
+
+		}
+
+		function showWebXRNotFound() {
+
+			disableButton();
+
+			button.textContent = 'VR NOT SUPPORTED';
+
+		}
+
+		function stylizeElement( element ) {
+
+			element.style.position = 'absolute';
+			element.style.bottom = '20px';
+			element.style.padding = '12px 6px';
+			element.style.border = '1px solid #fff';
+			element.style.borderRadius = '4px';
+			element.style.background = 'rgba(0,0,0,0.1)';
+			element.style.color = '#fff';
+			element.style.font = 'normal 13px sans-serif';
+			element.style.textAlign = 'center';
+			element.style.opacity = '0.5';
+			element.style.outline = 'none';
+			element.style.zIndex = '999';
+
+		}
+
+		if ( 'xr' in navigator ) {
+
+			button.id = 'VRButton';
+			button.style.display = 'none';
+
+			stylizeElement( button );
+
+			navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
+
+				supported ? showEnterVR() : showWebXRNotFound();
+
+			} );
+
+			return button;
+
+		} else {
+
+			const message = document.createElement( 'a' );
+
+			if ( window.isSecureContext === false ) {
+
+				message.href = document.location.href.replace( /^http:/, 'https:' );
+				message.innerHTML = 'WEBXR NEEDS HTTPS'; // TODO Improve message
+
+			} else {
+
+				message.href = 'https://immersiveweb.dev/';
+				message.innerHTML = 'WEBXR NOT AVAILABLE';
+
+			}
+
+			message.style.left = 'calc(50% - 90px)';
+			message.style.width = '180px';
+			message.style.textDecoration = 'none';
+
+			stylizeElement( message );
+
+			return message;
+
+		}
 
 	}
 

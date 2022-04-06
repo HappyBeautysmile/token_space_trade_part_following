@@ -1,6 +1,6 @@
-import { getCipherInfo } from "crypto";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 
 export class Hand extends THREE.Object3D {
   constructor(grip: THREE.Object3D) {
@@ -59,9 +59,12 @@ export class BlockBuild {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75,
       window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera.position.set(0, 1.7, 0);
+    this.camera.lookAt(0, 0, 0);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
+    document.body.appendChild(VRButton.createButton(this.renderer));
 
     const light = new THREE.AmbientLight(0x404040); // soft white light
     this.scene.add(light);
