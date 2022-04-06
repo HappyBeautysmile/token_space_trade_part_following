@@ -74,6 +74,7 @@ class BlockBuild {
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 0, 0);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.xr.enabled = true;
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
@@ -85,6 +86,14 @@ class BlockBuild {
         const controls = new OrbitControls_1.OrbitControls(this.camera, this.renderer.domElement);
         controls.target.set(0, 0, 0);
         controls.update();
+        const tetra = new THREE.Mesh(new THREE.TetrahedronBufferGeometry(0.5), new THREE.MeshStandardMaterial({ color: 'orange' }));
+        tetra.position.set(0, -1.5, 0);
+        tetra.onBeforeRender = () => {
+            tetra.rotateX(0.01);
+            tetra.rotateY(0.0231);
+            tetra.rotateZ(0.00512);
+        };
+        this.scene.add(tetra);
         const render = () => {
             requestAnimationFrame(render);
             this.renderer.render(this.scene, this.camera);
