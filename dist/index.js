@@ -85,7 +85,7 @@ class BlockBuild {
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, 0);
         // controls.update();
-        const tetra = new THREE.Mesh(new THREE.TetrahedronBufferGeometry(0.5), new THREE.MeshStandardMaterial({ color: 'yellow' }));
+        const tetra = new THREE.Mesh(new THREE.TetrahedronBufferGeometry(0.5), new THREE.MeshStandardMaterial({ color: 'green' }));
         tetra.position.set(0, -1.5, 0);
         tetra.onBeforeRender = () => {
             tetra.rotateX(0.01);
@@ -93,11 +93,9 @@ class BlockBuild {
             tetra.rotateZ(0.00512);
         };
         this.scene.add(tetra);
-        const render = () => {
-            requestAnimationFrame(render);
+        this.renderer.setAnimationLoop(() => {
             this.renderer.render(this.scene, this.camera);
-        };
-        render();
+        });
     }
     getGrips() {
         for (const i of [0, 1]) {

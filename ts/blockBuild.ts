@@ -79,7 +79,7 @@ export class BlockBuild {
 
     const tetra = new THREE.Mesh(
       new THREE.TetrahedronBufferGeometry(0.5),
-      new THREE.MeshStandardMaterial({ color: 'yellow' }));
+      new THREE.MeshStandardMaterial({ color: 'green' }));
     tetra.position.set(0, -1.5, 0);
     tetra.onBeforeRender = () => {
       tetra.rotateX(0.01);
@@ -87,12 +87,9 @@ export class BlockBuild {
       tetra.rotateZ(0.00512);
     };
     this.scene.add(tetra);
-
-    const render = () => {
-      requestAnimationFrame(render);
+    this.renderer.setAnimationLoop(() => {
       this.renderer.render(this.scene, this.camera);
-    }
-    render();
+    });
   }
 
   getGrips() {
