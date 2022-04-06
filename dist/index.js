@@ -72,11 +72,11 @@ class BlockBuild {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 0, 0);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.xr.enabled = true;
+        this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
+        this.renderer.xr.enabled = true;
         const light = new THREE.AmbientLight(0x404040); // soft white light
         this.scene.add(light);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
