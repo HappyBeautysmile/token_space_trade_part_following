@@ -69,23 +69,23 @@ class BlockBuild {
     setScene() {
         document.body.innerHTML = "";
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 0, 0);
         this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(512, 512);
         document.body.appendChild(this.renderer.domElement);
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
         this.renderer.xr.enabled = true;
         const light = new THREE.AmbientLight(0x404040); // soft white light
         this.scene.add(light);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(40, 2, 10);
+        directionalLight.position.set(2, 40, 10);
         this.scene.add(directionalLight);
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, 0);
         // controls.update();
-        const tetra = new THREE.Mesh(new THREE.TetrahedronBufferGeometry(0.5), new THREE.MeshStandardMaterial({ color: 'red' }));
+        const tetra = new THREE.Mesh(new THREE.TetrahedronBufferGeometry(0.5), new THREE.MeshStandardMaterial({ color: 'yellow' }));
         tetra.position.set(0, -1.5, 0);
         tetra.onBeforeRender = () => {
             tetra.rotateX(0.01);
