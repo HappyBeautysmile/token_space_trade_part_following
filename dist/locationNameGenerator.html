@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Location Name Generator</title>
+</head>
+
+<body>
+    <pre id="output"></pre>
+
+    <script type="text/javascript">
+        const vowels = ['a', 'e', 'i', 'o', 'u', 'y', 'ae', 'ee', 'ie', 'oi', 'ui'];
+        const consonants = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'qu', 'r', 's', 't', 'v', 'w', 'x', 'z', 'ch', 'st'];
+        const syllables = [];
+        for (var i = 0; i < vowels.length; i++) {
+            for (var j = 0; j < consonants.length; j++) {
+                syllables.push(consonants[j] + vowels[i]);
+            }
+        }
+        firstSyllable = syllables[Math.floor(Math.random() * syllables.length)];
+        secondSyllable = syllables[Math.floor(Math.random() * syllables.length)];
+        thirdSyllable = '';
+        if (Math.random() > 0.5) {
+            thirdSyllable = syllables[Math.floor(Math.random() * syllables.length)];
+        }
+        var str = firstSyllable + secondSyllable + thirdSyllable;
+        const str2 = str.charAt(0).toUpperCase() + str.slice(1);
+        document.getElementById('output').textContent = str2;
+    </script>
+</body>
+
+</html>
