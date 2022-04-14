@@ -4,21 +4,26 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Object3D } from "three";
 
-async function loadModel(filename) {
-  return new Promise((resolve, reject) => {
+class ModelLoader {
+  static async loadModel(filename: string): Promise<THREE.Object3D> {
     const loader = new GLTFLoader();
-    loader.load(filename, function (gltf) {
-      resolve(gltf.scene);
-    }, undefined, function (error) {
-      reject(error);
+    return new Promise<THREE.Object3D>((resolve, reject) => {
+      loader.load(filename, (gltf) => {
+        resolve(gltf.scene);
+      },
+        (error) => {
+          reject(error);
+        });
     });
-  });
+  }
+
 }
 
 let AllObjects = new Map()
 
 export class Hand extends THREE.Object3D {
-  constructor(grip: THREE.Object3D) {
+  private cube: THREE.Object3D;
+  constructor(private grip: THREE.Object3D) {
     super();
     grip.add(this);
 
@@ -39,12 +44,23 @@ export class Hand extends THREE.Object3D {
       geometry: THREE.BufferGeometry, material: THREE.Material,
       group: THREE.Group) => {
     }
+    this.initialize();
+  }
 
-    grip.addEventListener('selectstart', () => {
-      const o = cube.clone();
+  public setCube(o: THREE.Object3D) {
+    this.grip.remove(this.cube);
+    this.cube = o;
+    this.grip.add(this.cube);
+  }
+
+  private async initialize() {
+    this.cube = await ModelLoader.loadModel('dist/Model/cube-basic.glb');
+    this.grip.add(this.cube);
+    this.grip.addEventListener('selectstart', () => {
+      const o = this.cube.clone();
       const p = o.position;
       const r = o.rotation;
-      grip.getWorldPosition(p);
+      this.grip.getWorldPosition(p);
       p.x = Math.round(p.x * 10) / 10;
       p.y = Math.round(p.y * 10) / 10;
       p.z = Math.round(p.z * 10) / 10;
@@ -52,12 +68,12 @@ export class Hand extends THREE.Object3D {
       r.x = Math.round(r.x / scaleFactor) * scaleFactor;
       r.y = Math.round(r.y / scaleFactor) * scaleFactor;
       r.z = Math.round(r.z / scaleFactor) * scaleFactor;
-      grip.parent.add(o);
+      this.grip.parent.add(o);
       const key = p.x.toString() + ',' + p.y.toString() + ',' + p.z.toString();
       AllObjects.set(key, o);
     });
 
-    grip.addEventListener('selectend', () => {
+    this.grip.addEventListener('selectend', () => {
 
     });
   }
@@ -67,7 +83,6 @@ export class BlockBuild {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
-  private cube = new Object3D;
 
   private cubes = new Map<string, THREE.Object3D>();
 
@@ -111,8 +126,6 @@ export class BlockBuild {
     //   tetra.rotateZ(0.00512);
     // };
     // this.scene.add(tetra)
-    this.cube = await loadModel('Model/cube-glob.glb');
-
 
     this.renderer.setAnimationLoop(() => {
       this.renderer.render(this.scene, this.camera);
