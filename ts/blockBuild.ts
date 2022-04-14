@@ -1,17 +1,32 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Object3D } from "three";
+
+async function loadModel(filename) {
+  return new Promise((resolve, reject) => {
+    const loader = new GLTFLoader();
+    loader.load(filename, function (gltf) {
+      resolve(gltf.scene);
+    }, undefined, function (error) {
+      reject(error);
+    });
+  });
+}
+
+let AllObjects = new Map()
 
 export class Hand extends THREE.Object3D {
   constructor(grip: THREE.Object3D) {
     super();
     grip.add(this);
 
-    const cube = new THREE.Mesh(
-      new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
-      new THREE.MeshStandardMaterial({ color: '#987' }));
-    //cube.position.z = -0.2;
-    this.add(cube);
+    // const cube = new THREE.Mesh(
+    //   new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
+    //   new THREE.MeshStandardMaterial({ color: '#987' }));
+    // //cube.position.z = -0.2;
+    //this.add(cube);
 
     const lineMaterial = new THREE.LineBasicMaterial({ color: '#def' });
     const lineGeometry = new THREE.BufferGeometry()
@@ -28,11 +43,18 @@ export class Hand extends THREE.Object3D {
     grip.addEventListener('selectstart', () => {
       const o = cube.clone();
       const p = o.position;
+      const r = o.rotation;
       grip.getWorldPosition(p);
       p.x = Math.round(p.x * 10) / 10;
       p.y = Math.round(p.y * 10) / 10;
       p.z = Math.round(p.z * 10) / 10;
+      const scaleFactor = Math.PI / 2
+      r.x = Math.round(r.x / scaleFactor) * scaleFactor;
+      r.y = Math.round(r.y / scaleFactor) * scaleFactor;
+      r.z = Math.round(r.z / scaleFactor) * scaleFactor;
       grip.parent.add(o);
+      const key = p.x.toString() + ',' + p.y.toString() + ',' + p.z.toString();
+      AllObjects.set(key, o);
     });
 
     grip.addEventListener('selectend', () => {
@@ -45,6 +67,7 @@ export class BlockBuild {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
+  private cube = new Object3D;
 
   private cubes = new Map<string, THREE.Object3D>();
 
@@ -52,6 +75,7 @@ export class BlockBuild {
     this.setScene();
     this.getGrips();
   }
+
 
   setScene() {
     document.body.innerHTML = "";
@@ -87,6 +111,9 @@ export class BlockBuild {
     //   tetra.rotateZ(0.00512);
     // };
     // this.scene.add(tetra)
+    this.cube = await loadModel('Model/cube-glob.glb');
+
+
     this.renderer.setAnimationLoop(() => {
       this.renderer.render(this.scene, this.camera);
     });
