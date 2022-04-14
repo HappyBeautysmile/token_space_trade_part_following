@@ -27,11 +27,11 @@ export class Hand extends THREE.Object3D {
     super();
     grip.add(this);
 
-    // const cube = new THREE.Mesh(
-    //   new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
-    //   new THREE.MeshStandardMaterial({ color: '#987' }));
-    // //cube.position.z = -0.2;
-    //this.add(cube);
+    const cube = new THREE.Mesh(
+      new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
+      new THREE.MeshStandardMaterial({ color: '#987' }));
+    //cube.position.z = -0.2;
+    this.add(cube);
 
     const lineMaterial = new THREE.LineBasicMaterial({ color: '#def' });
     const lineGeometry = new THREE.BufferGeometry()
