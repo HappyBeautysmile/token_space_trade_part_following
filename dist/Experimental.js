@@ -150,7 +150,7 @@ function render() {
       sum += parseInt(framerates[i], 10); //don't forget to add the base
     }
     var avg = sum / framerates.length;
-    document.getElementById('info').innerHTML = "avg:" + avg.toString("00.0") + " min:" + Math.min(...framerates).toString();
+    document.getElementById('info').innerHTML = "avg:" + avg.toString() + " min:" + Math.min(...framerates).toString();
   }
   lastFrame = Date.now();
 }
