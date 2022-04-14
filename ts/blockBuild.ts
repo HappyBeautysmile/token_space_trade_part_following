@@ -56,7 +56,8 @@ export class Hand extends THREE.Object3D {
   private async initialize() {
     this.cube = await ModelLoader.loadModel('dist/Model/cube-basic.glb');
     this.grip.add(this.cube);
-    this.grip.addEventListener('selectstart', () => {
+    this.grip.addEventListener('squeeze', () => {
+      //this.grip.addEventListener('selectstart', () => {
       const o = this.cube.clone();
       const p = o.position;
       const r = o.rotation;
