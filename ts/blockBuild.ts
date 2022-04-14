@@ -33,7 +33,7 @@ export class Hand extends THREE.Object3D {
     //cube.position.z = -0.2;
     this.add(cube);
 
-    const lineMaterial = new THREE.LineBasicMaterial({ color: '#def' });
+    const lineMaterial = new THREE.LineBasicMaterial({ color: '#d00' });
     const lineGeometry = new THREE.BufferGeometry()
       .setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, -0.5, 0)]);
     const line = new THREE.Line(lineGeometry, lineMaterial);

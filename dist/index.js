@@ -58,7 +58,7 @@ class Hand extends THREE.Object3D {
         const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 0.1, 0.1), new THREE.MeshStandardMaterial({ color: '#987' }));
         //cube.position.z = -0.2;
         this.add(cube);
-        const lineMaterial = new THREE.LineBasicMaterial({ color: '#def' });
+        const lineMaterial = new THREE.LineBasicMaterial({ color: '#d00' });
         const lineGeometry = new THREE.BufferGeometry()
             .setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, -0.5, 0)]);
         const line = new THREE.Line(lineGeometry, lineMaterial);
