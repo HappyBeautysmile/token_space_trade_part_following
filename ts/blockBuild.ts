@@ -10,7 +10,7 @@ export class Hand extends THREE.Object3D {
     const cube = new THREE.Mesh(
       new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
       new THREE.MeshStandardMaterial({ color: '#987' }));
-    cube.position.z = -0.2;
+    //cube.position.z = -0.2;
     this.add(cube);
 
     const lineMaterial = new THREE.LineBasicMaterial({ color: '#def' });
@@ -77,16 +77,16 @@ export class BlockBuild {
     controls.target.set(0, 0, -5);
     controls.update();
 
-    const tetra = new THREE.Mesh(
-      new THREE.TetrahedronBufferGeometry(0.5),
-      new THREE.MeshStandardMaterial({ color: 'cyan' }));
-    tetra.position.set(0, 1.7, -1.5);
-    tetra.onBeforeRender = () => {
-      tetra.rotateX(0.01);
-      tetra.rotateY(0.0231);
-      tetra.rotateZ(0.00512);
-    };
-    this.scene.add(tetra)
+    // const tetra = new THREE.Mesh(
+    //   new THREE.TetrahedronBufferGeometry(0.5),
+    //   new THREE.MeshStandardMaterial({ color: 'cyan' }));
+    // tetra.position.set(0, 1.7, -1.5);
+    // tetra.onBeforeRender = () => {
+    //   tetra.rotateX(0.01);
+    //   tetra.rotateY(0.0231);
+    //   tetra.rotateZ(0.00512);
+    // };
+    // this.scene.add(tetra)
     this.renderer.setAnimationLoop(() => {
       this.renderer.render(this.scene, this.camera);
     });

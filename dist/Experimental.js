@@ -115,8 +115,8 @@ for (let i = 0; i < 20; i++) {
   buildAsteroid(asteroidLocation, Math.random() * 8);
 }
 
-var from = new THREE.Vector3(-300, -300, -300);
-var to = new THREE.Vector3(300, 300, 300);
+let from = new THREE.Vector3(-300, -300, -300);
+let to = new THREE.Vector3(300, 300, 300);
 buildStrays(from, to)
 
 function randomAngle() {
@@ -124,20 +124,35 @@ function randomAngle() {
 }
 //var stats = new Stats();
 //document.body.appendChild(stats.dom);
-var framecount = 0;
-const startTime = Date.now();
-var velocity = -1;
+let framecount = 0;
+let framerates = [];
+let lastFrame = Date.now();
+let velocity = -1;
 function render() {
   requestAnimationFrame(render);
   camera.position.z = camera.position.z + velocity
   camera.lookAt(0, 0, 0)
   renderer.render(scene, camera);
-  var lastFrame = Date.now();
+
   framecount++;
   if (framecount > 300) {
     velocity = -velocity;
     framecount = 0;
   }
+  let framerate = 1000 / (Date.now() - lastFrame);
+  framerates.push(framerate);
+  if (framerates.length > 10) {
+    framerates.shift();
+  }
+  if (framecount % 10 == 0) {
+    var sum = 0;
+    for (var i = 0; i < framerates.length; i++) {
+      sum += parseInt(framerates[i], 10); //don't forget to add the base
+    }
+    var avg = sum / framerates.length;
+    document.getElementById('info').innerHTML = "avg:" + avg.toString("00.0") + " min:" + Math.min(...framerates).toString();
+  }
+  lastFrame = Date.now();
 }
 
 render();
