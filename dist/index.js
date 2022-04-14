@@ -55,14 +55,16 @@ class Hand extends THREE.Object3D {
         super();
         this.grip = grip;
         grip.add(this);
-        const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 0.1, 0.1), new THREE.MeshStandardMaterial({ color: '#987' }));
-        //cube.position.z = -0.2;
-        this.add(cube);
-        const lineMaterial = new THREE.LineBasicMaterial({ color: '#d00' });
-        const lineGeometry = new THREE.BufferGeometry()
-            .setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, -0.5, 0)]);
-        const line = new THREE.Line(lineGeometry, lineMaterial);
-        this.add(line);
+        // const cube = new THREE.Mesh(
+        //   new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
+        //   new THREE.MeshStandardMaterial({ color: '#987' }));
+        // //cube.position.z = -0.2;
+        // this.add(cube);
+        // const lineMaterial = new THREE.LineBasicMaterial({ color: '#d00' });
+        // const lineGeometry = new THREE.BufferGeometry()
+        //   .setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, -0.5, 0)]);
+        // const line = new THREE.Line(lineGeometry, lineMaterial);
+        // this.add(line);
         this.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
         };
         this.initialize();
@@ -73,7 +75,8 @@ class Hand extends THREE.Object3D {
         this.grip.add(this.cube);
     }
     async initialize() {
-        this.cube = await ModelLoader.loadModel('dist/Model/cube.glb');
+        //this.cube = await ModelLoader.loadModel('dist/Model/cube.glb');
+        const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 0.1, 0.1), new THREE.MeshStandardMaterial({ color: '#987' }));
         this.grip.add(this.cube);
         this.grip.addEventListener('squeeze', () => {
             //this.grip.addEventListener('selectstart', () => {
