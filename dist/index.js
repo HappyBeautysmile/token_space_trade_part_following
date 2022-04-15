@@ -37,8 +37,6 @@ class ModelLoader {
         return new Promise((resolve, reject) => {
             loader.load(filename, (gltf) => {
                 resolve(gltf.scene);
-            }, (error) => {
-                reject(error);
             });
         });
     }
@@ -100,10 +98,31 @@ class BlockBuild {
     scene;
     camera;
     renderer;
-    cubes = new Map();
     constructor() {
+        this.initialize();
+    }
+    async initialize() {
         this.setScene();
+        await this.loadAllModels();
         this.getGrips();
+    }
+    allModels = [];
+    async loadAllModels() {
+        const models = ['cube', 'wedge', 'chopped corner', 'corner', 'cube-basic', 'cube-gem',
+            'cube-glob', 'cube-smooth', 'cube-tweek',
+            'wedge 2', 'wonk'];
+        for (const modelName of models) {
+            console.log(`Loading ${modelName}`);
+            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+            if (!m) {
+                continue;
+            }
+            m.scale.set(0.1, 0.1, 0.1);
+            this.allModels.push(m);
+            this.scene.add(m);
+            m.position.set(this.allModels.length * 0.14, 0, -3);
+            console.log(`Added ${modelName}`);
+        }
     }
     setScene() {
         document.body.innerHTML = "";
@@ -124,14 +143,16 @@ class BlockBuild {
         const controls = new OrbitControls_1.OrbitControls(this.camera, this.renderer.domElement);
         controls.target.set(0, 0, -5);
         controls.update();
-        const tetra = new THREE.Mesh(new THREE.TetrahedronBufferGeometry(0.5), new THREE.MeshStandardMaterial({ color: 'pink' }));
-        tetra.position.set(0, 1.7, -1.5);
-        tetra.onBeforeRender = () => {
-            tetra.rotateX(0.01);
-            tetra.rotateY(0.0231);
-            tetra.rotateZ(0.00512);
-        };
-        this.scene.add(tetra);
+        // const tetra = new THREE.Mesh(
+        //   new THREE.TetrahedronBufferGeometry(0.5),
+        //   new THREE.MeshStandardMaterial({ color: 'pink' }));
+        // tetra.position.set(0, 1.7, -1.5);
+        // tetra.onBeforeRender = () => {
+        //   tetra.rotateX(0.01);
+        //   tetra.rotateY(0.0231);
+        //   tetra.rotateZ(0.00512);
+        // };
+        // this.scene.add(tetra)
         this.renderer.setAnimationLoop(() => {
             this.renderer.render(this.scene, this.camera);
         });
@@ -139,12 +160,10 @@ class BlockBuild {
     getGrips() {
         for (const i of [0, 1]) {
             const grip = this.renderer.xr.getControllerGrip(i);
-            const ball = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.05, 3), new THREE.MeshStandardMaterial({ color: '#d2e' }));
-            ball.position.set(0, 0.5, 0);
-            grip.add(ball);
             this.scene.add(grip);
-            const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 0.1, 0.1), new THREE.MeshStandardMaterial({ color: '#987' }));
-            new Hand(grip, cube);
+            // Note: adding the model to the Hand will remove it from the Scene
+            // It's still in memory.
+            new Hand(grip, this.allModels[i]);
         }
     }
 }

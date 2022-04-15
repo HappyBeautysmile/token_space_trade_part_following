@@ -10,22 +10,20 @@ class ModelLoader {
     return new Promise<THREE.Object3D>((resolve, reject) => {
       loader.load(filename, (gltf) => {
         resolve(gltf.scene);
-      },
-        (error) => {
-          reject(error);
-        });
+      });
     });
   }
-
 }
 
 let AllObjects = new Map()
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
-  constructor(private grip: THREE.Object3D) {
+  constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D) {
     super();
     grip.add(this);
+    this.cube = initialObject;
+    this.add(this.cube);
 
     // const cube = new THREE.Mesh(
     //   new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
@@ -48,16 +46,12 @@ export class Hand extends THREE.Object3D {
   }
 
   public setCube(o: THREE.Object3D) {
-    this.grip.remove(this.cube);
+    this.remove(this.cube);
     this.cube = o;
-    this.grip.add(this.cube);
+    this.add(this.cube);
   }
 
   private async initialize() {
-    //this.cube = await ModelLoader.loadModel('dist/Model/cube.glb');
-    const cube = new THREE.Mesh(
-      new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
-      new THREE.MeshStandardMaterial({ color: '#987' }));
     this.grip.add(this.cube);
     this.grip.addEventListener('squeeze', () => {
       //this.grip.addEventListener('selectstart', () => {
@@ -88,15 +82,37 @@ export class BlockBuild {
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
 
-  private cubes = new Map<string, THREE.Object3D>();
-
   constructor() {
+    this.initialize();
+  }
+
+  private async initialize() {
     this.setScene();
+    await this.loadAllModels();
     this.getGrips();
   }
 
+  private allModels: THREE.Object3D[] = [];
 
-  setScene() {
+  private async loadAllModels() {
+    const models = ['cube', 'wedge', 'chopped corner', 'corner', 'cube-basic', 'cube-gem',
+      'cube-glob', 'cube-smooth', 'cube-tweek',
+      'wedge 2', 'wonk']
+    for (const modelName of models) {
+      console.log(`Loading ${modelName}`);
+      const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+      if (!m) {
+        continue;
+      }
+      m.scale.set(0.1, 0.1, 0.1);
+      this.allModels.push(m);
+      this.scene.add(m);
+      m.position.set(this.allModels.length * 0.14, 0, -3);
+      console.log(`Added ${modelName}`);
+    }
+  }
+
+  private setScene() {
     document.body.innerHTML = "";
 
     this.scene = new THREE.Scene();
@@ -122,7 +138,7 @@ export class BlockBuild {
 
     // const tetra = new THREE.Mesh(
     //   new THREE.TetrahedronBufferGeometry(0.5),
-    //   new THREE.MeshStandardMaterial({ color: 'cyan' }));
+    //   new THREE.MeshStandardMaterial({ color: 'pink' }));
     // tetra.position.set(0, 1.7, -1.5);
     // tetra.onBeforeRender = () => {
     //   tetra.rotateX(0.01);
@@ -140,7 +156,9 @@ export class BlockBuild {
     for (const i of [0, 1]) {
       const grip = this.renderer.xr.getControllerGrip(i);
       this.scene.add(grip);
-      new Hand(grip);
+      // Note: adding the model to the Hand will remove it from the Scene
+      // It's still in memory.
+      new Hand(grip, this.allModels[i]);
     }
   }
 }
