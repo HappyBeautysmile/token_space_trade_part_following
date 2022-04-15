@@ -163,6 +163,7 @@ class BlockBuild {
             this.scene.add(grip);
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
+            this.allModels[i].position.set(0, 0, 0);
             new Hand(grip, this.allModels[i]);
         }
     }
