@@ -78,8 +78,8 @@ class Hand extends THREE.Object3D {
         this.initialize();
     }
     tick(deltaS) {
-        // experiment to see if rotate is working
-        this.cube.rotateX(0.1);
+        // this.cube.rotateX(0.1);  // this worked.
+        this.cube.rotateX(0.1 * deltaS);
         if (this.source) {
             const rate = 0.1;
             const axes = this.source.gamepad.axes.slice(0);
