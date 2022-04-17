@@ -15,11 +15,20 @@ class ModelLoader {
   }
 }
 
+class Tick {
+  constructor(readonly deltaS: number) { }
+}
+
+interface Ticker {
+  tick(t: Tick): void;
+}
+
 let AllObjects = new Map()
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
-  constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D) {
+  constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
+    private source: THREE.XRInputSource) {
     super();
     grip.add(this);
     this.cube = initialObject;
@@ -43,6 +52,17 @@ export class Hand extends THREE.Object3D {
       group: THREE.Group) => {
     }
     this.initialize();
+  }
+
+  public tick(deltaS: number) {
+    if (this.source) {
+      const rate = 0.1;
+      const axes = this.source.gamepad.axes.slice(0);
+      if (axes.length >= 4) {
+        this.cube.rotateX(axes[2] * rate * deltaS);
+        this.cube.rotateY(axes[3] * rate * deltaS);
+      }
+    }
   }
 
   public setCube(o: THREE.Object3D) {
@@ -125,6 +145,15 @@ export class BlockBuild {
     }
   }
 
+  private tickEverything(o: THREE.Object3D, tick: Tick) {
+    if (o['tick']) {
+      (o as any as Ticker).tick(tick);
+    }
+    for (const child of o.children) {
+      this.tickEverything(child, tick);
+    }
+  }
+
   private setScene() {
     document.body.innerHTML = "";
 
@@ -160,19 +189,31 @@ export class BlockBuild {
     // };
     // this.scene.add(tetra)
 
+    const clock = new THREE.Clock();
+
     this.renderer.setAnimationLoop(() => {
+      const tick = new Tick(clock.getDelta());
+      this.tickEverything(this.scene, tick);
       this.renderer.render(this.scene, this.camera);
     });
   }
 
   getGrips() {
+    const session = this.renderer.xr.getSession();
+    let sources: THREE.XRInputSource[] = [];
+    if (session) {
+      if (session.inputSources) {
+        sources = session.inputSources;
+      }
+    }
+
     for (const i of [0, 1]) {
       const grip = this.renderer.xr.getControllerGrip(i);
       this.scene.add(grip);
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       this.allModels[i].position.set(0, 0, 0);
-      new Hand(grip, this.allModels[i]);
+      new Hand(grip, this.allModels[i], sources[i]);
     }
   }
 }
