@@ -51,10 +51,22 @@ export class Hand extends THREE.Object3D {
     this.add(this.cube);
   }
 
+  private posToKey(p) {
+    return p.x.toString() + ',' + p.y.toString() + ',' + p.z.toString();
+  }
+
   private async initialize() {
     this.grip.add(this.cube);
     this.grip.addEventListener('squeeze', () => {
-      //this.grip.addEventListener('selectstart', () => {
+      const p = this.cube.position;
+      const key = this.posToKey(p);
+      AllObjects[key]
+      const scene = this.grip.parent;
+      scene.remove(AllObjects[key]);
+      AllObjects.delete(key);
+    });
+
+    this.grip.addEventListener('selectstart', () => {
       const o = this.cube.clone();
       const p = o.position;
       const r = o.rotation;
@@ -66,8 +78,9 @@ export class Hand extends THREE.Object3D {
       r.x = Math.round(r.x / scaleFactor) * scaleFactor;
       r.y = Math.round(r.y / scaleFactor) * scaleFactor;
       r.z = Math.round(r.z / scaleFactor) * scaleFactor;
-      this.grip.parent.add(o);
-      const key = p.x.toString() + ',' + p.y.toString() + ',' + p.z.toString();
+      const scene = this.grip.parent;
+      scene.add(o);
+      const key = this.posToKey(p);
       AllObjects.set(key, o);
     });
 
