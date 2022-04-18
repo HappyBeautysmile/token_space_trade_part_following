@@ -60,7 +60,7 @@ export class Hand extends THREE.Object3D {
   }
 
   public tick(t: Tick) {
-    this.debug.rotateZ(3 * t.deltaS);
+    this.debug.rotateZ(0.5 * t.deltaS);
 
     let source: THREE.XRInputSource = null;
     const session = this.xr.getSession();
@@ -79,7 +79,8 @@ export class Hand extends THREE.Object3D {
       if (axes.length >= 4) {
         this.debugMaterial.color = new THREE.Color('green');
         if (!axes[2] || !axes[3]) {
-          this.cube.rotateZ(0.3);
+          // Sticks are not being touched.
+          // this.cube.rotateZ(0.3);
         } else {
           this.debugMaterial.color = new THREE.Color('orange');
           this.cube.rotateX(axes[2] * rate * t.deltaS);
