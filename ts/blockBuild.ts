@@ -54,13 +54,17 @@ export class Hand extends THREE.Object3D {
     this.initialize();
   }
 
-  public tick(deltaS: number) {
+  public tick(t: Tick) {
     if (this.source) {
-      const rate = 0.1;
+      const rate = 3;
       const axes = this.source.gamepad.axes.slice(0);
       if (axes.length >= 4) {
-        this.cube.rotateX(axes[2] * rate);
-        this.cube.rotateY(axes[3] * rate);
+        if (!axes[2] || !axes[3]) {
+          this.cube.rotateZ(0.3);
+        } else {
+          this.cube.rotateX(axes[2] * rate * t.deltaS);
+          this.cube.rotateY(axes[3] * rate * t.deltaS);
+        }
       }
     }
   }
