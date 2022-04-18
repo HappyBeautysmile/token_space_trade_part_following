@@ -216,8 +216,14 @@ class BlockBuild {
     getGrips() {
         const session = this.renderer.xr.getSession();
         let sources = [];
+        const debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+        const debug = new THREE.Mesh(new THREE.OctahedronBufferGeometry(0.2), debugMaterial);
+        debug.position.set(0, 0.5, -2);
+        this.scene.add(debug);
         if (session) {
+            debugMaterial.color = new THREE.Color('red');
             if (session.inputSources) {
+                debugMaterial.color = new THREE.Color('green');
                 sources = session.inputSources;
             }
         }
