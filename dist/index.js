@@ -52,10 +52,16 @@ class Hand extends THREE.Object3D {
     grip;
     source;
     cube;
+    debug;
+    debugMaterial;
     constructor(grip, initialObject, source) {
         super();
         this.grip = grip;
         this.source = source;
+        this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+        this.debug = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
+        this.debug.position.set(0, 0, -1);
+        this.add(this.debug);
         grip.add(this);
         this.cube = initialObject;
         this.add(this.cube);
@@ -74,14 +80,18 @@ class Hand extends THREE.Object3D {
         this.initialize();
     }
     tick(t) {
+        this.debug.rotateZ(0.1);
         if (this.source) {
+            this.debugMaterial.color = new THREE.Color('blue');
             const rate = 3;
             const axes = this.source.gamepad.axes.slice(0);
             if (axes.length >= 4) {
+                this.debugMaterial.color = new THREE.Color('green');
                 if (!axes[2] || !axes[3]) {
                     this.cube.rotateZ(0.3);
                 }
                 else {
+                    this.debugMaterial.color = new THREE.Color('orange');
                     this.cube.rotateX(axes[2] * rate * t.deltaS);
                     this.cube.rotateY(axes[3] * rate * t.deltaS);
                 }

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Object3D } from "three";
+import { MeshStandardMaterial, Object3D } from "three";
 
 class ModelLoader {
   static async loadModel(filename: string): Promise<THREE.Object3D> {
@@ -27,9 +27,20 @@ let AllObjects = new Map()
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
+
+  private debug: THREE.Object3D;
+  private debugMaterial: THREE.MeshStandardMaterial;
+
   constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
     private source: THREE.XRInputSource) {
     super();
+
+    this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+    this.debug = new THREE.Mesh(
+      new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
+    this.debug.position.set(0, 0, -1);
+    this.add(this.debug);
+
     grip.add(this);
     this.cube = initialObject;
     this.add(this.cube);
@@ -55,13 +66,17 @@ export class Hand extends THREE.Object3D {
   }
 
   public tick(t: Tick) {
+    this.debug.rotateZ(0.1);
     if (this.source) {
+      this.debugMaterial.color = new THREE.Color('blue');
       const rate = 3;
       const axes = this.source.gamepad.axes.slice(0);
       if (axes.length >= 4) {
+        this.debugMaterial.color = new THREE.Color('green');
         if (!axes[2] || !axes[3]) {
           this.cube.rotateZ(0.3);
         } else {
+          this.debugMaterial.color = new THREE.Color('orange');
           this.cube.rotateX(axes[2] * rate * t.deltaS);
           this.cube.rotateY(axes[3] * rate * t.deltaS);
         }
