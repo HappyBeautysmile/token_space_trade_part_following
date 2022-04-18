@@ -32,7 +32,7 @@ export class Hand extends THREE.Object3D {
   private debugMaterial: THREE.MeshStandardMaterial;
 
   constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
-    private source: THREE.XRInputSource) {
+    private index: number, private xr: THREE.WebXRManager) {
     super();
 
     this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
@@ -56,21 +56,26 @@ export class Hand extends THREE.Object3D {
     //   .setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, -0.5, 0)]);
     // const line = new THREE.Line(lineGeometry, lineMaterial);
     // this.add(line);
-
-    this.onBeforeRender = (renderer: THREE.WebGLRenderer,
-      scene: THREE.Scene, camera: THREE.Camera,
-      geometry: THREE.BufferGeometry, material: THREE.Material,
-      group: THREE.Group) => {
-    }
     this.initialize();
   }
 
   public tick(t: Tick) {
     this.debug.rotateZ(0.1);
-    if (this.source) {
+
+    let source: THREE.XRInputSource = null;
+    const session = this.xr.getSession();
+    if (session) {
+      this.debugMaterial.color = new THREE.Color('red');
+      if (session.inputSources) {
+        this.debugMaterial.color = new THREE.Color('brown');
+        source = session.inputSources[this.index];
+      }
+    }
+
+    if (source) {
       this.debugMaterial.color = new THREE.Color('blue');
       const rate = 3;
-      const axes = this.source.gamepad.axes.slice(0);
+      const axes = source.gamepad.axes.slice(0);
       if (axes.length >= 4) {
         this.debugMaterial.color = new THREE.Color('green');
         if (!axes[2] || !axes[3]) {
@@ -219,30 +224,22 @@ export class BlockBuild {
   }
 
   getGrips() {
-    const session = this.renderer.xr.getSession();
-    let sources: THREE.XRInputSource[] = [];
-
-    const debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+    const debugMaterial = new THREE.MeshStandardMaterial({ color: '#ff0' });
     const debug = new THREE.Mesh(new THREE.OctahedronBufferGeometry(0.2),
       debugMaterial);
     debug.position.set(0, 0.5, -2);
     this.scene.add(debug);
 
-    if (session) {
-      debugMaterial.color = new THREE.Color('red');
-      if (session.inputSources) {
-        debugMaterial.color = new THREE.Color('green');
-        sources = session.inputSources;
-      }
-    }
-
     for (const i of [0, 1]) {
       const grip = this.renderer.xr.getControllerGrip(i);
       this.scene.add(grip);
+      if (grip.userData['inputSource']) {
+        debugMaterial.color = new THREE.Color('#0ff');
+      }
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       this.allModels[i].position.set(0, 0, 0);
-      new Hand(grip, this.allModels[i], sources[i]);
+      new Hand(grip, this.allModels[i], i, this.renderer.xr);
     }
   }
 }
