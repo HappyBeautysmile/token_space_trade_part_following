@@ -35,6 +35,7 @@ const THREE = __importStar(__webpack_require__(232));
 const OrbitControls_1 = __webpack_require__(365);
 const VRButton_js_1 = __webpack_require__(18);
 const GLTFLoader_js_1 = __webpack_require__(217);
+//import { Object3D } from "three";
 class ModelLoader {
     static async loadModel(filename) {
         const loader = new GLTFLoader_js_1.GLTFLoader();
@@ -79,7 +80,7 @@ class Hand extends THREE.Object3D {
     }
     tick(deltaS) {
         // this.cube.rotateX(0.1);  // this worked.
-        this.cube.rotateX(0.1 * deltaS);
+        this.cube.rotateX(0.1 * deltaS); // this worked.
         if (this.source) {
             const rate = 0.1;
             const axes = this.source.gamepad.axes.slice(0);
