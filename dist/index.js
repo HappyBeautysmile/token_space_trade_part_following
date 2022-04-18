@@ -78,15 +78,15 @@ class Hand extends THREE.Object3D {
         this.initialize();
     }
     tick(deltaS) {
-        this.cube.rotateX(0.1 * deltaS);
-        if (this.source) {
-            const rate = 0.1;
-            const axes = this.source.gamepad.axes.slice(0);
-            if (axes.length >= 4) {
-                this.cube.rotateX(axes[2] * rate * deltaS);
-                this.cube.rotateY(axes[3] * rate * deltaS);
-            }
-        }
+        this.cube.rotateX(0.1);
+        // if (this.source) {
+        //   const rate = 0.1;
+        //   const axes = this.source.gamepad.axes.slice(0);
+        //   if (axes.length >= 4) {
+        //     this.cube.rotateX(axes[2] * rate * deltaS);
+        //     this.cube.rotateY(axes[3] * rate * deltaS);
+        //   }
+        // }
     }
     setCube(o) {
         this.remove(this.cube);
