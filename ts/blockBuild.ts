@@ -60,7 +60,7 @@ export class Hand extends THREE.Object3D {
   }
 
   public tick(t: Tick) {
-    this.debug.rotateZ(0.1);
+    this.debug.rotateZ(3 * t.deltaS);
 
     let source: THREE.XRInputSource = null;
     const session = this.xr.getSession();
@@ -224,7 +224,7 @@ export class BlockBuild {
   }
 
   getGrips() {
-    const debugMaterial = new THREE.MeshStandardMaterial({ color: '#ff0' });
+    const debugMaterial = new THREE.MeshStandardMaterial({ color: '#0f0' });
     const debug = new THREE.Mesh(new THREE.OctahedronBufferGeometry(0.2),
       debugMaterial);
     debug.position.set(0, 0.5, -2);
