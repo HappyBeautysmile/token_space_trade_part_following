@@ -57,13 +57,15 @@ class Hand extends THREE.Object3D {
     index;
     xr;
     cube;
+    universeGroup;
     debug;
     debugMaterial;
-    constructor(grip, initialObject, index, xr) {
+    constructor(grip, initialObject, index, xr, universeGroup) {
         super();
         this.grip = grip;
         this.index = index;
         this.xr = xr;
+        this.universeGroup = universeGroup;
         this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         this.debug = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
         this.debug.position.set(0, 0, -1);
@@ -106,8 +108,11 @@ class Hand extends THREE.Object3D {
                 }
                 else {
                     this.debugMaterial.color = new THREE.Color('orange');
-                    this.cube.rotateX(axes[2] * rate * t.deltaS);
-                    this.cube.rotateY(axes[3] * rate * t.deltaS);
+                    this;
+                    //this.cube.rotateX(axes[2] * rate * t.deltaS);
+                    //this.cube.rotateY(axes[3] * rate * t.deltaS);
+                    this.universeGroup.translateX(axes[2] * rate * t.deltaS);
+                    this.universeGroup.translateZ(axes[3] * rate * t.deltaS);
                 }
             }
         }
@@ -156,6 +161,9 @@ class BlockBuild {
     scene;
     camera;
     renderer;
+    allModels = [];
+    playerGroup;
+    universeGroup;
     constructor() {
         this.initialize();
     }
@@ -164,9 +172,6 @@ class BlockBuild {
         await this.loadAllModels();
         this.getGrips();
     }
-    allModels = [];
-    playerGroup;
-    universeGroup;
     async loadAllModels() {
         const models = ['cube', 'wedge', 'chopped corner', 'corner', 'cube-basic', 'cube-gem',
             'cube-glob', 'cube-smooth', 'cube-tweek',
@@ -248,7 +253,7 @@ class BlockBuild {
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             this.allModels[i].position.set(0, 0, 0);
-            new Hand(grip, this.allModels[i], i, this.renderer.xr);
+            new Hand(grip, this.allModels[i], i, this.renderer.xr, this.universeGroup);
         }
     }
 }

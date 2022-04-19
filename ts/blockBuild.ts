@@ -27,14 +27,16 @@ let AllObjects = new Map()
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
+  private universeGroup: THREE.Group;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
 
   constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
-    private index: number, private xr: THREE.WebXRManager) {
+    private index: number, private xr: THREE.WebXRManager, universeGroup: THREE.Group) {
     super();
 
+    this.universeGroup = universeGroup;
     this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
     this.debug = new THREE.Mesh(
       new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
@@ -83,8 +85,11 @@ export class Hand extends THREE.Object3D {
           // this.cube.rotateZ(0.3);
         } else {
           this.debugMaterial.color = new THREE.Color('orange');
-          this.cube.rotateX(axes[2] * rate * t.deltaS);
-          this.cube.rotateY(axes[3] * rate * t.deltaS);
+          this
+          //this.cube.rotateX(axes[2] * rate * t.deltaS);
+          //this.cube.rotateY(axes[3] * rate * t.deltaS);
+          this.universeGroup.translateX(axes[2] * rate * t.deltaS);
+          this.universeGroup.translateZ(axes[3] * rate * t.deltaS);
         }
       }
     }
@@ -139,6 +144,9 @@ export class BlockBuild {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
+  private allModels: THREE.Object3D[] = [];
+  private playerGroup: THREE.Group;
+  private universeGroup: THREE.Group;
 
   constructor() {
     this.initialize();
@@ -149,10 +157,6 @@ export class BlockBuild {
     await this.loadAllModels();
     this.getGrips();
   }
-
-  private allModels: THREE.Object3D[] = [];
-  private playerGroup: THREE.Group;
-  private universeGroup: THREE.Group;
 
   private async loadAllModels() {
     const models = ['cube', 'wedge', 'chopped corner', 'corner', 'cube-basic', 'cube-gem',
@@ -248,7 +252,7 @@ export class BlockBuild {
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       this.allModels[i].position.set(0, 0, 0);
-      new Hand(grip, this.allModels[i], i, this.renderer.xr);
+      new Hand(grip, this.allModels[i], i, this.renderer.xr, this.universeGroup);
     }
   }
 }
