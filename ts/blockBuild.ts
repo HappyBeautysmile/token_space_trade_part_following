@@ -89,13 +89,13 @@ export class Hand extends THREE.Object3D {
     this.cube.position.copy(this.directionWorld);
     this.cube.position.multiplyScalar(5);
     this.cube.position.add(this.gripWorld);
-    const p = this.cube.position;
-    p.x = Math.round(p.x);
-    p.y = Math.round(p.y);
-    p.z = Math.round(p.z);
+    // const p = this.cube.position;
+    // p.x = Math.round(p.x);
+    // p.y = Math.round(p.y);
+    // p.z = Math.round(p.z);
 
-    this.cube.rotation.copy(this.grip.rotation);
-    this.quantizeRotation(this.cube.rotation, 0.5);
+    // this.cube.rotation.copy(this.grip.rotation);
+    // this.quantizeRotation(this.cube.rotation, 0.5);
   }
 
   public tick(t: Tick) {
@@ -156,6 +156,12 @@ export class Hand extends THREE.Object3D {
 
     this.grip.addEventListener('selectstart', () => {
       const o = this.cube.clone();
+
+      const p = o.position;
+      p.x = Math.round(p.x);
+      p.y = Math.round(p.y);
+      p.z = Math.round(p.z);
+
       this.quantizeRotation(o.rotation, 1.0);
       this.universeGroup.add(o);
       const key = this.posToKey(o.position);
@@ -223,7 +229,7 @@ export class BlockBuild {
     this.universeGroup = new THREE.Group();
     this.scene.add(this.universeGroup);
 
-    this.scene.background = new THREE.Color(0x000055);
+    this.scene.background = new THREE.Color(0x550055);
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 1000);
     this.camera.position.set(0, 1.7, 0);
