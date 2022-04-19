@@ -85,11 +85,12 @@ class Hand extends THREE.Object3D {
         this.initialize();
     }
     // Quantizes the Euler angles to be cube-aligned
-    quantizeRotation(v) {
+    // `p` is the amount of quantization
+    quantizeRotation(v, p) {
         const q = Math.PI / 2;
-        v.x = q * Math.round(v.x / q);
-        v.y = q * Math.round(v.y / q);
-        v.z = q * Math.round(v.z / q);
+        v.x = (1 - p) * v.x + p * q * Math.round(v.x / q);
+        v.y = (1 - p) * v.y + p * q * Math.round(v.y / q);
+        v.z = (1 - p) * v.z + p * q * Math.round(v.z / q);
     }
     // We create these private temporary variables here so we aren't
     // creating new objects on every frame.  This reduces the amount of
@@ -116,7 +117,7 @@ class Hand extends THREE.Object3D {
         p.y = Math.round(p.y);
         p.z = Math.round(p.z);
         this.cube.rotation.copy(this.grip.rotation);
-        this.quantizeRotation(this.cube.rotation);
+        this.quantizeRotation(this.cube.rotation, 0.5);
     }
     tick(t) {
         this.setCubePosition();
@@ -163,7 +164,6 @@ class Hand extends THREE.Object3D {
         return `${p.x.toFixed(2)},${p.y.toFixed(2)},${p.z.toFixed(2)}`;
     }
     async initialize() {
-        this.grip.add(this.cube);
         this.grip.addEventListener('squeeze', () => {
             const p = this.cube.position;
             const key = this.posToKey(p);
@@ -173,6 +173,7 @@ class Hand extends THREE.Object3D {
         });
         this.grip.addEventListener('selectstart', () => {
             const o = this.cube.clone();
+            this.quantizeRotation(o.rotation, 1.0);
             this.universeGroup.add(o);
             const key = this.posToKey(o.position);
             AllObjects.set(key, o);
@@ -230,7 +231,7 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.universeGroup = new THREE.Group();
         this.scene.add(this.universeGroup);
-        this.scene.background = new THREE.Color(0x005555);
+        this.scene.background = new THREE.Color(0x000055);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);

@@ -60,11 +60,12 @@ export class Hand extends THREE.Object3D {
   }
 
   // Quantizes the Euler angles to be cube-aligned
-  private quantizeRotation(v: THREE.Euler) {
+  // `p` is the amount of quantization
+  private quantizeRotation(v: THREE.Euler, p: number) {
     const q = Math.PI / 2;
-    v.x = q * Math.round(v.x / q);
-    v.y = q * Math.round(v.y / q);
-    v.z = q * Math.round(v.z / q);
+    v.x = (1 - p) * v.x + p * q * Math.round(v.x / q);
+    v.y = (1 - p) * v.y + p * q * Math.round(v.y / q);
+    v.z = (1 - p) * v.z + p * q * Math.round(v.z / q);
   }
 
   // We create these private temporary variables here so we aren't
@@ -94,7 +95,7 @@ export class Hand extends THREE.Object3D {
     p.z = Math.round(p.z);
 
     this.cube.rotation.copy(this.grip.rotation);
-    this.quantizeRotation(this.cube.rotation);
+    this.quantizeRotation(this.cube.rotation, 0.5);
   }
 
   public tick(t: Tick) {
@@ -145,7 +146,6 @@ export class Hand extends THREE.Object3D {
   }
 
   private async initialize() {
-    this.grip.add(this.cube);
     this.grip.addEventListener('squeeze', () => {
       const p = this.cube.position;
       const key = this.posToKey(p);
@@ -156,6 +156,7 @@ export class Hand extends THREE.Object3D {
 
     this.grip.addEventListener('selectstart', () => {
       const o = this.cube.clone();
+      this.quantizeRotation(o.rotation, 1.0);
       this.universeGroup.add(o);
       const key = this.posToKey(o.position);
       AllObjects.set(key, o);
@@ -222,7 +223,7 @@ export class BlockBuild {
     this.universeGroup = new THREE.Group();
     this.scene.add(this.universeGroup);
 
-    this.scene.background = new THREE.Color(0x005555);
+    this.scene.background = new THREE.Color(0x000055);
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 1000);
     this.camera.position.set(0, 1.7, 0);
