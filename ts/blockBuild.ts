@@ -27,18 +27,14 @@ let AllObjects = new Map()
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
-  private universeGroup: THREE.Group;
-  private leftHand: boolean;
 
   // private debug: THREE.Object3D;
   // private debugMaterial: THREE.MeshStandardMaterial;
 
   constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
-    private index: number, private xr: THREE.WebXRManager, universeGroup: THREE.Group, leftHand: boolean) {
+    private index: number, private xr: THREE.WebXRManager,
+    private universeGroup: THREE.Group, private leftHand: boolean) {
     super();
-
-    this.universeGroup = universeGroup;
-    this.leftHand = leftHand;
     // this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
     // this.debug = new THREE.Mesh(
     //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
@@ -47,7 +43,7 @@ export class Hand extends THREE.Object3D {
 
     grip.add(this);
     this.cube = initialObject;
-    this.add(this.cube);
+    this.universeGroup.add(this.cube);
 
     // const cube = new THREE.Mesh(
     //   new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
@@ -63,9 +59,46 @@ export class Hand extends THREE.Object3D {
     this.initialize();
   }
 
-  public tick(t: Tick) {
-    //this.debug.rotateZ(0.5 * t.deltaS);
+  // Quantizes the Euler angles to be cube-aligned
+  private quantizeRotation(v: THREE.Euler) {
+    const q = Math.PI / 2;
+    v.x = q * Math.round(v.x / q);
+    v.y = q * Math.round(v.y / q);
+    v.z = q * Math.round(v.z / q);
+  }
 
+  // We create these private temporary variables here so we aren't
+  // creating new objects on every frame.  This reduces the amount of
+  // garbage collection.  Ideally we'd do this for other things in
+  // `tick` as well.
+  private gripWorld = new THREE.Vector3();
+  private chestWorld = new THREE.Vector3();
+  private directionWorld = new THREE.Vector3();
+  private setCubePosition() {
+    this.grip.getWorldPosition(this.gripWorld);
+    this.universeGroup.worldToLocal(this.gripWorld);
+    // Ideally, we'd make this about 50cm below the camera.
+    this.chestWorld.set(0, 1.2, 0);
+    this.universeGroup.worldToLocal(this.chestWorld);
+    // `directionWorld` is a unit vector pointing from the chest toward the grip.
+    this.directionWorld.copy(this.gripWorld);
+    this.directionWorld.sub(this.chestWorld);
+    this.directionWorld.normalize();
+
+    this.cube.position.copy(this.directionWorld);
+    this.cube.position.multiplyScalar(5);
+    this.cube.position.add(this.gripWorld);
+    const p = this.cube.position;
+    p.x = Math.round(p.x);
+    p.y = Math.round(p.y);
+    p.z = Math.round(p.z);
+
+    this.cube.rotation.copy(this.grip.rotation);
+    this.quantizeRotation(this.cube.rotation);
+  }
+
+  public tick(t: Tick) {
+    this.setCubePosition();
     let source: THREE.XRInputSource = null;
     const session = this.xr.getSession();
     if (session) {
@@ -84,7 +117,6 @@ export class Hand extends THREE.Object3D {
         //this.debugMaterial.color = new THREE.Color('green');
         if (!axes[2] || !axes[3]) {
           // Sticks are not being touched.
-          // this.cube.rotateZ(0.3);
         } else {
           //this.debugMaterial.color = new THREE.Color('orange');
           this
@@ -103,13 +135,13 @@ export class Hand extends THREE.Object3D {
   }
 
   public setCube(o: THREE.Object3D) {
-    this.remove(this.cube);
+    this.universeGroup.remove(this.cube);
     this.cube = o;
-    this.add(this.cube);
+    this.universeGroup.add(this.cube);
   }
 
-  private posToKey(p) {
-    return p.x.toString() + ',' + p.y.toString() + ',' + p.z.toString();
+  private posToKey(p: THREE.Vector3): string {
+    return `${p.x.toFixed(2)},${p.y.toFixed(2)},${p.z.toFixed(2)}`;
   }
 
   private async initialize() {
@@ -118,27 +150,14 @@ export class Hand extends THREE.Object3D {
       const p = this.cube.position;
       const key = this.posToKey(p);
       AllObjects[key]
-      const scene = this.grip.parent;
-      scene.remove(AllObjects[key]);
+      this.universeGroup.remove(AllObjects[key]);
       AllObjects.delete(key);
     });
 
     this.grip.addEventListener('selectstart', () => {
       const o = this.cube.clone();
-      let p = o.position;
-      const r = o.rotation;
-      this.grip.getWorldPosition(p);
-      p = p.sub(this.universeGroup.position);
-      p.x = Math.round(p.x * 10) / 10;
-      p.y = Math.round(p.y * 10) / 10;
-      p.z = Math.round(p.z * 10) / 10;
-      const scaleFactor = Math.PI / 2
-      r.x = Math.round(r.x / scaleFactor) * scaleFactor;
-      r.y = Math.round(r.y / scaleFactor) * scaleFactor;
-      r.z = Math.round(r.z / scaleFactor) * scaleFactor;
-      const scene = this.grip.parent;
       this.universeGroup.add(o);
-      const key = this.posToKey(p);
+      const key = this.posToKey(o.position);
       AllObjects.set(key, o);
     });
 
@@ -176,11 +195,11 @@ export class BlockBuild {
       if (!m) {
         continue;
       }
-      m.scale.set(0.1, 0.1, 0.1);
+      m.scale.set(1, 1, 1);
       this.allModels.push(m);
       //this.scene.add(m);
       this.universeGroup.add(m);
-      m.position.set(this.allModels.length * 0.14, 0, -3);
+      m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
       console.log(`Added ${modelName}`);
     }
   }
