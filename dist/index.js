@@ -145,9 +145,10 @@ class Hand extends THREE.Object3D {
         });
         this.grip.addEventListener('selectstart', () => {
             const o = this.cube.clone();
-            const p = o.position;
+            let p = o.position;
             const r = o.rotation;
             this.grip.getWorldPosition(p);
+            p = p.sub(this.universeGroup.position);
             p.x = Math.round(p.x * 10) / 10;
             p.y = Math.round(p.y * 10) / 10;
             p.z = Math.round(p.z * 10) / 10;
@@ -213,7 +214,7 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.universeGroup = new THREE.Group();
         this.scene.add(this.universeGroup);
-        this.scene.background = new THREE.Color(0x550055);
+        this.scene.background = new THREE.Color(0x005555);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
