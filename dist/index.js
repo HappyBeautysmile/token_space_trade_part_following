@@ -58,18 +58,21 @@ class Hand extends THREE.Object3D {
     xr;
     cube;
     universeGroup;
-    debug;
-    debugMaterial;
-    constructor(grip, initialObject, index, xr, universeGroup) {
+    leftHand;
+    // private debug: THREE.Object3D;
+    // private debugMaterial: THREE.MeshStandardMaterial;
+    constructor(grip, initialObject, index, xr, universeGroup, leftHand) {
         super();
         this.grip = grip;
         this.index = index;
         this.xr = xr;
         this.universeGroup = universeGroup;
-        this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
-        this.debug = new THREE.Mesh(new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
-        this.debug.position.set(0, 0, -1);
-        this.add(this.debug);
+        this.leftHand = leftHand;
+        // this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+        // this.debug = new THREE.Mesh(
+        //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
+        // this.debug.position.set(0, 0, -1);
+        // this.add(this.debug);
         grip.add(this);
         this.cube = initialObject;
         this.add(this.cube);
@@ -86,33 +89,38 @@ class Hand extends THREE.Object3D {
         this.initialize();
     }
     tick(t) {
-        this.debug.rotateZ(0.5 * t.deltaS);
+        //this.debug.rotateZ(0.5 * t.deltaS);
         let source = null;
         const session = this.xr.getSession();
         if (session) {
-            this.debugMaterial.color = new THREE.Color('red');
+            //this.debugMaterial.color = new THREE.Color('red');
             if (session.inputSources) {
-                this.debugMaterial.color = new THREE.Color('brown');
+                //this.debugMaterial.color = new THREE.Color('brown');
                 source = session.inputSources[this.index];
             }
         }
         if (source) {
-            this.debugMaterial.color = new THREE.Color('blue');
+            //this.debugMaterial.color = new THREE.Color('blue');
             const rate = 3;
             const axes = source.gamepad.axes.slice(0);
             if (axes.length >= 4) {
-                this.debugMaterial.color = new THREE.Color('green');
+                //this.debugMaterial.color = new THREE.Color('green');
                 if (!axes[2] || !axes[3]) {
                     // Sticks are not being touched.
                     // this.cube.rotateZ(0.3);
                 }
                 else {
-                    this.debugMaterial.color = new THREE.Color('orange');
+                    //this.debugMaterial.color = new THREE.Color('orange');
                     this;
                     //this.cube.rotateX(axes[2] * rate * t.deltaS);
                     //this.cube.rotateY(axes[3] * rate * t.deltaS);
-                    this.universeGroup.translateX(axes[2] * rate * t.deltaS);
-                    this.universeGroup.translateZ(axes[3] * rate * t.deltaS);
+                    if (this.leftHand) {
+                        this.universeGroup.translateX(-axes[2] * rate * t.deltaS);
+                        this.universeGroup.translateZ(-axes[3] * rate * t.deltaS);
+                    }
+                    else {
+                        this.universeGroup.translateZ(-axes[2] * rate * t.deltaS);
+                    }
                 }
             }
         }
@@ -205,7 +213,7 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.universeGroup = new THREE.Group();
         this.scene.add(this.universeGroup);
-        //this.scene.background = new THREE.Color(0x11000);
+        this.scene.background = new THREE.Color(0x008800);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
@@ -253,7 +261,7 @@ class BlockBuild {
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             this.allModels[i].position.set(0, 0, 0);
-            new Hand(grip, this.allModels[i], i, this.renderer.xr, this.universeGroup);
+            new Hand(grip, this.allModels[i], i, this.renderer.xr, this.universeGroup, i == 0);
         }
     }
 }
