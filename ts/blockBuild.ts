@@ -95,7 +95,7 @@ export class Hand extends THREE.Object3D {
             this.universeGroup.translateZ(-axes[3] * rate * t.deltaS);
           }
           else {
-            this.universeGroup.translateY(-axes[3] * rate * t.deltaS);
+            this.universeGroup.translateY(axes[3] * rate * t.deltaS);
           }
         }
       }
@@ -136,7 +136,7 @@ export class Hand extends THREE.Object3D {
       r.y = Math.round(r.y / scaleFactor) * scaleFactor;
       r.z = Math.round(r.z / scaleFactor) * scaleFactor;
       const scene = this.grip.parent;
-      scene.add(o);
+      this.universeGroup.add(o);
       const key = this.posToKey(p);
       AllObjects.set(key, o);
     });
@@ -202,7 +202,7 @@ export class BlockBuild {
     this.universeGroup = new THREE.Group();
     this.scene.add(this.universeGroup);
 
-    this.scene.background = new THREE.Color(0x000055);
+    this.scene.background = new THREE.Color(0x550055);
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 1000);
     this.camera.position.set(0, 1.7, 0);
@@ -244,17 +244,17 @@ export class BlockBuild {
   }
 
   getGrips() {
-    const debugMaterial = new THREE.MeshStandardMaterial({ color: '#0f0' });
-    const debug = new THREE.Mesh(new THREE.OctahedronBufferGeometry(0.2),
-      debugMaterial);
-    debug.position.set(0, 0.5, -2);
-    this.scene.add(debug);
+    //const debugMaterial = new THREE.MeshStandardMaterial({ color: '#0f0' });
+    //const debug = new THREE.Mesh(new THREE.OctahedronBufferGeometry(0.2),
+    //  debugMaterial);
+    //debug.position.set(0, 0.5, -2);
+    //this.scene.add(debug);
 
     for (const i of [0, 1]) {
       const grip = this.renderer.xr.getControllerGrip(i);
       this.scene.add(grip);
       if (grip.userData['inputSource']) {
-        debugMaterial.color = new THREE.Color('#0ff');
+        //debugMaterial.color = new THREE.Color('#0ff');
       }
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
