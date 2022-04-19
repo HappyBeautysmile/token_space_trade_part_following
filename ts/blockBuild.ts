@@ -84,7 +84,7 @@ export class Hand extends THREE.Object3D {
     // `directionWorld` is a unit vector pointing from the chest toward the grip.
     this.directionWorld.copy(this.gripWorld);
     this.directionWorld.sub(this.chestWorld);
-    this.directionWorld.normalize();
+    //this.directionWorld.normalize();
 
     this.cube.position.copy(this.directionWorld);
     this.cube.position.multiplyScalar(5);
@@ -229,7 +229,7 @@ export class BlockBuild {
     this.universeGroup = new THREE.Group();
     this.scene.add(this.universeGroup);
 
-    this.scene.background = new THREE.Color(0x550055);
+    this.scene.background = new THREE.Color(0x550000);
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 1000);
     this.camera.position.set(0, 1.7, 0);
