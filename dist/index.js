@@ -156,7 +156,7 @@ class Hand extends THREE.Object3D {
                     }
                     else {
                         this.universeGroup.translateY(axes[3] * rate * t.deltaS);
-                        this.camera.rotateY(axes[2] * rate * t.deltaS);
+                        this.universeGroup.rotateY(axes[2] * rate * t.deltaS);
                     }
                 }
             }
@@ -242,7 +242,7 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.universeGroup = new THREE.Group();
         this.scene.add(this.universeGroup);
-        this.scene.background = new THREE.Color(0x550);
+        this.scene.background = new THREE.Color(0x005500);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
