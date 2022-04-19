@@ -33,7 +33,7 @@ export class Hand extends THREE.Object3D {
 
   constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
     private index: number, private xr: THREE.WebXRManager,
-    private universeGroup: THREE.Group, private leftHand: boolean) {
+    private universeGroup: THREE.Group, private leftHand: boolean, private camera: THREE.Camera) {
     super();
     // this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
     // this.debug = new THREE.Mesh(
@@ -94,7 +94,7 @@ export class Hand extends THREE.Object3D {
     // p.y = Math.round(p.y);
     // p.z = Math.round(p.z);
 
-    // this.cube.rotation.copy(this.grip.rotation);
+    this.cube.rotation.copy(this.grip.rotation);
     // this.quantizeRotation(this.cube.rotation, 0.5);
   }
 
@@ -129,6 +129,7 @@ export class Hand extends THREE.Object3D {
           }
           else {
             this.universeGroup.translateY(axes[3] * rate * t.deltaS);
+            this.camera.rotateY(axes[2] * rate * t.deltaS)
           }
         }
       }
@@ -229,7 +230,7 @@ export class BlockBuild {
     this.universeGroup = new THREE.Group();
     this.scene.add(this.universeGroup);
 
-    this.scene.background = new THREE.Color(0x550000);
+    this.scene.background = new THREE.Color(0x550);
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 1000);
     this.camera.position.set(0, 1.7, 0);
@@ -286,7 +287,7 @@ export class BlockBuild {
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       this.allModels[i].position.set(0, 0, 0);
-      new Hand(grip, this.allModels[i], i, this.renderer.xr, this.universeGroup, i == 0);
+      new Hand(grip, this.allModels[i], i, this.renderer.xr, this.universeGroup, i == 0, this.camera);
     }
   }
 }

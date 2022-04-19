@@ -58,16 +58,18 @@ class Hand extends THREE.Object3D {
     xr;
     universeGroup;
     leftHand;
+    camera;
     cube;
     // private debug: THREE.Object3D;
     // private debugMaterial: THREE.MeshStandardMaterial;
-    constructor(grip, initialObject, index, xr, universeGroup, leftHand) {
+    constructor(grip, initialObject, index, xr, universeGroup, leftHand, camera) {
         super();
         this.grip = grip;
         this.index = index;
         this.xr = xr;
         this.universeGroup = universeGroup;
         this.leftHand = leftHand;
+        this.camera = camera;
         // this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         // this.debug = new THREE.Mesh(
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
@@ -120,7 +122,7 @@ class Hand extends THREE.Object3D {
         // p.x = Math.round(p.x);
         // p.y = Math.round(p.y);
         // p.z = Math.round(p.z);
-        // this.cube.rotation.copy(this.grip.rotation);
+        this.cube.rotation.copy(this.grip.rotation);
         // this.quantizeRotation(this.cube.rotation, 0.5);
     }
     tick(t) {
@@ -154,6 +156,7 @@ class Hand extends THREE.Object3D {
                     }
                     else {
                         this.universeGroup.translateY(axes[3] * rate * t.deltaS);
+                        this.camera.rotateY(axes[2] * rate * t.deltaS);
                     }
                 }
             }
@@ -239,7 +242,7 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.universeGroup = new THREE.Group();
         this.scene.add(this.universeGroup);
-        this.scene.background = new THREE.Color(0x550000);
+        this.scene.background = new THREE.Color(0x550);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
@@ -288,7 +291,7 @@ class BlockBuild {
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             this.allModels[i].position.set(0, 0, 0);
-            new Hand(grip, this.allModels[i], i, this.renderer.xr, this.universeGroup, i == 0);
+            new Hand(grip, this.allModels[i], i, this.renderer.xr, this.universeGroup, i == 0, this.camera);
         }
     }
 }
