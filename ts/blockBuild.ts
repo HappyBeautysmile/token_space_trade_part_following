@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshStandardMaterial, Object3D } from "three";
@@ -151,6 +151,8 @@ export class BlockBuild {
   }
 
   private allModels: THREE.Object3D[] = [];
+  private playerGroup: THREE.Group;
+  private universeGroup: THREE.Group;
 
   private async loadAllModels() {
     const models = ['cube', 'wedge', 'chopped corner', 'corner', 'cube-basic', 'cube-gem',
@@ -164,7 +166,8 @@ export class BlockBuild {
       }
       m.scale.set(0.1, 0.1, 0.1);
       this.allModels.push(m);
-      this.scene.add(m);
+      //this.scene.add(m);
+      this.universeGroup.add(m);
       m.position.set(this.allModels.length * 0.14, 0, -3);
       console.log(`Added ${modelName}`);
     }
@@ -183,7 +186,12 @@ export class BlockBuild {
     document.body.innerHTML = "";
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x11000);
+    this.playerGroup = new THREE.Group();
+    this.scene.add(this.playerGroup);
+    this.universeGroup = new THREE.Group();
+    this.scene.add(this.universeGroup);
+
+    //this.scene.background = new THREE.Color(0x11000);
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 1000);
     this.camera.position.set(0, 1.7, 0);
@@ -200,9 +208,9 @@ export class BlockBuild {
     directionalLight.position.set(2, 40, 10);
     this.scene.add(directionalLight);
 
-    const controls = new OrbitControls(this.camera, this.renderer.domElement);
-    controls.target.set(0, 0, -5);
-    controls.update();
+    // const controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // controls.target.set(0, 0, -5);
+    // controls.update();
 
     // const tetra = new THREE.Mesh(
     //   new THREE.TetrahedronBufferGeometry(0.5),
