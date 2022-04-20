@@ -3,6 +3,7 @@ const HtmlWebPackPlugin = require("html-webpack-plugin");
 module.exports = {
   entry: {
     index: "./src/index.js",
+    colorTest: "./src/colorTest.js",
   },
   output: {
     path: __dirname + "/dist",
@@ -17,6 +18,12 @@ module.exports = {
       template: "./src/index.html",
       filename: "index.html",
       chunks: ['index']
+    }),
+    new HtmlWebPackPlugin({
+      name: "colorTest",
+      template: "./src/colorTest.html",
+      filename: "colorTest.html",
+      chunks: ['colorTest']
     }),
   ],
   devtool: "source-map",
