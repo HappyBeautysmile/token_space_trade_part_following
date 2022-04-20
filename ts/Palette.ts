@@ -14,9 +14,46 @@ class Palette {
     public magentaish: THREE.Color;
 
     constructor() {
-        this.primary = new THREE.Color(0xb3d6c6);
-        this.secondary = new THREE.Color(0xdceab2);
-        this.accent = new THREE.Color(0x75b9be);
+        this.primary = new THREE.Color(Math.random(), Math.random(), Math.random());
+        // make a similar color for the secondary
+        let hsl = { h: 0, s: 0, l: 0 }
+        this.primary.getHSL(hsl);
+        hsl.h += Math.random() * .2 - 0.1;
+        if (hsl.h > 1) {
+            hsl.h -= 1;
+        }
+        if (hsl.h < 0) {
+            hsl.h += 1;
+        }
+        hsl.s += Math.random() * .2 - 0.1;
+        hsl.s = Math.max(0, hsl.s);
+        hsl.s = Math.min(1, hsl.s);
+        hsl.l += Math.random() * .2 - 0.1;
+        hsl.l = Math.max(0, hsl.l);
+        hsl.l = Math.min(1, hsl.l);
+        this.secondary = new THREE.Color();
+        this.secondary.setHSL(hsl.h, hsl.s, hsl.l);
+
+        // make a saturated analogus color for the accent.
+        this.primary.getHSL(hsl);
+        hsl.h += Math.random() * .1 - 0.333;
+        if (hsl.h > 1) {
+            hsl.h -= 1;
+        }
+        if (hsl.h < 0) {
+            hsl.h += 1;
+        }
+        //hsl.s = Math.random() * .2 + 0.8;
+        //hsl.l = Math.random() * .2 + 0.8;
+        hsl.s = 1.0;
+        hsl.l = 0.5;
+
+        this.accent = new THREE.Color();
+        this.accent.setHSL(hsl.h, hsl.s, hsl.l);
+
+        // this.primary = new THREE.Color(0xb3d6c6);
+        // this.secondary = new THREE.Color(0xdceab2);
+        // this.accent = new THREE.Color(0x75b9be);
 
         let maxR = Math.max(this.primary.r, this.secondary.r, this.accent.r,);
         let maxG = Math.max(this.primary.g, this.secondary.g, this.accent.g,);
@@ -31,7 +68,22 @@ class Palette {
         this.yellowish = new THREE.Color(maxR, maxG, minB);
         this.greenish = new THREE.Color(minR, maxG, minB);
         this.blueish = new THREE.Color(minR, minG, maxB);
-        this.magentaish = new THREE.Color(minR, maxG, maxB);
+        this.magentaish = new THREE.Color(maxR, minG, maxB);
+    }
+
+    public asArray() {
+        return [
+            this.primary,
+            this.secondary,
+            this.accent,
+            this.whiteish,
+            this.blackish,
+            this.redish,
+            this.yellowish,
+            this.greenish,
+            this.blueish,
+            this.magentaish
+        ];
     }
 }
 
@@ -42,6 +94,8 @@ export class PaletteTest {
     private renderer: THREE.WebGLRenderer;
     constructor() {
         this.testPalette = new Palette();
+
+        let colors = this.testPalette.asArray();
 
         document.body.innerHTML = "";
 
@@ -63,47 +117,19 @@ export class PaletteTest {
         directionalLight.position.set(2, 40, 10);
         this.scene.add(directionalLight);
 
-        const primaryCube = (new THREE.Mesh(
-            new THREE.BoxGeometry(5, 5, 1),
-            new THREE.MeshStandardMaterial({ color: this.testPalette.primary })
-        ));
-        primaryCube.position.set(0, 1.7, -10);
-        this.scene.add(primaryCube);
-
-        const secondaryCube = (new THREE.Mesh(
-            new THREE.BoxGeometry(0.5, 0.5, 0.5),
-            new THREE.MeshStandardMaterial({ color: this.testPalette.secondary })
-        ));
-        secondaryCube.position.set(-1, 1.7, -5);
-        this.scene.add(secondaryCube);
-
-        const accent = (new THREE.Mesh(
-            new THREE.BoxGeometry(0.3, 0.3, 0.3),
-            new THREE.MeshStandardMaterial({ color: this.testPalette.accent })
-        ));
-        accent.position.set(1, 1.7, -5);
-        this.scene.add(accent);
-
-        const redish = (new THREE.Mesh(
-            new THREE.BoxGeometry(0.2, 0.2, 0.2),
-            new THREE.MeshStandardMaterial({ color: this.testPalette.redish })
-        ));
-        redish.position.set(-1, 1, -5);
-        this.scene.add(redish);
-
-        const blackish = (new THREE.Mesh(
-            new THREE.BoxGeometry(0.2, 0.2, 0.2),
-            new THREE.MeshStandardMaterial({ color: this.testPalette.blackish })
-        ));
-        blackish.position.set(0, 1, -5);
-        this.scene.add(blackish);
-
-        const whiteish = (new THREE.Mesh(
-            new THREE.BoxGeometry(0.2, 0.2, 0.2),
-            new THREE.MeshStandardMaterial({ color: this.testPalette.whiteish })
-        ));
-        whiteish.position.set(1, 1, -5);
-        this.scene.add(whiteish);
+        for (let i = 0; i < colors.length; i++) {
+            const primaryCube = (new THREE.Mesh(
+                new THREE.BoxGeometry(1.5, 1.5, 1.5),
+                new THREE.MeshStandardMaterial({ color: colors[i] })
+            ));
+            primaryCube.position.set((i % 4) * 2 - 4, Math.floor(i / 4) * 2, -10);
+            primaryCube.onBeforeRender = () => {
+                primaryCube.rotateX(0.01);
+                primaryCube.rotateY(0.0231);
+                primaryCube.rotateZ(0.00512);
+            };
+            this.scene.add(primaryCube);
+        }
 
         // const tetra = new THREE.Mesh(
         //     new THREE.TetrahedronBufferGeometry(0.5),
