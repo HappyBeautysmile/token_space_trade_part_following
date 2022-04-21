@@ -8,19 +8,19 @@ export class Hand extends THREE.Object3D {
 
   private cube: THREE.Object3D;
 
-  // private debug: THREE.Object3D;
-  // private debugMaterial: THREE.MeshStandardMaterial;
+  private debug: THREE.Object3D;
+  private debugMaterial: THREE.MeshStandardMaterial;
 
   constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private leftHand: boolean) {
     super();
-    // this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
-    // this.debug = new THREE.Mesh(
-    //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
-    // this.debug.position.set(0, 0, -1);
-    // this.add(this.debug);
+    this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+    this.debug = new THREE.Mesh(
+      new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
+    this.debug.position.set(0, 0, -1);
+    this.add(this.debug);
 
     grip.add(this);
     this.cube = initialObject;
@@ -107,12 +107,25 @@ export class Hand extends THREE.Object3D {
             this.place.movePlayerRelativeToCamera(this.v);
           }
           else {
-            this.v.set(0, axes[3], 0);
+            this.v.set(0, -axes[3], 0);
             this.v.multiplyScalar(rate * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
             // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
           }
         }
+      }
+      const buttons = source.gamepad.buttons.map((b) => b.value);
+      if (buttons[0] === 1) {
+        this.debugMaterial.color = new THREE.Color('brown');
+      }
+      if (buttons[1] === 1) {
+        this.debugMaterial.color = new THREE.Color('red');
+      }
+      if (buttons[2] === 1) {
+        this.debugMaterial.color = new THREE.Color('orange');
+      }
+      if (buttons[3] === 1) {
+        this.debugMaterial.color = new THREE.Color('yellow');
       }
     }
   }
