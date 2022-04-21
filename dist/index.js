@@ -259,13 +259,15 @@ class Hand extends THREE.Object3D {
     directionPlayer = new THREE.Vector3();
     setCubePosition() {
         // The center of the chest is 50cm below the camera.
-        this.chestPlayer.copy(this.place.camera.position);
+        this.place.camera.localToWorld(this.chestPlayer);
         this.chestPlayer.y -= 0.5;
-        this.directionPlayer.copy(this.grip.position);
+        let gripWorldPos = new THREE.Vector3();
+        this.grip.localToWorld(gripWorldPos);
+        this.directionPlayer.copy(gripWorldPos);
         this.directionPlayer.sub(this.chestPlayer);
         this.cube.position.copy(this.directionPlayer);
         this.cube.position.multiplyScalar(5);
-        this.cube.position.add(this.grip.position);
+        this.cube.position.add(gripWorldPos);
         //this.place.playerToUniverse(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
