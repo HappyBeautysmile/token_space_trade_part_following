@@ -234,7 +234,7 @@ class Debug extends THREE.Object3D {
             Debug.messages.shift();
         }
         let y = textHeight;
-        ctx.font = `${textHeight}px`;
+        ctx.font = `${textHeight}px monospace`;
         ctx.fillStyle = 'lime';
         ctx.strokeStyle = 'white';
         for (const m of Debug.messages) {

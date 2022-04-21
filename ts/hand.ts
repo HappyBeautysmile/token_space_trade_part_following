@@ -24,7 +24,7 @@ export class Hand extends THREE.Object3D {
 
     grip.add(this);
     this.cube = initialObject;
-    this.place.universeGroup.add(this.cube);
+    this.place.playerGroup.add(this.cube);
 
     // const cube = new THREE.Mesh(
     //   new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
@@ -143,20 +143,22 @@ export class Hand extends THREE.Object3D {
   }
 
   public setCube(o: THREE.Object3D) {
-    this.place.universeGroup.remove(this.cube);
+    this.place.playerGroup.remove(this.cube);
     this.cube = o;
-    this.place.universeGroup.add(this.cube);
+    this.place.playerGroup.add(this.cube);
   }
 
   private posToKey(p: THREE.Vector3): string {
     return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
   }
 
+  private p = new THREE.Vector3();
   private async initialize() {
     this.grip.addEventListener('squeeze', () => {
-      const p = this.cube.position;
-      this.quantizePosition(p);
-      const key = this.posToKey(p);
+      this.p.copy(this.cube.position);
+      this.place.playerToUniverse(this.p);
+      this.quantizePosition(this.p);
+      const key = this.posToKey(this.p);
       if (Hand.AllObjects.has(key)) {
         this.place.universeGroup.remove(Hand.AllObjects.get(key));
         Hand.AllObjects.delete(key);  // TODO: it seems this isn't working.  If you put two objects in the same place you can't delete by squeezing twice.
@@ -167,6 +169,7 @@ export class Hand extends THREE.Object3D {
       const o = this.cube.clone();
 
       const p = o.position;
+      this.place.playerToUniverse(p);
       this.quantizePosition(p);
       this.quantizeRotation(o.rotation);
       this.place.universeGroup.add(o);

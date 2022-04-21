@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Debug } from "./debug";
 
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
@@ -20,10 +21,12 @@ export class Place {
     this.p.copy(motion);
     this.p.applyMatrix3(this.cameraNormalMatrix);
     this.playerGroup.position.add(this.p);
+
+    Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
   }
 
   public rotatePlayerRelativeToWorldY(rotation: number) {
-
+    this.playerGroup.rotation.y += rotation;
   }
 
   // Converts a posiiton in the player space to universe space.

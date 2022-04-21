@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { Tick, Ticker } from "./tick";
 import { Hand } from "./hand";
 import { Place } from "./place";
+import { Debug } from "./debug";
 
 class ModelLoader {
   static async loadModel(filename: string): Promise<THREE.Object3D> {
@@ -106,7 +107,7 @@ export class BlockBuild {
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
 
-    this.scene.background = new THREE.Color(0x000055);
+    this.scene.background = new THREE.Color(0x552200);
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 1000);
     this.camera.position.set(0, 1.7, 0);
@@ -125,6 +126,12 @@ export class BlockBuild {
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(2, 40, 10);
     this.scene.add(directionalLight);
+
+    const debugPanel = new Debug();
+    debugPanel.position.set(0, 0, -3);
+    this.universeGroup.add(debugPanel);
+    Debug.log('Hello, world!');
+    Debug.log('Another message.');
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
