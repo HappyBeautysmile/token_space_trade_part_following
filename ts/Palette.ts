@@ -14,7 +14,9 @@ class Palette {
     public magentaish: THREE.Color;
 
     constructor() {
-        this.primary = new THREE.Color(Math.random(), Math.random(), Math.random());
+        this.primary = new THREE.Color();
+
+        this.primary.setHSL(Math.random() * 0.8 + 0.2, Math.random() * 0.8 + 0.2 * .5, Math.random() * 0.8 + 0.2);
         // make a similar color for the secondary
         let hsl = { h: 0, s: 0, l: 0 }
         this.primary.getHSL(hsl);
@@ -25,10 +27,10 @@ class Palette {
         if (hsl.h < 0) {
             hsl.h += 1;
         }
-        hsl.s += Math.random() * .2 - 0.1;
+        hsl.s += Math.random() * .3 - 0.15;
         hsl.s = Math.max(0, hsl.s);
         hsl.s = Math.min(1, hsl.s);
-        hsl.l += Math.random() * .2 - 0.1;
+        hsl.l += Math.random() * .3 - 0.15;
         hsl.l = Math.max(0, hsl.l);
         hsl.l = Math.min(1, hsl.l);
         this.secondary = new THREE.Color();
@@ -36,7 +38,13 @@ class Palette {
 
         // make a saturated analogus color for the accent.
         this.primary.getHSL(hsl);
-        hsl.h += Math.random() * .1 - 0.333;
+        if (Math.random() > 0.5) {
+            hsl.h += Math.random() * .1 - 0.333;
+        }
+        else {
+            hsl.h += Math.random() * .1 + 0.333;
+        }
+
         if (hsl.h > 1) {
             hsl.h -= 1;
         }
@@ -118,11 +126,25 @@ export class PaletteTest {
         this.scene.add(directionalLight);
 
         for (let i = 0; i < colors.length; i++) {
+            let size = 1;
+            if (i < 2) {
+                size = 3 - i;
+            }
+
+            let cubeMat = new THREE.MeshPhysicalMaterial({
+                clearcoat: 1.0,
+                sheen: 0.5,
+                metalness: 0.9,
+                roughness: 0.5,
+                color: colors[i]
+            });
+
             const primaryCube = (new THREE.Mesh(
-                new THREE.BoxGeometry(1.5, 1.5, 1.5),
-                new THREE.MeshStandardMaterial({ color: colors[i] })
+                //new THREE.BoxGeometry(size, size, size),
+                new THREE.SphereGeometry(size, 3, 3),
+                cubeMat
             ));
-            primaryCube.position.set((i % 4) * 2 - 4, Math.floor(i / 4) * 2, -10);
+            primaryCube.position.set((i % 5) * 2 - 3, Math.floor(i / 5) * 2, -10);
             primaryCube.onBeforeRender = () => {
                 primaryCube.rotateX(0.01);
                 primaryCube.rotateY(0.0231);

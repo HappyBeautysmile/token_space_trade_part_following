@@ -93,15 +93,13 @@ export class Hand extends THREE.Object3D {
         } else {
           //this.debugMaterial.color = new THREE.Color('orange');
           this
-          //this.cube.rotateX(axes[2] * rate * t.deltaS);
-          //this.cube.rotateY(axes[3] * rate * t.deltaS);
           if (this.leftHand) {
-            this.v.set(axes[2], axes[3], 0);
+            this.v.set(axes[2], 0, axes[3]);
             this.v.multiplyScalar(rate * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
           }
           else {
-            this.v.set(0, 0, axes[3]);
+            this.v.set(0, axes[3], 0);
             this.v.multiplyScalar(rate * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
             // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
