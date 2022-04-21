@@ -251,6 +251,11 @@ class Hand extends THREE.Object3D {
         v.y = q * Math.round(v.y / q);
         v.z = q * Math.round(v.z / q);
     }
+    quantizePosition(p) {
+        p.x = Math.round(p.x);
+        p.y = Math.round(p.y);
+        p.z = Math.round(p.z);
+    }
     // We create these private temporary variables here so we aren't
     // creating new objects on every frame.  This reduces the amount of
     // garbage collection.  Ideally we'd do this for other things in
@@ -259,16 +264,15 @@ class Hand extends THREE.Object3D {
     directionPlayer = new THREE.Vector3();
     setCubePosition() {
         // The center of the chest is 50cm below the camera.
-        this.place.camera.localToWorld(this.chestPlayer);
+        this.chestPlayer.copy(this.place.camera.position);
         this.chestPlayer.y -= 0.5;
-        let gripWorldPos = new THREE.Vector3();
-        this.grip.localToWorld(gripWorldPos);
-        this.directionPlayer.copy(gripWorldPos);
+        this.directionPlayer.copy(this.grip.position);
         this.directionPlayer.sub(this.chestPlayer);
         this.cube.position.copy(this.directionPlayer);
-        this.cube.position.multiplyScalar(5);
-        this.cube.position.add(gripWorldPos);
+        this.cube.position.multiplyScalar(10);
+        this.cube.position.add(this.grip.position);
         //this.place.playerToUniverse(this.cube.position);
+        //this.place.worldToUniverse(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
     v = new THREE.Vector3();
@@ -316,11 +320,12 @@ class Hand extends THREE.Object3D {
         this.place.universeGroup.add(this.cube);
     }
     posToKey(p) {
-        return `${p.x.toFixed(2)},${p.y.toFixed(2)},${p.z.toFixed(2)}`;
+        return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
     async initialize() {
         this.grip.addEventListener('squeeze', () => {
             const p = this.cube.position;
+            this.quantizePosition(p);
             const key = this.posToKey(p);
             if (Hand.AllObjects.has(key)) {
                 this.place.universeGroup.remove(Hand.AllObjects.get(key));
@@ -330,9 +335,7 @@ class Hand extends THREE.Object3D {
         this.grip.addEventListener('selectstart', () => {
             const o = this.cube.clone();
             const p = o.position;
-            p.x = Math.round(p.x);
-            p.y = Math.round(p.y);
-            p.z = Math.round(p.z);
+            this.quantizePosition(p);
             this.quantizeRotation(o.rotation);
             this.place.universeGroup.add(o);
             const key = this.posToKey(o.position);
