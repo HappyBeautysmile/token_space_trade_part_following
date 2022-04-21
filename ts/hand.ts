@@ -116,16 +116,28 @@ export class Hand extends THREE.Object3D {
       }
       const buttons = source.gamepad.buttons.map((b) => b.value);
       if (buttons[0] === 1) {
-        this.debugMaterial.color = new THREE.Color('brown');
-      }
-      if (buttons[1] === 1) {
         this.debugMaterial.color = new THREE.Color('red');
       }
+      if (buttons[1] === 1) {
+        this.debugMaterial.color = new THREE.Color('yellow');
+      }
       if (buttons[2] === 1) {
-        this.debugMaterial.color = new THREE.Color('orange');
+        this.debugMaterial.color = new THREE.Color('green');
       }
       if (buttons[3] === 1) {
-        this.debugMaterial.color = new THREE.Color('yellow');
+        this.debugMaterial.color = new THREE.Color('blue');
+      }
+      if (buttons[4] === 1) {
+        this.debugMaterial.color = new THREE.Color('purple');
+      }
+      if (buttons[5] === 1) {
+        this.debugMaterial.color = new THREE.Color('black');
+      }
+      if (buttons[6] === 1) {
+        this.debugMaterial.color = new THREE.Color('white');
+      }
+      if (buttons[7] === 1) {
+        this.debugMaterial.color = new THREE.Color('gray');
       }
     }
   }
@@ -147,7 +159,7 @@ export class Hand extends THREE.Object3D {
       const key = this.posToKey(p);
       if (Hand.AllObjects.has(key)) {
         this.place.universeGroup.remove(Hand.AllObjects.get(key));
-        Hand.AllObjects.delete(key);
+        Hand.AllObjects.delete(key);  // TODO: it seems this isn't working.  If you put two objects in the same place you can't delete by squeezing twice.
       }
     });
 
