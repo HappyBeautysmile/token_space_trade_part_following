@@ -31,4 +31,7 @@ export class Place {
     this.playerGroup.localToWorld(v);
     this.universeGroup.worldToLocal(v);
   }
+  public worldToUniverse(v: THREE.Vector3) {
+    this.universeGroup.worldToLocal(v);
+  }
 }

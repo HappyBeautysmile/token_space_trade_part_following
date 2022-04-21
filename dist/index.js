@@ -407,6 +407,9 @@ class Place {
         this.playerGroup.localToWorld(v);
         this.universeGroup.worldToLocal(v);
     }
+    worldToUniverse(v) {
+        this.universeGroup.worldToLocal(v);
+    }
 }
 exports.Place = Place;
 //# sourceMappingURL=place.js.map
