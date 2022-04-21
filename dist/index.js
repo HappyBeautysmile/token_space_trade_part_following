@@ -88,6 +88,8 @@ class BlockBuild {
             m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
             console.log(`Added ${modelName}`);
         }
+        const m = await ModelLoader.loadModel(`Model/ship.glb`);
+        this.playerGroup.add(m);
     }
     tickEverything(o, tick) {
         if (o['tick']) {
@@ -126,7 +128,7 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
-        this.scene.background = new THREE.Color(0x555500);
+        this.scene.background = new THREE.Color(0x005500);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
