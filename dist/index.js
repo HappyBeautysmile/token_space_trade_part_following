@@ -126,7 +126,7 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
-        this.scene.background = new THREE.Color(0x550000);
+        this.scene.background = new THREE.Color(0x555500);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
@@ -266,7 +266,7 @@ class Hand extends THREE.Object3D {
         this.cube.position.copy(this.directionPlayer);
         this.cube.position.multiplyScalar(5);
         this.cube.position.add(this.grip.position);
-        this.place.playerToUniverse(this.cube.position);
+        //this.place.playerToUniverse(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
     v = new THREE.Vector3();
