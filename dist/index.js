@@ -130,7 +130,7 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
-        this.scene.background = new THREE.Color(0x005500);
+        this.scene.background = new THREE.Color(0x000055);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
