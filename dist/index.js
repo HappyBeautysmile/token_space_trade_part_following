@@ -89,6 +89,8 @@ class BlockBuild {
             console.log(`Added ${modelName}`);
         }
         const m = await ModelLoader.loadModel(`Model/ship.glb`);
+        m.position.y -= 0.5;
+        m.rotateY(Math.PI);
         this.playerGroup.add(m);
     }
     tickEverything(o, tick) {
