@@ -34,6 +34,7 @@ const GLTFLoader_js_1 = __webpack_require__(687);
 const tick_1 = __webpack_require__(544);
 const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
+const debug_1 = __webpack_require__(756);
 class ModelLoader {
     static async loadModel(filename) {
         const loader = new GLTFLoader_js_1.GLTFLoader();
@@ -142,6 +143,11 @@ class BlockBuild {
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(2, 40, 10);
         this.scene.add(directionalLight);
+        const debugPanel = new debug_1.Debug();
+        debugPanel.position.set(0, 0, -3);
+        this.universeGroup.add(debugPanel);
+        debug_1.Debug.log('Hello, world!');
+        debug_1.Debug.log('Another message.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -174,6 +180,74 @@ class BlockBuild {
 }
 exports.BlockBuild = BlockBuild;
 //# sourceMappingURL=blockBuild.js.map
+
+/***/ }),
+
+/***/ 756:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Debug = void 0;
+const THREE = __importStar(__webpack_require__(578));
+class Debug extends THREE.Object3D {
+    static canvas = document.createElement('canvas');
+    static messages = [];
+    static texture = new THREE.CanvasTexture(Debug.canvas);
+    static material;
+    constructor() {
+        super();
+        Debug.canvas.width = 1024;
+        Debug.canvas.height = 1024;
+        Debug.material = new THREE.MeshBasicMaterial();
+        Debug.material.map = Debug.texture;
+        const panel = new THREE.Mesh(new THREE.PlaneBufferGeometry(), Debug.material);
+        this.add(panel);
+    }
+    static log(message) {
+        const textHeight = 64;
+        console.log(message);
+        const ctx = Debug.canvas.getContext('2d');
+        ctx.fillStyle = 'black';
+        ctx.clearRect(0, 0, Debug.canvas.width, Debug.canvas.height);
+        Debug.messages.push(message);
+        while (Debug.messages.length > Debug.canvas.height / textHeight) {
+            Debug.messages.shift();
+        }
+        let y = textHeight;
+        ctx.font = `${textHeight}px`;
+        ctx.fillStyle = 'lime';
+        ctx.strokeStyle = 'white';
+        for (const m of Debug.messages) {
+            ctx.strokeText(m, 0, y);
+            ctx.fillText(m, 0, y);
+            y += textHeight;
+        }
+        Debug.texture.needsUpdate = true;
+        Debug.material.needsUpdate = true;
+    }
+}
+exports.Debug = Debug;
+//# sourceMappingURL=debug.js.map
 
 /***/ }),
 
@@ -399,6 +473,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Place = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const debug_1 = __webpack_require__(756);
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
 // For now we're implementing it so the player moves through the universe.
@@ -421,8 +496,10 @@ class Place {
         this.p.copy(motion);
         this.p.applyMatrix3(this.cameraNormalMatrix);
         this.playerGroup.position.add(this.p);
+        debug_1.Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
     }
     rotatePlayerRelativeToWorldY(rotation) {
+        this.playerGroup.rotation.y += rotation;
     }
     // Converts a posiiton in the player space to universe space.
     playerToUniverse(v) {
