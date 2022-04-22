@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Place } from "./place";
 import { Tick } from "./tick";
+import { Debug } from "./debug";
 
 export class Hand extends THREE.Object3D {
 
@@ -115,29 +116,22 @@ export class Hand extends THREE.Object3D {
         }
       }
       const buttons = source.gamepad.buttons.map((b) => b.value);
-      if (buttons[0] === 1) {
+      if (buttons[0] === 1) { // trigger
         this.debugMaterial.color = new THREE.Color('red');
       }
-      if (buttons[1] === 1) {
+      if (buttons[1] === 1) { // squeeze
         this.debugMaterial.color = new THREE.Color('yellow');
       }
-      if (buttons[2] === 1) {
-        this.debugMaterial.color = new THREE.Color('green');
-      }
-      if (buttons[3] === 1) {
+      if (buttons[3] === 1) { // stick
         this.debugMaterial.color = new THREE.Color('blue');
       }
-      if (buttons[4] === 1) {
-        this.debugMaterial.color = new THREE.Color('purple');
+      if (buttons[4] === 1) { // A or X
+        Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
+        Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
+        Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
       }
-      if (buttons[5] === 1) {
+      if (buttons[5] === 1) { // B or Y
         this.debugMaterial.color = new THREE.Color('black');
-      }
-      if (buttons[6] === 1) {
-        this.debugMaterial.color = new THREE.Color('white');
-      }
-      if (buttons[7] === 1) {
-        this.debugMaterial.color = new THREE.Color('gray');
       }
     }
   }

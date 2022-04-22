@@ -157,7 +157,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('added sky sphere.');
+        debug_1.Debug.log('A or X button shows debug info.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -230,11 +230,11 @@ class Debug extends THREE.Object3D {
     static material;
     constructor() {
         super();
-        Debug.canvas.width = 1024;
+        Debug.canvas.width = 4096;
         Debug.canvas.height = 1024;
         Debug.material = new THREE.MeshBasicMaterial();
         Debug.material.map = Debug.texture;
-        const panel = new THREE.Mesh(new THREE.PlaneBufferGeometry(), Debug.material);
+        const panel = new THREE.Mesh(new THREE.PlaneBufferGeometry(4, 1), Debug.material);
         this.add(panel);
     }
     static log(message) {
@@ -295,6 +295,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Hand = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const debug_1 = __webpack_require__(756);
 class Hand extends THREE.Object3D {
     grip;
     index;
@@ -400,29 +401,22 @@ class Hand extends THREE.Object3D {
                 }
             }
             const buttons = source.gamepad.buttons.map((b) => b.value);
-            if (buttons[0] === 1) {
+            if (buttons[0] === 1) { // trigger
                 this.debugMaterial.color = new THREE.Color('red');
             }
-            if (buttons[1] === 1) {
+            if (buttons[1] === 1) { // squeeze
                 this.debugMaterial.color = new THREE.Color('yellow');
             }
-            if (buttons[2] === 1) {
-                this.debugMaterial.color = new THREE.Color('green');
-            }
-            if (buttons[3] === 1) {
+            if (buttons[3] === 1) { // stick
                 this.debugMaterial.color = new THREE.Color('blue');
             }
-            if (buttons[4] === 1) {
-                this.debugMaterial.color = new THREE.Color('purple');
+            if (buttons[4] === 1) { // A or X
+                debug_1.Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
+                debug_1.Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
+                debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
             }
-            if (buttons[5] === 1) {
+            if (buttons[5] === 1) { // B or Y
                 this.debugMaterial.color = new THREE.Color('black');
-            }
-            if (buttons[6] === 1) {
-                this.debugMaterial.color = new THREE.Color('white');
-            }
-            if (buttons[7] === 1) {
-                this.debugMaterial.color = new THREE.Color('gray');
             }
         }
     }
@@ -495,7 +489,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Place = void 0;
 const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
 // For now we're implementing it so the player moves through the universe.
@@ -518,7 +511,7 @@ class Place {
         this.p.copy(motion);
         this.p.applyMatrix3(this.cameraNormalMatrix);
         this.playerGroup.position.add(this.p);
-        debug_1.Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
+        //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
     }
     rotatePlayerRelativeToWorldY(rotation) {
         this.playerGroup.rotation.y += rotation;
