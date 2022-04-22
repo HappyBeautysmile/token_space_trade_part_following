@@ -62,8 +62,6 @@ export class BlockBuild {
       console.log(`Added ${modelName}`);
     }
     const m = await ModelLoader.loadModel(`Model/ship.glb`);
-    m.position.y -= 0.5;
-    m.rotateY(Math.PI);
     this.playerGroup.add(m);
   }
 
@@ -107,9 +105,20 @@ export class BlockBuild {
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
 
-    this.scene.background = new THREE.Color(0x552200);
+    //this.scene.background = new THREE.Color(0x552200);
+
+    var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+    var loader = new THREE.TextureLoader()
+    var texture = loader.load("Model/sky.jpg");
+    var material = new THREE.MeshPhongMaterial({
+      map: texture,
+    });
+    var sky = new THREE.Mesh(skyGeo, material);
+    sky.material.side = THREE.BackSide;
+    this.playerGroup.add(sky);
+
     this.camera = new THREE.PerspectiveCamera(75,
-      1.0, 0.1, 1000);
+      1.0, 0.1, 2000);
     this.camera.position.set(0, 1.7, 0);
     this.camera.lookAt(0, 1.7, -1.5);
     this.playerGroup.add(this.camera);
@@ -130,8 +139,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log('Hello, world!');
-    Debug.log('Another message.');
+    Debug.log('added sky sphere.');
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
