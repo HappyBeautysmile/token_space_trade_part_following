@@ -7,12 +7,12 @@ export class Debug extends THREE.Object3D {
   static material: THREE.MeshBasicMaterial;
   constructor() {
     super();
-    Debug.canvas.width = 1024;
+    Debug.canvas.width = 4096;
     Debug.canvas.height = 1024;
     Debug.material = new THREE.MeshBasicMaterial();
     Debug.material.map = Debug.texture;
     const panel = new THREE.Mesh(
-      new THREE.PlaneBufferGeometry(),
+      new THREE.PlaneBufferGeometry(4, 1),
       Debug.material
     );
     this.add(panel);

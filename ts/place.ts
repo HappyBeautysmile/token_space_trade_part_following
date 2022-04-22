@@ -22,7 +22,7 @@ export class Place {
     this.p.applyMatrix3(this.cameraNormalMatrix);
     this.playerGroup.position.add(this.p);
 
-    Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
+    //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
   }
 
   public rotatePlayerRelativeToWorldY(rotation: number) {
