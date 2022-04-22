@@ -61,8 +61,8 @@ export class BlockBuild {
       m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
       console.log(`Added ${modelName}`);
     }
-    const m = await ModelLoader.loadModel(`Model/ship.glb`);
-    this.playerGroup.add(m);
+    // const m = await ModelLoader.loadModel(`Model/ship.glb`);
+    // this.playerGroup.add(m);
   }
 
   private tickEverything(o: THREE.Object3D, tick: Tick) {
@@ -139,7 +139,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log('A or X button shows debug info.');
+    Debug.log('removed ship.');
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

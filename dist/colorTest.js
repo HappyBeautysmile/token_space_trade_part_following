@@ -8,11 +8,7 @@
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -34,16 +30,6 @@ exports.PaletteTest = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const VRButton_js_1 = __webpack_require__(18);
 class Palette {
-    primary;
-    secondary;
-    accent;
-    blackish;
-    whiteish;
-    redish;
-    yellowish;
-    greenish;
-    blueish;
-    magentaish;
     constructor() {
         this.primary = new THREE.Color();
         this.primary.setHSL(Math.random() * 0.8 + 0.2, Math.random() * 0.8 + 0.2 * .5, Math.random() * 0.8 + 0.2);
@@ -118,10 +104,6 @@ class Palette {
     }
 }
 class PaletteTest {
-    testPalette;
-    scene;
-    camera;
-    renderer;
     constructor() {
         this.testPalette = new Palette();
         let colors = this.testPalette.asArray();

@@ -14,6 +14,7 @@ Required packages:
 ```
 npm -D install three
 npm -D install --save-dev @types/three
+npm install webpack
 npm install html-webpack-plugin
 ```
 
