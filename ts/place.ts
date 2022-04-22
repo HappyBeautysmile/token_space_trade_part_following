@@ -20,7 +20,7 @@ export class Place {
 
     this.p.copy(motion);
     this.p.applyMatrix3(this.cameraNormalMatrix);
-    this.playerGroup.position.add(this.p);
+    this.universeGroup.position.sub(this.p);
 
     //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
   }
