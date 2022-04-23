@@ -1,6 +1,6 @@
 
 export class Tick {
-  constructor(readonly deltaS: number) { }
+  constructor(readonly elapsedS: number, readonly deltaS: number) { }
 }
 
 export interface Ticker {

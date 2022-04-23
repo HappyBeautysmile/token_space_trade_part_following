@@ -6,6 +6,7 @@ import { Tick, Ticker } from "./tick";
 import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
+import { InHandObject } from "./inHandObject";
 
 class ModelLoader {
   static async loadModel(filename: string): Promise<THREE.Object3D> {
@@ -146,9 +147,12 @@ export class BlockBuild {
     // controls.update();
 
     const clock = new THREE.Clock();
+    let elapsedS = 0.0;
 
     this.renderer.setAnimationLoop(() => {
-      const tick = new Tick(clock.getDelta());
+      const deltaS = Math.min(clock.getDelta(), 0.1);
+      elapsedS += deltaS;
+      const tick = new Tick(elapsedS, deltaS);
       this.tick(tick);
       this.tickEverything(this.scene, tick);
       this.renderer.render(this.scene, this.camera);

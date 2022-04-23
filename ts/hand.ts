@@ -2,12 +2,14 @@ import * as THREE from "three";
 import { Place } from "./place";
 import { Tick } from "./tick";
 import { Debug } from "./debug";
+import { InHandObject } from "./inHandObject";
 
 export class Hand extends THREE.Object3D {
 
   private static AllObjects = new Map<string, THREE.Object3D>();
 
   private cube: THREE.Object3D;
+  private templateCube: THREE.Object3D;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
@@ -137,8 +139,11 @@ export class Hand extends THREE.Object3D {
   }
 
   public setCube(o: THREE.Object3D) {
-    this.place.playerGroup.remove(this.cube);
-    this.cube = o;
+    if (this.cube) {
+      this.place.playerGroup.remove(this.cube);
+    }
+    this.templateCube = o;
+    this.cube = new InHandObject(o, this.place);
     this.place.playerGroup.add(this.cube);
   }
 
@@ -160,7 +165,7 @@ export class Hand extends THREE.Object3D {
     });
 
     this.grip.addEventListener('selectstart', () => {
-      const o = this.cube.clone();
+      const o = this.templateCube.clone();
 
       const p = o.position;
       this.place.playerToUniverse(p);

@@ -37,4 +37,10 @@ export class Place {
   public worldToUniverse(v: THREE.Vector3) {
     this.universeGroup.worldToLocal(v);
   }
+
+  public snapToGrid(v: THREE.Vector3) {
+    v.x = Math.round(v.x);
+    v.y = Math.round(v.y);
+    v.z = Math.round(v.z);
+  }
 }
