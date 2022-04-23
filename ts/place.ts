@@ -13,6 +13,7 @@ export class Place {
 
   private p = new THREE.Vector3();
   private cameraNormalMatrix = new THREE.Matrix3();
+  private velocity = new THREE.Vector3();
 
   // Moves the player relative to the camera's orientation.
   public movePlayerRelativeToCamera(motion: THREE.Vector3) {
@@ -20,8 +21,12 @@ export class Place {
 
     this.p.copy(motion);
     this.p.applyMatrix3(this.cameraNormalMatrix);
+    this.velocity.add(this.p);
+    Debug.log(`p=${JSON.stringify(this.p)}`);
+    Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
+    Debug.log(`motion=${JSON.stringify(motion)}`);
+    //this.playerGroup.position.add(this.p);
     this.universeGroup.position.sub(this.p);
-
     //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
   }
 
@@ -42,5 +47,9 @@ export class Place {
     v.x = Math.round(v.x);
     v.y = Math.round(v.y);
     v.z = Math.round(v.z);
+  }
+
+  public stop() {
+    this.velocity = new THREE.Vector3(0, 0, 0);
   }
 }
