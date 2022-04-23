@@ -25,8 +25,8 @@ export class Place {
     Debug.log(`p=${JSON.stringify(this.p)}`);
     Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
     Debug.log(`motion=${JSON.stringify(motion)}`);
-    this.playerGroup.position.add(this.p);
-
+    //this.playerGroup.position.add(this.p);
+    this.universeGroup.position.sub(this.p);
     //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
   }
 

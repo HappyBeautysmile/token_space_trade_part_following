@@ -485,7 +485,8 @@ class Place {
         debug_1.Debug.log(`p=${JSON.stringify(this.p)}`);
         debug_1.Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
         debug_1.Debug.log(`motion=${JSON.stringify(motion)}`);
-        this.playerGroup.position.add(this.p);
+        //this.playerGroup.position.add(this.p);
+        this.universeGroup.position.sub(this.p);
         //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
     }
     rotatePlayerRelativeToWorldY(rotation) {
