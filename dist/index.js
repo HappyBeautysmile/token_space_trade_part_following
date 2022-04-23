@@ -150,7 +150,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('B or Y to change to random color.');
+        debug_1.Debug.log('back out cast of object3d to mesh.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -394,8 +394,8 @@ class Hand extends THREE.Object3D {
                 debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
             }
             if (buttons[5] === 1) { // B or Y
-                const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-                this.cube.material = newMat;
+                // const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+                // this.cube.material = newMat;
             }
         }
     }

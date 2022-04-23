@@ -8,12 +8,12 @@ export class Hand extends THREE.Object3D {
   private static AllObjects = new Map<string, THREE.Object3D>();
 
   //private cube: THREE.Object3D;
-  private cube: THREE.Mesh;
+  private cube: THREE.Object3D;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
 
-  constructor(private grip: THREE.Object3D, initialObject: THREE.Mesh,
+  constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private leftHand: boolean) {
@@ -134,8 +134,8 @@ export class Hand extends THREE.Object3D {
         Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
       }
       if (buttons[5] === 1) { // B or Y
-        const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-        this.cube.material = newMat;
+        // const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+        // this.cube.material = newMat;
       }
     }
   }
