@@ -44,22 +44,6 @@ export class Hand extends THREE.Object3D {
     this.initialize();
   }
 
-  // Quantizes the Euler angles to be cube-aligned
-  private quantizeRotation(v: THREE.Euler) {
-    const q = Math.PI / 2;
-    v.x = q * Math.round(v.x / q);
-    v.y = q * Math.round(v.y / q);
-    v.z = q * Math.round(v.z / q);
-  }
-
-  // Quantize position to 1 meter 3D grid.
-  private quantizePosition(p: THREE.Vector3) {
-    p.x = Math.round(p.x);
-    p.y = Math.round(p.y);
-    p.z = Math.round(p.z);
-  }
-
-
   // We create these private temporary variables here so we aren't
   // creating new objects on every frame.  This reduces the amount of
   // garbage collection.  Ideally we'd do this for other things in
@@ -160,7 +144,7 @@ export class Hand extends THREE.Object3D {
     this.grip.addEventListener('squeeze', () => {
       this.p.copy(this.cube.position);
       this.place.playerToUniverse(this.p);
-      this.quantizePosition(this.p);
+      this.place.quantizePosition(this.p);
       const key = this.posToKey(this.p);
       if (Hand.AllObjects.has(key)) {
         this.place.universeGroup.remove(Hand.AllObjects.get(key));
@@ -170,11 +154,11 @@ export class Hand extends THREE.Object3D {
 
     this.grip.addEventListener('selectstart', () => {
       const o = this.templateCube.clone();
-
+      o.position.copy(this.cube.position);
       const p = o.position;
       this.place.playerToUniverse(p);
-      this.quantizePosition(p);
-      this.quantizeRotation(o.rotation);
+      this.place.quantizePosition(p);
+      this.place.quantizeRotation(o.rotation);
       this.place.universeGroup.add(o);
       const key = this.posToKey(o.position);
       Hand.AllObjects.set(key, o);

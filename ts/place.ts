@@ -22,9 +22,9 @@ export class Place {
     this.p.copy(motion);
     this.p.applyMatrix3(this.cameraNormalMatrix);
     this.velocity.add(this.p);
-    Debug.log(`p=${JSON.stringify(this.p)}`);
-    Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
-    Debug.log(`motion=${JSON.stringify(motion)}`);
+    // Debug.log(`p=${JSON.stringify(this.p)}`);
+    // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
+    // Debug.log(`motion=${JSON.stringify(motion)}`);
     //this.playerGroup.position.add(this.p);
     this.universeGroup.position.sub(this.p);
     //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
@@ -43,10 +43,19 @@ export class Place {
     this.universeGroup.worldToLocal(v);
   }
 
-  public snapToGrid(v: THREE.Vector3) {
-    v.x = Math.round(v.x);
-    v.y = Math.round(v.y);
-    v.z = Math.round(v.z);
+  // Quantizes the Euler angles to be cube-aligned
+  public quantizeRotation(v: THREE.Euler) {
+    const q = Math.PI / 2;
+    v.x = q * Math.round(v.x / q);
+    v.y = q * Math.round(v.y / q);
+    v.z = q * Math.round(v.z / q);
+  }
+
+  // Quantize position to 1 meter 3D grid.
+  public quantizePosition(p: THREE.Vector3) {
+    p.x = Math.round(p.x);
+    p.y = Math.round(p.y);
+    p.z = Math.round(p.z);
   }
 
   public stop() {

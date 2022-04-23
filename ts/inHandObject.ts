@@ -24,7 +24,8 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     console.log(`Points: ${this.geometry.getAttribute('position').count}`);
 
     this.handMaterial = this.makeRasterMaterial(0);
-    this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
+    // this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
+    this.handMesh = o.clone();
     this.add(this.handMesh);
 
     this.snapMaterial = this.makeRasterMaterial(Math.PI);
@@ -50,7 +51,7 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     float d = cos(twist) * gl_FragCoord.y + sin(twist) * gl_FragCoord.x;
     float intensity = 0.5 + 0.5 * sin(
       ${phase.toFixed(5)} + time * 5.0 + 0.5 * d / gl_FragCoord.z);
-    gl_FragColor = vec4(vColor.rgb, 1.0) * intensity;
+    gl_FragColor = vec4(vColor.rgb * intensity, 1.0);
   }
       `,
       blending: THREE.AdditiveBlending,
@@ -112,7 +113,8 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     this.snapMaterial.uniformsNeedUpdate;
     this.handMesh.getWorldPosition(this.snapMesh.position);
     this.place.worldToUniverse(this.snapMesh.position);
-    this.place.snapToGrid(this.snapMesh.position);
+    this.place.quantizePosition(this.snapMesh.position);
+    this.place.quantizeRotation(this.snapMesh.rotation);
   }
 
 }

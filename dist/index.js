@@ -153,7 +153,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('InHandObject test 2.');
+        debug_1.Debug.log('InHandObject test 3.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -326,19 +326,6 @@ class Hand extends THREE.Object3D {
         // this.add(line);
         this.initialize();
     }
-    // Quantizes the Euler angles to be cube-aligned
-    quantizeRotation(v) {
-        const q = Math.PI / 2;
-        v.x = q * Math.round(v.x / q);
-        v.y = q * Math.round(v.y / q);
-        v.z = q * Math.round(v.z / q);
-    }
-    // Quantize position to 1 meter 3D grid.
-    quantizePosition(p) {
-        p.x = Math.round(p.x);
-        p.y = Math.round(p.y);
-        p.z = Math.round(p.z);
-    }
     // We create these private temporary variables here so we aren't
     // creating new objects on every frame.  This reduces the amount of
     // garbage collection.  Ideally we'd do this for other things in
@@ -433,7 +420,7 @@ class Hand extends THREE.Object3D {
         this.grip.addEventListener('squeeze', () => {
             this.p.copy(this.cube.position);
             this.place.playerToUniverse(this.p);
-            this.quantizePosition(this.p);
+            this.place.quantizePosition(this.p);
             const key = this.posToKey(this.p);
             if (Hand.AllObjects.has(key)) {
                 this.place.universeGroup.remove(Hand.AllObjects.get(key));
@@ -442,10 +429,11 @@ class Hand extends THREE.Object3D {
         });
         this.grip.addEventListener('selectstart', () => {
             const o = this.templateCube.clone();
+            o.position.copy(this.cube.position);
             const p = o.position;
             this.place.playerToUniverse(p);
-            this.quantizePosition(p);
-            this.quantizeRotation(o.rotation);
+            this.place.quantizePosition(p);
+            this.place.quantizeRotation(o.rotation);
             this.place.universeGroup.add(o);
             const key = this.posToKey(o.position);
             Hand.AllObjects.set(key, o);
@@ -501,7 +489,8 @@ class InHandObject extends THREE.Object3D {
         this.geometry = BufferGeometryUtils.mergeBufferGeometries(this.geometries, false);
         console.log(`Points: ${this.geometry.getAttribute('position').count}`);
         this.handMaterial = this.makeRasterMaterial(0);
-        this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
+        // this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
+        this.handMesh = o.clone();
         this.add(this.handMesh);
         this.snapMaterial = this.makeRasterMaterial(Math.PI);
         this.snapMesh = new THREE.LineSegments(this.geometry, this.snapMaterial);
@@ -525,7 +514,7 @@ class InHandObject extends THREE.Object3D {
     float d = cos(twist) * gl_FragCoord.y + sin(twist) * gl_FragCoord.x;
     float intensity = 0.5 + 0.5 * sin(
       ${phase.toFixed(5)} + time * 5.0 + 0.5 * d / gl_FragCoord.z);
-    gl_FragColor = vec4(vColor.rgb, 1.0) * intensity;
+    gl_FragColor = vec4(vColor.rgb * intensity, 1.0);
   }
       `,
             blending: THREE.AdditiveBlending,
@@ -584,7 +573,8 @@ class InHandObject extends THREE.Object3D {
         this.snapMaterial.uniformsNeedUpdate;
         this.handMesh.getWorldPosition(this.snapMesh.position);
         this.place.worldToUniverse(this.snapMesh.position);
-        this.place.snapToGrid(this.snapMesh.position);
+        this.place.quantizePosition(this.snapMesh.position);
+        this.place.quantizeRotation(this.snapMesh.rotation);
     }
 }
 exports.InHandObject = InHandObject;
@@ -618,7 +608,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Place = void 0;
 const THREE = __importStar(__webpack_require__(578));
-const debug_1 = __webpack_require__(756);
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
 // For now we're implementing it so the player moves through the universe.
@@ -642,9 +631,9 @@ class Place {
         this.p.copy(motion);
         this.p.applyMatrix3(this.cameraNormalMatrix);
         this.velocity.add(this.p);
-        debug_1.Debug.log(`p=${JSON.stringify(this.p)}`);
-        debug_1.Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
-        debug_1.Debug.log(`motion=${JSON.stringify(motion)}`);
+        // Debug.log(`p=${JSON.stringify(this.p)}`);
+        // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
+        // Debug.log(`motion=${JSON.stringify(motion)}`);
         //this.playerGroup.position.add(this.p);
         this.universeGroup.position.sub(this.p);
         //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
@@ -660,10 +649,18 @@ class Place {
     worldToUniverse(v) {
         this.universeGroup.worldToLocal(v);
     }
-    snapToGrid(v) {
-        v.x = Math.round(v.x);
-        v.y = Math.round(v.y);
-        v.z = Math.round(v.z);
+    // Quantizes the Euler angles to be cube-aligned
+    quantizeRotation(v) {
+        const q = Math.PI / 2;
+        v.x = q * Math.round(v.x / q);
+        v.y = q * Math.round(v.y / q);
+        v.z = q * Math.round(v.z / q);
+    }
+    // Quantize position to 1 meter 3D grid.
+    quantizePosition(p) {
+        p.x = Math.round(p.x);
+        p.y = Math.round(p.y);
+        p.z = Math.round(p.z);
     }
     stop() {
         this.velocity = new THREE.Vector3(0, 0, 0);
