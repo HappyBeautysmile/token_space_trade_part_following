@@ -22,7 +22,7 @@ export class BlockBuild {
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
-  private allModels: THREE.Object3D[] = [];
+  private allModels: THREE.Mesh[] = [];
   private playerGroup = new THREE.Group();
   private universeGroup = new THREE.Group();
   private place: Place;
@@ -50,7 +50,7 @@ export class BlockBuild {
       'wedge 2', 'wonk']
     for (const modelName of models) {
       console.log(`Loading ${modelName}`);
-      const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+      const m = <THREE.Mesh>await ModelLoader.loadModel(`Model/${modelName}.glb`);
       if (!m) {
         continue;
       }
@@ -139,7 +139,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log('backed out acceleration.');
+    Debug.log('B or Y to change to random color.');
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

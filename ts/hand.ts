@@ -7,12 +7,13 @@ export class Hand extends THREE.Object3D {
 
   private static AllObjects = new Map<string, THREE.Object3D>();
 
-  private cube: THREE.Object3D;
+  //private cube: THREE.Object3D;
+  private cube: THREE.Mesh;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
 
-  constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
+  constructor(private grip: THREE.Object3D, initialObject: THREE.Mesh,
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private leftHand: boolean) {
@@ -49,6 +50,7 @@ export class Hand extends THREE.Object3D {
     v.z = q * Math.round(v.z / q);
   }
 
+  // Quantize position to 1 meter 3D grid.
   private quantizePosition(p: THREE.Vector3) {
     p.x = Math.round(p.x);
     p.y = Math.round(p.y);
@@ -123,7 +125,8 @@ export class Hand extends THREE.Object3D {
         this.debugMaterial.color = new THREE.Color('yellow');
       }
       if (buttons[3] === 1) { // stick
-        this.debugMaterial.color = new THREE.Color('blue');
+        //this.debugMaterial.color = new THREE.Color('blue');
+        this.place.stop();
       }
       if (buttons[4] === 1) { // A or X
         Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
@@ -131,12 +134,13 @@ export class Hand extends THREE.Object3D {
         Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
       }
       if (buttons[5] === 1) { // B or Y
-        this.debugMaterial.color = new THREE.Color('black');
+        const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+        this.cube.material = newMat;
       }
     }
   }
 
-  public setCube(o: THREE.Object3D) {
+  public setCube(o: THREE.Mesh) {
     this.place.playerGroup.remove(this.cube);
     this.cube = o;
     this.place.playerGroup.add(this.cube);

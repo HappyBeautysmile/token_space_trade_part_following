@@ -150,7 +150,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('backed out acceleration.');
+        debug_1.Debug.log('B or Y to change to random color.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -322,6 +322,7 @@ class Hand extends THREE.Object3D {
         v.y = q * Math.round(v.y / q);
         v.z = q * Math.round(v.z / q);
     }
+    // Quantize position to 1 meter 3D grid.
     quantizePosition(p) {
         p.x = Math.round(p.x);
         p.y = Math.round(p.y);
@@ -384,7 +385,8 @@ class Hand extends THREE.Object3D {
                 this.debugMaterial.color = new THREE.Color('yellow');
             }
             if (buttons[3] === 1) { // stick
-                this.debugMaterial.color = new THREE.Color('blue');
+                //this.debugMaterial.color = new THREE.Color('blue');
+                this.place.stop();
             }
             if (buttons[4] === 1) { // A or X
                 debug_1.Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
@@ -392,7 +394,8 @@ class Hand extends THREE.Object3D {
                 debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
             }
             if (buttons[5] === 1) { // B or Y
-                this.debugMaterial.color = new THREE.Color('black');
+                const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+                this.cube.material = newMat;
             }
         }
     }
