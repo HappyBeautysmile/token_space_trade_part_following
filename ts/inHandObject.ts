@@ -24,7 +24,7 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     console.log(`Points: ${this.geometry.getAttribute('position').count}`);
 
     this.handMaterial = this.makeRasterMaterial(0);
-    // this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
+    // this.handMesh = new THREE.Mesh(this.geometry, this.handMaterial);
     this.handMesh = o.clone();
     this.setAdditiveBlending(this.handMesh);
 
@@ -38,6 +38,7 @@ export class InHandObject extends THREE.Object3D implements Ticker {
   private setAdditiveBlending(o: THREE.Object3D) {
     if (o instanceof THREE.Mesh) {
       if (o.material instanceof THREE.MeshStandardMaterial) {
+        o.material = o.material.clone();
         o.material.blending = THREE.AdditiveBlending;
         o.material.side = THREE.FrontSide;
       }

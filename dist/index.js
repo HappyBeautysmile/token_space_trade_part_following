@@ -164,7 +164,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('InHandObject test 6.');
+        debug_1.Debug.log('InHandObject test 7.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -500,7 +500,7 @@ class InHandObject extends THREE.Object3D {
         this.geometry = BufferGeometryUtils.mergeBufferGeometries(this.geometries, false);
         console.log(`Points: ${this.geometry.getAttribute('position').count}`);
         this.handMaterial = this.makeRasterMaterial(0);
-        // this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
+        // this.handMesh = new THREE.Mesh(this.geometry, this.handMaterial);
         this.handMesh = o.clone();
         this.setAdditiveBlending(this.handMesh);
         this.add(this.handMesh);
@@ -511,6 +511,7 @@ class InHandObject extends THREE.Object3D {
     setAdditiveBlending(o) {
         if (o instanceof THREE.Mesh) {
             if (o.material instanceof THREE.MeshStandardMaterial) {
+                o.material = o.material.clone();
                 o.material.blending = THREE.AdditiveBlending;
                 o.material.side = THREE.FrontSide;
             }
