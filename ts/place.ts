@@ -22,7 +22,10 @@ export class Place {
     this.p.copy(motion);
     this.p.applyMatrix3(this.cameraNormalMatrix);
     this.velocity.add(this.p);
-    this.playerGroup.position.add(this.velocity);
+    Debug.log(`p=${JSON.stringify(this.p)}`);
+    Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
+    Debug.log(`motion=${JSON.stringify(motion)}`);
+    this.playerGroup.position.add(this.p);
 
     //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
   }

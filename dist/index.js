@@ -150,7 +150,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('removed ship.');
+        debug_1.Debug.log('backed out acceleration.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -461,6 +461,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Place = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const debug_1 = __webpack_require__(756);
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
 // For now we're implementing it so the player moves through the universe.
@@ -481,7 +482,10 @@ class Place {
         this.p.copy(motion);
         this.p.applyMatrix3(this.cameraNormalMatrix);
         this.velocity.add(this.p);
-        this.playerGroup.position.add(this.velocity);
+        debug_1.Debug.log(`p=${JSON.stringify(this.p)}`);
+        debug_1.Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
+        debug_1.Debug.log(`motion=${JSON.stringify(motion)}`);
+        this.playerGroup.position.add(this.p);
         //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
     }
     rotatePlayerRelativeToWorldY(rotation) {
