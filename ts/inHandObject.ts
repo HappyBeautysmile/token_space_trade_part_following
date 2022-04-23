@@ -26,6 +26,12 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     this.handMaterial = this.makeRasterMaterial(0);
     // this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
     this.handMesh = o.clone();
+    if (this.handMesh instanceof THREE.Mesh) {
+      if (this.handMesh.material instanceof THREE.MeshStandardMaterial) {
+        this.handMesh.material.blending = THREE.AdditiveBlending;
+      }
+    }
+
     this.add(this.handMesh);
 
     this.snapMaterial = this.makeRasterMaterial(Math.PI);
@@ -49,7 +55,7 @@ export class InHandObject extends THREE.Object3D implements Ticker {
   void main() {
     float twist = 0.1 * sin(time / 5.0);
     float d = cos(twist) * gl_FragCoord.y + sin(twist) * gl_FragCoord.x;
-    float intensity = 0.5 + 0.5 * sin(
+    float intensity = 0.9 + 0.1 * sin(
       ${phase.toFixed(5)} + time * 5.0 + 0.5 * d / gl_FragCoord.z);
     gl_FragColor = vec4(vColor.rgb * intensity, 1.0);
   }
@@ -112,6 +118,7 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     this.snapMaterial.uniforms['time'].value = t.elapsedS;
     this.snapMaterial.uniformsNeedUpdate;
     this.handMesh.getWorldPosition(this.snapMesh.position);
+    this.snapMesh.rotation.copy(this.handMesh.rotation);
     this.place.worldToUniverse(this.snapMesh.position);
     this.place.quantizePosition(this.snapMesh.position);
     this.place.quantizeRotation(this.snapMesh.rotation);

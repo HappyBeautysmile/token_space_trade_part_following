@@ -155,6 +155,7 @@ export class Hand extends THREE.Object3D {
     this.grip.addEventListener('selectstart', () => {
       const o = this.templateCube.clone();
       o.position.copy(this.cube.position);
+      o.rotation.copy(this.cube.rotation);
       const p = o.position;
       this.place.playerToUniverse(p);
       this.place.quantizePosition(p);

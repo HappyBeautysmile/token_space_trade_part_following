@@ -153,7 +153,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('InHandObject test 3.');
+        debug_1.Debug.log('InHandObject test 4.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -430,6 +430,7 @@ class Hand extends THREE.Object3D {
         this.grip.addEventListener('selectstart', () => {
             const o = this.templateCube.clone();
             o.position.copy(this.cube.position);
+            o.rotation.copy(this.cube.rotation);
             const p = o.position;
             this.place.playerToUniverse(p);
             this.place.quantizePosition(p);
@@ -491,6 +492,11 @@ class InHandObject extends THREE.Object3D {
         this.handMaterial = this.makeRasterMaterial(0);
         // this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
         this.handMesh = o.clone();
+        if (this.handMesh instanceof THREE.Mesh) {
+            if (this.handMesh.material instanceof THREE.MeshStandardMaterial) {
+                this.handMesh.material.blending = THREE.AdditiveBlending;
+            }
+        }
         this.add(this.handMesh);
         this.snapMaterial = this.makeRasterMaterial(Math.PI);
         this.snapMesh = new THREE.LineSegments(this.geometry, this.snapMaterial);
@@ -512,7 +518,7 @@ class InHandObject extends THREE.Object3D {
   void main() {
     float twist = 0.1 * sin(time / 5.0);
     float d = cos(twist) * gl_FragCoord.y + sin(twist) * gl_FragCoord.x;
-    float intensity = 0.5 + 0.5 * sin(
+    float intensity = 0.9 + 0.1 * sin(
       ${phase.toFixed(5)} + time * 5.0 + 0.5 * d / gl_FragCoord.z);
     gl_FragColor = vec4(vColor.rgb * intensity, 1.0);
   }
@@ -572,6 +578,7 @@ class InHandObject extends THREE.Object3D {
         this.snapMaterial.uniforms['time'].value = t.elapsedS;
         this.snapMaterial.uniformsNeedUpdate;
         this.handMesh.getWorldPosition(this.snapMesh.position);
+        this.snapMesh.rotation.copy(this.handMesh.rotation);
         this.place.worldToUniverse(this.snapMesh.position);
         this.place.quantizePosition(this.snapMesh.position);
         this.place.quantizeRotation(this.snapMesh.rotation);
