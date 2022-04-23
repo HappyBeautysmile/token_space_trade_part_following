@@ -39,6 +39,7 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     if (o instanceof THREE.Mesh) {
       if (o.material instanceof THREE.MeshStandardMaterial) {
         o.material.blending = THREE.AdditiveBlending;
+        o.material.side = THREE.FrontSide;
       }
     }
     for (const child of o.children) {

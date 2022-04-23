@@ -40,9 +40,20 @@ class ModelLoader {
         const loader = new GLTFLoader_js_1.GLTFLoader();
         return new Promise((resolve, reject) => {
             loader.load(filename, (gltf) => {
+                ModelLoader.setSingleSide(gltf.scene);
                 resolve(gltf.scene);
             });
         });
+    }
+    static setSingleSide(o) {
+        if (o instanceof THREE.Mesh) {
+            if (o.material instanceof THREE.MeshStandardMaterial) {
+                o.material.side = THREE.FrontSide;
+            }
+        }
+        for (const child of o.children) {
+            ModelLoader.setSingleSide(child);
+        }
     }
 }
 class BlockBuild {
@@ -153,7 +164,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('InHandObject test 5.');
+        debug_1.Debug.log('InHandObject test 6.');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -407,7 +418,7 @@ class Hand extends THREE.Object3D {
         if (this.cube) {
             this.place.playerGroup.remove(this.cube);
         }
-        this.templateCube = o;
+        this.templateCube = o.clone();
         this.cube = new inHandObject_1.InHandObject(o, this.place);
         this.place.playerGroup.add(this.cube);
     }
@@ -501,6 +512,7 @@ class InHandObject extends THREE.Object3D {
         if (o instanceof THREE.Mesh) {
             if (o.material instanceof THREE.MeshStandardMaterial) {
                 o.material.blending = THREE.AdditiveBlending;
+                o.material.side = THREE.FrontSide;
             }
         }
         for (const child of o.children) {

@@ -6,16 +6,27 @@ import { Tick, Ticker } from "./tick";
 import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
-import { InHandObject } from "./inHandObject";
 
 class ModelLoader {
   static async loadModel(filename: string): Promise<THREE.Object3D> {
     const loader = new GLTFLoader();
     return new Promise<THREE.Object3D>((resolve, reject) => {
       loader.load(filename, (gltf) => {
+        ModelLoader.setSingleSide(gltf.scene);
         resolve(gltf.scene);
       });
     });
+  }
+
+  static setSingleSide(o: THREE.Object3D) {
+    if (o instanceof THREE.Mesh) {
+      if (o.material instanceof THREE.MeshStandardMaterial) {
+        o.material.side = THREE.FrontSide;
+      }
+    }
+    for (const child of o.children) {
+      ModelLoader.setSingleSide(child);
+    }
   }
 }
 
@@ -140,7 +151,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log('InHandObject test 5.');
+    Debug.log('InHandObject test 6.');
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
