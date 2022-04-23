@@ -28,7 +28,6 @@ export class Hand extends THREE.Object3D {
 
     grip.add(this);
     this.setCube(initialObject);
-    this.place.playerGroup.add(this.cube);
 
     // const cube = new THREE.Mesh(
     //   new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),

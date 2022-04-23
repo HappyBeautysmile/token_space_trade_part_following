@@ -26,17 +26,24 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     this.handMaterial = this.makeRasterMaterial(0);
     // this.handMesh = new THREE.LineSegments(this.geometry, this.handMaterial);
     this.handMesh = o.clone();
-    if (this.handMesh instanceof THREE.Mesh) {
-      if (this.handMesh.material instanceof THREE.MeshStandardMaterial) {
-        this.handMesh.material.blending = THREE.AdditiveBlending;
-      }
-    }
+    this.setAdditiveBlending(this.handMesh);
 
     this.add(this.handMesh);
 
     this.snapMaterial = this.makeRasterMaterial(Math.PI);
     this.snapMesh = new THREE.LineSegments(this.geometry, this.snapMaterial);
     this.place.universeGroup.add(this.snapMesh);
+  }
+
+  private setAdditiveBlending(o: THREE.Object3D) {
+    if (o instanceof THREE.Mesh) {
+      if (o.material instanceof THREE.MeshStandardMaterial) {
+        o.material.blending = THREE.AdditiveBlending;
+      }
+    }
+    for (const child of o.children) {
+      this.setAdditiveBlending(child);
+    }
   }
 
   private makeRasterMaterial(phase: number) {
@@ -117,8 +124,9 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     this.handMaterial.uniformsNeedUpdate;
     this.snapMaterial.uniforms['time'].value = t.elapsedS;
     this.snapMaterial.uniformsNeedUpdate;
-    this.handMesh.getWorldPosition(this.snapMesh.position);
     this.snapMesh.rotation.copy(this.handMesh.rotation);
+
+    this.handMesh.getWorldPosition(this.snapMesh.position);
     this.place.worldToUniverse(this.snapMesh.position);
     this.place.quantizePosition(this.snapMesh.position);
     this.place.quantizeRotation(this.snapMesh.rotation);
