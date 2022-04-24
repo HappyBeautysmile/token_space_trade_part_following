@@ -465,6 +465,7 @@ class S {
     }
     static {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
+        S.setDefault('sr', 1e9, 'Starfield radius');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -538,8 +539,8 @@ class Zoom {
         const dy = r.y - l.y;
         const dz = r.z - l.z;
         return [
-            new THREE.Vector3(l.x - dy, l.y + dx, l.z - dz),
-            new THREE.Vector3(l.x + dy, l.y - dx, l.z - dz)
+            new THREE.Vector3(l.x - dy, l.y + dx, l.z),
+            new THREE.Vector3(l.x, l.y - dz, l.z + dy)
         ];
     }
     static makeZoomMatrix(l1, r1, l2, r2) {
@@ -610,7 +611,6 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.rotation.setFromRotationMatrix(this.matrix);
     }
     zoomEnd() {
-        this.oldZoom.copy(this.matrix);
         this.oldZoom = null;
     }
     addStars() {
