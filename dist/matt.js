@@ -325,7 +325,7 @@ class Game {
             this.renderer.render(this.scene, this.camera);
         });
         this.getGrips();
-        const vlu = new veryLargeUniverse_1.VeryLargeUniverse(this.grips, this.renderer.xr);
+        const vlu = new veryLargeUniverse_1.VeryLargeUniverse(this.grips, this.camera, this.renderer.xr);
         this.scene.add(vlu);
     }
     getGrips() {
@@ -538,13 +538,14 @@ const zoom_1 = __webpack_require__(950);
 class StarSystem extends THREE.Object3D {
     constructor() {
         super();
-        this.add(new THREE.Mesh(new THREE.BoxBufferGeometry(1e3, 1e3, 1e3), new THREE.MeshBasicMaterial({ color: '#fff' })));
+        this.add(new THREE.Mesh(new THREE.BoxBufferGeometry(1e1, 1e1, 1e1), new THREE.MeshBasicMaterial({ color: '#fff' })));
     }
 }
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
 class VeryLargeUniverse extends THREE.Object3D {
     grips;
+    camera;
     xr;
     currentStarPosition = new THREE.Vector3();
     currentStar = null;
@@ -552,9 +553,10 @@ class VeryLargeUniverse extends THREE.Object3D {
     leftStart;
     rightStart;
     oldZoom = null;
-    constructor(grips, xr) {
+    constructor(grips, camera, xr) {
         super();
         this.grips = grips;
+        this.camera = camera;
         this.xr = xr;
         this.addStars();
         this.grips[0].addEventListener('selectstart', () => {
@@ -578,6 +580,7 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.rightStart = null;
         });
     }
+    rotationMatrix = new THREE.Matrix4();
     zoom() {
         if (!this.oldZoom) {
             this.oldZoom = new THREE.Matrix4();
@@ -587,7 +590,8 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.matrix.copy(this.oldZoom);
         this.matrix.multiply(m);
         this.position.setFromMatrixPosition(this.matrix);
-        this.rotation.setFromRotationMatrix(this.matrix);
+        this.matrix.extractRotation(this.rotationMatrix);
+        this.rotation.setFromRotationMatrix(this.rotationMatrix);
         this.scale.setFromMatrixScale(this.matrix);
     }
     zoomEnd() {
@@ -609,7 +613,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         // uniform float pointMultiplier;
         varying vec3 vColor;
         void main() {
-          vColor = vec3(1.0, 0.5, 1.0);
+          vColor = vec3(0.5, 0.5, 1.0);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           float distance = length(mvPosition.xyz);
           if (distance > 1000.0) {
@@ -650,10 +654,32 @@ class VeryLargeUniverse extends THREE.Object3D {
         }
         return this.p2;
     }
+    getButtonsFromGrip(index) {
+        let source = null;
+        const session = this.xr.getSession();
+        if (session) {
+            if (session.inputSources) {
+                source = session.inputSources[index];
+            }
+            return source.gamepad.buttons.map((b) => b.value);
+        }
+        else {
+            return null;
+        }
+    }
+    direction = new THREE.Vector3();
     tick(t) {
         if (this.rightStart && this.leftStart) {
             this.zoom();
         }
+        const leftButtons = this.getButtonsFromGrip(0);
+        const rightButtons = this.getButtonsFromGrip(1);
+        if (leftButtons && rightButtons && leftButtons[1] && rightButtons[1]) {
+            this.camera.getWorldDirection(this.direction);
+            this.direction.multiplyScalar(t.deltaS * 5.0);
+            this.position.sub(this.direction);
+        }
+        this.updateMatrix();
         const closest = this.findClosestStar();
         if (closest.x != this.currentStarPosition.x ||
             closest.y != this.currentStarPosition.y ||
