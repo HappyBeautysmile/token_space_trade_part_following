@@ -613,7 +613,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         // uniform float pointMultiplier;
         varying vec3 vColor;
         void main() {
-          vColor = vec3(0.5, 0.5, 1.0);
+          vColor = vec3(0.5, 1.0, 0.8);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           float distance = length(mvPosition.xyz);
           if (distance > 1000.0) {
@@ -642,17 +642,20 @@ class VeryLargeUniverse extends THREE.Object3D {
     }
     p1 = new THREE.Vector3();
     p2 = new THREE.Vector3();
+    closest = new THREE.Vector3();
     findClosestStar() {
         let closestDistance = 1e10;
+        this.getWorldPosition(this.p1);
         for (const starPosition of this.starPositions) {
-            this.p1.copy(starPosition);
-            this.p1.sub(this.position);
-            if (closestDistance > this.p1.length()) {
-                closestDistance = this.p1.length();
-                this.p2.copy(starPosition);
+            this.p2.copy(starPosition);
+            this.localToWorld(this.p2);
+            this.p2.sub(this.p1);
+            if (closestDistance > this.p2.length()) {
+                closestDistance = this.p2.length();
+                this.closest.copy(starPosition);
             }
         }
-        return this.p2;
+        return this.closest;
     }
     getButtonsFromGrip(index) {
         let source = null;
@@ -678,8 +681,8 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.camera.getWorldDirection(this.direction);
             this.direction.multiplyScalar(t.deltaS * 5.0);
             this.position.sub(this.direction);
+            this.updateMatrix();
         }
-        this.updateMatrix();
         const closest = this.findClosestStar();
         if (closest.x != this.currentStarPosition.x ||
             closest.y != this.currentStarPosition.y ||
