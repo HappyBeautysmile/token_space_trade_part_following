@@ -168,7 +168,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("restored constrocor without grip.add(this);");
+        debug_1.Debug.log("restored if(source)");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -391,6 +391,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Hand = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const debug_1 = __webpack_require__(756);
 const inHandObject_1 = __webpack_require__(642);
 class Hand extends THREE.Object3D {
     grip;
@@ -444,57 +445,56 @@ class Hand extends THREE.Object3D {
         let source = null;
         const session = this.xr.getSession();
         if (session) {
-            //this.debugMaterial.color = new THREE.Color('red');
             if (session.inputSources) {
-                //this.debugMaterial.color = new THREE.Color('brown');
                 source = session.inputSources[this.index];
             }
         }
-        // if (source) {
-        //   //this.debugMaterial.color = new THREE.Color('blue');
-        //   const rate = 3;
-        //   const axes = source.gamepad.axes.slice(0);
-        //   if (axes.length >= 4) {
-        //     //this.debugMaterial.color = new THREE.Color('green');
-        //     if (!axes[2] || !axes[3]) {
-        //       // Sticks are not being touched.
-        //     } else {
-        //       //this.debugMaterial.color = new THREE.Color('orange');
-        //       this
-        //       if (this.leftHand) {
-        //         this.v.set(axes[2], 0, axes[3]);
-        //         this.v.multiplyScalar(rate * t.deltaS);
-        //         this.place.movePlayerRelativeToCamera(this.v);
-        //       }
-        //       else {
-        //         this.v.set(0, -axes[3], 0);
-        //         this.v.multiplyScalar(rate * t.deltaS);
-        //         this.place.movePlayerRelativeToCamera(this.v);
-        //         // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
-        //       }
-        //     }
-        //   }
-        //   const buttons = source.gamepad.buttons.map((b) => b.value);
-        //   if (buttons[0] === 1) { // trigger
-        //     this.debugMaterial.color = new THREE.Color('red');
-        //   }
-        //   if (buttons[1] === 1) { // squeeze
-        //     this.debugMaterial.color = new THREE.Color('yellow');
-        //   }
-        //   if (buttons[3] === 1) { // stick
-        //     //this.debugMaterial.color = new THREE.Color('blue');
-        //     this.place.stop();
-        //   }
-        //   if (buttons[4] === 1) { // A or X
-        //     Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
-        //     Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
-        //     Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
-        //   }
-        //   if (buttons[5] === 1) { // B or Y
-        //     // const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-        //     // this.cube.material = newMat;
-        //   }
-        // }
+        if (source) {
+            //this.debugMaterial.color = new THREE.Color('blue');
+            const rate = 3;
+            const axes = source.gamepad.axes.slice(0);
+            if (axes.length >= 4) {
+                //this.debugMaterial.color = new THREE.Color('green');
+                if (!axes[2] || !axes[3]) {
+                    // Sticks are not being touched.
+                }
+                else {
+                    //this.debugMaterial.color = new THREE.Color('orange');
+                    this;
+                    if (this.leftHand) {
+                        this.v.set(axes[2], 0, axes[3]);
+                        this.v.multiplyScalar(rate * t.deltaS);
+                        this.place.movePlayerRelativeToCamera(this.v);
+                    }
+                    else {
+                        this.v.set(0, -axes[3], 0);
+                        this.v.multiplyScalar(rate * t.deltaS);
+                        this.place.movePlayerRelativeToCamera(this.v);
+                        // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
+                    }
+                }
+            }
+            const buttons = source.gamepad.buttons.map((b) => b.value);
+            if (buttons[0] === 1) { // trigger
+                this.debugMaterial.color = new THREE.Color('red');
+            }
+            if (buttons[1] === 1) { // squeeze
+                this.debugMaterial.color = new THREE.Color('yellow');
+            }
+            if (buttons[3] === 1) { // stick
+                //this.debugMaterial.color = new THREE.Color('blue');
+                this.place.stop();
+            }
+            if (buttons[4] === 1) { // A or X
+                debug_1.Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
+                debug_1.Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
+                debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
+            }
+            if (buttons[5] === 1) { // B or Y
+                // const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+                // this.cube.material = newMat;
+            }
+        }
     }
     setCube(o) {
         if (this.cube) {
