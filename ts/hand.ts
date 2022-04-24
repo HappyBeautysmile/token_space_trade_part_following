@@ -157,16 +157,16 @@ export class Hand extends THREE.Object3D {
 
     this.grip.addEventListener('selectstart', () => {
       //this.deleteCube();
-      const o = this.templateCube.clone();
-      o.position.copy(this.cube.position);
-      o.rotation.copy(this.cube.rotation);
-      const p = o.position;
-      this.place.playerToUniverse(p);
-      this.place.quantizePosition(p);
-      this.place.quantizeRotation(o.rotation);
-      this.place.universeGroup.add(o);
-      const key = this.posToKey(o.position);
-      Hand.AllObjects.set(key, o);
+      // const o = this.templateCube.clone();
+      // o.position.copy(this.cube.position);
+      // o.rotation.copy(this.cube.rotation);
+      // const p = o.position;
+      // this.place.playerToUniverse(p);
+      // this.place.quantizePosition(p);
+      // this.place.quantizeRotation(o.rotation);
+      // this.place.universeGroup.add(o);
+      // const key = this.posToKey(o.position);
+      // Hand.AllObjects.set(key, o);
     });
 
     this.grip.addEventListener('selectend', () => {
