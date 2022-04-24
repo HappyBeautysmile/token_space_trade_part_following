@@ -590,8 +590,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.matrix.copy(this.oldZoom);
         this.matrix.multiply(m);
         this.position.setFromMatrixPosition(this.matrix);
-        this.matrix.extractRotation(this.rotationMatrix);
-        this.rotation.setFromRotationMatrix(this.rotationMatrix);
+        this.rotation.setFromRotationMatrix(this.matrix);
         this.scale.setFromMatrixScale(this.matrix);
     }
     zoomEnd() {
@@ -613,7 +612,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         // uniform float pointMultiplier;
         varying vec3 vColor;
         void main() {
-          vColor = vec3(0.5, 1.0, 0.8);
+          vColor = vec3(1.0, 0.8, 0.2);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           float distance = length(mvPosition.xyz);
           if (distance > 1000.0) {
@@ -645,10 +644,10 @@ class VeryLargeUniverse extends THREE.Object3D {
     closest = new THREE.Vector3();
     findClosestStar() {
         let closestDistance = 1e10;
-        this.getWorldPosition(this.p1);
+        this.camera.getWorldPosition(this.p1);
+        this.worldToLocal(this.p1);
         for (const starPosition of this.starPositions) {
             this.p2.copy(starPosition);
-            this.localToWorld(this.p2);
             this.p2.sub(this.p1);
             if (closestDistance > this.p2.length()) {
                 closestDistance = this.p2.length();
