@@ -535,13 +535,21 @@ exports.VeryLargeUniverse = exports.Zoom = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const settings_1 = __webpack_require__(451);
 class Zoom {
+    static d = new THREE.Vector3;
+    static seed = new THREE.Vector3();
+    static other = new THREE.Vector3();
     static makePerpendicular(l, r) {
-        const dx = r.x - l.x;
-        const dy = r.y - l.y;
-        const dz = r.z - l.z;
+        this.d.copy(r);
+        this.d.sub(l);
+        this.seed.set(-this.d.y, this.d.x, 0);
+        this.seed.cross(this.d);
+        this.seed.setLength(this.d.length());
+        this.other.copy(this.d);
+        this.other.cross(this.seed);
+        this.other.setLength(this.d.length());
         return [
-            new THREE.Vector3(l.x - dy, l.y + dx, l.z),
-            new THREE.Vector3(l.x, l.y - dz, l.z + dy)
+            new THREE.Vector3(l.x + this.seed.x, l.y + this.seed.y, l.z + this.seed.z),
+            new THREE.Vector3(l.x + this.other.x, l.y + this.other.y, l.z + this.other.z)
         ];
     }
     static makeZoomMatrix(l1, r1, l2, r2) {
