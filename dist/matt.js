@@ -513,36 +513,36 @@ class Hand extends THREE.Object3D {
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
-    deleteCube() {
-        this.p.copy(this.cube.position);
-        this.place.playerToUniverse(this.p);
-        this.place.quantizePosition(this.p);
-        const key = this.posToKey(this.p);
-        if (Hand.AllObjects.has(key)) {
-            this.place.universeGroup.remove(Hand.AllObjects.get(key));
-            Hand.AllObjects.delete(key);
-        }
-    }
+    // private deleteCube() {
+    //   this.p.copy(this.cube.position);
+    //   this.place.playerToUniverse(this.p);
+    //   this.place.quantizePosition(this.p);
+    //   const key = this.posToKey(this.p);
+    //   if (Hand.AllObjects.has(key)) {
+    //     this.place.universeGroup.remove(Hand.AllObjects.get(key));
+    //     Hand.AllObjects.delete(key);
+    //   }
+    // }
     p = new THREE.Vector3();
     async initialize() {
-        this.grip.addEventListener('squeeze', () => {
-            this.deleteCube();
-        });
-        this.grip.addEventListener('selectstart', () => {
-            this.deleteCube();
-            const o = this.templateCube.clone();
-            o.position.copy(this.cube.position);
-            o.rotation.copy(this.cube.rotation);
-            const p = o.position;
-            this.place.playerToUniverse(p);
-            this.place.quantizePosition(p);
-            this.place.quantizeRotation(o.rotation);
-            this.place.universeGroup.add(o);
-            const key = this.posToKey(o.position);
-            Hand.AllObjects.set(key, o);
-        });
-        this.grip.addEventListener('selectend', () => {
-        });
+        // this.grip.addEventListener('squeeze', () => {
+        //   this.deleteCube();
+        // });
+        // this.grip.addEventListener('selectstart', () => {
+        //   this.deleteCube();
+        //   const o = this.templateCube.clone();
+        //   o.position.copy(this.cube.position);
+        //   o.rotation.copy(this.cube.rotation);
+        //   const p = o.position;
+        //   this.place.playerToUniverse(p);
+        //   this.place.quantizePosition(p);
+        //   this.place.quantizeRotation(o.rotation);
+        //   this.place.universeGroup.add(o);
+        //   const key = this.posToKey(o.position);
+        //   Hand.AllObjects.set(key, o);
+        // });
+        // this.grip.addEventListener('selectend', () => {
+        // });
     }
 }
 exports.Hand = Hand;
