@@ -26,7 +26,13 @@ export class Hand extends THREE.Object3D {
     // this.debug.position.set(0, 0, -1);
     // this.add(this.debug);
 
-    //grip.add(this);
+    if (grip) {
+      grip.add(this);
+    }
+    else {
+      Debug.log("ERROR: grip not defined.")
+    }
+
     this.setCube(initialObject);
     this.initialize();
   }

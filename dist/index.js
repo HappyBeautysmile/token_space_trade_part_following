@@ -168,7 +168,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("restored if(source)");
+        debug_1.Debug.log("check grip before use.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -416,7 +416,12 @@ class Hand extends THREE.Object3D {
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
         // this.debug.position.set(0, 0, -1);
         // this.add(this.debug);
-        //grip.add(this);
+        if (grip) {
+            grip.add(this);
+        }
+        else {
+            debug_1.Debug.log("ERROR: grip not defined.");
+        }
         this.setCube(initialObject);
         this.initialize();
     }
