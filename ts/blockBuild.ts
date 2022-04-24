@@ -151,7 +151,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("comment out this.setCube(initialObject);");
+    Debug.log("Hand constructor only has super();");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

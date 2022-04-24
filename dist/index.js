@@ -168,7 +168,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("comment out this.setCube(initialObject);");
+        debug_1.Debug.log("Hand constructor only has super();");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -416,8 +416,8 @@ class Hand extends THREE.Object3D {
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
         // this.debug.position.set(0, 0, -1);
         // this.add(this.debug);
-        grip.add(this);
-        this.setCube(initialObject);
+        //grip.add(this);
+        //this.setCube(initialObject);
         //this.initialize();
     }
     // We create these private temporary variables here so we aren't
