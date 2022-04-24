@@ -1,17 +1,18 @@
 import * as THREE from "three";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 
-class Palette {
+export class Palette {
     public primary: THREE.Color;
     public secondary: THREE.Color;
     public accent: THREE.Color;
     public blackish: THREE.Color;
-    public whiteish: THREE.Color;
-    public redish: THREE.Color;
+    public whitish: THREE.Color;
+    public reddish: THREE.Color;
     public yellowish: THREE.Color;
     public greenish: THREE.Color;
-    public blueish: THREE.Color;
+    public bluish: THREE.Color;
     public magentaish: THREE.Color;
+    private colorIndex: number;
 
     constructor() {
         this.primary = new THREE.Color();
@@ -70,13 +71,15 @@ class Palette {
         let minG = Math.min(this.primary.g, this.secondary.g, this.accent.g,) * 0.6;
         let minB = Math.min(this.primary.b, this.secondary.b, this.accent.b,) * 0.6;
 
-        this.whiteish = new THREE.Color(maxR, maxG, maxB);
+        this.whitish = new THREE.Color(maxR, maxG, maxB);
         this.blackish = new THREE.Color(minR, minG, minB);
-        this.redish = new THREE.Color(maxR, minG, minB);
+        this.reddish = new THREE.Color(maxR, minG, minB);
         this.yellowish = new THREE.Color(maxR, maxG, minB);
         this.greenish = new THREE.Color(minR, maxG, minB);
-        this.blueish = new THREE.Color(minR, minG, maxB);
+        this.bluish = new THREE.Color(minR, minG, maxB);
         this.magentaish = new THREE.Color(maxR, minG, maxB);
+
+        this.colorIndex = 0;
     }
 
     public asArray() {
@@ -84,14 +87,24 @@ class Palette {
             this.primary,
             this.secondary,
             this.accent,
-            this.whiteish,
+            this.whitish,
             this.blackish,
-            this.redish,
+            this.reddish,
             this.yellowish,
             this.greenish,
-            this.blueish,
+            this.bluish,
             this.magentaish
         ];
+    }
+
+    public nextColor() {
+        const colors = this.asArray();
+        this.colorIndex = (this.colorIndex + 1) % colors.length;
+        return colors[this.colorIndex];
+    }
+
+    public getCurrentColor() {
+        return this.asArray()[this.colorIndex];
     }
 }
 

@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 317:
+/***/ 812:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30,7 +30,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PaletteTest = void 0;
+exports.PaletteTest = exports.Palette = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const VRButton_js_1 = __webpack_require__(18);
 class Palette {
@@ -38,12 +38,13 @@ class Palette {
     secondary;
     accent;
     blackish;
-    whiteish;
-    redish;
+    whitish;
+    reddish;
     yellowish;
     greenish;
-    blueish;
+    bluish;
     magentaish;
+    colorIndex;
     constructor() {
         this.primary = new THREE.Color();
         this.primary.setHSL(Math.random() * 0.8 + 0.2, Math.random() * 0.8 + 0.2 * .5, Math.random() * 0.8 + 0.2);
@@ -94,29 +95,39 @@ class Palette {
         let minR = Math.min(this.primary.r, this.secondary.r, this.accent.r) * 0.6;
         let minG = Math.min(this.primary.g, this.secondary.g, this.accent.g) * 0.6;
         let minB = Math.min(this.primary.b, this.secondary.b, this.accent.b) * 0.6;
-        this.whiteish = new THREE.Color(maxR, maxG, maxB);
+        this.whitish = new THREE.Color(maxR, maxG, maxB);
         this.blackish = new THREE.Color(minR, minG, minB);
-        this.redish = new THREE.Color(maxR, minG, minB);
+        this.reddish = new THREE.Color(maxR, minG, minB);
         this.yellowish = new THREE.Color(maxR, maxG, minB);
         this.greenish = new THREE.Color(minR, maxG, minB);
-        this.blueish = new THREE.Color(minR, minG, maxB);
+        this.bluish = new THREE.Color(minR, minG, maxB);
         this.magentaish = new THREE.Color(maxR, minG, maxB);
+        this.colorIndex = 0;
     }
     asArray() {
         return [
             this.primary,
             this.secondary,
             this.accent,
-            this.whiteish,
+            this.whitish,
             this.blackish,
-            this.redish,
+            this.reddish,
             this.yellowish,
             this.greenish,
-            this.blueish,
+            this.bluish,
             this.magentaish
         ];
     }
+    nextColor() {
+        const colors = this.asArray();
+        this.colorIndex = (this.colorIndex + 1) % colors.length;
+        return colors[this.colorIndex];
+    }
+    getCurrentColor() {
+        return this.asArray()[this.colorIndex];
+    }
 }
+exports.Palette = Palette;
 class PaletteTest {
     testPalette;
     scene;
@@ -180,7 +191,7 @@ class PaletteTest {
     }
 }
 exports.PaletteTest = PaletteTest;
-//# sourceMappingURL=Palette.js.map
+//# sourceMappingURL=palette.js.map
 
 /***/ }),
 
@@ -37214,8 +37225,8 @@ var exports = __webpack_exports__;
 var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
-const Palette_1 = __webpack_require__(317);
-new Palette_1.PaletteTest();
+const palette_1 = __webpack_require__(812);
+new palette_1.PaletteTest();
 //# sourceMappingURL=colorTest.js.map
 })();
 

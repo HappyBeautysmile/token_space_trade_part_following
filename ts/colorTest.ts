@@ -1,3 +1,3 @@
-import { PaletteTest } from "./Palette";
+import { PaletteTest } from "./palette";
 
 new PaletteTest();
