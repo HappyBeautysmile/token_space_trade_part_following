@@ -21,14 +21,14 @@ export class Hand extends THREE.Object3D {
     private place: Place,
     private leftHand: boolean) {
     super();
-    this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
-    this.debug = new THREE.Mesh(
-      new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
-    this.debug.position.set(0, 0, -1);
-    this.add(this.debug);
+    // this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+    // this.debug = new THREE.Mesh(
+    //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
+    // this.debug.position.set(0, 0, -1);
+    // this.add(this.debug);
 
-    grip.add(this);
-    this.setCube(initialObject);
+    // grip.add(this);
+    // this.setCube(initialObject);
 
     // const cube = new THREE.Mesh(
     //   new THREE.BoxBufferGeometry(0.1, 0.1, 0.1),
@@ -41,7 +41,7 @@ export class Hand extends THREE.Object3D {
     //   .setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, -0.5, 0)]);
     // const line = new THREE.Line(lineGeometry, lineMaterial);
     // this.add(line);
-    this.initialize();
+    //this.initialize();
   }
 
   // We create these private temporary variables here so we aren't
