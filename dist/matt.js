@@ -164,7 +164,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("VR button moved to end.");
+        debug_1.Debug.log("pulled clean copy.  added back in trigger and squeeze.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -497,33 +497,33 @@ class Hand extends THREE.Object3D {
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
-    // private deleteCube() {
-    //   this.p.copy(this.cube.position);
-    //   this.place.playerToUniverse(this.p);
-    //   this.place.quantizePosition(this.p);
-    //   const key = this.posToKey(this.p);
-    //   if (Hand.AllObjects.has(key)) {
-    //     this.place.universeGroup.remove(Hand.AllObjects.get(key));
-    //     Hand.AllObjects.delete(key);
-    //   }
-    // }
+    deleteCube() {
+        this.p.copy(this.cube.position);
+        this.place.playerToUniverse(this.p);
+        this.place.quantizePosition(this.p);
+        const key = this.posToKey(this.p);
+        if (Hand.AllObjects.has(key)) {
+            this.place.universeGroup.remove(Hand.AllObjects.get(key));
+            Hand.AllObjects.delete(key);
+        }
+    }
     p = new THREE.Vector3();
     async initialize() {
         this.grip.addEventListener('squeeze', () => {
-            //this.deleteCube();
+            this.deleteCube();
         });
         this.grip.addEventListener('selectstart', () => {
-            //this.deleteCube();
-            // const o = this.templateCube.clone();
-            // o.position.copy(this.cube.position);
-            // o.rotation.copy(this.cube.rotation);
-            // const p = o.position;
-            // this.place.playerToUniverse(p);
-            // this.place.quantizePosition(p);
-            // this.place.quantizeRotation(o.rotation);
-            // this.place.universeGroup.add(o);
-            // const key = this.posToKey(o.position);
-            // Hand.AllObjects.set(key, o);
+            this.deleteCube();
+            const o = this.templateCube.clone();
+            o.position.copy(this.cube.position);
+            o.rotation.copy(this.cube.rotation);
+            const p = o.position;
+            this.place.playerToUniverse(p);
+            this.place.quantizePosition(p);
+            this.place.quantizeRotation(o.rotation);
+            this.place.universeGroup.add(o);
+            const key = this.posToKey(o.position);
+            Hand.AllObjects.set(key, o);
         });
         this.grip.addEventListener('selectend', () => {
         });
@@ -914,7 +914,6 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.rightStart = null;
         });
     }
-    rotationMatrix = new THREE.Matrix4();
     zoom() {
         if (!this.oldZoom) {
             this.oldZoom = new THREE.Matrix4();
@@ -923,9 +922,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         const m = zoom_1.Zoom.makeZoomMatrix(this.leftStart, this.rightStart, this.grips[0].position, this.grips[1].position);
         this.matrix.copy(this.oldZoom);
         this.matrix.multiply(m);
-        this.position.setFromMatrixPosition(this.matrix);
-        this.rotation.setFromRotationMatrix(this.matrix);
-        this.scale.setFromMatrixScale(this.matrix);
+        this.matrix.decompose(this.position, this.quaternion, this.scale);
     }
     zoomEnd() {
         this.oldZoom = null;

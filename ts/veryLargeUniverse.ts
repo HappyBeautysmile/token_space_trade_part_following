@@ -52,7 +52,6 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     });
   }
 
-  private rotationMatrix = new THREE.Matrix4();
   private zoom() {
     if (!this.oldZoom) {
       this.oldZoom = new THREE.Matrix4();
@@ -62,9 +61,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       this.grips[0].position, this.grips[1].position);
     this.matrix.copy(this.oldZoom);
     this.matrix.multiply(m);
-    this.position.setFromMatrixPosition(this.matrix);
-    this.rotation.setFromRotationMatrix(this.matrix);
-    this.scale.setFromMatrixScale(this.matrix);
+    this.matrix.decompose(this.position, this.quaternion, this.scale);
   }
 
   private zoomEnd() {
