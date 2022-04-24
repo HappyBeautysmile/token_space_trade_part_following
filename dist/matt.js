@@ -531,40 +531,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.VeryLargeUniverse = exports.Zoom = void 0;
+exports.VeryLargeUniverse = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const settings_1 = __webpack_require__(451);
-class Zoom {
-    static d = new THREE.Vector3;
-    static seed = new THREE.Vector3();
-    static other = new THREE.Vector3();
-    static makePerpendicular(l, r) {
-        this.d.copy(r);
-        this.d.sub(l);
-        this.seed.set(-this.d.y, this.d.x, 0);
-        this.seed.cross(this.d);
-        this.seed.setLength(this.d.length());
-        this.other.copy(this.d);
-        this.other.cross(this.seed);
-        this.other.setLength(this.d.length());
-        return [
-            new THREE.Vector3(l.x + this.seed.x, l.y + this.seed.y, l.z + this.seed.z),
-            new THREE.Vector3(l.x + this.other.x, l.y + this.other.y, l.z + this.other.z)
-        ];
-    }
-    static makeZoomMatrix(l1, r1, l2, r2) {
-        const [a1, b1] = Zoom.makePerpendicular(l1, r1);
-        const [a2, b2] = Zoom.makePerpendicular(l2, r2);
-        const initialPosition = new THREE.Matrix4();
-        initialPosition.set(l1.x, r1.x, a1.x, b1.x, l1.y, r1.y, a1.y, b1.y, l1.z, r1.z, a1.z, b1.z, 1, 1, 1, 1);
-        const newPosition = new THREE.Matrix4();
-        newPosition.set(l2.x, r2.x, a2.x, b2.x, l2.y, r2.y, a2.y, b2.y, l2.z, r2.z, a2.z, b2.z, 1, 1, 1, 1);
-        initialPosition.invert();
-        newPosition.multiplyMatrices(newPosition, initialPosition);
-        return newPosition;
-    }
-}
-exports.Zoom = Zoom;
+const zoom_1 = __webpack_require__(950);
 class StarSystem extends THREE.Object3D {
     constructor() {
         super();
@@ -613,11 +583,12 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.oldZoom = new THREE.Matrix4();
             this.oldZoom.copy(this.matrix);
         }
-        const m = Zoom.makeZoomMatrix(this.leftStart, this.rightStart, this.grips[0].position, this.grips[1].position);
+        const m = zoom_1.Zoom.makeZoomMatrix(this.leftStart, this.rightStart, this.grips[0].position, this.grips[1].position);
         this.matrix.copy(this.oldZoom);
         this.matrix.multiply(m);
         this.position.setFromMatrixPosition(this.matrix);
         this.rotation.setFromRotationMatrix(this.matrix);
+        this.scale.setFromMatrixScale(this.matrix);
     }
     zoomEnd() {
         this.oldZoom = null;
@@ -699,6 +670,67 @@ class VeryLargeUniverse extends THREE.Object3D {
 }
 exports.VeryLargeUniverse = VeryLargeUniverse;
 //# sourceMappingURL=veryLargeUniverse.js.map
+
+/***/ }),
+
+/***/ 950:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Zoom = void 0;
+const THREE = __importStar(__webpack_require__(578));
+class Zoom {
+    static d = new THREE.Vector3;
+    static seed = new THREE.Vector3();
+    static other = new THREE.Vector3();
+    static makePerpendicular(l, r) {
+        this.d.copy(r);
+        this.d.sub(l);
+        this.seed.set(-this.d.y, this.d.x, 0);
+        this.seed.cross(this.d);
+        this.seed.setLength(this.d.length());
+        this.other.copy(this.d);
+        this.other.cross(this.seed);
+        this.other.setLength(this.d.length());
+        return [
+            new THREE.Vector3(l.x + this.seed.x, l.y + this.seed.y, l.z + this.seed.z),
+            new THREE.Vector3(l.x + this.other.x, l.y + this.other.y, l.z + this.other.z)
+        ];
+    }
+    static makeZoomMatrix(l1, r1, l2, r2) {
+        const [a1, b1] = Zoom.makePerpendicular(l1, r1);
+        const [a2, b2] = Zoom.makePerpendicular(l2, r2);
+        const initialPosition = new THREE.Matrix4();
+        initialPosition.set(l1.x, r1.x, a1.x, b1.x, l1.y, r1.y, a1.y, b1.y, l1.z, r1.z, a1.z, b1.z, 1, 1, 1, 1);
+        const newPosition = new THREE.Matrix4();
+        newPosition.set(l2.x, r2.x, a2.x, b2.x, l2.y, r2.y, a2.y, b2.y, l2.z, r2.z, a2.z, b2.z, 1, 1, 1, 1);
+        initialPosition.invert();
+        newPosition.multiplyMatrices(newPosition, initialPosition);
+        return newPosition;
+    }
+}
+exports.Zoom = Zoom;
+//# sourceMappingURL=zoom.js.map
 
 /***/ }),
 
