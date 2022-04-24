@@ -27,7 +27,7 @@ export class Hand extends THREE.Object3D {
     // this.debug.position.set(0, 0, -1);
     // this.add(this.debug);
 
-    //grip.add(this);
+    grip.add(this);
     //this.setCube(initialObject);
     //this.initialize();
   }
