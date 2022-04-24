@@ -8,7 +8,11 @@
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -210,7 +214,11 @@ exports.BlockBuild = BlockBuild;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -278,7 +286,11 @@ exports.Debug = Debug;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -356,7 +368,11 @@ exports.Game = Game;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -540,7 +556,11 @@ exports.Hand = Hand;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -689,7 +709,11 @@ exports.InHandObject = InHandObject;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -847,7 +871,11 @@ exports.Tick = Tick;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1038,7 +1066,11 @@ exports.VeryLargeUniverse = VeryLargeUniverse;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -37850,70 +37882,70 @@ exports.sRGBEncoding = sRGBEncoding;
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "m7l": () => (/* binding */ AnimationClip),
-/* harmony export */   "N$j": () => (/* binding */ Bone),
-/* harmony export */   "ZzF": () => (/* binding */ Box3),
-/* harmony export */   "TlE": () => (/* binding */ BufferAttribute),
-/* harmony export */   "u9r": () => (/* binding */ BufferGeometry),
-/* harmony export */   "uWy": () => (/* binding */ ClampToEdgeWrapping),
-/* harmony export */   "Ilk": () => (/* binding */ Color),
-/* harmony export */   "Ox3": () => (/* binding */ DirectionalLight),
-/* harmony export */   "ehD": () => (/* binding */ DoubleSide),
-/* harmony export */   "hH6": () => (/* binding */ FileLoader),
-/* harmony export */   "a$l": () => (/* binding */ Float32BufferAttribute),
-/* harmony export */   "Wl3": () => (/* binding */ FrontSide),
-/* harmony export */   "ZAu": () => (/* binding */ Group),
-/* harmony export */   "QRU": () => (/* binding */ ImageBitmapLoader),
-/* harmony export */   "vpT": () => (/* binding */ InterleavedBuffer),
-/* harmony export */   "kB5": () => (/* binding */ InterleavedBufferAttribute),
-/* harmony export */   "_C8": () => (/* binding */ Interpolant),
-/* harmony export */   "Syv": () => (/* binding */ InterpolateDiscrete),
-/* harmony export */   "NMF": () => (/* binding */ InterpolateLinear),
-/* harmony export */   "x12": () => (/* binding */ Line),
-/* harmony export */   "nls": () => (/* binding */ LineBasicMaterial),
-/* harmony export */   "blk": () => (/* binding */ LineLoop),
-/* harmony export */   "ejS": () => (/* binding */ LineSegments),
-/* harmony export */   "wem": () => (/* binding */ LinearFilter),
 /* harmony export */   "D1R": () => (/* binding */ LinearMipmapLinearFilter),
-/* harmony export */   "qyh": () => (/* binding */ LinearMipmapNearestFilter),
-/* harmony export */   "aNw": () => (/* binding */ Loader),
-/* harmony export */   "Zp0": () => (/* binding */ LoaderUtils),
-/* harmony export */   "F5T": () => (/* binding */ Material),
-/* harmony export */   "M8C": () => (/* binding */ MathUtils),
-/* harmony export */   "yGw": () => (/* binding */ Matrix4),
-/* harmony export */   "Kj0": () => (/* binding */ Mesh),
-/* harmony export */   "vBJ": () => (/* binding */ MeshBasicMaterial),
 /* harmony export */   "EJi": () => (/* binding */ MeshPhysicalMaterial),
-/* harmony export */   "Wid": () => (/* binding */ MeshStandardMaterial),
+/* harmony export */   "F5T": () => (/* binding */ Material),
+/* harmony export */   "FM8": () => (/* binding */ Vector2),
+/* harmony export */   "IOt": () => (/* binding */ TangentSpaceNormalMap),
+/* harmony export */   "Ilk": () => (/* binding */ Color),
+/* harmony export */   "Kj0": () => (/* binding */ Mesh),
+/* harmony export */   "M8C": () => (/* binding */ MathUtils),
+/* harmony export */   "N$j": () => (/* binding */ Bone),
+/* harmony export */   "NMF": () => (/* binding */ InterpolateLinear),
+/* harmony export */   "OdW": () => (/* binding */ Skeleton),
 /* harmony export */   "OoA": () => (/* binding */ MirroredRepeatWrapping),
-/* harmony export */   "TyD": () => (/* binding */ NearestFilter),
-/* harmony export */   "aH4": () => (/* binding */ NearestMipmapLinearFilter),
-/* harmony export */   "YLQ": () => (/* binding */ NearestMipmapNearestFilter),
-/* harmony export */   "dUE": () => (/* binding */ NumberKeyframeTrack),
+/* harmony export */   "Ox3": () => (/* binding */ DirectionalLight),
+/* harmony export */   "PMe": () => (/* binding */ SpotLight),
+/* harmony export */   "Pa4": () => (/* binding */ Vector3),
+/* harmony export */   "QRU": () => (/* binding */ ImageBitmapLoader),
+/* harmony export */   "Syv": () => (/* binding */ InterpolateDiscrete),
+/* harmony export */   "TUv": () => (/* binding */ SkinnedMesh),
+/* harmony export */   "TlE": () => (/* binding */ BufferAttribute),
 /* harmony export */   "Tme": () => (/* binding */ Object3D),
-/* harmony export */   "iKG": () => (/* binding */ OrthographicCamera),
+/* harmony export */   "TyD": () => (/* binding */ NearestFilter),
+/* harmony export */   "UY4": () => (/* binding */ PointsMaterial),
+/* harmony export */   "UlW": () => (/* binding */ TriangleStripDrawMode),
+/* harmony export */   "Wid": () => (/* binding */ MeshStandardMaterial),
+/* harmony export */   "Wl3": () => (/* binding */ FrontSide),
+/* harmony export */   "WwZ": () => (/* binding */ TrianglesDrawMode),
+/* harmony export */   "YLQ": () => (/* binding */ NearestMipmapNearestFilter),
+/* harmony export */   "ZAu": () => (/* binding */ Group),
+/* harmony export */   "Zp0": () => (/* binding */ LoaderUtils),
+/* harmony export */   "ZzF": () => (/* binding */ Box3),
+/* harmony export */   "_C8": () => (/* binding */ Interpolant),
+/* harmony export */   "_fP": () => (/* binding */ Quaternion),
+/* harmony export */   "a$l": () => (/* binding */ Float32BufferAttribute),
+/* harmony export */   "aH4": () => (/* binding */ NearestMipmapLinearFilter),
+/* harmony export */   "aLr": () => (/* binding */ Sphere),
+/* harmony export */   "aNw": () => (/* binding */ Loader),
+/* harmony export */   "blk": () => (/* binding */ LineLoop),
 /* harmony export */   "cPb": () => (/* binding */ PerspectiveCamera),
 /* harmony export */   "cek": () => (/* binding */ PointLight),
-/* harmony export */   "woe": () => (/* binding */ Points),
-/* harmony export */   "UY4": () => (/* binding */ PointsMaterial),
-/* harmony export */   "iUV": () => (/* binding */ PropertyBinding),
-/* harmony export */   "_fP": () => (/* binding */ Quaternion),
-/* harmony export */   "iLg": () => (/* binding */ QuaternionKeyframeTrack),
-/* harmony export */   "rpg": () => (/* binding */ RepeatWrapping),
-/* harmony export */   "OdW": () => (/* binding */ Skeleton),
-/* harmony export */   "TUv": () => (/* binding */ SkinnedMesh),
-/* harmony export */   "aLr": () => (/* binding */ Sphere),
-/* harmony export */   "PMe": () => (/* binding */ SpotLight),
-/* harmony export */   "IOt": () => (/* binding */ TangentSpaceNormalMap),
-/* harmony export */   "xEZ": () => (/* binding */ Texture),
+/* harmony export */   "dUE": () => (/* binding */ NumberKeyframeTrack),
 /* harmony export */   "dpR": () => (/* binding */ TextureLoader),
-/* harmony export */   "z$h": () => (/* binding */ TriangleFanDrawMode),
-/* harmony export */   "UlW": () => (/* binding */ TriangleStripDrawMode),
-/* harmony export */   "WwZ": () => (/* binding */ TrianglesDrawMode),
-/* harmony export */   "FM8": () => (/* binding */ Vector2),
-/* harmony export */   "Pa4": () => (/* binding */ Vector3),
+/* harmony export */   "ehD": () => (/* binding */ DoubleSide),
+/* harmony export */   "ejS": () => (/* binding */ LineSegments),
+/* harmony export */   "hH6": () => (/* binding */ FileLoader),
+/* harmony export */   "iKG": () => (/* binding */ OrthographicCamera),
+/* harmony export */   "iLg": () => (/* binding */ QuaternionKeyframeTrack),
+/* harmony export */   "iUV": () => (/* binding */ PropertyBinding),
+/* harmony export */   "kB5": () => (/* binding */ InterleavedBufferAttribute),
+/* harmony export */   "knz": () => (/* binding */ sRGBEncoding),
+/* harmony export */   "m7l": () => (/* binding */ AnimationClip),
+/* harmony export */   "nls": () => (/* binding */ LineBasicMaterial),
+/* harmony export */   "qyh": () => (/* binding */ LinearMipmapNearestFilter),
+/* harmony export */   "rpg": () => (/* binding */ RepeatWrapping),
+/* harmony export */   "u9r": () => (/* binding */ BufferGeometry),
+/* harmony export */   "uWy": () => (/* binding */ ClampToEdgeWrapping),
+/* harmony export */   "vBJ": () => (/* binding */ MeshBasicMaterial),
+/* harmony export */   "vpT": () => (/* binding */ InterleavedBuffer),
+/* harmony export */   "wem": () => (/* binding */ LinearFilter),
+/* harmony export */   "woe": () => (/* binding */ Points),
+/* harmony export */   "x12": () => (/* binding */ Line),
+/* harmony export */   "xEZ": () => (/* binding */ Texture),
 /* harmony export */   "yC1": () => (/* binding */ VectorKeyframeTrack),
-/* harmony export */   "knz": () => (/* binding */ sRGBEncoding)
+/* harmony export */   "yGw": () => (/* binding */ Matrix4),
+/* harmony export */   "z$h": () => (/* binding */ TriangleFanDrawMode)
 /* harmony export */ });
 /* unused harmony exports ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AlphaFormat, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AmbientLightProbe, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, Audio, AudioAnalyser, AudioContext, AudioListener, AudioLoader, AxesHelper, AxisHelper, BackSide, BasicDepthPacking, BasicShadowMap, BinaryTextureLoader, BooleanKeyframeTrack, BoundingBoxHelper, Box2, Box3Helper, BoxBufferGeometry, BoxGeometry, BoxHelper, BufferGeometryLoader, ByteType, Cache, Camera, CameraHelper, CanvasRenderer, CanvasTexture, CapsuleBufferGeometry, CapsuleGeometry, CatmullRomCurve3, CineonToneMapping, CircleBufferGeometry, CircleGeometry, Clock, ColorKeyframeTrack, ColorManagement, CompressedTexture, CompressedTextureLoader, ConeBufferGeometry, ConeGeometry, CubeCamera, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderBufferGeometry, CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTexture2DArray, DataTexture3D, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthStencilFormat, DepthTexture, DirectionalLightHelper, DiscreteInterpolant, DodecahedronBufferGeometry, DodecahedronGeometry, DstAlphaFactor, DstColorFactor, DynamicBufferAttribute, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, EdgesGeometry, EdgesHelper, EllipseCurve, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, ExtrudeBufferGeometry, ExtrudeGeometry, FaceColors, FlatShading, Float16BufferAttribute, Float32Attribute, Float64Attribute, Float64BufferAttribute, FloatType, Fog, FogExp2, Font, FontLoader, FramebufferTexture, Frustum, GLBufferAttribute, GLSL1, GLSL3, GreaterDepth, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, HalfFloatType, HemisphereLight, HemisphereLightHelper, HemisphereLightProbe, IcosahedronBufferGeometry, IcosahedronGeometry, ImageLoader, ImageUtils, ImmediateRenderObject, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16Attribute, Int16BufferAttribute, Int32Attribute, Int32BufferAttribute, Int8Attribute, Int8BufferAttribute, IntType, InterpolateSmooth, InvertStencilOp, JSONLoader, KeepStencilOp, KeyframeTrack, LOD, LatheBufferGeometry, LatheGeometry, Layers, LensFlare, LessDepth, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line3, LineCurve, LineCurve3, LineDashedMaterial, LinePieces, LineStrip, LinearEncoding, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, LuminanceAlphaFormat, LuminanceFormat, MOUSE, MaterialLoader, Math, Matrix3, MaxEquation, MeshDepthMaterial, MeshDistanceMaterial, MeshFaceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshToonMaterial, MinEquation, MixOperation, MultiMaterial, MultiplyBlending, MultiplyOperation, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoColors, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NotEqualDepth, NotEqualStencilFunc, ObjectLoader, ObjectSpaceNormalMap, OctahedronBufferGeometry, OctahedronGeometry, OneFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, PCFShadowMap, PCFSoftShadowMap, PMREMGenerator, ParametricGeometry, Particle, ParticleBasicMaterial, ParticleSystem, ParticleSystemMaterial, Path, Plane, PlaneBufferGeometry, PlaneGeometry, PlaneHelper, PointCloud, PointCloudMaterial, PointLightHelper, PolarGridHelper, PolyhedronBufferGeometry, PolyhedronGeometry, PositionalAudio, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, QuaternionLinearInterpolant, REVISION, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBFormat, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, ReinhardToneMapping, ReplaceStencilOp, ReverseSubtractEquation, RingBufferGeometry, RingGeometry, SRGBColorSpace, Scene, SceneUtils, ShaderChunk, ShaderLib, ShaderMaterial, ShadowMaterial, Shape, ShapeBufferGeometry, ShapeGeometry, ShapePath, ShapeUtils, ShortType, SkeletonHelper, SmoothShading, Source, SphereBufferGeometry, SphereGeometry, Spherical, SphericalHarmonics3, SplineCurve, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TetrahedronBufferGeometry, TetrahedronGeometry, TextGeometry, TorusBufferGeometry, TorusGeometry, TorusKnotBufferGeometry, TorusKnotGeometry, Triangle, TubeBufferGeometry, TubeGeometry, UVMapping, Uint16Attribute, Uint16BufferAttribute, Uint32Attribute, Uint32BufferAttribute, Uint8Attribute, Uint8BufferAttribute, Uint8ClampedAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsLib, UniformsUtils, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector4, Vertex, VertexColors, VideoTexture, WebGL1Renderer, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCubeRenderTarget, WebGLMultipleRenderTargets, WebGLMultisampleRenderTarget, WebGLRenderTarget, WebGLRenderTargetCube, WebGLRenderer, WebGLUtils, WireframeGeometry, WireframeHelper, WrapAroundEnding, XHRLoader, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, _SRGBAFormat */
 /**
@@ -92889,15 +92921,15 @@ function toTrianglesDrawMode( geometry, drawMode ) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "computeTangents": () => (/* binding */ computeTangents),
-/* harmony export */   "mergeBufferGeometries": () => (/* binding */ mergeBufferGeometries),
-/* harmony export */   "mergeBufferAttributes": () => (/* binding */ mergeBufferAttributes),
-/* harmony export */   "interleaveAttributes": () => (/* binding */ interleaveAttributes),
-/* harmony export */   "estimateBytesUsed": () => (/* binding */ estimateBytesUsed),
-/* harmony export */   "mergeVertices": () => (/* binding */ mergeVertices),
-/* harmony export */   "toTrianglesDrawMode": () => (/* binding */ toTrianglesDrawMode),
 /* harmony export */   "computeMorphedAttributes": () => (/* binding */ computeMorphedAttributes),
-/* harmony export */   "mergeGroups": () => (/* binding */ mergeGroups)
+/* harmony export */   "computeTangents": () => (/* binding */ computeTangents),
+/* harmony export */   "estimateBytesUsed": () => (/* binding */ estimateBytesUsed),
+/* harmony export */   "interleaveAttributes": () => (/* binding */ interleaveAttributes),
+/* harmony export */   "mergeBufferAttributes": () => (/* binding */ mergeBufferAttributes),
+/* harmony export */   "mergeBufferGeometries": () => (/* binding */ mergeBufferGeometries),
+/* harmony export */   "mergeGroups": () => (/* binding */ mergeGroups),
+/* harmony export */   "mergeVertices": () => (/* binding */ mergeVertices),
+/* harmony export */   "toTrianglesDrawMode": () => (/* binding */ toTrianglesDrawMode)
 /* harmony export */ });
 /* harmony import */ var three__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(477);
 
