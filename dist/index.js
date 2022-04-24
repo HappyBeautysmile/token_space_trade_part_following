@@ -324,6 +324,7 @@ class Game {
             this.tickEverything(this.scene, tick);
             this.renderer.render(this.scene, this.camera);
         });
+        this.getGrips();
         const vlu = new veryLargeUniverse_1.VeryLargeUniverse(this.grips, this.renderer.xr);
         this.scene.add(vlu);
     }
