@@ -563,7 +563,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         });
         this.grips[1].addEventListener('selectstart', () => {
             this.rightStart = new THREE.Vector3();
-            this.rightStart.copy(this.grips[0].position);
+            this.rightStart.copy(this.grips[1].position);
         });
         this.grips[0].addEventListener('selectend', () => {
             if (this.leftStart && this.rightStart) {
@@ -609,7 +609,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         // uniform float pointMultiplier;
         varying vec3 vColor;
         void main() {
-          vColor = vec3(1.0, 1.0, 1.0);
+          vColor = vec3(1.0, 0.5, 1.0);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           float distance = length(mvPosition.xyz);
           if (distance > 1000.0) {
