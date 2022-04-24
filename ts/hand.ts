@@ -79,51 +79,51 @@ export class Hand extends THREE.Object3D {
       }
     }
 
-    if (source) {
-      //this.debugMaterial.color = new THREE.Color('blue');
-      const rate = 3;
-      const axes = source.gamepad.axes.slice(0);
-      if (axes.length >= 4) {
-        //this.debugMaterial.color = new THREE.Color('green');
-        if (!axes[2] || !axes[3]) {
-          // Sticks are not being touched.
-        } else {
-          //this.debugMaterial.color = new THREE.Color('orange');
-          this
-          if (this.leftHand) {
-            this.v.set(axes[2], 0, axes[3]);
-            this.v.multiplyScalar(rate * t.deltaS);
-            this.place.movePlayerRelativeToCamera(this.v);
-          }
-          else {
-            this.v.set(0, -axes[3], 0);
-            this.v.multiplyScalar(rate * t.deltaS);
-            this.place.movePlayerRelativeToCamera(this.v);
-            // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
-          }
-        }
-      }
-      const buttons = source.gamepad.buttons.map((b) => b.value);
-      if (buttons[0] === 1) { // trigger
-        this.debugMaterial.color = new THREE.Color('red');
-      }
-      if (buttons[1] === 1) { // squeeze
-        this.debugMaterial.color = new THREE.Color('yellow');
-      }
-      if (buttons[3] === 1) { // stick
-        //this.debugMaterial.color = new THREE.Color('blue');
-        this.place.stop();
-      }
-      if (buttons[4] === 1) { // A or X
-        Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
-        Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
-        Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
-      }
-      if (buttons[5] === 1) { // B or Y
-        // const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-        // this.cube.material = newMat;
-      }
-    }
+    // if (source) {
+    //   //this.debugMaterial.color = new THREE.Color('blue');
+    //   const rate = 3;
+    //   const axes = source.gamepad.axes.slice(0);
+    //   if (axes.length >= 4) {
+    //     //this.debugMaterial.color = new THREE.Color('green');
+    //     if (!axes[2] || !axes[3]) {
+    //       // Sticks are not being touched.
+    //     } else {
+    //       //this.debugMaterial.color = new THREE.Color('orange');
+    //       this
+    //       if (this.leftHand) {
+    //         this.v.set(axes[2], 0, axes[3]);
+    //         this.v.multiplyScalar(rate * t.deltaS);
+    //         this.place.movePlayerRelativeToCamera(this.v);
+    //       }
+    //       else {
+    //         this.v.set(0, -axes[3], 0);
+    //         this.v.multiplyScalar(rate * t.deltaS);
+    //         this.place.movePlayerRelativeToCamera(this.v);
+    //         // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
+    //       }
+    //     }
+    //   }
+    //   const buttons = source.gamepad.buttons.map((b) => b.value);
+    //   if (buttons[0] === 1) { // trigger
+    //     this.debugMaterial.color = new THREE.Color('red');
+    //   }
+    //   if (buttons[1] === 1) { // squeeze
+    //     this.debugMaterial.color = new THREE.Color('yellow');
+    //   }
+    //   if (buttons[3] === 1) { // stick
+    //     //this.debugMaterial.color = new THREE.Color('blue');
+    //     this.place.stop();
+    //   }
+    //   if (buttons[4] === 1) { // A or X
+    //     Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
+    //     Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
+    //     Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
+    //   }
+    //   if (buttons[5] === 1) { // B or Y
+    //     // const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+    //     // this.cube.material = newMat;
+    //   }
+    // }
   }
 
   public setCube(o: THREE.Object3D) {
