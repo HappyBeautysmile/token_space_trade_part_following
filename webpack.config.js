@@ -3,6 +3,8 @@ const HtmlWebPackPlugin = require("html-webpack-plugin");
 module.exports = {
   entry: {
     index: "./src/index.js",
+    matt: "./src/index.js",
+    steve: "./src/index.js",
     colorTest: "./src/colorTest.js",
   },
   output: {
@@ -18,6 +20,18 @@ module.exports = {
       template: "./src/index.html",
       filename: "index.html",
       chunks: ['index']
+    }),
+    new HtmlWebPackPlugin({
+      name: "matt",
+      template: "./src/index.html",
+      filename: "matt.html",
+      chunks: ['matt']
+    }),
+    new HtmlWebPackPlugin({
+      name: "steve",
+      template: "./src/index.html",
+      filename: "steve.html",
+      chunks: ['steve']
     }),
     new HtmlWebPackPlugin({
       name: "colorTest",
