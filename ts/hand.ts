@@ -3,6 +3,7 @@ import { Place } from "./place";
 import { Tick } from "./tick";
 import { Debug } from "./debug";
 import { InHandObject } from "./inHandObject";
+import { Palette } from "./palette";
 
 export class Hand extends THREE.Object3D {
 
