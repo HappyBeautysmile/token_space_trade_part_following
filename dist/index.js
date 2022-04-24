@@ -168,7 +168,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("added grip.add(this);");
+        debug_1.Debug.log("restored constrocor without grip.add(this);");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -399,7 +399,6 @@ class Hand extends THREE.Object3D {
     place;
     leftHand;
     static AllObjects = new Map();
-    //private cube: THREE.Object3D;
     cube;
     templateCube;
     debug;
@@ -416,9 +415,9 @@ class Hand extends THREE.Object3D {
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
         // this.debug.position.set(0, 0, -1);
         // this.add(this.debug);
-        grip.add(this);
-        //this.setCube(initialObject);
-        //this.initialize();
+        //grip.add(this);
+        this.setCube(initialObject);
+        this.initialize();
     }
     // We create these private temporary variables here so we aren't
     // creating new objects on every frame.  This reduces the amount of

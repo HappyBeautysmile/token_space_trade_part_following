@@ -9,7 +9,6 @@ export class Hand extends THREE.Object3D {
 
   private static AllObjects = new Map<string, THREE.Object3D>();
 
-  //private cube: THREE.Object3D;
   private cube: THREE.Object3D;
   private templateCube: THREE.Object3D;
 
@@ -27,9 +26,9 @@ export class Hand extends THREE.Object3D {
     // this.debug.position.set(0, 0, -1);
     // this.add(this.debug);
 
-    grip.add(this);
-    //this.setCube(initialObject);
-    //this.initialize();
+    //grip.add(this);
+    this.setCube(initialObject);
+    this.initialize();
   }
 
   // We create these private temporary variables here so we aren't
