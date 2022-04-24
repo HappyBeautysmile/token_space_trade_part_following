@@ -53,6 +53,7 @@ export class BlockBuild {
   private async initialize() {
     this.setScene();
     await this.loadAllModels();
+    Debug.log("all models loaded.");
     this.getGrips();
   }
 
@@ -139,7 +140,6 @@ export class BlockBuild {
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(512, 512);
     document.body.appendChild(this.renderer.domElement);
-    document.body.appendChild(VRButton.createButton(this.renderer));
     this.renderer.xr.enabled = true;
 
     const light = new THREE.AmbientLight(0x404040); // soft white light
@@ -151,7 +151,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("check grip before use.");
+    Debug.log("VR button moved to end.");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -168,6 +168,7 @@ export class BlockBuild {
       this.tickEverything(this.scene, tick);
       this.renderer.render(this.scene, this.camera);
     });
+    document.body.appendChild(VRButton.createButton(this.renderer));
   }
 
   getGrips() {

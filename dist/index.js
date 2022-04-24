@@ -81,6 +81,7 @@ class BlockBuild {
     async initialize() {
         this.setScene();
         await this.loadAllModels();
+        debug_1.Debug.log("all models loaded.");
         this.getGrips();
     }
     async loadAllModels() {
@@ -158,7 +159,6 @@ class BlockBuild {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(512, 512);
         document.body.appendChild(this.renderer.domElement);
-        document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
         this.renderer.xr.enabled = true;
         const light = new THREE.AmbientLight(0x404040); // soft white light
         this.scene.add(light);
@@ -168,7 +168,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("check grip before use.");
+        debug_1.Debug.log("VR button moved to end.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -182,6 +182,7 @@ class BlockBuild {
             this.tickEverything(this.scene, tick);
             this.renderer.render(this.scene, this.camera);
         });
+        document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
     }
     getGrips() {
         //const debugMaterial = new THREE.MeshStandardMaterial({ color: '#0f0' });
@@ -416,11 +417,11 @@ class Hand extends THREE.Object3D {
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
         // this.debug.position.set(0, 0, -1);
         // this.add(this.debug);
-        if (grip) {
+        if (grip && this) {
             grip.add(this);
         }
         else {
-            debug_1.Debug.log("ERROR: grip not defined.");
+            debug_1.Debug.log("ERROR: grip or this not defined.");
         }
         this.setCube(initialObject);
         this.initialize();
