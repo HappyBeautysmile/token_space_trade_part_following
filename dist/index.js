@@ -271,6 +271,83 @@ exports.Debug = Debug;
 
 /***/ }),
 
+/***/ 417:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Game = void 0;
+const THREE = __importStar(__webpack_require__(578));
+const tick_1 = __webpack_require__(544);
+const VRButton_js_1 = __webpack_require__(652);
+const veryLargeUniverse_1 = __webpack_require__(453);
+class Game {
+    scene = new THREE.Scene();
+    camera;
+    renderer;
+    grips = [];
+    constructor() {
+        this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
+        this.camera.position.set(0, 1.7, 0);
+        this.camera.lookAt(0, 1.7, -1.5);
+        this.scene.add(this.camera);
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setSize(512, 512);
+        document.body.appendChild(this.renderer.domElement);
+        document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
+        this.renderer.xr.enabled = true;
+        const clock = new THREE.Clock();
+        let elapsedS = 0.0;
+        this.renderer.setAnimationLoop(() => {
+            const deltaS = Math.min(clock.getDelta(), 0.1);
+            elapsedS += deltaS;
+            const tick = new tick_1.Tick(elapsedS, deltaS);
+            this.tickEverything(this.scene, tick);
+            this.renderer.render(this.scene, this.camera);
+        });
+        const vlu = new veryLargeUniverse_1.VeryLargeUniverse(this.grips, this.renderer.xr);
+        this.scene.add(vlu);
+    }
+    getGrips() {
+        for (const i of [0, 1]) {
+            const grip = this.renderer.xr.getControllerGrip(i);
+            this.scene.add(grip);
+            this.grips.push(grip);
+        }
+    }
+    tickEverything(o, tick) {
+        if (o['tick']) {
+            o.tick(tick);
+        }
+        for (const child of o.children) {
+            this.tickEverything(child, tick);
+        }
+    }
+}
+exports.Game = Game;
+//# sourceMappingURL=game.js.map
+
+/***/ }),
+
 /***/ 673:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -696,6 +773,55 @@ exports.Place = Place;
 
 /***/ }),
 
+/***/ 451:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.S = void 0;
+class S {
+    static cache = new Map();
+    static default = new Map();
+    static description = new Map();
+    static setDefault(key, value, description) {
+        S.default.set(key, value);
+        S.description.set(key, description);
+    }
+    static appendHelpText(container) {
+        const helpText = document.createElement('div');
+        for (const k of S.default.keys()) {
+            const d = document.createElement('div');
+            const desc = S.description.get(k);
+            const val = S.float(k);
+            d.innerText = (`${k} = ${val}: ${desc}`);
+            helpText.appendChild(d);
+        }
+        container.appendChild(helpText);
+    }
+    static {
+        S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
+    }
+    static float(name) {
+        if (S.cache.has(name)) {
+            return S.cache.get(name);
+        }
+        const url = new URL(document.URL);
+        const stringVal = url.searchParams.get(name);
+        if (!stringVal) {
+            S.cache.set(name, S.default.get(name));
+        }
+        else {
+            const val = parseFloat(stringVal);
+            S.cache.set(name, val);
+        }
+        return S.cache.get(name);
+    }
+}
+exports.S = S;
+//# sourceMappingURL=settings.js.map
+
+/***/ }),
+
 /***/ 544:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -712,6 +838,193 @@ class Tick {
 }
 exports.Tick = Tick;
 //# sourceMappingURL=tick.js.map
+
+/***/ }),
+
+/***/ 453:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.VeryLargeUniverse = exports.Zoom = void 0;
+const THREE = __importStar(__webpack_require__(578));
+class Zoom {
+    static makePerpendicular(l, r) {
+        const dx = r.x - l.x;
+        const dy = r.y - l.y;
+        const dz = r.z - l.z;
+        return [
+            new THREE.Vector3(l.x - dy, l.y + dx, l.z - dz),
+            new THREE.Vector3(l.x + dy, l.y - dx, l.z - dz)
+        ];
+    }
+    static makeZoomMatrix(l1, r1, l2, r2) {
+        const [a1, b1] = Zoom.makePerpendicular(l1, r1);
+        const [a2, b2] = Zoom.makePerpendicular(l2, r2);
+        const initialPosition = new THREE.Matrix4();
+        initialPosition.set(l1.x, r1.x, a1.x, b1.x, l1.y, r1.y, a1.y, b1.y, l1.z, r1.z, a1.z, b1.z, 1, 1, 1, 1);
+        const newPosition = new THREE.Matrix4();
+        newPosition.set(l2.x, r2.x, a2.x, b2.x, l2.y, r2.y, a2.y, b2.y, l2.z, r2.z, a2.z, b2.z, 1, 1, 1, 1);
+        initialPosition.invert();
+        newPosition.multiplyMatrices(newPosition, initialPosition);
+        return newPosition;
+    }
+}
+exports.Zoom = Zoom;
+class StarSystem extends THREE.Object3D {
+    constructor() {
+        super();
+        this.add(new THREE.Mesh(new THREE.BoxBufferGeometry(1e3, 1e3, 1e3), new THREE.MeshBasicMaterial({ color: '#fff' })));
+    }
+}
+// A collection of StarSystems.  We only instantiate the StarSystem object
+// when the world origin is close to it.
+class VeryLargeUniverse extends THREE.Object3D {
+    grips;
+    xr;
+    currentStarPosition = new THREE.Vector3();
+    currentStar = null;
+    starPositions = [];
+    leftStart;
+    rightStart;
+    oldZoom = null;
+    constructor(grips, xr) {
+        super();
+        this.grips = grips;
+        this.xr = xr;
+        this.addStars();
+        this.grips[0].addEventListener('selectstart', () => {
+            this.leftStart = new THREE.Vector3();
+            this.leftStart.copy(this.grips[0].position);
+        });
+        this.grips[1].addEventListener('selectstart', () => {
+            this.rightStart = new THREE.Vector3();
+            this.rightStart.copy(this.grips[0].position);
+        });
+        this.grips[0].addEventListener('selectend', () => {
+            if (this.leftStart && this.rightStart) {
+                this.zoomEnd();
+            }
+            this.leftStart = null;
+        });
+        this.grips[1].addEventListener('selectend', () => {
+            if (this.leftStart && this.rightStart) {
+                this.zoomEnd();
+            }
+            this.rightStart = null;
+        });
+    }
+    zoom() {
+        if (!this.oldZoom) {
+            this.oldZoom = new THREE.Matrix4();
+            this.oldZoom.copy(this.matrix);
+        }
+        const m = Zoom.makeZoomMatrix(this.leftStart, this.rightStart, this.grips[0].position, this.grips[1].position);
+        this.matrix.copy(this.oldZoom);
+        this.matrix.multiply(m);
+        this.position.setFromMatrixPosition(this.matrix);
+        this.rotation.setFromRotationMatrix(this.matrix);
+    }
+    zoomEnd() {
+        this.oldZoom.copy(this.matrix);
+        this.oldZoom = null;
+    }
+    addStars() {
+        const positions = [];
+        const radius = 1e9;
+        for (let i = 0; i < 100000; ++i) {
+            const v = new THREE.Vector3(Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius));
+            this.starPositions.push(v);
+            positions.push(v.x, v.y, v.z);
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        const material = new THREE.ShaderMaterial({
+            uniforms: {},
+            vertexShader: `
+        // uniform float pointMultiplier;
+        varying vec3 vColor;
+        void main() {
+          vColor = vec3(1.0, 1.0, 1.0);
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          float distance = length(mvPosition.xyz);
+          if (distance > 1000.0) {
+            mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
+          }
+          gl_Position = projectionMatrix * mvPosition;
+          gl_PointSize = max(800.0 / distance, 2.0);
+          
+        }`,
+            fragmentShader: `
+      uniform sampler2D diffuseTexture;
+      varying vec3 vColor;
+      void main() {
+        vec2 coords = gl_PointCoord;
+        float intensity = 2.0 * (0.5 - length(gl_PointCoord - 0.5));
+        gl_FragColor = vec4(vColor.rgb * intensity, 1.0);
+      }`,
+            blending: THREE.AdditiveBlending,
+            depthTest: true,
+            depthWrite: false,
+            transparent: false,
+            vertexColors: true,
+        });
+        const points = new THREE.Points(geometry, material);
+        this.add(points);
+    }
+    p1 = new THREE.Vector3();
+    p2 = new THREE.Vector3();
+    findClosestStar() {
+        let closestDistance = 1e10;
+        for (const starPosition of this.starPositions) {
+            this.p1.copy(starPosition);
+            this.p1.sub(this.position);
+            if (closestDistance > this.p1.length()) {
+                closestDistance = this.p1.length();
+                this.p2.copy(starPosition);
+            }
+        }
+        return this.p2;
+    }
+    tick(t) {
+        if (this.rightStart && this.leftStart) {
+            this.zoom();
+        }
+        const closest = this.findClosestStar();
+        if (closest.x != this.currentStarPosition.x ||
+            closest.y != this.currentStarPosition.y ||
+            closest.z != this.currentStarPosition.z) {
+            this.currentStarPosition.copy(closest);
+            if (this.currentStar) {
+                this.remove(this.currentStar);
+            }
+            this.currentStar = new StarSystem();
+            this.add(this.currentStar);
+            this.currentStar.position.copy(this.currentStarPosition);
+        }
+    }
+}
+exports.VeryLargeUniverse = VeryLargeUniverse;
+//# sourceMappingURL=veryLargeUniverse.js.map
 
 /***/ }),
 
@@ -56388,7 +56701,17 @@ var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
 const blockBuild_1 = __webpack_require__(64);
-new blockBuild_1.BlockBuild();
+const game_1 = __webpack_require__(417);
+const settings_1 = __webpack_require__(451);
+switch (settings_1.S.float('sh')) {
+    case 1:
+    default:
+        new blockBuild_1.BlockBuild();
+        break;
+    case 2:
+        new game_1.Game();
+        break;
+}
 //# sourceMappingURL=index.js.map
 })();
 
