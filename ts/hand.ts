@@ -138,25 +138,25 @@ export class Hand extends THREE.Object3D {
     return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
   }
 
-  private deleteCube() {
-    this.p.copy(this.cube.position);
-    this.place.playerToUniverse(this.p);
-    this.place.quantizePosition(this.p);
-    const key = this.posToKey(this.p);
-    if (Hand.AllObjects.has(key)) {
-      this.place.universeGroup.remove(Hand.AllObjects.get(key));
-      Hand.AllObjects.delete(key);
-    }
-  }
+  // private deleteCube() {
+  //   this.p.copy(this.cube.position);
+  //   this.place.playerToUniverse(this.p);
+  //   this.place.quantizePosition(this.p);
+  //   const key = this.posToKey(this.p);
+  //   if (Hand.AllObjects.has(key)) {
+  //     this.place.universeGroup.remove(Hand.AllObjects.get(key));
+  //     Hand.AllObjects.delete(key);
+  //   }
+  // }
 
   private p = new THREE.Vector3();
   private async initialize() {
     this.grip.addEventListener('squeeze', () => {
-      this.deleteCube();
+      //this.deleteCube();
     });
 
     this.grip.addEventListener('selectstart', () => {
-      this.deleteCube();
+      //this.deleteCube();
       const o = this.templateCube.clone();
       o.position.copy(this.cube.position);
       o.rotation.copy(this.cube.rotation);

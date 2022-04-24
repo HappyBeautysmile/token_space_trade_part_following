@@ -168,7 +168,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log('Fix Delete Cube?');
+        debug_1.Debug.log('back out delete cube');
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -437,23 +437,23 @@ class Hand extends THREE.Object3D {
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
-    deleteCube() {
-        this.p.copy(this.cube.position);
-        this.place.playerToUniverse(this.p);
-        this.place.quantizePosition(this.p);
-        const key = this.posToKey(this.p);
-        if (Hand.AllObjects.has(key)) {
-            this.place.universeGroup.remove(Hand.AllObjects.get(key));
-            Hand.AllObjects.delete(key);
-        }
-    }
+    // private deleteCube() {
+    //   this.p.copy(this.cube.position);
+    //   this.place.playerToUniverse(this.p);
+    //   this.place.quantizePosition(this.p);
+    //   const key = this.posToKey(this.p);
+    //   if (Hand.AllObjects.has(key)) {
+    //     this.place.universeGroup.remove(Hand.AllObjects.get(key));
+    //     Hand.AllObjects.delete(key);
+    //   }
+    // }
     p = new THREE.Vector3();
     async initialize() {
         this.grip.addEventListener('squeeze', () => {
-            this.deleteCube();
+            //this.deleteCube();
         });
         this.grip.addEventListener('selectstart', () => {
-            this.deleteCube();
+            //this.deleteCube();
             const o = this.templateCube.clone();
             o.position.copy(this.cube.position);
             o.rotation.copy(this.cube.rotation);
