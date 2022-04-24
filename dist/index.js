@@ -533,6 +533,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VeryLargeUniverse = exports.Zoom = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const settings_1 = __webpack_require__(451);
 class Zoom {
     static makePerpendicular(l, r) {
         const dx = r.x - l.x;
@@ -615,7 +616,7 @@ class VeryLargeUniverse extends THREE.Object3D {
     }
     addStars() {
         const positions = [];
-        const radius = 1e9;
+        const radius = settings_1.S.float('sr');
         for (let i = 0; i < 100000; ++i) {
             const v = new THREE.Vector3(Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius));
             this.starPositions.push(v);
