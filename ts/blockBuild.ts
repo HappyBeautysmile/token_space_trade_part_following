@@ -6,6 +6,7 @@ import { Tick, Ticker } from "./tick";
 import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
+//import { Assets } from "./assets";
 
 class ModelLoader {
   static async loadModel(filename: string): Promise<THREE.Object3D> {
@@ -39,6 +40,7 @@ export class BlockBuild {
   private universeGroup = new THREE.Group();
   private place: Place;
   private keysDown = new Set<string>();
+  //private assets = new Assets();
 
   constructor() {
     this.initialize();
@@ -67,6 +69,8 @@ export class BlockBuild {
       if (!m) {
         continue;
       }
+      const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+      //this.assets.replaceMaterial(m, newMat);
       m.scale.set(1, 1, 1);
       this.allModels.push(m);
       //this.scene.add(m);
@@ -151,7 +155,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("change color on button push fix 1");
+    Debug.log("change color on button push fix 3");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
