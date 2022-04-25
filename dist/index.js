@@ -32,21 +32,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assets = void 0;
 const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
 class Assets extends THREE.Object3D {
     replaceMaterial(source, mat) {
         console.log(`${source.name} (${source.type})`);
-        if (source instanceof THREE.Mesh) {
-            source.material = mat;
-        }
-        else {
-            debug_1.Debug.log("not a mesh.");
-        }
-        if (source instanceof THREE.Group) {
-            debug_1.Debug.log("is a group");
-            for (let i = 0; i < source.children.length; i++) {
-                this.replaceMaterial(source.children[i], mat);
-            }
+        for (let i = 0; i < source.children.length; i++) {
+            let mesh = source.children[i];
+            mesh.material = mat;
         }
     }
 }
@@ -92,6 +83,7 @@ const tick_1 = __webpack_require__(544);
 const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
+//import { Assets } from "./assets";
 class ModelLoader {
     static async loadModel(filename) {
         const loader = new GLTFLoader_js_1.GLTFLoader();
@@ -122,6 +114,7 @@ class BlockBuild {
     universeGroup = new THREE.Group();
     place;
     keysDown = new Set();
+    //private assets = new Assets();
     constructor() {
         this.initialize();
         document.body.addEventListener('keydown', (ev) => {
@@ -147,6 +140,8 @@ class BlockBuild {
             if (!m) {
                 continue;
             }
+            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+            //this.assets.replaceMaterial(m, newMat);
             m.scale.set(1, 1, 1);
             this.allModels.push(m);
             //this.scene.add(m);
@@ -221,7 +216,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("change color on button push fix 1");
+        debug_1.Debug.log("change color on button push fix 2");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
