@@ -128,8 +128,8 @@ export class Hand extends THREE.Object3D {
       this.place.playerGroup.remove(this.cube);
     }
     this.templateCube = o.clone();
-    //this.cube = new InHandObject(o, this.place);
-    this.cube = o.clone();
+    this.cube = new InHandObject(o, this.place);
+    //this.cube = o.clone();
     this.place.playerGroup.add(this.cube);
   }
 
