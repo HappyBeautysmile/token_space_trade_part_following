@@ -81,8 +81,8 @@ export class InHandObject extends THREE.Object3D implements Ticker {
     return material;
   }
 
-
   private buildGeometry(source: THREE.Object3D) {
+    console.log(`${source.name} (${source.type})`);
     if (source instanceof THREE.Mesh) {
       this.addMesh(source);
     } else {

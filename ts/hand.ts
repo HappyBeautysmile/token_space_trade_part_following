@@ -20,7 +20,7 @@ export class Hand extends THREE.Object3D {
     private place: Place,
     private leftHand: boolean) {
     super();
-    // this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+    this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
     // this.debug = new THREE.Mesh(
     //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
     // this.debug.position.set(0, 0, -1);
@@ -154,19 +154,19 @@ export class Hand extends THREE.Object3D {
     //   this.deleteCube();
     // });
 
-    // this.grip.addEventListener('selectstart', () => {
-    //   this.deleteCube();
-    //   const o = this.templateCube.clone();
-    //   o.position.copy(this.cube.position);
-    //   o.rotation.copy(this.cube.rotation);
-    //   const p = o.position;
-    //   this.place.playerToUniverse(p);
-    //   this.place.quantizePosition(p);
-    //   this.place.quantizeRotation(o.rotation);
-    //   this.place.universeGroup.add(o);
-    //   const key = this.posToKey(o.position);
-    //   Hand.AllObjects.set(key, o);
-    // });
+    this.grip.addEventListener('selectstart', () => {
+      // this.deleteCube();
+      const o = this.templateCube.clone();
+      o.position.copy(this.cube.position);
+      o.rotation.copy(this.cube.rotation);
+      const p = o.position;
+      this.place.playerToUniverse(p);
+      this.place.quantizePosition(p);
+      this.place.quantizeRotation(o.rotation);
+      this.place.universeGroup.add(o);
+      const key = this.posToKey(o.position);
+      Hand.AllObjects.set(key, o);
+    });
 
     // this.grip.addEventListener('selectend', () => {
 

@@ -38,6 +38,8 @@ export class Debug extends THREE.Object3D {
       y += textHeight;
     }
     Debug.texture.needsUpdate = true;
-    Debug.material.needsUpdate = true;
+    if (Debug.material) {
+      Debug.material.needsUpdate = true;
+    }
   }
 }
