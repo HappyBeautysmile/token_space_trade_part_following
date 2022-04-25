@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "description": "Real Time Economy",
   "main": "webpack.config.js",
+  "dependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.72.0"
+  },
   "devDependencies": {
+    "@types/three": "^0.139.0",
     "three": "^0.139.2"
   },
   "scripts": {
