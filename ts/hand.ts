@@ -59,18 +59,24 @@ export class Hand extends THREE.Object3D {
     this.cube.rotation.copy(this.grip.rotation);
   }
 
+  private sourceLogged = false;
+
   private v = new THREE.Vector3();
   public tick(t: Tick) {
     this.setCubePosition();
     let source: THREE.XRInputSource = null;
     const session = this.xr.getSession();
     if (session) {
-      if (session.inputSources) {
+      if (session.inputSources && session.inputSources.length > this.index) {
         source = session.inputSources[this.index];
       }
     }
 
     if (source) {
+      if (!this.sourceLogged) {
+        Debug.log(`Has a source. left:${this.leftHand}`);
+        this.sourceLogged = true;
+      }
       //this.debugMaterial.color = new THREE.Color('blue');
       const rate = 3;
       const axes = source.gamepad.axes.slice(0);
