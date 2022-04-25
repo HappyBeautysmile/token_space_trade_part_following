@@ -61,7 +61,7 @@ export class Hand extends THREE.Object3D {
   }
 
   private sourceLogged = false;
-
+  private lastButtons;
   private v = new THREE.Vector3();
   public tick(t: Tick) {
     this.setCubePosition();
@@ -72,6 +72,7 @@ export class Hand extends THREE.Object3D {
         source = session.inputSources[this.index];
       }
     }
+
 
     if (source) {
       if (!this.sourceLogged) {
@@ -102,25 +103,26 @@ export class Hand extends THREE.Object3D {
         }
       }
       const buttons = source.gamepad.buttons.map((b) => b.value);
-      if (buttons[0] === 1) { // trigger
+      if (buttons[0] === 1 && this.lastButtons[0] != 1) { // trigger
         //this.debugMaterial.color = new THREE.Color('red');
       }
-      if (buttons[1] === 1) { // squeeze
+      if (buttons[1] === 1 && this.lastButtons[1] != 1) { // squeeze
         //this.debugMaterial.color = new THREE.Color('yellow');
       }
-      if (buttons[3] === 1) { // stick
+      if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick
         //this.debugMaterial.color = new THREE.Color('blue');
         this.place.stop();
       }
-      if (buttons[4] === 1) { // A or X
+      if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
         Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
         Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
         Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
       }
-      if (buttons[5] === 1) { // B or Y
+      if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
         const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
         this.assets.replaceMaterial(this.cube, newMat);
       }
+      this.lastButtons = buttons;
     }
   }
 
@@ -158,7 +160,7 @@ export class Hand extends THREE.Object3D {
 
     this.grip.addEventListener('selectstart', () => {
       this.deleteCube();
-      const o = this.templateCube.clone();
+      const o = this.cube.clone();
       o.position.copy(this.cube.position);
       o.rotation.copy(this.cube.rotation);
       const p = o.position;

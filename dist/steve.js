@@ -216,7 +216,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("change color on button push fix 2");
+        debug_1.Debug.log("change color on button push fix 3");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -497,6 +497,7 @@ class Hand extends THREE.Object3D {
         this.cube.rotation.copy(this.grip.rotation);
     }
     sourceLogged = false;
+    lastButtons;
     v = new THREE.Vector3();
     tick(t) {
         this.setCubePosition();
@@ -537,25 +538,26 @@ class Hand extends THREE.Object3D {
                 }
             }
             const buttons = source.gamepad.buttons.map((b) => b.value);
-            if (buttons[0] === 1) { // trigger
+            if (buttons[0] === 1 && this.lastButtons[0] != 1) { // trigger
                 //this.debugMaterial.color = new THREE.Color('red');
             }
-            if (buttons[1] === 1) { // squeeze
+            if (buttons[1] === 1 && this.lastButtons[1] != 1) { // squeeze
                 //this.debugMaterial.color = new THREE.Color('yellow');
             }
-            if (buttons[3] === 1) { // stick
+            if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick
                 //this.debugMaterial.color = new THREE.Color('blue');
                 this.place.stop();
             }
-            if (buttons[4] === 1) { // A or X
+            if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
                 debug_1.Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
                 debug_1.Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
                 debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
             }
-            if (buttons[5] === 1) { // B or Y
+            if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
                 const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
                 this.assets.replaceMaterial(this.cube, newMat);
             }
+            this.lastButtons = buttons;
         }
     }
     setCube(o) {
@@ -588,7 +590,7 @@ class Hand extends THREE.Object3D {
         });
         this.grip.addEventListener('selectstart', () => {
             this.deleteCube();
-            const o = this.templateCube.clone();
+            const o = this.cube.clone();
             o.position.copy(this.cube.position);
             o.rotation.copy(this.cube.rotation);
             const p = o.position;
