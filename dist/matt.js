@@ -796,6 +796,7 @@ class VeryLargeUniverse extends THREE.Object3D {
     starPositions = [];
     leftStart;
     rightStart;
+    startMatrix = new THREE.Matrix4();
     oldZoom = null;
     material;
     constructor(grips, camera, xr) {
@@ -807,19 +808,24 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.grips[0].addEventListener('selectstart', () => {
             this.leftStart = new THREE.Vector3();
             this.leftStart.copy(this.grips[0].position);
-            this.worldToLocal(this.leftStart);
+            this.startMatrix.copy(this.matrix);
+            this.startMatrix.invert();
+            this.leftStart.applyMatrix4(this.startMatrix);
+            ;
             if (this.rightStart) {
                 this.rightStart.copy(this.grips[1].position);
-                this.worldToLocal(this.rightStart);
+                this.rightStart.applyMatrix4(this.startMatrix);
             }
         });
         this.grips[1].addEventListener('selectstart', () => {
             this.rightStart = new THREE.Vector3();
             this.rightStart.copy(this.grips[1].position);
-            this.worldToLocal(this.rightStart);
+            this.startMatrix.invert();
+            this.rightStart.applyMatrix4(this.startMatrix);
+            ;
             if (this.leftStart) {
                 this.leftStart.copy(this.grips[0].position);
-                this.worldToLocal(this.leftStart);
+                this.leftStart.applyMatrix4(this.startMatrix);
             }
         });
         this.grips[0].addEventListener('selectend', () => {
@@ -843,9 +849,9 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.oldZoom.copy(this.matrix);
         }
         this.leftCurrent.copy(this.grips[0].position);
-        this.worldToLocal(this.leftCurrent);
+        this.leftCurrent.applyMatrix4(this.startMatrix);
         this.rightCurrent.copy(this.grips[1].position);
-        this.worldToLocal(this.rightCurrent);
+        this.rightCurrent.applyMatrix4(this.startMatrix);
         const m = zoom_1.Zoom.makeZoomMatrix(this.leftStart, this.rightStart, this.leftCurrent, this.rightCurrent);
         this.matrix.copy(this.oldZoom);
         this.matrix.multiply(m);
