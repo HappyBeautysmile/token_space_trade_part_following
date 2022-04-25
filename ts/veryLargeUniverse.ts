@@ -21,7 +21,9 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   private starPositions: THREE.Vector3[] = [];
   private leftStart: THREE.Vector3;
   private rightStart: THREE.Vector3;
+  private startMatrix = new THREE.Matrix4();
   private oldZoom: THREE.Matrix4 = null;
+  private material: THREE.ShaderMaterial;
 
   constructor(private grips: THREE.Object3D[],
     private camera: THREE.Camera,
@@ -32,10 +34,23 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     this.grips[0].addEventListener('selectstart', () => {
       this.leftStart = new THREE.Vector3();
       this.leftStart.copy(this.grips[0].position);
+      this.startMatrix.copy(this.matrix);
+      this.startMatrix.invert();
+      this.leftStart.applyMatrix4(this.startMatrix);;
+      if (this.rightStart) {
+        this.rightStart.copy(this.grips[1].position);
+        this.rightStart.applyMatrix4(this.startMatrix);
+      }
     });
     this.grips[1].addEventListener('selectstart', () => {
       this.rightStart = new THREE.Vector3();
       this.rightStart.copy(this.grips[1].position);
+      this.startMatrix.invert();
+      this.rightStart.applyMatrix4(this.startMatrix);;
+      if (this.leftStart) {
+        this.leftStart.copy(this.grips[0].position);
+        this.leftStart.applyMatrix4(this.startMatrix);
+      }
     });
 
     this.grips[0].addEventListener('selectend', () => {
@@ -52,16 +67,28 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     });
   }
 
+  private leftCurrent = new THREE.Vector3();
+  private rightCurrent = new THREE.Vector3();
+
   private zoom() {
     if (!this.oldZoom) {
       this.oldZoom = new THREE.Matrix4();
       this.oldZoom.copy(this.matrix);
     }
+    this.leftCurrent.copy(this.grips[0].position);
+    this.leftCurrent.applyMatrix4(this.startMatrix);
+    this.rightCurrent.copy(this.grips[1].position);
+    this.rightCurrent.applyMatrix4(this.startMatrix);
     const m = Zoom.makeZoomMatrix(this.leftStart, this.rightStart,
-      this.grips[0].position, this.grips[1].position);
+      this.leftCurrent, this.rightCurrent);
     this.matrix.copy(this.oldZoom);
     this.matrix.multiply(m);
     this.matrix.decompose(this.position, this.quaternion, this.scale);
+    if (this.material) {
+      const scale = this.scale.length() / Math.sqrt(3);
+      this.material.uniforms['sizeScale'].value = scale;
+      this.material.uniformsNeedUpdate = true;
+    }
   }
 
   private zoomEnd() {
@@ -83,21 +110,24 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     geometry.setAttribute('position',
       new THREE.Float32BufferAttribute(positions, 3));
 
-    const material = new THREE.ShaderMaterial({
+    this.material = new THREE.ShaderMaterial({
       uniforms: {
+        'sizeScale': {
+          value: 1.0
+        },
       },
       vertexShader: `
-        // uniform float pointMultiplier;
+        uniform float sizeScale;
         varying vec3 vColor;
         void main() {
-          vColor = vec3(1.0, 0.8, 0.2);
+          vColor = vec3(0.5, 1.0, 1.0);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           float distance = length(mvPosition.xyz);
           if (distance > 1000.0) {
             mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
           }
           gl_Position = projectionMatrix * mvPosition;
-          gl_PointSize = max(800.0 / distance, 2.0);
+          gl_PointSize = max(sizeScale * 800.0 / distance, 2.0);
           
         }`,
       fragmentShader: `
@@ -115,7 +145,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       vertexColors: true,
     });
 
-    const points = new THREE.Points(geometry, material);
+    const points = new THREE.Points(geometry, this.material);
     this.add(points);
   }
 
