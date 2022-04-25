@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Place } from "./place";
 import { Tick } from "./tick";
 import { Debug } from "./debug";
+import { Assets } from "./assets";
 import { InHandObject } from "./inHandObject";
 //import { Palette } from "./palette";
 
@@ -117,8 +118,8 @@ export class Hand extends THREE.Object3D {
         Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
       }
       if (buttons[5] === 1) { // B or Y
-        // const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-        // this.cube.material = newMat;
+        const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+        this.assets.replaceMaterial(this.cube, newMat);
       }
     }
   }
@@ -128,8 +129,8 @@ export class Hand extends THREE.Object3D {
       this.place.playerGroup.remove(this.cube);
     }
     this.templateCube = o.clone();
-    this.cube = new InHandObject(o, this.place);
-    //this.cube = o.clone();
+    //this.cube = new InHandObject(o, this.place);
+    this.cube = o.clone();
     this.place.playerGroup.add(this.cube);
   }
 
@@ -149,6 +150,7 @@ export class Hand extends THREE.Object3D {
   }
 
   private p = new THREE.Vector3();
+  private assets = new Assets();
   private async initialize() {
     this.grip.addEventListener('squeeze', () => {
       this.deleteCube();
