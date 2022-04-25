@@ -32,7 +32,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assets = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const palette_1 = __webpack_require__(812);
 class Assets extends THREE.Object3D {
+    palette = new palette_1.Palette();
+    // sets the color of the passed object to the next color in the palette.
+    nextColor(source) {
+        const newMat = new THREE.MeshPhongMaterial({ color: this.palette.nextColor() });
+        this.replaceMaterial(source, newMat);
+    }
     replaceMaterial(source, mat) {
         console.log(`${source.name} (${source.type})`);
         for (let i = 0; i < source.children.length; i++) {
@@ -216,7 +223,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("change color on button push fix 3");
+        debug_1.Debug.log("next color");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -554,8 +561,7 @@ class Hand extends THREE.Object3D {
                 debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
-                const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-                this.assets.replaceMaterial(this.cube, newMat);
+                this.assets.nextColor(this.cube);
             }
             this.lastButtons = buttons;
         }
@@ -607,6 +613,199 @@ class Hand extends THREE.Object3D {
 }
 exports.Hand = Hand;
 //# sourceMappingURL=hand.js.map
+
+/***/ }),
+
+/***/ 812:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PaletteTest = exports.Palette = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const VRButton_js_1 = __webpack_require__(18);
+class Palette {
+    primary;
+    secondary;
+    accent;
+    blackish;
+    whitish;
+    reddish;
+    yellowish;
+    greenish;
+    bluish;
+    magentaish;
+    colorIndex;
+    constructor() {
+        this.primary = new THREE.Color();
+        this.primary.setHSL(Math.random() * 0.8 + 0.2, Math.random() * 0.8 + 0.2 * .5, Math.random() * 0.8 + 0.2);
+        // make a similar color for the secondary
+        let hsl = { h: 0, s: 0, l: 0 };
+        this.primary.getHSL(hsl);
+        hsl.h += Math.random() * .2 - 0.1;
+        if (hsl.h > 1) {
+            hsl.h -= 1;
+        }
+        if (hsl.h < 0) {
+            hsl.h += 1;
+        }
+        hsl.s += Math.random() * .3 - 0.15;
+        hsl.s = Math.max(0, hsl.s);
+        hsl.s = Math.min(1, hsl.s);
+        hsl.l += Math.random() * .3 - 0.15;
+        hsl.l = Math.max(0, hsl.l);
+        hsl.l = Math.min(1, hsl.l);
+        this.secondary = new THREE.Color();
+        this.secondary.setHSL(hsl.h, hsl.s, hsl.l);
+        // make a saturated analogus color for the accent.
+        this.primary.getHSL(hsl);
+        if (Math.random() > 0.5) {
+            hsl.h += Math.random() * .1 - 0.333;
+        }
+        else {
+            hsl.h += Math.random() * .1 + 0.333;
+        }
+        if (hsl.h > 1) {
+            hsl.h -= 1;
+        }
+        if (hsl.h < 0) {
+            hsl.h += 1;
+        }
+        //hsl.s = Math.random() * .2 + 0.8;
+        //hsl.l = Math.random() * .2 + 0.8;
+        hsl.s = 1.0;
+        hsl.l = 0.5;
+        this.accent = new THREE.Color();
+        this.accent.setHSL(hsl.h, hsl.s, hsl.l);
+        // this.primary = new THREE.Color(0xb3d6c6);
+        // this.secondary = new THREE.Color(0xdceab2);
+        // this.accent = new THREE.Color(0x75b9be);
+        let maxR = Math.max(this.primary.r, this.secondary.r, this.accent.r);
+        let maxG = Math.max(this.primary.g, this.secondary.g, this.accent.g);
+        let maxB = Math.max(this.primary.b, this.secondary.b, this.accent.b);
+        let minR = Math.min(this.primary.r, this.secondary.r, this.accent.r) * 0.6;
+        let minG = Math.min(this.primary.g, this.secondary.g, this.accent.g) * 0.6;
+        let minB = Math.min(this.primary.b, this.secondary.b, this.accent.b) * 0.6;
+        this.whitish = new THREE.Color(maxR, maxG, maxB);
+        this.blackish = new THREE.Color(minR, minG, minB);
+        this.reddish = new THREE.Color(maxR, minG, minB);
+        this.yellowish = new THREE.Color(maxR, maxG, minB);
+        this.greenish = new THREE.Color(minR, maxG, minB);
+        this.bluish = new THREE.Color(minR, minG, maxB);
+        this.magentaish = new THREE.Color(maxR, minG, maxB);
+        this.colorIndex = 0;
+    }
+    asArray() {
+        return [
+            this.primary,
+            this.secondary,
+            this.accent,
+            this.whitish,
+            this.blackish,
+            this.reddish,
+            this.yellowish,
+            this.greenish,
+            this.bluish,
+            this.magentaish
+        ];
+    }
+    nextColor() {
+        const colors = this.asArray();
+        this.colorIndex = (this.colorIndex + 1) % colors.length;
+        return colors[this.colorIndex];
+    }
+    getCurrentColor() {
+        return this.asArray()[this.colorIndex];
+    }
+}
+exports.Palette = Palette;
+class PaletteTest {
+    testPalette;
+    scene;
+    camera;
+    renderer;
+    constructor() {
+        this.testPalette = new Palette();
+        let colors = this.testPalette.asArray();
+        document.body.innerHTML = "";
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0, 0, 0);
+        this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 1000);
+        this.camera.position.set(0, 1.7, 0);
+        this.camera.lookAt(0, 1.7, -1.5);
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setSize(512, 512);
+        document.body.appendChild(this.renderer.domElement);
+        this.renderer.xr.enabled = true;
+        const light = new THREE.AmbientLight(0x404040); // soft white light
+        this.scene.add(light);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(2, 40, 10);
+        this.scene.add(directionalLight);
+        for (let i = 0; i < colors.length; i++) {
+            let size = 1;
+            if (i < 2) {
+                size = 3 - i;
+            }
+            let cubeMat = new THREE.MeshPhysicalMaterial({
+                clearcoat: 1.0,
+                sheen: 0.5,
+                metalness: 0.9,
+                roughness: 0.5,
+                color: colors[i]
+            });
+            const primaryCube = (new THREE.Mesh(
+            //new THREE.BoxGeometry(size, size, size),
+            new THREE.SphereGeometry(size, 3, 3), cubeMat));
+            primaryCube.position.set((i % 5) * 2 - 3, Math.floor(i / 5) * 2, -10);
+            primaryCube.onBeforeRender = () => {
+                primaryCube.rotateX(0.01);
+                primaryCube.rotateY(0.0231);
+                primaryCube.rotateZ(0.00512);
+            };
+            this.scene.add(primaryCube);
+        }
+        // const tetra = new THREE.Mesh(
+        //     new THREE.TetrahedronBufferGeometry(0.5),
+        //     new THREE.MeshStandardMaterial({ color: this.testPalette.secondary }));
+        // tetra.position.set(0, 1.7, -1.5);
+        // tetra.onBeforeRender = () => {
+        //     tetra.rotateX(0.01);
+        //     tetra.rotateY(0.0231);
+        //     tetra.rotateZ(0.00512);
+        // };
+        // this.scene.add(tetra)
+        document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
+        this.renderer.setAnimationLoop(() => {
+            this.renderer.render(this.scene, this.camera);
+        });
+    }
+}
+exports.PaletteTest = PaletteTest;
+//# sourceMappingURL=palette.js.map
 
 /***/ }),
 
