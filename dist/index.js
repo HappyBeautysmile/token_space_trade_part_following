@@ -40,7 +40,13 @@ class Assets extends THREE.Object3D {
             source.material = mat;
         }
         else {
-            debug_1.Debug.log("could not add material.");
+            debug_1.Debug.log("not a mesh.");
+        }
+        if (source instanceof THREE.Group) {
+            debug_1.Debug.log("is a group");
+            for (let i = 0; i < source.children.length; i++) {
+                this.replaceMaterial(source.children[i], mat);
+            }
         }
     }
 }
@@ -215,7 +221,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("change color on button push");
+        debug_1.Debug.log("change color on button push fix 1");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();

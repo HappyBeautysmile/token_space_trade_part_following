@@ -9,8 +9,13 @@ export class Assets extends THREE.Object3D {
             source.material = mat;
         }
         else {
-            Debug.log("could not add material.");
-
+            Debug.log("not a mesh.");
+        }
+        if (source instanceof THREE.Group) {
+            Debug.log("is a group");
+            for (let i = 0; i < source.children.length; i++) {
+                this.replaceMaterial(source.children[i], mat);
+            }
         }
     }
 }
