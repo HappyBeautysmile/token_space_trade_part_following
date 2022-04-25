@@ -168,7 +168,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("remove InHandObject");
+        debug_1.Debug.log("added squeeze to delete");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -272,7 +272,9 @@ class Debug extends THREE.Object3D {
             y += textHeight;
         }
         Debug.texture.needsUpdate = true;
-        Debug.material.needsUpdate = true;
+        if (Debug.material) {
+            Debug.material.needsUpdate = true;
+        }
     }
 }
 exports.Debug = Debug;
@@ -412,7 +414,7 @@ class Hand extends THREE.Object3D {
         this.xr = xr;
         this.place = place;
         this.leftHand = leftHand;
-        // this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
+        this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         // this.debug = new THREE.Mesh(
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
         // this.debug.position.set(0, 0, -1);
@@ -445,17 +447,22 @@ class Hand extends THREE.Object3D {
         //this.place.worldToUniverse(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
+    sourceLogged = false;
     v = new THREE.Vector3();
     tick(t) {
         this.setCubePosition();
         let source = null;
         const session = this.xr.getSession();
         if (session) {
-            if (session.inputSources) {
+            if (session.inputSources && session.inputSources.length > this.index) {
                 source = session.inputSources[this.index];
             }
         }
         if (source) {
+            if (!this.sourceLogged) {
+                debug_1.Debug.log(`Has a source. left:${this.leftHand}`);
+                this.sourceLogged = true;
+            }
             //this.debugMaterial.color = new THREE.Color('blue');
             const rate = 3;
             const axes = source.gamepad.axes.slice(0);
@@ -482,10 +489,10 @@ class Hand extends THREE.Object3D {
             }
             const buttons = source.gamepad.buttons.map((b) => b.value);
             if (buttons[0] === 1) { // trigger
-                this.debugMaterial.color = new THREE.Color('red');
+                //this.debugMaterial.color = new THREE.Color('red');
             }
             if (buttons[1] === 1) { // squeeze
-                this.debugMaterial.color = new THREE.Color('yellow');
+                //this.debugMaterial.color = new THREE.Color('yellow');
             }
             if (buttons[3] === 1) { // stick
                 //this.debugMaterial.color = new THREE.Color('blue');
@@ -514,34 +521,34 @@ class Hand extends THREE.Object3D {
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
-    // private deleteCube() {
-    //   this.p.copy(this.cube.position);
-    //   this.place.playerToUniverse(this.p);
-    //   this.place.quantizePosition(this.p);
-    //   const key = this.posToKey(this.p);
-    //   if (Hand.AllObjects.has(key)) {
-    //     this.place.universeGroup.remove(Hand.AllObjects.get(key));
-    //     Hand.AllObjects.delete(key);
-    //   }
-    // }
+    deleteCube() {
+        this.p.copy(this.cube.position);
+        this.place.playerToUniverse(this.p);
+        this.place.quantizePosition(this.p);
+        const key = this.posToKey(this.p);
+        if (Hand.AllObjects.has(key)) {
+            this.place.universeGroup.remove(Hand.AllObjects.get(key));
+            Hand.AllObjects.delete(key);
+        }
+    }
     p = new THREE.Vector3();
     async initialize() {
-        // this.grip.addEventListener('squeeze', () => {
-        //   this.deleteCube();
-        // });
-        // this.grip.addEventListener('selectstart', () => {
-        //   this.deleteCube();
-        //   const o = this.templateCube.clone();
-        //   o.position.copy(this.cube.position);
-        //   o.rotation.copy(this.cube.rotation);
-        //   const p = o.position;
-        //   this.place.playerToUniverse(p);
-        //   this.place.quantizePosition(p);
-        //   this.place.quantizeRotation(o.rotation);
-        //   this.place.universeGroup.add(o);
-        //   const key = this.posToKey(o.position);
-        //   Hand.AllObjects.set(key, o);
-        // });
+        this.grip.addEventListener('squeeze', () => {
+            this.deleteCube();
+        });
+        this.grip.addEventListener('selectstart', () => {
+            this.deleteCube();
+            const o = this.templateCube.clone();
+            o.position.copy(this.cube.position);
+            o.rotation.copy(this.cube.rotation);
+            const p = o.position;
+            this.place.playerToUniverse(p);
+            this.place.quantizePosition(p);
+            this.place.quantizeRotation(o.rotation);
+            this.place.universeGroup.add(o);
+            const key = this.posToKey(o.position);
+            Hand.AllObjects.set(key, o);
+        });
         // this.grip.addEventListener('selectend', () => {
         // });
     }
@@ -92974,8 +92981,10 @@ var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
 const blockBuild_1 = __webpack_require__(64);
+const debug_1 = __webpack_require__(756);
 const game_1 = __webpack_require__(417);
 const settings_1 = __webpack_require__(451);
+debug_1.Debug.log(`Start home: ${settings_1.S.float('sh')}`);
 switch (settings_1.S.float('sh')) {
     case 1:
     default:

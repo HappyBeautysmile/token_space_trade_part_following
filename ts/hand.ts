@@ -102,10 +102,10 @@ export class Hand extends THREE.Object3D {
       }
       const buttons = source.gamepad.buttons.map((b) => b.value);
       if (buttons[0] === 1) { // trigger
-        this.debugMaterial.color = new THREE.Color('red');
+        //this.debugMaterial.color = new THREE.Color('red');
       }
       if (buttons[1] === 1) { // squeeze
-        this.debugMaterial.color = new THREE.Color('yellow');
+        //this.debugMaterial.color = new THREE.Color('yellow');
       }
       if (buttons[3] === 1) { // stick
         //this.debugMaterial.color = new THREE.Color('blue');
@@ -137,25 +137,25 @@ export class Hand extends THREE.Object3D {
     return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
   }
 
-  // private deleteCube() {
-  //   this.p.copy(this.cube.position);
-  //   this.place.playerToUniverse(this.p);
-  //   this.place.quantizePosition(this.p);
-  //   const key = this.posToKey(this.p);
-  //   if (Hand.AllObjects.has(key)) {
-  //     this.place.universeGroup.remove(Hand.AllObjects.get(key));
-  //     Hand.AllObjects.delete(key);
-  //   }
-  // }
+  private deleteCube() {
+    this.p.copy(this.cube.position);
+    this.place.playerToUniverse(this.p);
+    this.place.quantizePosition(this.p);
+    const key = this.posToKey(this.p);
+    if (Hand.AllObjects.has(key)) {
+      this.place.universeGroup.remove(Hand.AllObjects.get(key));
+      Hand.AllObjects.delete(key);
+    }
+  }
 
   private p = new THREE.Vector3();
   private async initialize() {
-    // this.grip.addEventListener('squeeze', () => {
-    //   this.deleteCube();
-    // });
+    this.grip.addEventListener('squeeze', () => {
+      this.deleteCube();
+    });
 
     this.grip.addEventListener('selectstart', () => {
-      // this.deleteCube();
+      this.deleteCube();
       const o = this.templateCube.clone();
       o.position.copy(this.cube.position);
       o.rotation.copy(this.cube.rotation);
