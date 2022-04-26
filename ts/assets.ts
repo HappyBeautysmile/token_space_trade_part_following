@@ -36,17 +36,17 @@ export class Assets extends THREE.Object3D {
     static init() {
         Palette.init();
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x987 });
-        this.materials.push(flatPrimary);
+        Assets.materials.push(flatPrimary);
         let glossPrimary = new THREE.MeshPhongMaterial({ color: 0x987, shininess: 1.0 });
-        this.materials.push(glossPrimary);
+        Assets.materials.push(glossPrimary);
         let flatSeconday = new THREE.MeshPhongMaterial({ color: 0x654 });
-        this.materials.push(flatSeconday);
+        Assets.materials.push(flatSeconday);
         let glossSecondary = new THREE.MeshPhongMaterial({ color: 0x654, shininess: 1.0 });
-        this.materials.push(glossSecondary);
+        Assets.materials.push(glossSecondary);
         let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111 });
-        this.materials.push(flatBlack);
+        Assets.materials.push(flatBlack);
         let glossBlack = new THREE.MeshPhongMaterial({ color: 0x111 });
-        this.materials.push(glossBlack);
+        Assets.materials.push(glossBlack);
     }
 
     // sets the color of the passed object to the next color in the palette.
@@ -65,12 +65,14 @@ export class Assets extends THREE.Object3D {
 
     static nextModel() {
         Assets.modelIndex = (Assets.modelIndex + 1) % Assets.allModels.length;
-        return Assets.allModels[Assets.modelIndex].clone();
+        return Assets.allModels[Assets.modelIndex];
     }
 
     static nextMaterial() {
         Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materialIndex;
-        return Assets.materials[Assets.materialIndex].clone();
+        Debug.log('materialIndex=' + Assets.materialIndex.toString());
+        Debug.log('materials.length=' + Assets.materials.length.toString())
+        return Assets.materials[Assets.materialIndex];
     }
 
     static async loadAllModels() {
