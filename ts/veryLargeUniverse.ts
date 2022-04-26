@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { PointSetLinear } from "./pointSet";
 import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 import { Zoom } from "./zoom";
@@ -18,7 +19,7 @@ class StarSystem extends THREE.Object3D {
 export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   private currentStarPosition = new THREE.Vector3();
   private currentStar: StarSystem = null;
-  private starPositions: THREE.Vector3[] = [];
+  private starPositions = new PointSetLinear(1e10);
   private leftStart: THREE.Vector3;
   private rightStart: THREE.Vector3;
   private startMatrix = new THREE.Matrix4();
@@ -27,7 +28,8 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
 
   constructor(private grips: THREE.Object3D[],
     private camera: THREE.Camera,
-    private xr: THREE.WebXRManager) {
+    private xr: THREE.WebXRManager,
+    private keysDown: Set<string>) {
     super();
     this.addStars();
 
@@ -103,7 +105,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
         Math.round((Math.random() - 0.5) * radius),
         Math.round((Math.random() - 0.5) * radius),
         Math.round((Math.random() - 0.5) * radius));
-      this.starPositions.push(v);
+      this.starPositions.add(v);
       positions.push(v.x, v.y, v.z);
     }
     const geometry = new THREE.BufferGeometry();
@@ -150,21 +152,10 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   }
 
   private p1 = new THREE.Vector3();
-  private p2 = new THREE.Vector3();
-  private closest = new THREE.Vector3();
   private findClosestStar(): THREE.Vector3 {
-    let closestDistance = 1e10;
     this.camera.getWorldPosition(this.p1);
     this.worldToLocal(this.p1);
-    for (const starPosition of this.starPositions) {
-      this.p2.copy(starPosition);
-      this.p2.sub(this.p1);
-      if (closestDistance > this.p2.length()) {
-        closestDistance = this.p2.length();
-        this.closest.copy(starPosition);
-      }
-    }
-    return this.closest;
+    return this.starPositions.getClosest(this.p1);
   }
 
   private getButtonsFromGrip(index: number): number[] {
@@ -176,11 +167,25 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       }
       return source.gamepad.buttons.map((b) => b.value);
     } else {
-      return null;
+      return [];
     }
   }
 
   private direction = new THREE.Vector3();
+  private m1 = new THREE.Matrix4();
+  private m2 = new THREE.Matrix4();
+  private m3 = new THREE.Matrix4();
+  zoomAroundWorldOrigin(zoomFactor: number) {
+    this.p1.set(0, 0, 0);
+    this.worldToLocal(this.p1);
+    this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
+    this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
+    this.m3.makeTranslation(this.p1.x, this.p1.y, this.p1.z);
+    this.matrix.multiply(this.m3);
+    this.matrix.multiply(this.m2);
+    this.matrix.multiply(this.m1);
+    this.matrix.decompose(this.position, this.quaternion, this.scale);
+  }
 
   tick(t: Tick) {
     if (this.rightStart && this.leftStart) {
@@ -190,7 +195,17 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     const leftButtons = this.getButtonsFromGrip(0);
     const rightButtons = this.getButtonsFromGrip(1);
 
-    if (leftButtons && rightButtons && leftButtons[1] && rightButtons[1]) {
+    if (leftButtons[4] === 1 || rightButtons[4] === 1  // A or X
+      || this.keysDown.has('Equal')) {
+      this.zoomAroundWorldOrigin(Math.pow(2, t.deltaS));
+    }
+    if (leftButtons[5] === 1 || rightButtons[5] === 1  // B or Y
+      || this.keysDown.has('Minus')) {
+      this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
+    }
+
+    if ((leftButtons[1] && rightButtons[1]) ||  // Squeeze
+      this.keysDown.has('ArrowUp')) {
       this.camera.getWorldDirection(this.direction);
       this.direction.multiplyScalar(t.deltaS * 5.0);
       this.position.sub(this.direction);

@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { Tick, Ticker } from "./tick";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { VeryLargeUniverse } from "./veryLargeUniverse";
+import { S } from "./settings";
+import { MaterialExplorer } from "./materialExplorer";
 
 export class Game {
   private scene = new THREE.Scene();
@@ -11,6 +13,7 @@ export class Game {
   private grips: THREE.Object3D[] = [];
 
   constructor() {
+    document.body.innerHTML = '';
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 2000);
     this.camera.position.set(0, 1.7, 0);
@@ -34,8 +37,27 @@ export class Game {
     });
 
     this.getGrips();
-    const vlu = new VeryLargeUniverse(this.grips, this.camera, this.renderer.xr);
-    this.scene.add(vlu);
+
+    const keysDown = new Set<string>();
+    document.body.addEventListener('keydown', (ev) => {
+      keysDown.add(ev.code);
+    });
+    document.body.addEventListener('keyup', (ev) => {
+      keysDown.delete(ev.code);
+    });
+
+    switch (S.float('sh')) {
+      case 2:
+        const vlu = new VeryLargeUniverse(
+          this.grips, this.camera, this.renderer.xr, keysDown);
+        this.scene.add(vlu);
+
+        break;
+      case 3:
+        const materialExplorer = new MaterialExplorer();
+        this.scene.add(materialExplorer);
+        break;
+    }
   }
 
   getGrips() {

@@ -5,7 +5,8 @@ import { S } from "./settings";
 
 Debug.log(`Start home: ${S.float('sh')}`);
 
-switch (S.float('sh')) {
-  case 1: default: new BlockBuild(); break;
-  case 2: new Game(); break;
+if (S.float('sh') < 2 || !S.float('sh')) {
+  new BlockBuild();
+} else {
+  new Game();
 }
