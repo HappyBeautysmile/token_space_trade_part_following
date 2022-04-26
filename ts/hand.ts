@@ -58,7 +58,7 @@ export class Hand extends THREE.Object3D {
     // Debug.log("this.place.playerGroup.quaternion=" + JSON.stringify(this.place.playerGroup.quaternion));
     // Debug.log("this.grip.quaternion=" + JSON.stringify(this.grip.quaternion));
 
-    this.cube.position.add(this.place.playerGroup.position);
+    this.cube.position.sub(this.place.playerGroup.position);
     this.cube.rotation.copy(this.grip.rotation);
   }
 
@@ -171,17 +171,17 @@ export class Hand extends THREE.Object3D {
     this.grip.addEventListener('selectstart', () => {
       this.deleteCube();
       const o = this.cube.clone();
-      Debug.log("this.cube.quaternion=" + JSON.stringify(this.cube.quaternion));
+      //Debug.log("this.cube.quaternion=" + JSON.stringify(this.cube.quaternion));
       o.position.copy(this.cube.position);
       o.rotation.copy(this.cube.rotation);
-      Debug.log("o.quaternion=" + JSON.stringify(o.quaternion));
+      //Debug.log("o.quaternion=" + JSON.stringify(o.quaternion));
       o.applyQuaternion(this.place.playerGroup.quaternion);
-      Debug.log("post applyQuarternion o.quaternion=" + JSON.stringify(o.quaternion));
+      //Debug.log("post applyQuarternion o.quaternion=" + JSON.stringify(o.quaternion));
       const p = o.position;
       this.place.playerToUniverse(p);
       this.place.quantizePosition(p);
       this.place.quantizeRotation(o.rotation);
-      Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
+      //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
       this.place.universeGroup.add(o);
       const key = this.posToKey(o.position);
       Hand.AllObjects.set(key, o);
