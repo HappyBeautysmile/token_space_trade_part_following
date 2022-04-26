@@ -37,17 +37,17 @@ export class Assets extends THREE.Object3D {
     static init() {
         Palette.init();
         Assets.materialIndex = 0;
-        let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x987 });
+        let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
         Assets.materials.push(flatPrimary);
-        let glossPrimary = new THREE.MeshPhongMaterial({ color: 0x987, shininess: 1.0 });
+        let glossPrimary = new THREE.MeshPhongMaterial({ color: 0x998877, shininess: 1.0 });
         Assets.materials.push(glossPrimary);
-        let flatSeconday = new THREE.MeshPhongMaterial({ color: 0x654 });
+        let flatSeconday = new THREE.MeshPhongMaterial({ color: 0x665544 });
         Assets.materials.push(flatSeconday);
-        let glossSecondary = new THREE.MeshPhongMaterial({ color: 0x654, shininess: 1.0 });
+        let glossSecondary = new THREE.MeshPhongMaterial({ color: 0x665544, shininess: 1.0 });
         Assets.materials.push(glossSecondary);
-        let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111 });
+        let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
         Assets.materials.push(flatBlack);
-        let glossBlack = new THREE.MeshPhongMaterial({ color: 0x111 });
+        let glossBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
         Assets.materials.push(glossBlack);
     }
 
