@@ -57,6 +57,7 @@ class ModelLoader {
 }
 class Assets extends THREE.Object3D {
     static allModels = [];
+    static modelIndex = 0;
     static init() {
         palette_1.Palette.init();
     }
@@ -71,6 +72,10 @@ class Assets extends THREE.Object3D {
             let mesh = source.children[i];
             mesh.material = mat;
         }
+    }
+    static nextModel() {
+        Assets.modelIndex = (this.modelIndex + 1) % Assets.allModels.length;
+        return this.allModels[this.modelIndex];
     }
     static async loadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster'];
@@ -230,7 +235,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("move models to Assets.");
+        debug_1.Debug.log("button to change models.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -530,7 +535,8 @@ class Hand extends THREE.Object3D {
                 this.sourceLogged = true;
             }
             //this.debugMaterial.color = new THREE.Color('blue');
-            const rate = 6;
+            const rateUpDown = 5;
+            const rateMove = 10;
             const rotRate = 2;
             const axes = source.gamepad.axes.slice(0);
             if (axes.length >= 4) {
@@ -543,23 +549,14 @@ class Hand extends THREE.Object3D {
                     this;
                     if (this.leftHand) {
                         this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
-                        this.v.multiplyScalar(rate * t.deltaS);
+                        this.v.multiplyScalar(rateMove * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
                     }
                     else {
                         this.v.set(0, -Math.pow(axes[3], 3), 0);
-                        this.v.multiplyScalar(rate * t.deltaS);
+                        this.v.multiplyScalar(rateUpDown * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
-                        // // rotate playerGroup around camera
-                        // let moveVector = new THREE.Vector3(
-                        //   this.place.camera.position.x - this.place.playerGroup.position.x,
-                        //   this.place.camera.position.y - this.place.playerGroup.position.y,
-                        //   this.place.camera.position.z - this.place.playerGroup.position.z,
-                        // );
-                        // this.place.playerGroup.position.add(moveVector);
                         this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
-                        // moveVector = new THREE.Vector3().sub(moveVector);
-                        // this.place.playerGroup.position.add(moveVector);
                     }
                 }
             }
@@ -575,10 +572,7 @@ class Hand extends THREE.Object3D {
                 this.place.stop();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-                debug_1.Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
-                debug_1.Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
-                debug_1.Debug.log(`Grip: ${JSON.stringify(this.grip.position)}`);
-                debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
+                this.setCube(assets_1.Assets.nextModel());
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
                 assets_1.Assets.nextColor(this.cube);

@@ -29,6 +29,7 @@ class ModelLoader {
 export class Assets extends THREE.Object3D {
 
     static allModels: THREE.Object3D[] = [];
+    static modelIndex = 0;
 
     static init() {
         Palette.init();
@@ -48,6 +49,10 @@ export class Assets extends THREE.Object3D {
         }
     }
 
+    static nextModel() {
+        Assets.modelIndex = (this.modelIndex + 1) % Assets.allModels.length;
+        return this.allModels[this.modelIndex];
+    }
 
     static async loadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster']

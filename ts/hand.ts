@@ -84,7 +84,8 @@ export class Hand extends THREE.Object3D {
         this.sourceLogged = true;
       }
       //this.debugMaterial.color = new THREE.Color('blue');
-      const rate = 6;
+      const rateUpDown = 5;
+      const rateMove = 10;
       const rotRate = 2;
       const axes = source.gamepad.axes.slice(0);
       if (axes.length >= 4) {
@@ -96,23 +97,14 @@ export class Hand extends THREE.Object3D {
           this
           if (this.leftHand) {
             this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
-            this.v.multiplyScalar(rate * t.deltaS);
+            this.v.multiplyScalar(rateMove * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
           }
           else {
             this.v.set(0, -Math.pow(axes[3], 3), 0);
-            this.v.multiplyScalar(rate * t.deltaS);
+            this.v.multiplyScalar(rateUpDown * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
-            // // rotate playerGroup around camera
-            // let moveVector = new THREE.Vector3(
-            //   this.place.camera.position.x - this.place.playerGroup.position.x,
-            //   this.place.camera.position.y - this.place.playerGroup.position.y,
-            //   this.place.camera.position.z - this.place.playerGroup.position.z,
-            // );
-            // this.place.playerGroup.position.add(moveVector);
             this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
-            // moveVector = new THREE.Vector3().sub(moveVector);
-            // this.place.playerGroup.position.add(moveVector);
           }
         }
       }
@@ -128,10 +120,7 @@ export class Hand extends THREE.Object3D {
         this.place.stop();
       }
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-        Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
-        Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
-        Debug.log(`Grip: ${JSON.stringify(this.grip.position)}`);
-        Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
+        this.setCube(Assets.nextModel());
       }
       if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
         Assets.nextColor(this.cube);
