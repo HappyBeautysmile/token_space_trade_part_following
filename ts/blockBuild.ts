@@ -6,7 +6,8 @@ import { Tick, Ticker } from "./tick";
 import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
-//import { Assets } from "./assets";
+import { Assets } from "./assets";
+import { Palette } from "./palette";
 
 class ModelLoader {
   static async loadModel(filename: string): Promise<THREE.Object3D> {
@@ -118,6 +119,7 @@ export class BlockBuild {
   }
 
   private setScene() {
+    Palette.init();
     document.body.innerHTML = "";
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
@@ -155,7 +157,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("change color on button push fix 3");
+    Debug.log("created assets class");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

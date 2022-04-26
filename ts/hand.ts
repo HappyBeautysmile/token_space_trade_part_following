@@ -4,7 +4,6 @@ import { Tick } from "./tick";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { InHandObject } from "./inHandObject";
-//import { Palette } from "./palette";
 
 export class Hand extends THREE.Object3D {
 
@@ -119,8 +118,7 @@ export class Hand extends THREE.Object3D {
         Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
       }
       if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
-        const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-        this.assets.replaceMaterial(this.cube, newMat);
+        Assets.nextColor(this.cube);
       }
       this.lastButtons = buttons;
     }
@@ -152,7 +150,6 @@ export class Hand extends THREE.Object3D {
   }
 
   private p = new THREE.Vector3();
-  private assets = new Assets();
   private async initialize() {
     this.grip.addEventListener('squeeze', () => {
       this.deleteCube();

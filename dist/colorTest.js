@@ -34,23 +34,24 @@ exports.PaletteTest = exports.Palette = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const VRButton_js_1 = __webpack_require__(18);
 class Palette {
-    primary;
-    secondary;
-    accent;
-    blackish;
-    whitish;
-    reddish;
-    yellowish;
-    greenish;
-    bluish;
-    magentaish;
-    colorIndex;
-    constructor() {
-        this.primary = new THREE.Color();
-        this.primary.setHSL(Math.random() * 0.8 + 0.2, Math.random() * 0.8 + 0.2 * .5, Math.random() * 0.8 + 0.2);
+    static primary;
+    static secondary;
+    static accent;
+    static blackish;
+    static whitish;
+    static reddish;
+    static yellowish;
+    static greenish;
+    static bluish;
+    static magentaish;
+    static colorIndex;
+    constructor() { }
+    static init() {
+        Palette.primary = new THREE.Color();
+        Palette.primary.setHSL(Math.random() * 0.8 + 0.2, Math.random() * 0.8 + 0.2 * .5, Math.random() * 0.8 + 0.2);
         // make a similar color for the secondary
         let hsl = { h: 0, s: 0, l: 0 };
-        this.primary.getHSL(hsl);
+        Palette.primary.getHSL(hsl);
         hsl.h += Math.random() * .2 - 0.1;
         if (hsl.h > 1) {
             hsl.h -= 1;
@@ -64,10 +65,10 @@ class Palette {
         hsl.l += Math.random() * .3 - 0.15;
         hsl.l = Math.max(0, hsl.l);
         hsl.l = Math.min(1, hsl.l);
-        this.secondary = new THREE.Color();
-        this.secondary.setHSL(hsl.h, hsl.s, hsl.l);
+        Palette.secondary = new THREE.Color();
+        Palette.secondary.setHSL(hsl.h, hsl.s, hsl.l);
         // make a saturated analogus color for the accent.
-        this.primary.getHSL(hsl);
+        Palette.primary.getHSL(hsl);
         if (Math.random() > 0.5) {
             hsl.h += Math.random() * .1 - 0.333;
         }
@@ -84,47 +85,47 @@ class Palette {
         //hsl.l = Math.random() * .2 + 0.8;
         hsl.s = 1.0;
         hsl.l = 0.5;
-        this.accent = new THREE.Color();
-        this.accent.setHSL(hsl.h, hsl.s, hsl.l);
+        Palette.accent = new THREE.Color();
+        Palette.accent.setHSL(hsl.h, hsl.s, hsl.l);
         // this.primary = new THREE.Color(0xb3d6c6);
         // this.secondary = new THREE.Color(0xdceab2);
         // this.accent = new THREE.Color(0x75b9be);
-        let maxR = Math.max(this.primary.r, this.secondary.r, this.accent.r);
-        let maxG = Math.max(this.primary.g, this.secondary.g, this.accent.g);
-        let maxB = Math.max(this.primary.b, this.secondary.b, this.accent.b);
-        let minR = Math.min(this.primary.r, this.secondary.r, this.accent.r) * 0.6;
-        let minG = Math.min(this.primary.g, this.secondary.g, this.accent.g) * 0.6;
-        let minB = Math.min(this.primary.b, this.secondary.b, this.accent.b) * 0.6;
-        this.whitish = new THREE.Color(maxR, maxG, maxB);
-        this.blackish = new THREE.Color(minR, minG, minB);
-        this.reddish = new THREE.Color(maxR, minG, minB);
-        this.yellowish = new THREE.Color(maxR, maxG, minB);
-        this.greenish = new THREE.Color(minR, maxG, minB);
-        this.bluish = new THREE.Color(minR, minG, maxB);
-        this.magentaish = new THREE.Color(maxR, minG, maxB);
-        this.colorIndex = 0;
+        let maxR = Math.max(Palette.primary.r, Palette.secondary.r, Palette.accent.r);
+        let maxG = Math.max(Palette.primary.g, Palette.secondary.g, Palette.accent.g);
+        let maxB = Math.max(Palette.primary.b, Palette.secondary.b, Palette.accent.b);
+        let minR = Math.min(Palette.primary.r, Palette.secondary.r, Palette.accent.r) * 0.6;
+        let minG = Math.min(Palette.primary.g, Palette.secondary.g, Palette.accent.g) * 0.6;
+        let minB = Math.min(Palette.primary.b, Palette.secondary.b, Palette.accent.b) * 0.6;
+        Palette.whitish = new THREE.Color(maxR, maxG, maxB);
+        Palette.blackish = new THREE.Color(minR, minG, minB);
+        Palette.reddish = new THREE.Color(maxR, minG, minB);
+        Palette.yellowish = new THREE.Color(maxR, maxG, minB);
+        Palette.greenish = new THREE.Color(minR, maxG, minB);
+        Palette.bluish = new THREE.Color(minR, minG, maxB);
+        Palette.magentaish = new THREE.Color(maxR, minG, maxB);
+        Palette.colorIndex = 0;
     }
-    asArray() {
+    static asArray() {
         return [
-            this.primary,
-            this.secondary,
-            this.accent,
-            this.whitish,
-            this.blackish,
-            this.reddish,
-            this.yellowish,
-            this.greenish,
-            this.bluish,
-            this.magentaish
+            Palette.primary,
+            Palette.secondary,
+            Palette.accent,
+            Palette.whitish,
+            Palette.blackish,
+            Palette.reddish,
+            Palette.yellowish,
+            Palette.greenish,
+            Palette.bluish,
+            Palette.magentaish
         ];
     }
-    nextColor() {
+    static nextColor() {
         const colors = this.asArray();
-        this.colorIndex = (this.colorIndex + 1) % colors.length;
-        return colors[this.colorIndex];
+        Palette.colorIndex = (Palette.colorIndex + 1) % colors.length;
+        return colors[Palette.colorIndex];
     }
-    getCurrentColor() {
-        return this.asArray()[this.colorIndex];
+    static getCurrentColor() {
+        return this.asArray()[Palette.colorIndex];
     }
 }
 exports.Palette = Palette;
@@ -134,8 +135,8 @@ class PaletteTest {
     camera;
     renderer;
     constructor() {
-        this.testPalette = new Palette();
-        let colors = this.testPalette.asArray();
+        Palette.init();
+        let colors = Palette.asArray();
         document.body.innerHTML = "";
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0, 0, 0);
