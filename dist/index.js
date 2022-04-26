@@ -253,7 +253,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("clone materials");
+        debug_1.Debug.log("debug 1");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -593,7 +593,8 @@ class Hand extends THREE.Object3D {
                 this.setCube(assets_1.Assets.nextModel());
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
-                assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
+                //Assets.replaceMaterial(this.cube, Assets.nextMaterial());
+                assets_1.Assets.nextMaterial();
             }
             this.lastButtons = buttons;
         }
