@@ -163,7 +163,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("added this.place.worldToUniverse(this.cube.position);");
+    Debug.log("added this.place.playerToUniverse(this.cube.position);");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
