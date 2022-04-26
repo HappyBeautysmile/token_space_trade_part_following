@@ -97,7 +97,7 @@ export class Hand extends THREE.Object3D {
             this.v.set(0, -axes[3], 0);
             this.v.multiplyScalar(rate * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
-            // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
+            this.place.playerGroup.rotateY(axes[2] * rate * t.deltaS)
           }
         }
       }
