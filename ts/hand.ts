@@ -4,6 +4,7 @@ import { Tick } from "./tick";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { InHandObject } from "./inHandObject";
+import { Vector3 } from "three";
 
 export class Hand extends THREE.Object3D {
 
@@ -47,15 +48,19 @@ export class Hand extends THREE.Object3D {
     // The center of the chest is 50cm below the camera.
     this.chestPlayer.copy(this.place.camera.position);
     this.chestPlayer.y -= 0.5;
+    this.chestPlayer = new Vector3(0, this.chestPlayer.y, 0);
 
     this.directionPlayer.copy(this.grip.position);
     this.directionPlayer.sub(this.chestPlayer);
 
     this.cube.position.copy(this.directionPlayer);
-    this.cube.position.multiplyScalar(10);
-    this.cube.position.add(this.grip.position);
-    //this.place.playerToUniverse(this.cube.position);
-    //this.place.worldToUniverse(this.cube.position);
+    this.cube.position.multiplyScalar(15);
+
+    // Debug.log("this.cube.quaterion=" + JSON.stringify(this.cube.quaternion));
+    // Debug.log("this.place.playerGroup.quaternion=" + JSON.stringify(this.place.playerGroup.quaternion));
+    // Debug.log("this.grip.quaternion=" + JSON.stringify(this.grip.quaternion));
+
+    this.cube.position.sub(this.place.playerGroup.position);
     this.cube.rotation.copy(this.grip.rotation);
   }
 
@@ -79,7 +84,9 @@ export class Hand extends THREE.Object3D {
         this.sourceLogged = true;
       }
       //this.debugMaterial.color = new THREE.Color('blue');
-      const rate = 3;
+      const rateUpDown = 5;
+      const rateMove = 10;
+      const rotRate = 2;
       const axes = source.gamepad.axes.slice(0);
       if (axes.length >= 4) {
         //this.debugMaterial.color = new THREE.Color('green');
@@ -89,15 +96,15 @@ export class Hand extends THREE.Object3D {
           //this.debugMaterial.color = new THREE.Color('orange');
           this
           if (this.leftHand) {
-            this.v.set(axes[2], 0, axes[3]);
-            this.v.multiplyScalar(rate * t.deltaS);
+            this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
+            this.v.multiplyScalar(rateMove * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
           }
           else {
-            this.v.set(0, -axes[3], 0);
-            this.v.multiplyScalar(rate * t.deltaS);
+            this.v.set(0, -Math.pow(axes[3], 3), 0);
+            this.v.multiplyScalar(rateUpDown * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
-            // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
+            this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
           }
         }
       }
@@ -113,9 +120,7 @@ export class Hand extends THREE.Object3D {
         this.place.stop();
       }
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-        Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
-        Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
-        Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
+        this.setCube(Assets.nextModel());
       }
       if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
         Assets.nextColor(this.cube);
@@ -158,12 +163,17 @@ export class Hand extends THREE.Object3D {
     this.grip.addEventListener('selectstart', () => {
       this.deleteCube();
       const o = this.cube.clone();
+      //Debug.log("this.cube.quaternion=" + JSON.stringify(this.cube.quaternion));
       o.position.copy(this.cube.position);
       o.rotation.copy(this.cube.rotation);
+      //Debug.log("o.quaternion=" + JSON.stringify(o.quaternion));
+      o.applyQuaternion(this.place.playerGroup.quaternion);
+      //Debug.log("post applyQuarternion o.quaternion=" + JSON.stringify(o.quaternion));
       const p = o.position;
       this.place.playerToUniverse(p);
       this.place.quantizePosition(p);
       this.place.quantizeRotation(o.rotation);
+      //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
       this.place.universeGroup.add(o);
       const key = this.posToKey(o.position);
       Hand.AllObjects.set(key, o);
