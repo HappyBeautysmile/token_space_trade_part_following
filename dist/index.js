@@ -33,7 +33,30 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assets = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const palette_1 = __webpack_require__(812);
+const GLTFLoader_js_1 = __webpack_require__(217);
+class ModelLoader {
+    static async loadModel(filename) {
+        const loader = new GLTFLoader_js_1.GLTFLoader();
+        return new Promise((resolve, reject) => {
+            loader.load(filename, (gltf) => {
+                ModelLoader.setSingleSide(gltf.scene);
+                resolve(gltf.scene);
+            });
+        });
+    }
+    static setSingleSide(o) {
+        if (o instanceof THREE.Mesh) {
+            if (o.material instanceof THREE.MeshStandardMaterial) {
+                o.material.side = THREE.FrontSide;
+            }
+        }
+        for (const child of o.children) {
+            ModelLoader.setSingleSide(child);
+        }
+    }
+}
 class Assets extends THREE.Object3D {
+    static allModels = [];
     static init() {
         palette_1.Palette.init();
     }
@@ -48,6 +71,26 @@ class Assets extends THREE.Object3D {
             let mesh = source.children[i];
             mesh.material = mat;
         }
+    }
+    static async loadAllModels() {
+        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster'];
+        for (const modelName of models) {
+            console.log(`Loading ${modelName}`);
+            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+            if (!m) {
+                continue;
+            }
+            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+            //this.assets.replaceMaterial(m, newMat);
+            m.scale.set(1, 1, 1);
+            this.allModels.push(m);
+            //this.scene.add(m);
+            //this.universeGroup.add(m);
+            m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
+            console.log(`Added ${modelName}`);
+        }
+        // const m = await ModelLoader.loadModel(`Model/ship.glb`);
+        // this.playerGroup.add(m);
     }
 }
 exports.Assets = Assets;
@@ -87,38 +130,16 @@ exports.BlockBuild = void 0;
 const THREE = __importStar(__webpack_require__(232));
 // import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 const VRButton_js_1 = __webpack_require__(18);
-const GLTFLoader_js_1 = __webpack_require__(217);
 const tick_1 = __webpack_require__(544);
 const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
+const assets_1 = __webpack_require__(398);
 const palette_1 = __webpack_require__(812);
-class ModelLoader {
-    static async loadModel(filename) {
-        const loader = new GLTFLoader_js_1.GLTFLoader();
-        return new Promise((resolve, reject) => {
-            loader.load(filename, (gltf) => {
-                ModelLoader.setSingleSide(gltf.scene);
-                resolve(gltf.scene);
-            });
-        });
-    }
-    static setSingleSide(o) {
-        if (o instanceof THREE.Mesh) {
-            if (o.material instanceof THREE.MeshStandardMaterial) {
-                o.material.side = THREE.FrontSide;
-            }
-        }
-        for (const child of o.children) {
-            ModelLoader.setSingleSide(child);
-        }
-    }
-}
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
     renderer;
-    allModels = [];
     playerGroup = new THREE.Group();
     universeGroup = new THREE.Group();
     place;
@@ -135,31 +156,9 @@ class BlockBuild {
     }
     async initialize() {
         this.setScene();
-        await this.loadAllModels();
+        await assets_1.Assets.loadAllModels();
         debug_1.Debug.log("all models loaded.");
         this.getGrips();
-    }
-    async loadAllModels() {
-        const models = ['cube', 'wedge', 'chopped corner', 'corner', 'cube-basic', 'cube-gem',
-            'cube-glob', 'cube-smooth', 'cube-tweek',
-            'wedge 2', 'wonk'];
-        for (const modelName of models) {
-            console.log(`Loading ${modelName}`);
-            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
-            if (!m) {
-                continue;
-            }
-            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-            //this.assets.replaceMaterial(m, newMat);
-            m.scale.set(1, 1, 1);
-            this.allModels.push(m);
-            //this.scene.add(m);
-            this.universeGroup.add(m);
-            m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
-            console.log(`Added ${modelName}`);
-        }
-        const m = await ModelLoader.loadModel(`Model/ship.glb`);
-        this.playerGroup.add(m);
     }
     tickEverything(o, tick) {
         if (o['tick']) {
@@ -231,7 +230,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("cube axes value to allow more contol at low velocity");
+        debug_1.Debug.log("move models to Assets.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -261,8 +260,8 @@ class BlockBuild {
             }
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
-            this.allModels[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, this.allModels[i], i, this.renderer.xr, this.place, i == 0);
+            assets_1.Assets.allModels[i].position.set(0, 0, 0);
+            new hand_1.Hand(grip, assets_1.Assets.allModels[i], i, this.renderer.xr, this.place, i == 0);
         }
     }
 }
