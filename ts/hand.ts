@@ -95,12 +95,12 @@ export class Hand extends THREE.Object3D {
           //this.debugMaterial.color = new THREE.Color('orange');
           this
           if (this.leftHand) {
-            this.v.set(Math.pow(axes[2], 2), 0, Math.pow(axes[3], 2));
+            this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
             this.v.multiplyScalar(rate * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
           }
           else {
-            this.v.set(0, -Math.pow(axes[3], 2), 0);
+            this.v.set(0, -Math.pow(axes[3], 3), 0);
             this.v.multiplyScalar(rate * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
             // // rotate playerGroup around camera
