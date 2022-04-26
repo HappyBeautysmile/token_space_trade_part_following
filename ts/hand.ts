@@ -60,7 +60,6 @@ export class Hand extends THREE.Object3D {
 
     this.cube.position.add(this.place.playerGroup.position);
     this.cube.rotation.copy(this.grip.rotation);
-    this.cube.applyQuaternion(this.place.playerGroup.quaternion);
   }
 
   private sourceLogged = false;
@@ -176,6 +175,8 @@ export class Hand extends THREE.Object3D {
       o.position.copy(this.cube.position);
       o.rotation.copy(this.cube.rotation);
       Debug.log("o.quaternion=" + JSON.stringify(o.quaternion));
+      o.applyQuaternion(this.place.playerGroup.quaternion);
+      Debug.log("post applyQuarternion o.quaternion=" + JSON.stringify(o.quaternion));
       const p = o.position;
       this.place.playerToUniverse(p);
       this.place.quantizePosition(p);

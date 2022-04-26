@@ -231,7 +231,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("add debug info for quaternion in selectstart");
+        debug_1.Debug.log("apply quarternion in selectstart");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -510,7 +510,6 @@ class Hand extends THREE.Object3D {
         // Debug.log("this.grip.quaternion=" + JSON.stringify(this.grip.quaternion));
         this.cube.position.add(this.place.playerGroup.position);
         this.cube.rotation.copy(this.grip.rotation);
-        this.cube.applyQuaternion(this.place.playerGroup.quaternion);
     }
     sourceLogged = false;
     lastButtons;
@@ -619,6 +618,8 @@ class Hand extends THREE.Object3D {
             o.position.copy(this.cube.position);
             o.rotation.copy(this.cube.rotation);
             debug_1.Debug.log("o.quaternion=" + JSON.stringify(o.quaternion));
+            o.applyQuaternion(this.place.playerGroup.quaternion);
+            debug_1.Debug.log("post applyQuarternion o.quaternion=" + JSON.stringify(o.quaternion));
             const p = o.position;
             this.place.playerToUniverse(p);
             this.place.quantizePosition(p);
