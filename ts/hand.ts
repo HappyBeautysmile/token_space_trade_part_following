@@ -4,6 +4,7 @@ import { Tick } from "./tick";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { InHandObject } from "./inHandObject";
+import { Vector3 } from "three";
 
 export class Hand extends THREE.Object3D {
 
@@ -45,9 +46,10 @@ export class Hand extends THREE.Object3D {
   private directionPlayer = new THREE.Vector3();
   private setCubePosition() {
     // The center of the chest is 50cm below the camera.
-    this.chestPlayer.copy(this.place.camera.position);
-    this.place.playerGroup.localToWorld(this.chestPlayer);
-    this.chestPlayer.y -= 0.5;
+    // this.chestPlayer.copy(this.place.camera.position);
+    // this.place.playerGroup.localToWorld(this.chestPlayer);
+    // this.chestPlayer.y -= 0.5;
+    this.chestPlayer = new Vector3(0, 1.0, 0);
 
     this.directionPlayer.copy(this.grip.position);
     this.directionPlayer.sub(this.chestPlayer);
