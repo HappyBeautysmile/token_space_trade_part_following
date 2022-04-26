@@ -123,7 +123,7 @@ export class Hand extends THREE.Object3D {
         this.setCube(Assets.nextModel());
       }
       if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
-        Assets.nextColor(this.cube);
+        Assets.replaceMaterial(this.cube, Assets.nextMaterial());
       }
       this.lastButtons = buttons;
     }
