@@ -80,6 +80,7 @@ export class Hand extends THREE.Object3D {
       }
       //this.debugMaterial.color = new THREE.Color('blue');
       const rate = 3;
+      const rotRate = 1;
       const axes = source.gamepad.axes.slice(0);
       if (axes.length >= 4) {
         //this.debugMaterial.color = new THREE.Color('green');
@@ -97,7 +98,17 @@ export class Hand extends THREE.Object3D {
             this.v.set(0, -axes[3], 0);
             this.v.multiplyScalar(rate * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
-            this.place.playerGroup.rotateY(axes[2] * rate * t.deltaS)
+            // rotate playerGroup around camera
+            /// step 1: calculate move direction and move distance:
+            let moveVector = new THREE.Vector3(
+              this.place.camera.position.x - this.place.playerGroup.position.x,
+              this.place.camera.position.y - this.place.playerGroup.position.y,
+              this.place.camera.position.z - this.place.playerGroup.position.z,
+            );
+            this.place.playerGroup.position.add(moveVector);
+            this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
+            moveVector = new THREE.Vector3().sub(moveVector);
+            this.place.playerGroup.position.add(moveVector);
           }
         }
       }
