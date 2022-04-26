@@ -6,7 +6,6 @@ import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
-import { Palette } from "./palette";
 
 
 export class BlockBuild {
@@ -75,7 +74,7 @@ export class BlockBuild {
   }
 
   private setScene() {
-    Palette.init();
+    Assets.init();
     document.body.innerHTML = "";
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
@@ -119,7 +118,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("debug 2");
+    Debug.log("debug 3");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

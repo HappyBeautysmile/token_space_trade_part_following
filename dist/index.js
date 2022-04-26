@@ -161,7 +161,6 @@ const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
-const palette_1 = __webpack_require__(812);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -220,7 +219,7 @@ class BlockBuild {
         }
     }
     setScene() {
-        palette_1.Palette.init();
+        assets_1.Assets.init();
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
@@ -256,7 +255,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("debug 2");
+        debug_1.Debug.log("debug 3");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
