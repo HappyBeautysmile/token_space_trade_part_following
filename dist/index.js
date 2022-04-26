@@ -231,7 +231,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("added this.place.playerToUniverse(this.cube.position);");
+        debug_1.Debug.log("add placement vector to playergroup.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -505,8 +505,8 @@ class Hand extends THREE.Object3D {
         this.directionPlayer.sub(this.chestPlayer);
         this.cube.position.copy(this.directionPlayer);
         this.cube.position.multiplyScalar(15);
-        this.cube.position.add(this.grip.position);
-        this.place.playerToUniverse(this.cube.position);
+        //this.cube.position.add(this.grip.position);
+        this.cube.position.add(this.place.playerGroup.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
     sourceLogged = false;

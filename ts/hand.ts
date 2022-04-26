@@ -53,8 +53,8 @@ export class Hand extends THREE.Object3D {
 
     this.cube.position.copy(this.directionPlayer);
     this.cube.position.multiplyScalar(15);
-    this.cube.position.add(this.grip.position);
-    this.place.playerToUniverse(this.cube.position);
+    //this.cube.position.add(this.grip.position);
+    this.cube.position.add(this.place.playerGroup.position);
     this.cube.rotation.copy(this.grip.rotation);
   }
 
