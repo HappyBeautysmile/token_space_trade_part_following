@@ -65,12 +65,12 @@ export class Assets extends THREE.Object3D {
 
     static nextModel() {
         Assets.modelIndex = (Assets.modelIndex + 1) % Assets.allModels.length;
-        return Assets.allModels[Assets.modelIndex];
+        return Assets.allModels[Assets.modelIndex].clone();
     }
 
     static nextMaterial() {
         Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materialIndex;
-        return Assets.materials[Assets.materialIndex];
+        return Assets.materials[Assets.materialIndex].clone();
     }
 
     static async loadAllModels() {

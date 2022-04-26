@@ -89,11 +89,11 @@ class Assets extends THREE.Object3D {
     }
     static nextModel() {
         Assets.modelIndex = (Assets.modelIndex + 1) % Assets.allModels.length;
-        return Assets.allModels[Assets.modelIndex];
+        return Assets.allModels[Assets.modelIndex].clone();
     }
     static nextMaterial() {
         Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materialIndex;
-        return Assets.materials[Assets.materialIndex];
+        return Assets.materials[Assets.materialIndex].clone();
     }
     static async loadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster'];
@@ -253,7 +253,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("material switch instead of colors.");
+        debug_1.Debug.log("clone materials");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
