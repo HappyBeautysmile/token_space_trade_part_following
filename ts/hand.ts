@@ -53,9 +53,14 @@ export class Hand extends THREE.Object3D {
 
     this.cube.position.copy(this.directionPlayer);
     this.cube.position.multiplyScalar(15);
-    //this.cube.position.add(this.grip.position);
+
+    Debug.log("this.cube.quaterion=" + JSON.stringify(this.cube.quaternion));
+    Debug.log("this.place.playerGroup.quaternion=" + JSON.stringify(this.place.playerGroup.quaternion));
+    Debug.log("this.grip.quaternion=" + JSON.stringify(this.grip.quaternion));
+
     this.cube.position.add(this.place.playerGroup.position);
     this.cube.rotation.copy(this.grip.rotation);
+    this.cube.applyQuaternion(this.place.playerGroup.quaternion);
   }
 
   private sourceLogged = false;
