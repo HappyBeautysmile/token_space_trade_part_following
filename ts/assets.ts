@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Debug } from "./debug";
 import { Palette } from "./palette";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Material } from "three";
 
 class ModelLoader {
     static async loadModel(filename: string): Promise<THREE.Object3D> {
@@ -35,6 +36,7 @@ export class Assets extends THREE.Object3D {
 
     static init() {
         Palette.init();
+        Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x987 });
         Assets.materials.push(flatPrimary);
         let glossPrimary = new THREE.MeshPhongMaterial({ color: 0x987, shininess: 1.0 });
@@ -69,7 +71,7 @@ export class Assets extends THREE.Object3D {
     }
 
     static nextMaterial() {
-        Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materialIndex;
+        Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materials.length;
         Debug.log('materialIndex=' + Assets.materialIndex.toString());
         Debug.log('materials.length=' + Assets.materials.length.toString())
         return Assets.materials[Assets.materialIndex];

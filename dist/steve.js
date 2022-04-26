@@ -63,6 +63,7 @@ class Assets extends THREE.Object3D {
     static materialIndex = 0;
     static init() {
         palette_1.Palette.init();
+        Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x987 });
         Assets.materials.push(flatPrimary);
         let glossPrimary = new THREE.MeshPhongMaterial({ color: 0x987, shininess: 1.0 });
@@ -93,7 +94,7 @@ class Assets extends THREE.Object3D {
         return Assets.allModels[Assets.modelIndex];
     }
     static nextMaterial() {
-        Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materialIndex;
+        Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materials.length;
         debug_1.Debug.log('materialIndex=' + Assets.materialIndex.toString());
         debug_1.Debug.log('materials.length=' + Assets.materials.length.toString());
         return Assets.materials[Assets.materialIndex];
@@ -255,7 +256,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("debug 3");
+        debug_1.Debug.log("debug 4");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -595,8 +596,8 @@ class Hand extends THREE.Object3D {
                 this.setCube(assets_1.Assets.nextModel());
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
-                //Assets.replaceMaterial(this.cube, Assets.nextMaterial());
-                assets_1.Assets.nextMaterial();
+                assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
+                //Assets.nextMaterial();
             }
             this.lastButtons = buttons;
         }
