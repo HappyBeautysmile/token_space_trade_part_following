@@ -231,7 +231,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("use only y position of camera for chest.");
+        debug_1.Debug.log("square axes value to allow more contol at low velocity");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -531,8 +531,8 @@ class Hand extends THREE.Object3D {
                 this.sourceLogged = true;
             }
             //this.debugMaterial.color = new THREE.Color('blue');
-            const rate = 3;
-            const rotRate = 1;
+            const rate = 6;
+            const rotRate = 2;
             const axes = source.gamepad.axes.slice(0);
             if (axes.length >= 4) {
                 //this.debugMaterial.color = new THREE.Color('green');
@@ -543,12 +543,12 @@ class Hand extends THREE.Object3D {
                     //this.debugMaterial.color = new THREE.Color('orange');
                     this;
                     if (this.leftHand) {
-                        this.v.set(axes[2], 0, axes[3]);
+                        this.v.set(Math.pow(axes[2], 2), 0, Math.pow(axes[3], 2));
                         this.v.multiplyScalar(rate * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
                     }
                     else {
-                        this.v.set(0, -axes[3], 0);
+                        this.v.set(0, -Math.pow(axes[3], 2), 0);
                         this.v.multiplyScalar(rate * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
                         // // rotate playerGroup around camera
