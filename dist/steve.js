@@ -231,7 +231,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("slower rotate");
+        debug_1.Debug.log("added this.place.worldToUniverse(this.cube.position);");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -504,10 +504,10 @@ class Hand extends THREE.Object3D {
         this.directionPlayer.copy(this.grip.position);
         this.directionPlayer.sub(this.chestPlayer);
         this.cube.position.copy(this.directionPlayer);
-        this.cube.position.multiplyScalar(10);
+        this.cube.position.multiplyScalar(15);
         this.cube.position.add(this.grip.position);
         //this.place.playerToUniverse(this.cube.position);
-        //this.place.worldToUniverse(this.cube.position);
+        this.place.worldToUniverse(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
     sourceLogged = false;
@@ -548,13 +548,16 @@ class Hand extends THREE.Object3D {
                         this.v.set(0, -axes[3], 0);
                         this.v.multiplyScalar(rate * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
-                        // rotate playerGroup around camera
-                        /// step 1: calculate move direction and move distance:
-                        let moveVector = new THREE.Vector3(this.place.camera.position.x - this.place.playerGroup.position.x, this.place.camera.position.y - this.place.playerGroup.position.y, this.place.camera.position.z - this.place.playerGroup.position.z);
-                        this.place.playerGroup.position.add(moveVector);
+                        // // rotate playerGroup around camera
+                        // let moveVector = new THREE.Vector3(
+                        //   this.place.camera.position.x - this.place.playerGroup.position.x,
+                        //   this.place.camera.position.y - this.place.playerGroup.position.y,
+                        //   this.place.camera.position.z - this.place.playerGroup.position.z,
+                        // );
+                        // this.place.playerGroup.position.add(moveVector);
                         this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
-                        moveVector = new THREE.Vector3().sub(moveVector);
-                        this.place.playerGroup.position.add(moveVector);
+                        // moveVector = new THREE.Vector3().sub(moveVector);
+                        // this.place.playerGroup.position.add(moveVector);
                     }
                 }
             }
