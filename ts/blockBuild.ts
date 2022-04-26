@@ -79,8 +79,8 @@ export class BlockBuild {
       m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
       console.log(`Added ${modelName}`);
     }
-    // const m = await ModelLoader.loadModel(`Model/ship.glb`);
-    // this.playerGroup.add(m);
+    const m = await ModelLoader.loadModel(`Model/ship.glb`);
+    this.playerGroup.add(m);
   }
 
   private tickEverything(o: THREE.Object3D, tick: Tick) {
@@ -154,10 +154,16 @@ export class BlockBuild {
     directionalLight.position.set(2, 40, 10);
     this.scene.add(directionalLight);
 
+    const headLamp = new THREE.PointLight(0xFFFFFF);
+    headLamp.position.set(0, 2, 0);
+    headLamp.decay = 2.0;
+    headLamp.distance = 10;
+    this.scene.add(headLamp);
+
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("created assets class");
+    Debug.log("10m distance headlamp");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

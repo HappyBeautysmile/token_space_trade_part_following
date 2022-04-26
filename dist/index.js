@@ -158,8 +158,8 @@ class BlockBuild {
             m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
             console.log(`Added ${modelName}`);
         }
-        // const m = await ModelLoader.loadModel(`Model/ship.glb`);
-        // this.playerGroup.add(m);
+        const m = await ModelLoader.loadModel(`Model/ship.glb`);
+        this.playerGroup.add(m);
     }
     tickEverything(o, tick) {
         if (o['tick']) {
@@ -223,10 +223,15 @@ class BlockBuild {
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(2, 40, 10);
         this.scene.add(directionalLight);
+        const headLamp = new THREE.PointLight(0xFFFFFF);
+        headLamp.position.set(0, 2, 0);
+        headLamp.decay = 2.0;
+        headLamp.distance = 10;
+        this.scene.add(headLamp);
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("created assets class");
+        debug_1.Debug.log("10m distance headlamp");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
