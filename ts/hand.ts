@@ -128,6 +128,7 @@ export class Hand extends THREE.Object3D {
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
         Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
         Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
+        Debug.log(`Grip: ${JSON.stringify(this.grip.position)}`);
         Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
       }
       if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y

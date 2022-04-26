@@ -231,7 +231,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("subtract playerGroup position");
+        debug_1.Debug.log("more debug");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -576,6 +576,7 @@ class Hand extends THREE.Object3D {
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
                 debug_1.Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
                 debug_1.Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
+                debug_1.Debug.log(`Grip: ${JSON.stringify(this.grip.position)}`);
                 debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
