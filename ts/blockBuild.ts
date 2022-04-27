@@ -6,7 +6,7 @@ import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
-
+import { FileIO } from "./fileIO";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -118,7 +118,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("color fix");
+    Debug.log("save by pushing the stick");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

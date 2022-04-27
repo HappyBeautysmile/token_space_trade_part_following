@@ -150,7 +150,7 @@ class PaletteTest {
         const light = new THREE.AmbientLight(0x404040); // soft white light
         this.scene.add(light);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(2, 40, 10);
+        directionalLight.position.set(0, 0, 30);
         this.scene.add(directionalLight);
         for (let i = 0; i < colors.length; i++) {
             let size = 1;
@@ -158,20 +158,20 @@ class PaletteTest {
                 size = 3 - i;
             }
             let cubeMat = new THREE.MeshPhysicalMaterial({
-                clearcoat: 1.0,
-                sheen: 0.5,
-                metalness: 0.9,
                 roughness: 0.5,
-                color: colors[i]
+                metalness: 0.5,
+                clearcoat: 1,
+                clearcoatRoughness: 0.2,
+                color: colors[1]
             });
             const primaryCube = (new THREE.Mesh(
             //new THREE.BoxGeometry(size, size, size),
-            new THREE.SphereGeometry(size, 3, 3), cubeMat));
+            new THREE.BoxGeometry(size, size, size), cubeMat));
             primaryCube.position.set((i % 5) * 2 - 3, Math.floor(i / 5) * 2, -10);
             primaryCube.onBeforeRender = () => {
                 primaryCube.rotateX(0.01);
-                primaryCube.rotateY(0.0231);
-                primaryCube.rotateZ(0.00512);
+                primaryCube.rotateY(0.02);
+                primaryCube.rotateZ(0.03);
             };
             this.scene.add(primaryCube);
         }

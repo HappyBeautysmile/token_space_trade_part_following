@@ -5,6 +5,7 @@ import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { InHandObject } from "./inHandObject";
 import { Vector3 } from "three";
+import { FileIO } from "./fileIO";
 
 export class Hand extends THREE.Object3D {
 
@@ -117,7 +118,7 @@ export class Hand extends THREE.Object3D {
       }
       if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick
         //this.debugMaterial.color = new THREE.Color('blue');
-        this.place.stop();
+        FileIO.saveObject(Hand.AllObjects, "what_you_built.json");
       }
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
         this.setCube(Assets.nextModel());

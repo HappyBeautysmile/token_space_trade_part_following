@@ -66,15 +66,33 @@ class Assets extends THREE.Object3D {
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
         Assets.materials.push(flatPrimary);
-        let glossPrimary = new THREE.MeshPhongMaterial({ color: 0x998877, shininess: 1.0 });
+        let glossPrimary = new THREE.MeshPhysicalMaterial({
+            roughness: 0.5,
+            metalness: 0.5,
+            clearcoat: 1,
+            clearcoatRoughness: 0.2,
+            color: 0x998877
+        });
         Assets.materials.push(glossPrimary);
-        let flatSeconday = new THREE.MeshPhongMaterial({ color: 0x665544 });
-        Assets.materials.push(flatSeconday);
-        let glossSecondary = new THREE.MeshPhongMaterial({ color: 0x665544, shininess: 1.0 });
+        let flatSecondary = new THREE.MeshPhongMaterial({ color: 0x665544 });
+        Assets.materials.push(flatSecondary);
+        let glossSecondary = new THREE.MeshPhysicalMaterial({
+            roughness: 0.5,
+            metalness: 0.5,
+            clearcoat: 1,
+            clearcoatRoughness: 0.2,
+            color: 0x665544
+        });
         Assets.materials.push(glossSecondary);
         let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
         Assets.materials.push(flatBlack);
-        let glossBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        let glossBlack = new THREE.MeshPhysicalMaterial({
+            roughness: 0.5,
+            metalness: 0.5,
+            clearcoat: 1,
+            clearcoatRoughness: 0.2,
+            color: 0x111111
+        });
         Assets.materials.push(glossBlack);
     }
     // sets the color of the passed object to the next color in the palette.
@@ -256,7 +274,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("color fix");
+        debug_1.Debug.log("save by pushing the stick");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -367,6 +385,28 @@ class Debug extends THREE.Object3D {
 }
 exports.Debug = Debug;
 //# sourceMappingURL=debug.js.map
+
+/***/ }),
+
+/***/ 3:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FileIO = void 0;
+class FileIO {
+    static saveObject(content, fileName) {
+        var a = document.createElement("a");
+        var file = new Blob([JSON.stringify(content, null, 2)], { type: 'text/plain' });
+        a.href = URL.createObjectURL(file);
+        a.download = fileName;
+        a.click();
+    }
+    static loadObject(filename) {
+    }
+}
+exports.FileIO = FileIO;
+//# sourceMappingURL=fileIO.js.map
 
 /***/ }),
 
@@ -485,6 +525,7 @@ const THREE = __importStar(__webpack_require__(232));
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const three_1 = __webpack_require__(232);
+const fileIO_1 = __webpack_require__(3);
 class Hand extends THREE.Object3D {
     grip;
     index;
@@ -590,7 +631,7 @@ class Hand extends THREE.Object3D {
             }
             if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick
                 //this.debugMaterial.color = new THREE.Color('blue');
-                this.place.stop();
+                fileIO_1.FileIO.saveObject(Hand.AllObjects, "what_you_built.json");
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
                 this.setCube(assets_1.Assets.nextModel());
@@ -804,7 +845,7 @@ class PaletteTest {
         const light = new THREE.AmbientLight(0x404040); // soft white light
         this.scene.add(light);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(2, 40, 10);
+        directionalLight.position.set(0, 0, 30);
         this.scene.add(directionalLight);
         for (let i = 0; i < colors.length; i++) {
             let size = 1;
@@ -812,20 +853,20 @@ class PaletteTest {
                 size = 3 - i;
             }
             let cubeMat = new THREE.MeshPhysicalMaterial({
-                clearcoat: 1.0,
-                sheen: 0.5,
-                metalness: 0.9,
                 roughness: 0.5,
-                color: colors[i]
+                metalness: 0.5,
+                clearcoat: 1,
+                clearcoatRoughness: 0.2,
+                color: colors[1]
             });
             const primaryCube = (new THREE.Mesh(
             //new THREE.BoxGeometry(size, size, size),
-            new THREE.SphereGeometry(size, 3, 3), cubeMat));
+            new THREE.BoxGeometry(size, size, size), cubeMat));
             primaryCube.position.set((i % 5) * 2 - 3, Math.floor(i / 5) * 2, -10);
             primaryCube.onBeforeRender = () => {
                 primaryCube.rotateX(0.01);
-                primaryCube.rotateY(0.0231);
-                primaryCube.rotateZ(0.00512);
+                primaryCube.rotateY(0.02);
+                primaryCube.rotateZ(0.03);
             };
             this.scene.add(primaryCube);
         }
