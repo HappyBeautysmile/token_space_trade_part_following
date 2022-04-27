@@ -29,7 +29,31 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assets = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const palette_1 = __webpack_require__(812);
+const GLTFLoader_js_1 = __webpack_require__(687);
+class ModelLoader {
+    static async loadModel(filename) {
+        const loader = new GLTFLoader_js_1.GLTFLoader();
+        return new Promise((resolve, reject) => {
+            loader.load(filename, (gltf) => {
+                ModelLoader.setSingleSide(gltf.scene);
+                resolve(gltf.scene);
+            });
+        });
+    }
+    static setSingleSide(o) {
+        if (o instanceof THREE.Mesh) {
+            if (o.material instanceof THREE.MeshStandardMaterial) {
+                o.material.side = THREE.FrontSide;
+            }
+        }
+        for (const child of o.children) {
+            ModelLoader.setSingleSide(child);
+        }
+    }
+}
 class Assets extends THREE.Object3D {
+    static allModels = [];
+    static modelIndex = 0;
     static init() {
         palette_1.Palette.init();
     }
@@ -44,6 +68,30 @@ class Assets extends THREE.Object3D {
             let mesh = source.children[i];
             mesh.material = mat;
         }
+    }
+    static nextModel() {
+        Assets.modelIndex = (this.modelIndex + 1) % Assets.allModels.length;
+        return this.allModels[this.modelIndex];
+    }
+    static async loadAllModels() {
+        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster'];
+        for (const modelName of models) {
+            console.log(`Loading ${modelName}`);
+            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+            if (!m) {
+                continue;
+            }
+            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+            //this.assets.replaceMaterial(m, newMat);
+            m.scale.set(1, 1, 1);
+            this.allModels.push(m);
+            //this.scene.add(m);
+            //this.universeGroup.add(m);
+            m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
+            console.log(`Added ${modelName}`);
+        }
+        // const m = await ModelLoader.loadModel(`Model/ship.glb`);
+        // this.playerGroup.add(m);
     }
 }
 exports.Assets = Assets;
@@ -79,38 +127,16 @@ exports.BlockBuild = void 0;
 const THREE = __importStar(__webpack_require__(578));
 // import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 const VRButton_js_1 = __webpack_require__(652);
-const GLTFLoader_js_1 = __webpack_require__(687);
 const tick_1 = __webpack_require__(544);
 const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
+const assets_1 = __webpack_require__(398);
 const palette_1 = __webpack_require__(812);
-class ModelLoader {
-    static async loadModel(filename) {
-        const loader = new GLTFLoader_js_1.GLTFLoader();
-        return new Promise((resolve, reject) => {
-            loader.load(filename, (gltf) => {
-                ModelLoader.setSingleSide(gltf.scene);
-                resolve(gltf.scene);
-            });
-        });
-    }
-    static setSingleSide(o) {
-        if (o instanceof THREE.Mesh) {
-            if (o.material instanceof THREE.MeshStandardMaterial) {
-                o.material.side = THREE.FrontSide;
-            }
-        }
-        for (const child of o.children) {
-            ModelLoader.setSingleSide(child);
-        }
-    }
-}
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
     renderer;
-    allModels = [];
     playerGroup = new THREE.Group();
     universeGroup = new THREE.Group();
     place;
@@ -127,31 +153,9 @@ class BlockBuild {
     }
     async initialize() {
         this.setScene();
-        await this.loadAllModels();
+        await assets_1.Assets.loadAllModels();
         debug_1.Debug.log("all models loaded.");
         this.getGrips();
-    }
-    async loadAllModels() {
-        const models = ['cube', 'wedge', 'chopped corner', 'corner', 'cube-basic', 'cube-gem',
-            'cube-glob', 'cube-smooth', 'cube-tweek',
-            'wedge 2', 'wonk'];
-        for (const modelName of models) {
-            console.log(`Loading ${modelName}`);
-            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
-            if (!m) {
-                continue;
-            }
-            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-            //this.assets.replaceMaterial(m, newMat);
-            m.scale.set(1, 1, 1);
-            this.allModels.push(m);
-            //this.scene.add(m);
-            this.universeGroup.add(m);
-            m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
-            console.log(`Added ${modelName}`);
-        }
-        // const m = await ModelLoader.loadModel(`Model/ship.glb`);
-        // this.playerGroup.add(m);
     }
     tickEverything(o, tick) {
         if (o['tick']) {
@@ -215,10 +219,15 @@ class BlockBuild {
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(2, 40, 10);
         this.scene.add(directionalLight);
+        const headLamp = new THREE.PointLight(0xFFFFFF);
+        headLamp.position.set(0, 2, 0);
+        headLamp.decay = 2.0;
+        headLamp.distance = 10;
+        this.scene.add(headLamp);
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("created assets class");
+        debug_1.Debug.log("button to change models.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -248,8 +257,8 @@ class BlockBuild {
             }
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
-            this.allModels[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, this.allModels[i], i, this.renderer.xr, this.place, i == 0);
+            assets_1.Assets.allModels[i].position.set(0, 0, 0);
+            new hand_1.Hand(grip, assets_1.Assets.allModels[i], i, this.renderer.xr, this.place, i == 0);
         }
     }
 }
@@ -398,7 +407,7 @@ class Game {
                 this.scene.add(vlu);
                 break;
             case 3:
-                const materialExplorer = new materialExplorer_1.MaterialExplorer();
+                const materialExplorer = new materialExplorer_1.MaterialExplorer(keysDown, this.camera);
                 this.scene.add(materialExplorer);
                 break;
         }
@@ -452,6 +461,7 @@ exports.Hand = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
+const three_1 = __webpack_require__(578);
 class Hand extends THREE.Object3D {
     grip;
     index;
@@ -494,13 +504,15 @@ class Hand extends THREE.Object3D {
         // The center of the chest is 50cm below the camera.
         this.chestPlayer.copy(this.place.camera.position);
         this.chestPlayer.y -= 0.5;
+        this.chestPlayer = new three_1.Vector3(0, this.chestPlayer.y, 0);
         this.directionPlayer.copy(this.grip.position);
         this.directionPlayer.sub(this.chestPlayer);
         this.cube.position.copy(this.directionPlayer);
-        this.cube.position.multiplyScalar(10);
-        this.cube.position.add(this.grip.position);
-        //this.place.playerToUniverse(this.cube.position);
-        //this.place.worldToUniverse(this.cube.position);
+        this.cube.position.multiplyScalar(15);
+        // Debug.log("this.cube.quaterion=" + JSON.stringify(this.cube.quaternion));
+        // Debug.log("this.place.playerGroup.quaternion=" + JSON.stringify(this.place.playerGroup.quaternion));
+        // Debug.log("this.grip.quaternion=" + JSON.stringify(this.grip.quaternion));
+        this.cube.position.sub(this.place.playerGroup.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
     sourceLogged = false;
@@ -521,7 +533,9 @@ class Hand extends THREE.Object3D {
                 this.sourceLogged = true;
             }
             //this.debugMaterial.color = new THREE.Color('blue');
-            const rate = 3;
+            const rateUpDown = 5;
+            const rateMove = 10;
+            const rotRate = 2;
             const axes = source.gamepad.axes.slice(0);
             if (axes.length >= 4) {
                 //this.debugMaterial.color = new THREE.Color('green');
@@ -532,15 +546,15 @@ class Hand extends THREE.Object3D {
                     //this.debugMaterial.color = new THREE.Color('orange');
                     this;
                     if (this.leftHand) {
-                        this.v.set(axes[2], 0, axes[3]);
-                        this.v.multiplyScalar(rate * t.deltaS);
+                        this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
+                        this.v.multiplyScalar(rateMove * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
                     }
                     else {
-                        this.v.set(0, -axes[3], 0);
-                        this.v.multiplyScalar(rate * t.deltaS);
+                        this.v.set(0, -Math.pow(axes[3], 3), 0);
+                        this.v.multiplyScalar(rateUpDown * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
-                        // this.universeGroup.rotateY(axes[2] * rate * t.deltaS)
+                        this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
                     }
                 }
             }
@@ -556,9 +570,7 @@ class Hand extends THREE.Object3D {
                 this.place.stop();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-                debug_1.Debug.log(`Camera: ${JSON.stringify(this.place.camera.position)}`);
-                debug_1.Debug.log(`Chest Player: ${JSON.stringify(this.chestPlayer)}`);
-                debug_1.Debug.log(`Direction Player: ${JSON.stringify(this.directionPlayer)}`);
+                this.setCube(assets_1.Assets.nextModel());
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
                 assets_1.Assets.nextColor(this.cube);
@@ -596,12 +608,17 @@ class Hand extends THREE.Object3D {
         this.grip.addEventListener('selectstart', () => {
             this.deleteCube();
             const o = this.cube.clone();
+            //Debug.log("this.cube.quaternion=" + JSON.stringify(this.cube.quaternion));
             o.position.copy(this.cube.position);
             o.rotation.copy(this.cube.rotation);
+            //Debug.log("o.quaternion=" + JSON.stringify(o.quaternion));
+            o.applyQuaternion(this.place.playerGroup.quaternion);
+            //Debug.log("post applyQuarternion o.quaternion=" + JSON.stringify(o.quaternion));
             const p = o.position;
             this.place.playerToUniverse(p);
             this.place.quantizePosition(p);
             this.place.quantizeRotation(o.rotation);
+            //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
             this.place.universeGroup.add(o);
             const key = this.posToKey(o.position);
             Hand.AllObjects.set(key, o);
@@ -642,29 +659,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MaterialExplorer = void 0;
 const THREE = __importStar(__webpack_require__(578));
 class MaterialExplorer extends THREE.Object3D {
-    paramTA;
-    vertexTA;
-    fragmentTA;
-    material;
-    cube;
-    constructor() {
-        super();
-        this.paramTA = document.createElement('textarea');
-        this.vertexTA = document.createElement('textarea');
-        this.fragmentTA = document.createElement('textarea');
-        this.vertexTA.value = `
-varying vec3 vColor;
-void main() {
-  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-  vColor = worldPosition.xyz;
-
-  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-  gl_Position = projectionMatrix * mvPosition;
-}    
-    `;
-        // https://github.com/KdotJPG/OpenSimplex2/blob/master/glsl/OpenSimplex2.glsl
-        this.fragmentTA.value = `
-uniform float time;
+    keySet;
+    camera;
+    // https://github.com/KdotJPG/OpenSimplex2/blob/master/glsl/OpenSimplex2.glsl
+    static gold = `
+  uniform float time;
 varying vec3 vColor;
 vec4 permute(vec4 t) {
     return t * (t * 34.0 + 133.0);
@@ -723,18 +722,67 @@ void main() {
   vec4 c3 = 0.1 * openSimplex2_Conventional(x * 3.0);
 
   vec4 cTotal = c1; // + c2 + c3;
-  cTotal = cTotal / cTotal.w;
+  cTotal = sin(0.1 * cTotal / cTotal.w) * 0.5 + 0.5;
 
   mat3 m = mat3(
-      0.8, 1.0, 0.1, 
-      0.8, 1.0, 0.2, 
-      0.8, 1.0, 0.3);
-  vec3 crgb = m * cTotal.rgb * 0.01 + 0.5;
+      1.0, 0.5, 0.01, 
+      1.0, 0.5, 0.02, 
+      1.0, 0.4, 0.03);
+  vec3 crgb = m * cTotal.rgb;
 
   gl_FragColor = vec4(crgb, 1.0);
 }
-        
-        `;
+`;
+    static shinyV = `
+  varying vec3 vColor;
+  varying vec3 vNormal;
+  varying vec3 vIncident;
+  
+  void main() {
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vIncident = normalize(worldPosition.xyz - cameraPosition.xyz);
+    vColor = vec3(0.2, 0.2, 0.2);
+    vNormal = normalMatrix * normal;
+  
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+  }`;
+    static shinyF = `
+  uniform float time;
+  varying vec3 vColor;
+  varying vec3 vNormal;
+  varying vec3 vIncident;
+  
+  void main() {  
+    vec3 ve = dot(vIncident, vNormal) * vNormal;
+    vec3 reflection = vIncident - 2.0 * ve;
+   
+    float shiny = 64.0;
+  
+    float intensity = dot(normalize(reflection), 
+      normalize(vec3(0.0, 1.0, 0.0)));
+    intensity = shiny * intensity - shiny + 1.0;
+    intensity = clamp(intensity, 0.0, 1.0);
+    intensity = pow(intensity, 2.0);
+  
+    gl_FragColor = 
+      vec4(vec3(1.0,1.0,1.0) * clamp(intensity, 0.0, 1.0), 1.0) +
+      vec4(reflection.rgb, 0.0);
+  }`;
+    paramTA;
+    vertexTA;
+    fragmentTA;
+    material;
+    cube;
+    constructor(keySet, camera) {
+        super();
+        this.keySet = keySet;
+        this.camera = camera;
+        this.paramTA = document.createElement('textarea');
+        this.vertexTA = document.createElement('textarea');
+        this.fragmentTA = document.createElement('textarea');
+        this.vertexTA.value = MaterialExplorer.shinyV;
+        this.fragmentTA.value = MaterialExplorer.shinyF;
         this.paramTA.value = `
     {
       "blending": ${THREE.NormalBlending},
@@ -759,8 +807,11 @@ void main() {
         });
         document.body.appendChild(button);
         this.cube = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
-        this.cube.position.set(0, 2.5, -2);
+        this.cube.position.set(1, 2.5, -2);
         this.add(this.cube);
+        const sphere = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.9, 4), new THREE.MeshBasicMaterial({ color: '#f0f' }));
+        sphere.position.set(-1, 2.5, -2);
+        this.add(sphere);
         for (let i = 0; i < 10; ++i) {
             const platform = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.1, 1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
             platform.position.set(Math.sin(i * 0.4), i * 0.1, -i * 0.5);
@@ -790,6 +841,30 @@ void main() {
         this.cube.rotateX(t.deltaS);
         this.cube.rotateY(t.deltaS / 2.718);
         this.cube.rotateZ(t.deltaS / 3.14);
+        if (this.keySet.has('KeyA')) {
+            this.camera.position.x -= 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyD')) {
+            this.camera.position.x += 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyS')) {
+            this.camera.position.y -= 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyW')) {
+            this.camera.position.y += 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyQ')) {
+            this.camera.position.z -= 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyE')) {
+            this.camera.position.z += 5 * t.deltaS;
+        }
+        if (this.keySet.has('ArrowLeft')) {
+            this.camera.rotateY(2 * t.deltaS);
+        }
+        if (this.keySet.has('ArrowRight')) {
+            this.camera.rotateY(-2 * t.deltaS);
+        }
     }
 }
 exports.MaterialExplorer = MaterialExplorer;
