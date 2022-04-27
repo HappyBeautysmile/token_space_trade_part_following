@@ -1,12 +1,24 @@
-export class FileIO {
-    static saveObject(content, fileName: string) {
-        var a = document.createElement("a");
-        var file = new Blob([JSON.stringify(content, null, 2)], { type: 'text/plain' });
-        a.href = URL.createObjectURL(file);
-        a.download = fileName;
-        a.click();
-    }
-    static loadObject(filename: string) {
+import { Debug } from "./debug";
 
+export class FileIO {
+  static saveObject(content: Object, fileName: string) {
+    const a = document.createElement("a");
+    const serialized = "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(content));
+    a.href = serialized;
+    Debug.log(`Saved ${a.href.length} encoded bytes.`);
+    a.download = fileName;
+    a.click();
+  }
+
+  static loadObject(fileName: string) {
+  }
+
+  static mapToObject(m: Map<string, Object>): Object {
+    const result = {};
+    for (const [k, v] of m.entries()) {
+      result[k] = v;
     }
+    return result;
+  }
 }

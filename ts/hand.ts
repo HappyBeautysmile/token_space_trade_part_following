@@ -6,11 +6,9 @@ import { Assets } from "./assets";
 import { InHandObject } from "./inHandObject";
 import { Vector3 } from "three";
 import { FileIO } from "./fileIO";
+import { Construction } from "./construction";
 
 export class Hand extends THREE.Object3D {
-
-  private static AllObjects = new Map<string, THREE.Object3D>();
-
   private cube: THREE.Object3D;
   private templateCube: THREE.Object3D;
 
@@ -19,8 +17,8 @@ export class Hand extends THREE.Object3D {
 
   constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
     private index: number, private xr: THREE.WebXRManager,
-    private place: Place,
-    private leftHand: boolean) {
+    private place: Place, private leftHand: boolean,
+    private keysDown: Set<string>, private construction: Construction) {
     super();
     this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
     // this.debug = new THREE.Mesh(
@@ -116,9 +114,9 @@ export class Hand extends THREE.Object3D {
       if (buttons[1] === 1 && this.lastButtons[1] != 1) { // squeeze
         //this.debugMaterial.color = new THREE.Color('yellow');
       }
-      if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick
+      if (buttons[3] === 1 && this.lastButtons[3] != 1) {
         //this.debugMaterial.color = new THREE.Color('blue');
-        FileIO.saveObject(Hand.AllObjects, "what_you_built.json");
+        this.construction.save();
       }
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
         this.setCube(Assets.nextModel());
@@ -150,9 +148,9 @@ export class Hand extends THREE.Object3D {
     this.place.playerToUniverse(this.p);
     this.place.quantizePosition(this.p);
     const key = this.posToKey(this.p);
-    if (Hand.AllObjects.has(key)) {
-      this.place.universeGroup.remove(Hand.AllObjects.get(key));
-      Hand.AllObjects.delete(key);
+    if (this.construction.allObjects.has(key)) {
+      this.place.universeGroup.remove(this.construction.allObjects.get(key));
+      this.construction.allObjects.delete(key);
     }
   }
 
@@ -178,7 +176,7 @@ export class Hand extends THREE.Object3D {
       //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
       this.place.universeGroup.add(o);
       const key = this.posToKey(o.position);
-      Hand.AllObjects.set(key, o);
+      this.construction.allObjects.set(key, o);
     });
 
     // this.grip.addEventListener('selectend', () => {

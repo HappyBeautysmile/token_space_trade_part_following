@@ -7,6 +7,7 @@ import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { FileIO } from "./fileIO";
+import { Construction } from "./construction";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -17,6 +18,7 @@ export class BlockBuild {
   private universeGroup = new THREE.Group();
   private place: Place;
   private keysDown = new Set<string>();
+  private construction = new Construction();
   //private assets = new Assets();
 
   constructor() {
@@ -27,6 +29,7 @@ export class BlockBuild {
     document.body.addEventListener('keyup', (ev: KeyboardEvent) => {
       this.keysDown.delete(ev.code);
     });
+
   }
 
   private async initialize() {
@@ -35,8 +38,6 @@ export class BlockBuild {
     Debug.log("all models loaded.");
     this.getGrips();
   }
-
-
 
   private tickEverything(o: THREE.Object3D, tick: Tick) {
     if (o['tick']) {
@@ -48,6 +49,7 @@ export class BlockBuild {
   }
 
   private v = new THREE.Vector3();
+  private isSaving = false;
   private tick(t: Tick) {
     this.v.set(0, 0, 0);
     if (this.keysDown.has('KeyA')) {
@@ -70,6 +72,13 @@ export class BlockBuild {
     }
     if (this.v.length() > 0) {
       this.place.movePlayerRelativeToCamera(this.v);
+    }
+
+    if (this.keysDown.has('Digit5') && !this.isSaving) {
+      this.isSaving = true;
+      this.construction.save();
+    } else {
+      this.isSaving = false;
     }
   }
 
@@ -155,7 +164,7 @@ export class BlockBuild {
       // It's still in memory.
       Assets.allModels[i].position.set(0, 0, 0);
       new Hand(grip, Assets.allModels[i], i, this.renderer.xr,
-        this.place, i == 0);
+        this.place, i == 0, this.keysDown, this.construction);
     }
   }
 }
