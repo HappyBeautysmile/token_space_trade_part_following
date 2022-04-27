@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Debug } from "./debug";
 import { Palette } from "./palette";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Material } from "three";
 
 class ModelLoader {
     static async loadModel(filename: string): Promise<THREE.Object3D> {
@@ -30,9 +31,24 @@ export class Assets extends THREE.Object3D {
 
     static allModels: THREE.Object3D[] = [];
     static modelIndex = 0;
+    static materials: THREE.Material[] = [];
+    static materialIndex = 0;
 
     static init() {
         Palette.init();
+        Assets.materialIndex = 0;
+        let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
+        Assets.materials.push(flatPrimary);
+        let glossPrimary = new THREE.MeshPhongMaterial({ color: 0x998877, shininess: 1.0 });
+        Assets.materials.push(glossPrimary);
+        let flatSeconday = new THREE.MeshPhongMaterial({ color: 0x665544 });
+        Assets.materials.push(flatSeconday);
+        let glossSecondary = new THREE.MeshPhongMaterial({ color: 0x665544, shininess: 1.0 });
+        Assets.materials.push(glossSecondary);
+        let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        Assets.materials.push(flatBlack);
+        let glossBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        Assets.materials.push(glossBlack);
     }
 
     // sets the color of the passed object to the next color in the palette.
@@ -50,8 +66,15 @@ export class Assets extends THREE.Object3D {
     }
 
     static nextModel() {
-        Assets.modelIndex = (this.modelIndex + 1) % Assets.allModels.length;
-        return this.allModels[this.modelIndex];
+        Assets.modelIndex = (Assets.modelIndex + 1) % Assets.allModels.length;
+        return Assets.allModels[Assets.modelIndex];
+    }
+
+    static nextMaterial() {
+        Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materials.length;
+        Debug.log('materialIndex=' + Assets.materialIndex.toString());
+        Debug.log('materials.length=' + Assets.materials.length.toString())
+        return Assets.materials[Assets.materialIndex];
     }
 
     static async loadAllModels() {

@@ -32,6 +32,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assets = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const debug_1 = __webpack_require__(756);
 const palette_1 = __webpack_require__(812);
 const GLTFLoader_js_1 = __webpack_require__(217);
 class ModelLoader {
@@ -58,8 +59,23 @@ class ModelLoader {
 class Assets extends THREE.Object3D {
     static allModels = [];
     static modelIndex = 0;
+    static materials = [];
+    static materialIndex = 0;
     static init() {
         palette_1.Palette.init();
+        Assets.materialIndex = 0;
+        let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
+        Assets.materials.push(flatPrimary);
+        let glossPrimary = new THREE.MeshPhongMaterial({ color: 0x998877, shininess: 1.0 });
+        Assets.materials.push(glossPrimary);
+        let flatSeconday = new THREE.MeshPhongMaterial({ color: 0x665544 });
+        Assets.materials.push(flatSeconday);
+        let glossSecondary = new THREE.MeshPhongMaterial({ color: 0x665544, shininess: 1.0 });
+        Assets.materials.push(glossSecondary);
+        let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        Assets.materials.push(flatBlack);
+        let glossBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        Assets.materials.push(glossBlack);
     }
     // sets the color of the passed object to the next color in the palette.
     static nextColor(source) {
@@ -74,8 +90,14 @@ class Assets extends THREE.Object3D {
         }
     }
     static nextModel() {
-        Assets.modelIndex = (this.modelIndex + 1) % Assets.allModels.length;
-        return this.allModels[this.modelIndex];
+        Assets.modelIndex = (Assets.modelIndex + 1) % Assets.allModels.length;
+        return Assets.allModels[Assets.modelIndex];
+    }
+    static nextMaterial() {
+        Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materials.length;
+        debug_1.Debug.log('materialIndex=' + Assets.materialIndex.toString());
+        debug_1.Debug.log('materials.length=' + Assets.materials.length.toString());
+        return Assets.materials[Assets.materialIndex];
     }
     static async loadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster'];
@@ -140,7 +162,6 @@ const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
-const palette_1 = __webpack_require__(812);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -199,7 +220,7 @@ class BlockBuild {
         }
     }
     setScene() {
-        palette_1.Palette.init();
+        assets_1.Assets.init();
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
@@ -235,7 +256,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("button to change models.");
+        debug_1.Debug.log("color fix");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -575,7 +596,8 @@ class Hand extends THREE.Object3D {
                 this.setCube(assets_1.Assets.nextModel());
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
-                assets_1.Assets.nextColor(this.cube);
+                assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
+                //Assets.nextMaterial();
             }
             this.lastButtons = buttons;
         }
