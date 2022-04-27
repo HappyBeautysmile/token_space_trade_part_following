@@ -54,7 +54,7 @@ export class Game {
 
         break;
       case 3:
-        const materialExplorer = new MaterialExplorer();
+        const materialExplorer = new MaterialExplorer(keysDown, this.camera);
         this.scene.add(materialExplorer);
         break;
     }

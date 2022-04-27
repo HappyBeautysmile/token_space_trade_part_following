@@ -3,31 +3,10 @@ import { Object3D } from "three";
 import { Tick, Ticker } from "./tick";
 
 export class MaterialExplorer extends THREE.Object3D implements Ticker {
-  private paramTA: HTMLTextAreaElement;
-  private vertexTA: HTMLTextAreaElement;
-  private fragmentTA: HTMLTextAreaElement;
-  private material: THREE.ShaderMaterial;
-  private cube: THREE.Mesh;
-  constructor() {
-    super();
-    this.paramTA = document.createElement('textarea');
-    this.vertexTA = document.createElement('textarea');
-    this.fragmentTA = document.createElement('textarea');
 
-    this.vertexTA.value = `
-varying vec3 vColor;
-void main() {
-  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-  vColor = worldPosition.xyz;
-
-  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-  gl_Position = projectionMatrix * mvPosition;
-}    
-    `;
-
-    // https://github.com/KdotJPG/OpenSimplex2/blob/master/glsl/OpenSimplex2.glsl
-    this.fragmentTA.value = `
-uniform float time;
+  // https://github.com/KdotJPG/OpenSimplex2/blob/master/glsl/OpenSimplex2.glsl
+  private static gold = `
+  uniform float time;
 varying vec3 vColor;
 vec4 permute(vec4 t) {
     return t * (t * 34.0 + 133.0);
@@ -85,8 +64,7 @@ void main() {
   vec4 c2 = 0.5 * openSimplex2_Conventional(x * 2.0);
   vec4 c3 = 0.1 * openSimplex2_Conventional(x * 3.0);
 
-  vec4 cTotal = c1; // + c2 + c3;
-  cTotal = sin(0.1 * cTotal / cTotal.w) * 0.5 + 0.5;
+  vec4 cTotal = c1 + c2 + c3 * 0.2 + 0.5;
 
   mat3 m = mat3(
       1.0, 0.5, 0.01, 
@@ -96,8 +74,62 @@ void main() {
 
   gl_FragColor = vec4(crgb, 1.0);
 }
-        
-        `;
+`;
+
+  private static shinyV = `
+  varying vec3 vColor;
+  varying vec3 vNormal;
+  varying vec3 vIncident;
+  
+  void main() {
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vIncident = normalize(worldPosition.xyz - cameraPosition.xyz);
+    vColor = vec3(0.2, 0.2, 0.2);
+    vNormal = normalMatrix * normal;
+  
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+  }`;
+
+
+  private static shinyF = `
+  uniform float time;
+  varying vec3 vColor;
+  varying vec3 vNormal;
+  varying vec3 vIncident;
+  
+  void main() {  
+    vec3 ve = dot(vIncident, vNormal) * vNormal;
+    vec3 reflection = vIncident - 2.0 * ve;
+   
+    float shiny = 64.0;
+  
+    float intensity = dot(normalize(reflection), 
+      normalize(vec3(0.0, 1.0, 0.5 * sin(time))));
+    intensity = shiny * intensity - shiny + 1.0;
+    intensity = clamp(intensity, 0.0, 1.0);
+    intensity = pow(intensity, 2.0);
+  
+    gl_FragColor = 
+      vec4(vec3(1.0,1.0,1.0) * clamp(intensity, 0.0, 1.0), 1.0) +
+      vec4(vColor.rgb, 0.0);
+  }`;
+
+
+  private paramTA: HTMLTextAreaElement;
+  private vertexTA: HTMLTextAreaElement;
+  private fragmentTA: HTMLTextAreaElement;
+  private material: THREE.ShaderMaterial;
+  private cube: THREE.Mesh;
+  constructor(private keySet: Set<string>, private camera: THREE.Object3D) {
+    super();
+    this.paramTA = document.createElement('textarea');
+    this.vertexTA = document.createElement('textarea');
+    this.fragmentTA = document.createElement('textarea');
+
+    this.vertexTA.value = MaterialExplorer.shinyV;
+
+    this.fragmentTA.value = MaterialExplorer.shinyF;
 
     this.paramTA.value = `
     {
@@ -128,8 +160,15 @@ void main() {
       new THREE.BoxBufferGeometry(1, 1, 1),
       new THREE.MeshBasicMaterial({ color: '#f0f' })
     );
-    this.cube.position.set(0, 2.5, -2);
+    this.cube.position.set(1, 2.5, -2);
     this.add(this.cube);
+
+    const sphere = new THREE.Mesh(
+      new THREE.IcosahedronBufferGeometry(0.9, 4),
+      new THREE.MeshBasicMaterial({ color: '#f0f' })
+    )
+    sphere.position.set(-1, 2.5, -2);
+    this.add(sphere);
 
     for (let i = 0; i < 10; ++i) {
       const platform = new THREE.Mesh(
@@ -167,7 +206,29 @@ void main() {
     this.cube.rotateX(t.deltaS);
     this.cube.rotateY(t.deltaS / 2.718);
     this.cube.rotateZ(t.deltaS / 3.14);
+    if (this.keySet.has('KeyA')) {
+      this.camera.position.x -= 5 * t.deltaS;
+    }
+    if (this.keySet.has('KeyD')) {
+      this.camera.position.x += 5 * t.deltaS;
+    }
+    if (this.keySet.has('KeyS')) {
+      this.camera.position.y -= 5 * t.deltaS;
+    }
+    if (this.keySet.has('KeyW')) {
+      this.camera.position.y += 5 * t.deltaS;
+    }
+    if (this.keySet.has('KeyQ')) {
+      this.camera.position.z -= 5 * t.deltaS;
+    }
+    if (this.keySet.has('KeyE')) {
+      this.camera.position.z += 5 * t.deltaS;
+    }
+    if (this.keySet.has('ArrowLeft')) {
+      this.camera.rotateY(2 * t.deltaS);
+    }
+    if (this.keySet.has('ArrowRight')) {
+      this.camera.rotateY(-2 * t.deltaS);
+    }
   }
-
-
 }
