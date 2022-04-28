@@ -2,13 +2,13 @@ import * as THREE from "three";
 
 export interface PointSet {
   add(p: THREE.Vector3): void;
-  getClosest(p: THREE.Vector3): THREE.Vector3;
   elements(): Iterable<THREE.Vector3>;
+  getAllWithinRadius(p: THREE.Vector3, radius: number): Iterable<THREE.Vector3>;
 }
 
 export class PointSetLinear implements PointSet {
   private points: THREE.Vector3[] = [];
-  constructor(private radius: number) {
+  constructor() {
   }
 
   add(p: THREE.Vector3) {
@@ -20,28 +20,72 @@ export class PointSetLinear implements PointSet {
   }
 
   private p2 = new THREE.Vector3();
-  private closest = new THREE.Vector3();
-  getClosest(p: THREE.Vector3): THREE.Vector3 {
-    let closestDistance = 2 * this.radius;
+  *getAllWithinRadius(p: THREE.Vector3, radius: number): Iterable<THREE.Vector3> {
+
     for (const starPosition of this.points) {
       this.p2.copy(starPosition);
       this.p2.sub(p);
-      if (closestDistance > this.p2.length()) {
-        closestDistance = this.p2.length();
-        this.closest.copy(starPosition);
+      if (radius >= this.p2.length()) {
+        yield starPosition;
       }
     }
-    return this.closest;
+  }
+}
+
+export class AABB {
+  // Represents an Axis Aligned Bounding Box cube.
+  constructor(readonly center: THREE.Vector3, readonly radius: number) {
+  }
+
+  private p = new THREE.Vector3();
+  intersects(other: AABB): boolean {
+    this.p.copy(other.center);
+    this.p.sub(this.center);
+    const distance = Math.max(
+      Math.abs(this.p.x),
+      Math.abs(this.p.y),
+      Math.abs(this.p.z));
+    return distance <= this.radius + other.radius;
+  }
+
+  contains(point: THREE.Vector3) {
+    this.p.copy(point);
+    this.p.sub(this.center);
+    const distance = Math.max(
+      Math.abs(this.p.x),
+      Math.abs(this.p.y),
+      Math.abs(this.p.z));
+    return distance <= this.radius;
+  }
+
+  split(): AABB[] {
+    const halfRadius = this.radius / 2;
+
+    const children = [];
+    for (const cx of [-halfRadius, halfRadius]) {
+      for (const cy of [-halfRadius, halfRadius]) {
+        for (const cz of [-halfRadius, halfRadius]) {
+          const aabb = new AABB(
+            new THREE.Vector3(
+              cx + this.center.x,
+              cy + this.center.y,
+              cz + this.center.z), halfRadius);
+          // console.log(`AABB: ${JSON.stringify(aabb)}`);
+          children.push(aabb);
+        }
+      }
+    }
+    return children;
   }
 }
 
 export class PointSetOctoTree implements PointSet {
   private points: THREE.Vector3[] = [];
   private children: PointSetOctoTree[] = null;
-  private center: THREE.Vector3 = new THREE.Vector3();
+  private bounds: AABB;
 
-  constructor(center: THREE.Vector3, readonly radius: number) {
-    this.center.copy(center);
+  constructor(center: THREE.Vector3, radius: number) {
+    this.bounds = new AABB(center, radius);
   }
 
   add(p: THREE.Vector3) {
@@ -50,17 +94,12 @@ export class PointSetOctoTree implements PointSet {
 
   private p1 = new THREE.Vector3;
   private insert(p: THREE.Vector3): boolean {
-    // console.log(`Insert ${JSON.stringify(p)} into ${this.center}`);
-    this.p1.copy(this.center);
-    this.p1.sub(p);
-    const r = Math.max(
-      Math.abs(this.p1.x), Math.abs(this.p1.y), Math.abs(this.p1.z));
-    if (r > this.radius) {
+    if (!this.bounds.contains(p)) {
       return false;
     }
     if (this.points) {
       this.points.push(p);
-      if (this.points.length > 2) {
+      if (this.points.length > 64) {
         this.split();
       }
       return true;
@@ -70,21 +109,16 @@ export class PointSetOctoTree implements PointSet {
           return true;
         }
       }
-      console.log(`${JSON.stringify(p)} is not in ${JSON.stringify(this.center)}`);
+      console.log(`${JSON.stringify(p)} is not in ${JSON.stringify(this.bounds)}`);
       console.log(`Failed to insert.`);
     }
   }
 
   private split() {
-    const halfRadius = this.radius / 2;
+    const childBoxes = this.bounds.split();
     this.children = [];
-    for (const cx of [-halfRadius, halfRadius]) {
-      for (const cy of [-halfRadius, halfRadius]) {
-        for (const cz of [-halfRadius, halfRadius]) {
-          this.children.push(new PointSetOctoTree(
-            new THREE.Vector3(cx, cy, cz), halfRadius));
-        }
-      }
+    for (const c of childBoxes) {
+      this.children.push(new PointSetOctoTree(c.center, c.radius));
     }
     for (const p of this.points) {
       for (const c of this.children) {
@@ -106,38 +140,28 @@ export class PointSetOctoTree implements PointSet {
     }
   }
 
-  private p2 = new THREE.Vector3();
-  private closest = new THREE.Vector3();
-
-  private getClosestPoint(p: THREE.Vector3): THREE.Vector3 {
-    let closestDistance = this.radius * 3;
-    for (const starPosition of this.points) {
-      this.p2.copy(starPosition);
-      this.p2.sub(p);
-      if (closestDistance > this.p2.length()) {
-        closestDistance = this.p2.length();
-        this.closest.copy(starPosition);
-      }
-    }
-    return this.closest;
-  }
-
-  getClosest(p: THREE.Vector3): THREE.Vector3 {
-    if (this.points) {
-      return this.getClosestPoint(p);
-    } else {
-      let closestDistance = this.radius * 4;
-      let closestOcto: PointSetOctoTree;
-      for (const child of this.children) {
-        this.p2.copy(child.center);
-        this.p2.sub(p);
-        if (closestDistance > this.p2.length()) {
-          closestOcto = child;
-          closestDistance = this.p2.length();
+  private *getAllWithinAABB(aabb: AABB): Iterable<THREE.Vector3> {
+    if (this.bounds.intersects(aabb)) {
+      if (this.points) {
+        yield* this.points;
+      } else {
+        for (const child of this.children) {
+          yield* child.getAllWithinAABB(aabb);
         }
       }
-      console.log(`Closest distance: ${closestDistance}`);
-      return closestOcto.getClosest(p);
     }
   }
+
+  *getAllWithinRadius(p: THREE.Vector3, radius: number):
+    Iterable<THREE.Vector3> {
+    const aabb = new AABB(p, radius);
+    for (const pp of this.getAllWithinAABB(aabb)) {
+      this.p1.copy(pp);
+      this.p1.sub(p);
+      if (this.p1.length() <= radius) {
+        yield pp;
+      }
+    }
+  }
+
 }
