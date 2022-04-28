@@ -8,11 +8,7 @@
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -149,11 +145,7 @@ exports.Assets = Assets;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -180,6 +172,7 @@ const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
+const construction_1 = __webpack_require__(844);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -188,6 +181,7 @@ class BlockBuild {
     universeGroup = new THREE.Group();
     place;
     keysDown = new Set();
+    construction = new construction_1.Construction();
     //private assets = new Assets();
     constructor() {
         this.initialize();
@@ -213,6 +207,7 @@ class BlockBuild {
         }
     }
     v = new THREE.Vector3();
+    isSaving = false;
     tick(t) {
         this.v.set(0, 0, 0);
         if (this.keysDown.has('KeyA')) {
@@ -235,6 +230,13 @@ class BlockBuild {
         }
         if (this.v.length() > 0) {
             this.place.movePlayerRelativeToCamera(this.v);
+        }
+        if (this.keysDown.has('Digit5') && !this.isSaving) {
+            this.isSaving = true;
+            this.construction.save();
+        }
+        else {
+            this.isSaving = false;
         }
     }
     setScene() {
@@ -305,12 +307,36 @@ class BlockBuild {
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             assets_1.Assets.allModels[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.allModels[i], i, this.renderer.xr, this.place, i == 0);
+            new hand_1.Hand(grip, assets_1.Assets.allModels[i], i, this.renderer.xr, this.place, i == 0, this.keysDown, this.construction);
         }
     }
 }
 exports.BlockBuild = BlockBuild;
 //# sourceMappingURL=blockBuild.js.map
+
+/***/ }),
+
+/***/ 844:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Construction = void 0;
+const fileIO_1 = __webpack_require__(3);
+class Construction {
+    // TODO: Make this private and instead have some nicer methods for
+    // inserting and deleting.  This is where code to make sure we have only
+    // one block per location would go, also where Vector3 to key would go.
+    allObjects = new Map();
+    save() {
+        console.log('Saving...');
+        const o = { 'size': this.allObjects.size };
+        o['objects'] = fileIO_1.FileIO.mapToObject(this.allObjects);
+        fileIO_1.FileIO.saveObject(o, "what_you_built.json");
+    }
+}
+exports.Construction = Construction;
+//# sourceMappingURL=construction.js.map
 
 /***/ }),
 
@@ -320,11 +346,7 @@ exports.BlockBuild = BlockBuild;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -389,20 +411,30 @@ exports.Debug = Debug;
 /***/ }),
 
 /***/ 3:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileIO = void 0;
+const debug_1 = __webpack_require__(756);
 class FileIO {
     static saveObject(content, fileName) {
-        var a = document.createElement("a");
-        var file = new Blob([JSON.stringify(content, null, 2)], { type: 'text/plain' });
-        a.href = URL.createObjectURL(file);
+        const a = document.createElement("a");
+        const serialized = "data:text/json;charset=utf-8," +
+            encodeURIComponent(JSON.stringify(content));
+        a.href = serialized;
+        debug_1.Debug.log(`Saved ${a.href.length} encoded bytes.`);
         a.download = fileName;
         a.click();
     }
-    static loadObject(filename) {
+    static loadObject(fileName) {
+    }
+    static mapToObject(m) {
+        const result = {};
+        for (const [k, v] of m.entries()) {
+            result[k] = v;
+        }
+        return result;
     }
 }
 exports.FileIO = FileIO;
@@ -416,11 +448,7 @@ exports.FileIO = FileIO;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -443,12 +471,15 @@ const THREE = __importStar(__webpack_require__(232));
 const tick_1 = __webpack_require__(544);
 const VRButton_js_1 = __webpack_require__(18);
 const veryLargeUniverse_1 = __webpack_require__(453);
+const settings_1 = __webpack_require__(451);
+const materialExplorer_1 = __webpack_require__(587);
 class Game {
     scene = new THREE.Scene();
     camera;
     renderer;
     grips = [];
     constructor() {
+        document.body.innerHTML = '';
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
@@ -468,8 +499,23 @@ class Game {
             this.renderer.render(this.scene, this.camera);
         });
         this.getGrips();
-        const vlu = new veryLargeUniverse_1.VeryLargeUniverse(this.grips, this.camera, this.renderer.xr);
-        this.scene.add(vlu);
+        const keysDown = new Set();
+        document.body.addEventListener('keydown', (ev) => {
+            keysDown.add(ev.code);
+        });
+        document.body.addEventListener('keyup', (ev) => {
+            keysDown.delete(ev.code);
+        });
+        switch (settings_1.S.float('sh')) {
+            case 2:
+                const vlu = new veryLargeUniverse_1.VeryLargeUniverse(this.grips, this.camera, this.renderer.xr, keysDown);
+                this.scene.add(vlu);
+                break;
+            case 3:
+                const materialExplorer = new materialExplorer_1.MaterialExplorer(keysDown, this.camera);
+                this.scene.add(materialExplorer);
+                break;
+        }
     }
     getGrips() {
         for (const i of [0, 1]) {
@@ -498,11 +544,7 @@ exports.Game = Game;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -525,25 +567,27 @@ const THREE = __importStar(__webpack_require__(232));
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const three_1 = __webpack_require__(232);
-const fileIO_1 = __webpack_require__(3);
 class Hand extends THREE.Object3D {
     grip;
     index;
     xr;
     place;
     leftHand;
-    static AllObjects = new Map();
+    keysDown;
+    construction;
     cube;
     templateCube;
     debug;
     debugMaterial;
-    constructor(grip, initialObject, index, xr, place, leftHand) {
+    constructor(grip, initialObject, index, xr, place, leftHand, keysDown, construction) {
         super();
         this.grip = grip;
         this.index = index;
         this.xr = xr;
         this.place = place;
         this.leftHand = leftHand;
+        this.keysDown = keysDown;
+        this.construction = construction;
         this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         // this.debug = new THREE.Mesh(
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
@@ -629,9 +673,9 @@ class Hand extends THREE.Object3D {
             if (buttons[1] === 1 && this.lastButtons[1] != 1) { // squeeze
                 //this.debugMaterial.color = new THREE.Color('yellow');
             }
-            if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick
+            if (buttons[3] === 1 && this.lastButtons[3] != 1) {
                 //this.debugMaterial.color = new THREE.Color('blue');
-                fileIO_1.FileIO.saveObject(Hand.AllObjects, "what_you_built.json");
+                this.construction.save();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
                 this.setCube(assets_1.Assets.nextModel());
@@ -660,9 +704,9 @@ class Hand extends THREE.Object3D {
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);
         const key = this.posToKey(this.p);
-        if (Hand.AllObjects.has(key)) {
-            this.place.universeGroup.remove(Hand.AllObjects.get(key));
-            Hand.AllObjects.delete(key);
+        if (this.construction.allObjects.has(key)) {
+            this.place.universeGroup.remove(this.construction.allObjects.get(key));
+            this.construction.allObjects.delete(key);
         }
     }
     p = new THREE.Vector3();
@@ -686,7 +730,7 @@ class Hand extends THREE.Object3D {
             //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
             this.place.universeGroup.add(o);
             const key = this.posToKey(o.position);
-            Hand.AllObjects.set(key, o);
+            this.construction.allObjects.set(key, o);
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -697,17 +741,396 @@ exports.Hand = Hand;
 
 /***/ }),
 
+/***/ 587:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MaterialExplorer = void 0;
+const THREE = __importStar(__webpack_require__(232));
+class CodeSnippet {
+    codeType;
+    code;
+    constructor(codeType, code) {
+        this.codeType = codeType;
+        this.code = code;
+    }
+}
+class MaterialExplorer extends THREE.Object3D {
+    keySet;
+    camera;
+    snippets = [];
+    material;
+    cube;
+    constructor(keySet, camera) {
+        super();
+        this.keySet = keySet;
+        this.camera = camera;
+        this.load();
+        this.arrange();
+        const button = document.createElement('span');
+        button.innerText = 'Go';
+        button.style.border = '2px outset';
+        button.style.borderRadius = '3px';
+        button.addEventListener('click', () => {
+            this.save();
+            this.material = this.makeMaterial();
+            this.updateMaterial(this);
+        });
+        document.body.appendChild(button);
+        this.buildScene();
+        this.material = this.makeMaterial();
+        this.updateMaterial(this);
+    }
+    buildScene() {
+        this.cube = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f0f' }));
+        this.cube.position.set(1, 2.5, -2);
+        this.add(this.cube);
+        const sphere = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.9, 4), new THREE.MeshBasicMaterial({ color: '#f0f' }));
+        sphere.position.set(-1, 2.5, -2);
+        this.add(sphere);
+        for (let i = 0; i < 10; ++i) {
+            const platform = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.1, 1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
+            platform.position.set(Math.sin(i * 0.4), i * 0.1, -i * 0.5);
+            this.add(platform);
+        }
+    }
+    arrange() {
+        for (const s of this.snippets) {
+            const ta = document.createElement('textarea');
+            ta.value = s.code;
+            ta.cols = 80;
+            ta['codeType'] = s.codeType;
+            ta.classList.add('code');
+            ta.classList.add('collapsed');
+            ta.classList.add('disabled');
+            ta.spellcheck = false;
+            ta.addEventListener('mouseenter', function (ev) {
+                this.classList.remove('collapsed');
+            });
+            ta.addEventListener('mouseover', function (ev) {
+                this.classList.remove('collapsed');
+            });
+            ta.addEventListener('mouseleave', function (ev) {
+                this.classList.add('collapsed');
+            });
+            ta.addEventListener('click', function (ev) {
+                if (ev.ctrlKey) {
+                    this.classList.toggle('enabled');
+                    this.classList.toggle('disabled');
+                }
+            });
+            document.body.appendChild(ta);
+        }
+    }
+    hasClass(classList, className) {
+        for (const c of classList) {
+            if (c === className)
+                return true;
+        }
+        return false;
+    }
+    makeMaterial() {
+        const material = new THREE.ShaderMaterial();
+        let configCode = '';
+        let vertexCode = '';
+        let fragmentCode = '';
+        for (const ta of document.querySelectorAll('textarea')) {
+            if (this.hasClass(ta.classList, 'disabled'))
+                continue;
+            const codeType = ta['codeType'];
+            switch (codeType) {
+                case 'config':
+                    configCode = configCode + ta.value.trim() + '\n';
+                    break;
+                case 'vertex':
+                    vertexCode = vertexCode + ta.value.trim() + '\n';
+                    break;
+                case 'fragment':
+                    fragmentCode = fragmentCode + ta.value.trim() + '\n';
+                    break;
+            }
+        }
+        if (configCode === '') {
+            return null;
+        }
+        Object.assign(material, JSON.parse(configCode));
+        material.vertexShader = vertexCode;
+        material.fragmentShader = fragmentCode;
+        return material;
+    }
+    updateMaterial(o) {
+        if (this.material === null) {
+            console.log('No material.');
+            return;
+        }
+        if (o instanceof THREE.Mesh) {
+            o.material = this.material;
+        }
+        for (const c of o.children) {
+            this.updateMaterial(c);
+        }
+    }
+    tick(t) {
+        if (this.material !== null) {
+            this.material.uniforms['time'].value = t.elapsedS;
+            this.material.uniformsNeedUpdate = true;
+        }
+        this.cube.rotateX(t.deltaS);
+        this.cube.rotateY(t.deltaS / 2.718);
+        this.cube.rotateZ(t.deltaS / 3.14);
+        if (this.keySet.has('KeyA')) {
+            this.camera.position.x -= 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyD')) {
+            this.camera.position.x += 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyS')) {
+            this.camera.position.y -= 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyW')) {
+            this.camera.position.y += 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyQ')) {
+            this.camera.position.z -= 5 * t.deltaS;
+        }
+        if (this.keySet.has('KeyE')) {
+            this.camera.position.z += 5 * t.deltaS;
+        }
+        if (this.keySet.has('ArrowLeft')) {
+            this.camera.rotateY(2 * t.deltaS);
+        }
+        if (this.keySet.has('ArrowRight')) {
+            this.camera.rotateY(-2 * t.deltaS);
+        }
+        if (this.keySet.has('Digit0')) {
+            this.camera.position.set(0, 1.7, 0);
+            this.camera.lookAt(0, 1.7, -1.5);
+        }
+    }
+    save() {
+        console.log('Saving.');
+        this.snippets.length = 0;
+        for (const ta of document.querySelectorAll('textarea')) {
+            const codeType = ta['codeType'];
+            const snippet = new CodeSnippet(codeType, ta.value.trim());
+            this.snippets.push(snippet);
+        }
+        localStorage.setItem('glsl', JSON.stringify(this.snippets));
+    }
+    load() {
+        if (localStorage.getItem('glsl')) {
+            console.log('Loading');
+            this.snippets = JSON.parse(localStorage.getItem('glsl'));
+        }
+        else {
+            console.log('Initializing');
+            this.snippets.push(new CodeSnippet('config', `
+{
+  "blending": ${THREE.NormalBlending},
+  "depthTest": true,
+  "depthWrite": true,
+  "transparent": false,
+  "vertexColors": true,
+  "uniforms": {
+    "time": { "value": 0.0 }
+  }
+}`));
+            this.snippets.push(new CodeSnippet('vertex', `
+// Paint Vertex Shader
+varying vec3 vColor;
+varying vec3 vNormal;
+varying vec3 vIncident;
+varying vec3 vWorldPosition;
+
+void main() {
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vIncident = normalize(worldPosition.xyz - cameraPosition.xyz);
+  vWorldPosition = worldPosition.xyz;
+  vColor = vec3(1.0, 0.4, 0.8);
+  vNormal = normalMatrix * normal;
+
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mvPosition;
+}      `));
+            this.snippets.push(new CodeSnippet('vertex', `
+// Lava Vertex Shader
+varying vec3 vColor;
+varying vec3 vNormal;
+varying vec3 vIncident;
+
+void main() {
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vIncident = normalize(worldPosition.xyz - cameraPosition.xyz);
+  vColor = vec3(0.2, 0.2, 0.2);
+  vNormal = normalMatrix * normal;
+
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mvPosition;
+}`));
+            this.snippets.push(new CodeSnippet('fragment', `
+// Simplex Fragment Shader Code
+// https://github.com/KdotJPG/OpenSimplex2/blob/master/glsl/OpenSimplex2.glsl
+
+vec4 permute(vec4 t) {
+  return t * (t * 34.0 + 133.0);
+}
+vec3 grad(float hash) {
+  vec3 cube = mod(floor(hash / vec3(1.0, 2.0, 4.0)), 2.0) * 2.0 - 1.0;
+  vec3 cuboct = cube;
+  cuboct[int(hash / 16.0)] = 0.0;
+  float type = mod(floor(hash / 8.0), 2.0);
+  vec3 rhomb = (1.0 - type) * cube + type * (cuboct + cross(cube, cuboct));
+  vec3 grad = cuboct * 1.22474487139 + rhomb;
+  grad *= (1.0 - 0.042942436724648037 * type) * 32.80201376986577;
+  return grad;
+}
+
+vec4 openSimplex2Base(vec3 X) {
+  vec3 v1 = round(X);
+  vec3 d1 = X - v1;
+  vec3 score1 = abs(d1);
+  vec3 dir1 = step(max(score1.yzx, score1.zxy), score1);
+  vec3 v2 = v1 + dir1 * sign(d1);
+  vec3 d2 = X - v2;
+  vec3 X2 = X + 144.5;
+  vec3 v3 = round(X2);
+  vec3 d3 = X2 - v3;
+  vec3 score2 = abs(d3);
+  vec3 dir2 = step(max(score2.yzx, score2.zxy), score2);
+  vec3 v4 = v3 + dir2 * sign(d3);
+  vec3 d4 = X2 - v4;
+  
+  vec4 hashes = permute(mod(vec4(v1.x, v2.x, v3.x, v4.x), 289.0));
+  hashes = permute(mod(hashes + vec4(v1.y, v2.y, v3.y, v4.y), 289.0));
+  hashes = mod(permute(mod(hashes + vec4(v1.z, v2.z, v3.z, v4.z), 289.0)), 48.0);
+  
+  vec4 a = max(0.5 - vec4(dot(d1, d1), dot(d2, d2), dot(d3, d3), dot(d4, d4)), 0.0);
+  vec4 aa = a * a; vec4 aaaa = aa * aa;
+  vec3 g1 = grad(hashes.x); vec3 g2 = grad(hashes.y);
+  vec3 g3 = grad(hashes.z); vec3 g4 = grad(hashes.w);
+  vec4 extrapolations = vec4(dot(d1, g1), dot(d2, g2), dot(d3, g3), dot(d4, g4));
+  
+  vec3 derivative = -8.0 * mat4x3(d1, d2, d3, d4) * (aa * a * extrapolations)
+      + mat4x3(g1, g2, g3, g4) * aaaa;
+  
+  return vec4(derivative, dot(aaaa, extrapolations));
+}
+
+vec4 openSimplex2_Conventional(vec3 X) {
+  vec4 result = openSimplex2Base(dot(X, vec3(2.0/3.0)) - X);
+  return vec4(dot(result.xyz, vec3(2.0/3.0)) - result.xyz, result.w);
+}
+`));
+            this.snippets.push(new CodeSnippet('fragment', `
+// Paint Fragment Shader
+uniform float time;
+varying vec3 vColor;
+varying vec3 vWorldPosition;
+varying vec3 vNormal;
+varying vec3 vIncident;
+
+void main() {
+  vec3 x = vWorldPosition; 
+  vec4 r = openSimplex2_Conventional(x * 60.0);
+  vec3 normal = vNormal + (0.01 * r.xyz);
+
+
+  vec3 ve = dot(vIncident, normal) * normal;
+  vec3 reflection = vIncident - 2.0 * ve;
+   
+  float shiny = 8.0;
+
+  float shine = dot(normalize(reflection), normalize(vec3(0.0, 1.0, 0.5)));
+  shine = shiny * shine - shiny + 1.0;
+  shine = clamp(shine, 0.0, 1.0);
+  shine = pow(shine, 2.0);
+
+  float intensity = dot(normal, normalize(vec3(0.1, 1.0, 0.5)));
+  gl_FragColor = vec4(vColor * intensity + shine, 1.0);
+}`));
+            this.snippets.push(new CodeSnippet('fragment', `
+// Lava Fragment Shader
+
+uniform float time;
+varying vec3 vColor;
+varying vec3 vWorldPosition;
+varying vec3 vNormal;
+varying vec3 vIncident;
+
+void main() {
+  vec3 x = vWorldPosition; 
+  vec4 c1 = openSimplex2_Conventional(x);
+  vec4 c2 = 0.5 * openSimplex2_Conventional(x * 2.0);
+  vec4 c3 = 0.1 * openSimplex2_Conventional(x * 3.0);
+
+  vec4 cTotal = c1 + c2 + c3 * 0.2 + 0.5;
+
+  mat3 m = mat3(
+      1.0, 0.5, 0.01, 
+      1.0, 0.5, 0.02, 
+      1.0, 0.4, 0.03);
+  vec3 crgb = m * cTotal.rgb;
+
+  gl_FragColor = vec4(crgb, 1.0);
+}`));
+            this.snippets.push(new CodeSnippet('fragment', `
+// Shiny Fragment Shader
+uniform float time;
+varying vec3 vColor;
+varying vec3 vNormal;
+varying vec3 vIncident;
+
+void main() {  
+  vec3 ve = dot(vIncident, vNormal) * vNormal;
+  vec3 reflection = vIncident - 2.0 * ve;
+
+  float shiny = 64.0;
+
+  float intensity = dot(normalize(reflection), 
+    normalize(vec3(0.0, 1.0, 0.5 * sin(time))));
+  intensity = shiny * intensity - shiny + 1.0;
+  intensity = clamp(intensity, 0.0, 1.0);
+  intensity = pow(intensity, 2.0);
+
+  gl_FragColor = 
+    vec4(vec3(1.0,1.0,1.0) * clamp(intensity, 0.0, 1.0), 1.0) +
+    vec4(vColor.rgb, 0.0);
+}`));
+        }
+    }
+}
+exports.MaterialExplorer = MaterialExplorer;
+//# sourceMappingURL=materialExplorer.js.map
+
+/***/ }),
+
 /***/ 812:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -897,11 +1320,7 @@ exports.PaletteTest = PaletteTest;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -984,6 +1403,166 @@ exports.Place = Place;
 
 /***/ }),
 
+/***/ 147:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PointSetOctoTree = exports.PointSetLinear = void 0;
+const THREE = __importStar(__webpack_require__(232));
+class PointSetLinear {
+    radius;
+    points = [];
+    constructor(radius) {
+        this.radius = radius;
+    }
+    add(p) {
+        this.points.push(p);
+    }
+    elements() {
+        return this.points;
+    }
+    p2 = new THREE.Vector3();
+    closest = new THREE.Vector3();
+    getClosest(p) {
+        let closestDistance = 2 * this.radius;
+        for (const starPosition of this.points) {
+            this.p2.copy(starPosition);
+            this.p2.sub(p);
+            if (closestDistance > this.p2.length()) {
+                closestDistance = this.p2.length();
+                this.closest.copy(starPosition);
+            }
+        }
+        return this.closest;
+    }
+}
+exports.PointSetLinear = PointSetLinear;
+class PointSetOctoTree {
+    radius;
+    points = [];
+    children = null;
+    center = new THREE.Vector3();
+    constructor(center, radius) {
+        this.radius = radius;
+        this.center.copy(center);
+    }
+    add(p) {
+        console.assert(this.insert(p));
+    }
+    p1 = new THREE.Vector3;
+    insert(p) {
+        // console.log(`Insert ${JSON.stringify(p)} into ${this.center}`);
+        this.p1.copy(this.center);
+        this.p1.sub(p);
+        const r = Math.max(Math.abs(this.p1.x), Math.abs(this.p1.y), Math.abs(this.p1.z));
+        if (r > this.radius) {
+            return false;
+        }
+        if (this.points) {
+            this.points.push(p);
+            if (this.points.length > 2) {
+                this.split();
+            }
+            return true;
+        }
+        else {
+            for (const c of this.children) {
+                if (c.insert(p)) {
+                    return true;
+                }
+            }
+            console.log(`${JSON.stringify(p)} is not in ${JSON.stringify(this.center)}`);
+            console.log(`Failed to insert.`);
+        }
+    }
+    split() {
+        const halfRadius = this.radius / 2;
+        this.children = [];
+        for (const cx of [-halfRadius, halfRadius]) {
+            for (const cy of [-halfRadius, halfRadius]) {
+                for (const cz of [-halfRadius, halfRadius]) {
+                    this.children.push(new PointSetOctoTree(new THREE.Vector3(cx, cy, cz), halfRadius));
+                }
+            }
+        }
+        for (const p of this.points) {
+            for (const c of this.children) {
+                if (c.insert(p)) {
+                    break;
+                }
+            }
+        }
+        this.points = null;
+    }
+    *elements() {
+        if (this.points) {
+            return this.points;
+        }
+        else {
+            for (const child of this.children) {
+                yield* child.elements();
+            }
+        }
+    }
+    p2 = new THREE.Vector3();
+    closest = new THREE.Vector3();
+    getClosestPoint(p) {
+        let closestDistance = this.radius * 3;
+        for (const starPosition of this.points) {
+            this.p2.copy(starPosition);
+            this.p2.sub(p);
+            if (closestDistance > this.p2.length()) {
+                closestDistance = this.p2.length();
+                this.closest.copy(starPosition);
+            }
+        }
+        return this.closest;
+    }
+    getClosest(p) {
+        if (this.points) {
+            return this.getClosestPoint(p);
+        }
+        else {
+            let closestDistance = this.radius * 4;
+            let closestOcto;
+            for (const child of this.children) {
+                this.p2.copy(child.center);
+                this.p2.sub(p);
+                if (closestDistance > this.p2.length()) {
+                    closestOcto = child;
+                    closestDistance = this.p2.length();
+                }
+            }
+            console.log(`Closest distance: ${closestDistance}`);
+            return closestOcto.getClosest(p);
+        }
+    }
+}
+exports.PointSetOctoTree = PointSetOctoTree;
+//# sourceMappingURL=pointSet.js.map
+
+/***/ }),
+
 /***/ 451:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -1059,11 +1638,7 @@ exports.Tick = Tick;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1083,6 +1658,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VeryLargeUniverse = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const pointSet_1 = __webpack_require__(147);
 const settings_1 = __webpack_require__(451);
 const zoom_1 = __webpack_require__(950);
 class StarSystem extends THREE.Object3D {
@@ -1097,19 +1673,21 @@ class VeryLargeUniverse extends THREE.Object3D {
     grips;
     camera;
     xr;
+    keysDown;
     currentStarPosition = new THREE.Vector3();
     currentStar = null;
-    starPositions = [];
+    starPositions = new pointSet_1.PointSetLinear(1e10);
     leftStart;
     rightStart;
     startMatrix = new THREE.Matrix4();
     oldZoom = null;
     material;
-    constructor(grips, camera, xr) {
+    constructor(grips, camera, xr, keysDown) {
         super();
         this.grips = grips;
         this.camera = camera;
         this.xr = xr;
+        this.keysDown = keysDown;
         this.addStars();
         this.grips[0].addEventListener('selectstart', () => {
             this.leftStart = new THREE.Vector3();
@@ -1176,7 +1754,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         const radius = settings_1.S.float('sr');
         for (let i = 0; i < 100000; ++i) {
             const v = new THREE.Vector3(Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius));
-            this.starPositions.push(v);
+            this.starPositions.add(v);
             positions.push(v.x, v.y, v.z);
         }
         const geometry = new THREE.BufferGeometry();
@@ -1219,21 +1797,10 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.add(points);
     }
     p1 = new THREE.Vector3();
-    p2 = new THREE.Vector3();
-    closest = new THREE.Vector3();
     findClosestStar() {
-        let closestDistance = 1e10;
         this.camera.getWorldPosition(this.p1);
         this.worldToLocal(this.p1);
-        for (const starPosition of this.starPositions) {
-            this.p2.copy(starPosition);
-            this.p2.sub(this.p1);
-            if (closestDistance > this.p2.length()) {
-                closestDistance = this.p2.length();
-                this.closest.copy(starPosition);
-            }
-        }
-        return this.closest;
+        return this.starPositions.getClosest(this.p1);
     }
     getButtonsFromGrip(index) {
         let source = null;
@@ -1245,17 +1812,40 @@ class VeryLargeUniverse extends THREE.Object3D {
             return source.gamepad.buttons.map((b) => b.value);
         }
         else {
-            return null;
+            return [];
         }
     }
     direction = new THREE.Vector3();
+    m1 = new THREE.Matrix4();
+    m2 = new THREE.Matrix4();
+    m3 = new THREE.Matrix4();
+    zoomAroundWorldOrigin(zoomFactor) {
+        this.p1.set(0, 0, 0);
+        this.worldToLocal(this.p1);
+        this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
+        this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
+        this.m3.makeTranslation(this.p1.x, this.p1.y, this.p1.z);
+        this.matrix.multiply(this.m3);
+        this.matrix.multiply(this.m2);
+        this.matrix.multiply(this.m1);
+        this.matrix.decompose(this.position, this.quaternion, this.scale);
+    }
     tick(t) {
         if (this.rightStart && this.leftStart) {
             this.zoom();
         }
         const leftButtons = this.getButtonsFromGrip(0);
         const rightButtons = this.getButtonsFromGrip(1);
-        if (leftButtons && rightButtons && leftButtons[1] && rightButtons[1]) {
+        if (leftButtons[4] === 1 || rightButtons[4] === 1 // A or X
+            || this.keysDown.has('Equal')) {
+            this.zoomAroundWorldOrigin(Math.pow(2, t.deltaS));
+        }
+        if (leftButtons[5] === 1 || rightButtons[5] === 1 // B or Y
+            || this.keysDown.has('Minus')) {
+            this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
+        }
+        if ((leftButtons[1] && rightButtons[1]) || // Squeeze
+            this.keysDown.has('ArrowUp')) {
             this.camera.getWorldDirection(this.direction);
             this.direction.multiplyScalar(t.deltaS * 5.0);
             this.position.sub(this.direction);
@@ -1286,11 +1876,7 @@ exports.VeryLargeUniverse = VeryLargeUniverse;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -93350,14 +93936,11 @@ const debug_1 = __webpack_require__(756);
 const game_1 = __webpack_require__(417);
 const settings_1 = __webpack_require__(451);
 debug_1.Debug.log(`Start home: ${settings_1.S.float('sh')}`);
-switch (settings_1.S.float('sh')) {
-    case 1:
-    default:
-        new blockBuild_1.BlockBuild();
-        break;
-    case 2:
-        new game_1.Game();
-        break;
+if (settings_1.S.float('sh') < 2 || !settings_1.S.float('sh')) {
+    new blockBuild_1.BlockBuild();
+}
+else {
+    new game_1.Game();
 }
 //# sourceMappingURL=index.js.map
 })();
