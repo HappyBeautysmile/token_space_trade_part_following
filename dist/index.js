@@ -8,7 +8,11 @@
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -28,6 +32,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assets = void 0;
 const THREE = __importStar(__webpack_require__(232));
+//import * as fs from "fs";
 const debug_1 = __webpack_require__(756);
 const palette_1 = __webpack_require__(812);
 const GLTFLoader_js_1 = __webpack_require__(217);
@@ -53,10 +58,11 @@ class ModelLoader {
     }
 }
 class Assets extends THREE.Object3D {
-    static allModels = [];
+    static blocks = [];
     static modelIndex = 0;
     static materials = [];
     static materialIndex = 0;
+    static models = new Map();
     static init() {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
@@ -104,8 +110,8 @@ class Assets extends THREE.Object3D {
         }
     }
     static nextModel() {
-        Assets.modelIndex = (Assets.modelIndex + 1) % Assets.allModels.length;
-        return Assets.allModels[Assets.modelIndex];
+        Assets.modelIndex = (Assets.modelIndex + 1) % Assets.blocks.length;
+        return Assets.blocks[Assets.modelIndex];
     }
     static nextMaterial() {
         Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materials.length;
@@ -124,14 +130,24 @@ class Assets extends THREE.Object3D {
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             //this.assets.replaceMaterial(m, newMat);
             m.scale.set(1, 1, 1);
-            this.allModels.push(m);
+            this.blocks.push(m);
             //this.scene.add(m);
             //this.universeGroup.add(m);
-            m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
+            m.position.set((this.blocks.length - models.length / 2) * 1.4, 0, -15);
             console.log(`Added ${modelName}`);
         }
-        // const m = await ModelLoader.loadModel(`Model/ship.glb`);
-        // this.playerGroup.add(m);
+        this.models['ship'] = await ModelLoader.loadModel("Model/ship.glb");
+        this.models['guide'] = await ModelLoader.loadModel("Model/guide.glb");
+        // TODO: load all glb files int the Model directory into this.models
+        // const testFolder = 'Model/*.glb';
+        // const fs = require('fs');
+        // fs.readdir(testFolder, (err, files) => {
+        //     files.forEach(file => {
+        //         let filename = file as string;
+        //         const m = ModelLoader.loadModel(filename);
+        //         this.models[filename.split('.')[0]] = m;
+        //     });
+        // });
     }
 }
 exports.Assets = Assets;
@@ -145,7 +161,11 @@ exports.Assets = Assets;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -276,7 +296,8 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("save by pushing the stick");
+        this.universeGroup.add(assets_1.Assets.models["ship"]);
+        debug_1.Debug.log("added back in ship.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -306,8 +327,8 @@ class BlockBuild {
             }
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
-            assets_1.Assets.allModels[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.allModels[i], i, this.renderer.xr, this.place, i == 0, this.keysDown, this.construction);
+            assets_1.Assets.blocks[i].position.set(0, 0, 0);
+            new hand_1.Hand(grip, assets_1.Assets.blocks[i], i, this.renderer.xr, this.place, i == 0, this.keysDown, this.construction);
         }
     }
 }
@@ -334,6 +355,16 @@ class Construction {
         o['objects'] = fileIO_1.FileIO.mapToObject(this.allObjects);
         fileIO_1.FileIO.saveObject(o, "what_you_built.json");
     }
+    // TODO: change this to private and fix the code that breaks.
+    posToKey(p) {
+        return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
+    }
+    addCube(o) {
+        const key = this.posToKey(o.position);
+        this.allObjects.set(key, o);
+    }
+    removeCube(o) {
+    }
 }
 exports.Construction = Construction;
 //# sourceMappingURL=construction.js.map
@@ -346,7 +377,11 @@ exports.Construction = Construction;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -448,7 +483,11 @@ exports.FileIO = FileIO;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -544,7 +583,11 @@ exports.Game = Game;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -696,14 +739,11 @@ class Hand extends THREE.Object3D {
         this.cube = o.clone();
         this.place.playerGroup.add(this.cube);
     }
-    posToKey(p) {
-        return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
-    }
     deleteCube() {
         this.p.copy(this.cube.position);
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);
-        const key = this.posToKey(this.p);
+        const key = this.construction.posToKey(this.p);
         if (this.construction.allObjects.has(key)) {
             this.place.universeGroup.remove(this.construction.allObjects.get(key));
             this.construction.allObjects.delete(key);
@@ -729,8 +769,7 @@ class Hand extends THREE.Object3D {
             this.place.quantizeRotation(o.rotation);
             //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
             this.place.universeGroup.add(o);
-            const key = this.posToKey(o.position);
-            this.construction.allObjects.set(key, o);
+            this.construction.addCube(o);
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -747,7 +786,11 @@ exports.Hand = Hand;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1130,7 +1173,11 @@ exports.MaterialExplorer = MaterialExplorer;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1320,7 +1367,11 @@ exports.PaletteTest = PaletteTest;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1409,7 +1460,11 @@ exports.Place = Place;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1638,7 +1693,11 @@ exports.Tick = Tick;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1876,7 +1935,11 @@ exports.VeryLargeUniverse = VeryLargeUniverse;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];

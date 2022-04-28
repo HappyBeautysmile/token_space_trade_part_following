@@ -14,6 +14,7 @@ export class Construction {
     FileIO.saveObject(o, "what_you_built.json");
   }
 
+  // TODO: change this to private and fix the code that breaks.
   public posToKey(p: THREE.Vector3): string {
     return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
   }

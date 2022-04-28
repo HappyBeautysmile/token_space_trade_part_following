@@ -127,7 +127,8 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("moved some things to construction");
+    this.universeGroup.add(Assets.models["ship"]);
+    Debug.log("added back in ship.");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -162,8 +163,8 @@ export class BlockBuild {
       }
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
-      Assets.allModels[i].position.set(0, 0, 0);
-      new Hand(grip, Assets.allModels[i], i, this.renderer.xr,
+      Assets.blocks[i].position.set(0, 0, 0);
+      new Hand(grip, Assets.blocks[i], i, this.renderer.xr,
         this.place, i == 0, this.keysDown, this.construction);
     }
   }

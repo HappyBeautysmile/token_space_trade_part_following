@@ -1,4 +1,5 @@
 import * as THREE from "three";
+//import * as fs from "fs";
 import { Debug } from "./debug";
 import { Palette } from "./palette";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -29,10 +30,11 @@ class ModelLoader {
 
 export class Assets extends THREE.Object3D {
 
-    static allModels: THREE.Object3D[] = [];
+    static blocks: THREE.Object3D[] = [];
     static modelIndex = 0;
     static materials: THREE.Material[] = [];
     static materialIndex = 0;
+    static models: Map<string, THREE.Object3D> = new Map<string, THREE.Object3D>();
 
     static init() {
         Palette.init();
@@ -86,8 +88,8 @@ export class Assets extends THREE.Object3D {
     }
 
     static nextModel() {
-        Assets.modelIndex = (Assets.modelIndex + 1) % Assets.allModels.length;
-        return Assets.allModels[Assets.modelIndex];
+        Assets.modelIndex = (Assets.modelIndex + 1) % Assets.blocks.length;
+        return Assets.blocks[Assets.modelIndex];
     }
 
     static nextMaterial() {
@@ -108,13 +110,27 @@ export class Assets extends THREE.Object3D {
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             //this.assets.replaceMaterial(m, newMat);
             m.scale.set(1, 1, 1);
-            this.allModels.push(m);
+            this.blocks.push(m);
             //this.scene.add(m);
             //this.universeGroup.add(m);
-            m.position.set((this.allModels.length - models.length / 2) * 1.4, 0, -15);
+            m.position.set((this.blocks.length - models.length / 2) * 1.4, 0, -15);
             console.log(`Added ${modelName}`);
         }
-        // const m = await ModelLoader.loadModel(`Model/ship.glb`);
-        // this.playerGroup.add(m);
+
+        this.models['ship'] = await ModelLoader.loadModel("Model/ship.glb");
+        this.models['guide'] = await ModelLoader.loadModel("Model/guide.glb");
+
+        // TODO: load all glb files int the Model directory into this.models
+
+        // const testFolder = 'Model/*.glb';
+        // const fs = require('fs');
+
+        // fs.readdir(testFolder, (err, files) => {
+        //     files.forEach(file => {
+        //         let filename = file as string;
+        //         const m = ModelLoader.loadModel(filename);
+        //         this.models[filename.split('.')[0]] = m;
+        //     });
+        // });
     }
 }
