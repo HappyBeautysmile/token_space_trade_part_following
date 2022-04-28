@@ -139,15 +139,11 @@ export class Hand extends THREE.Object3D {
     this.place.playerGroup.add(this.cube);
   }
 
-  private posToKey(p: THREE.Vector3): string {
-    return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
-  }
-
   private deleteCube() {
     this.p.copy(this.cube.position);
     this.place.playerToUniverse(this.p);
     this.place.quantizePosition(this.p);
-    const key = this.posToKey(this.p);
+    const key = this.construction.posToKey(this.p);
     if (this.construction.allObjects.has(key)) {
       this.place.universeGroup.remove(this.construction.allObjects.get(key));
       this.construction.allObjects.delete(key);
@@ -175,8 +171,7 @@ export class Hand extends THREE.Object3D {
       this.place.quantizeRotation(o.rotation);
       //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
       this.place.universeGroup.add(o);
-      const key = this.posToKey(o.position);
-      this.construction.allObjects.set(key, o);
+      this.construction.addCube(o);
     });
 
     // this.grip.addEventListener('selectend', () => {

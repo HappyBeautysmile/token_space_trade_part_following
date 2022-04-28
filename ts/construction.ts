@@ -13,4 +13,18 @@ export class Construction {
     o['objects'] = FileIO.mapToObject(this.allObjects);
     FileIO.saveObject(o, "what_you_built.json");
   }
+
+  public posToKey(p: THREE.Vector3): string {
+    return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
+  }
+
+  public addCube(o: THREE.Object3D) {
+    const key = this.posToKey(o.position);
+    this.allObjects.set(key, o);
+  }
+
+  public removeCube(o: THREE.Object3D) {
+
+  }
+
 }
