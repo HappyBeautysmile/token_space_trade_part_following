@@ -1,0 +1,26 @@
+body {
+  background-color: black;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  color: lime;
+}
+
+textarea.code {
+  width: 90vw;
+  height: 300px;
+  font-family: monospace;
+  font-size: 14px;
+  color: #f82;
+  background-color: black;
+  border: 1px solid gray;
+  margin: 2px;
+  padding: 2px;
+  border-radius: 5px;
+}
+
+textarea.disabled {
+  color: lightgray;
+}
+
+textarea.collapsed {
+  height: 32px;
+}
