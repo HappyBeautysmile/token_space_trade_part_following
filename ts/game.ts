@@ -4,6 +4,9 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { VeryLargeUniverse } from "./veryLargeUniverse";
 import { S } from "./settings";
 import { MaterialExplorer } from "./materialExplorer";
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
 export class Game {
   private scene = new THREE.Scene();
@@ -26,6 +29,19 @@ export class Game {
     document.body.appendChild(VRButton.createButton(this.renderer));
     this.renderer.xr.enabled = true;
 
+
+    const renderScene = new RenderPass(this.scene, this.camera);
+
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloomPass.threshold = 0.25;
+    bloomPass.strength = 3.0;
+    bloomPass.radius = 0.5;
+
+    const composer = new EffectComposer(this.renderer);
+    composer.addPass(renderScene);
+    composer.addPass(bloomPass);
+
+
     const clock = new THREE.Clock();
     let elapsedS = 0.0;
     this.renderer.setAnimationLoop(() => {
@@ -33,7 +49,8 @@ export class Game {
       elapsedS += deltaS;
       const tick = new Tick(elapsedS, deltaS);
       this.tickEverything(this.scene, tick);
-      this.renderer.render(this.scene, this.camera);
+      // this.renderer.render(this.scene, this.camera);
+      composer.render();
     });
 
     this.getGrips();
