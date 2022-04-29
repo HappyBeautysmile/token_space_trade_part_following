@@ -297,7 +297,7 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         this.universeGroup.add(assets_1.Assets.models["ship"]);
-        debug_1.Debug.log("back out hand fix.");
+        debug_1.Debug.log("different hand fix.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -641,19 +641,6 @@ class Hand extends THREE.Object3D {
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
         }
-        // let source: THREE.XRInputSource = null;
-        // const session = this.xr.getSession();
-        // if (session) {
-        //   if (session.inputSources && session.inputSources.length > this.index) {
-        //     source = session.inputSources[this.index];
-        //   }
-        // }
-        // if (source.handedness == "left") {
-        //   this.leftHand = true;
-        // }
-        // else {
-        //   this.leftHand = false;
-        // }
         this.setCube(initialObject);
         this.initialize();
     }
@@ -692,6 +679,12 @@ class Hand extends THREE.Object3D {
         }
         if (source) {
             if (!this.sourceLogged) {
+                if (source.handedness == "left") {
+                    this.leftHand = true;
+                }
+                else {
+                    this.leftHand = false;
+                }
                 debug_1.Debug.log(`Has a source. left:${this.leftHand} ${source.handedness}`);
                 this.sourceLogged = true;
             }
