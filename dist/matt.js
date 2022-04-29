@@ -1833,7 +1833,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         uniform float sizeScale;
         varying vec3 vColor;
         void main() {
-          vColor = vec3(0.5, 1.0, 1.0);
+          vColor = vec3(1.0, 1.0, 1.0);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           float distance = length(mvPosition.xyz);
           if (distance > 1000.0) {
