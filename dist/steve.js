@@ -304,7 +304,7 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         this.universeGroup.add(assets_1.Assets.models["ship"]);
-        debug_1.Debug.log("added material name to save");
+        debug_1.Debug.log("debug material name to save");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -345,12 +345,13 @@ exports.BlockBuild = BlockBuild;
 /***/ }),
 
 /***/ 385:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Codec = void 0;
-class Format {
+const debug_1 = __webpack_require__(756);
+class Encode {
     position;
     quarternion;
     modelName;
@@ -359,16 +360,20 @@ class Format {
         this.position = o.position;
         this.quarternion = o.quaternion;
         this.modelName = o.userData["modelName"];
+        debug_1.Debug.log("before ... as mesh");
         let mesh = o;
+        debug_1.Debug.log("mesh as o worked. before ... as material");
         let mat = mesh.material;
+        debug_1.Debug.log(" ... as material worked.  before asigning texture name.");
         this.textureName = mat.userData["textureName"];
+        debug_1.Debug.log("asigning texture name worked.");
     }
 }
 class Codec {
     toSaveFormat(input) {
         let output = [];
         input.forEach((value, key) => {
-            output.push(new Format(value));
+            output.push(new Encode(value));
         });
         return output;
     }

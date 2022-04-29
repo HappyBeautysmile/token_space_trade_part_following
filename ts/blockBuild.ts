@@ -128,7 +128,7 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
     this.universeGroup.add(Assets.models["ship"]);
-    Debug.log("added material name to save");
+    Debug.log("debug material name to save");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
