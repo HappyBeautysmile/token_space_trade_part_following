@@ -116,7 +116,7 @@ class Assets extends THREE.Object3D {
         return Assets.materials[Assets.materialIndex];
     }
     static async loadAllModels() {
-        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue'];
+        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
             const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
@@ -289,7 +289,7 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         this.universeGroup.add(assets_1.Assets.models["ship"]);
-        debug_1.Debug.log("fix left and right hand?");
+        debug_1.Debug.log("back out hand fix.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -621,19 +621,19 @@ class Hand extends THREE.Object3D {
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
         }
-        let source = null;
-        const session = this.xr.getSession();
-        if (session) {
-            if (session.inputSources && session.inputSources.length > this.index) {
-                source = session.inputSources[this.index];
-            }
-        }
-        if (source.handedness == "left") {
-            this.leftHand = true;
-        }
-        else {
-            this.leftHand = false;
-        }
+        // let source: THREE.XRInputSource = null;
+        // const session = this.xr.getSession();
+        // if (session) {
+        //   if (session.inputSources && session.inputSources.length > this.index) {
+        //     source = session.inputSources[this.index];
+        //   }
+        // }
+        // if (source.handedness == "left") {
+        //   this.leftHand = true;
+        // }
+        // else {
+        //   this.leftHand = false;
+        // }
         this.setCube(initialObject);
         this.initialize();
     }
