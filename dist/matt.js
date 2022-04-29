@@ -1884,15 +1884,20 @@ class VeryLargeUniverse extends THREE.Object3D {
     m2 = new THREE.Matrix4();
     m3 = new THREE.Matrix4();
     zoomAroundWorldOrigin(zoomFactor) {
-        this.p1.set(0, 0, 0);
-        this.worldToLocal(this.p1);
-        this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
-        this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
-        this.m3.makeTranslation(this.p1.x, this.p1.y, this.p1.z);
-        this.matrix.multiply(this.m1);
-        this.matrix.multiply(this.m2);
-        this.matrix.multiply(this.m3);
-        this.matrix.decompose(this.position, this.quaternion, this.scale);
+        this.position.multiplyScalar(zoomFactor);
+        this.scale.multiplyScalar(zoomFactor);
+        // this.p1.set(0, 0, 0);
+        //    this.worldToLocal(this.p1);
+        // this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
+        // this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
+        // this.m3.makeTranslation(
+        //   this.p1.x * zoomFactor,
+        //   this.p1.y * zoomFactor,
+        //   this.p1.z * zoomFactor);
+        // this.matrix.multiply(this.m3);
+        // this.matrix.multiply(this.m2);
+        // this.matrix.multiply(this.m1);
+        // this.matrix.decompose(this.position, this.quaternion, this.scale);
     }
     tick(t) {
         if (this.rightStart && this.leftStart) {
@@ -1908,10 +1913,17 @@ class VeryLargeUniverse extends THREE.Object3D {
             || this.keysDown.has('Minus')) {
             this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
         }
+        if ((leftButtons[0] && rightButtons[0]) || // Trigger
+            this.keysDown.has('ArrowDown')) {
+            this.camera.getWorldDirection(this.direction);
+            this.direction.multiplyScalar(-t.deltaS * 5.0);
+            this.position.sub(this.direction);
+            this.updateMatrix();
+        }
         if ((leftButtons[1] && rightButtons[1]) || // Squeeze
             this.keysDown.has('ArrowUp')) {
             this.camera.getWorldDirection(this.direction);
-            this.direction.multiplyScalar(t.deltaS * 50000.0);
+            this.direction.multiplyScalar(t.deltaS * 5.0);
             this.position.sub(this.direction);
             this.updateMatrix();
         }
