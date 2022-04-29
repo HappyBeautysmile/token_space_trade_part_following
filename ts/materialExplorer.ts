@@ -320,7 +320,7 @@ void main() {
 }`));
 
       this.snippets.push(new CodeSnippet('fragment', `
-// Star Fragment Shader
+// Lava Fragment Shader
 
 uniform float time;
 varying vec3 vColor;
@@ -329,34 +329,32 @@ varying vec3 vNormal;
 varying vec3 vIncident;
 
 vec4 brown(in vec3 x) {
-  vec4 c1 = openSimplex2_Conventional(x);
-  vec4 c2 = 0.5 * openSimplex2_Conventional(x * 2.0);
-  vec4 c3 = 0.3 * openSimplex2_Conventional(x * 4.0);
-  return(c1 + c2 + c3);
-}
-
-vec4 orange(in vec3 x) {
-  vec4 b = brown(x * 0.5) * 0.5;
-  b = brown(b.yxz * 0.5 + sin(time * 0.1)) * 0.5;
-  return(brown(vec3(b.xy + cos(time * 0.1), sin(time * 0.5)) * 0.1));
+  return (
+    openSimplex2_Conventional(x) 
+    + openSimplex2_Conventional(x * 2.0)
+    + openSimplex2_Conventional(x * 4.0)
+    + openSimplex2_Conventional(x * 8.0)
+  );
 }
 
 void main() {
-  vec4 cTotal = clamp((orange(vWorldPosition) * 0.1) + 0.5, 0.0, 1.0);
+  vec4 c1 = brown(vWorldPosition * 0.3); 
+  c1 = brown(vec3(c1.xy * 0.05, time*0.1)) * 0.05 + 0.5;
+  float intensity = dot(-vIncident, vNormal);
 
   mat3 m = mat3(
       1.0, 0.5, 0.01, 
       1.0, 0.5, 0.02, 
       1.0, 0.4, 0.03);
-  vec3 crgb = m * cTotal.rgb;
-
-  float intensity = dot(-vIncident, vNormal);
+  vec3 crgb = m * c1.rgb * pow(intensity, 0.3);
 
   float whiteness = clamp(
     (intensity - 0.5) * 10.0 + length(crgb), 0.0, 1.0);
   vec3 white = vec3(1.0, 1.0, 1.0) * whiteness;
-  gl_FragColor = vec4(white + (crgb * intensity), 1.0);
-}}`));
+
+
+  gl_FragColor = vec4(crgb + white, 1.0) * 0.4;
+}`));
 
       this.snippets.push(new CodeSnippet('fragment', `
 // Shiny Fragment Shader
