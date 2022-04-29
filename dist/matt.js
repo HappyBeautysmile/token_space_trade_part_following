@@ -1742,41 +1742,39 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.xr = xr;
         this.keysDown = keysDown;
         this.addStars();
-        this.grips[0].addEventListener('selectstart', () => {
-            this.leftStart = new THREE.Vector3();
-            this.leftStart.copy(this.grips[0].position);
-            this.startMatrix.copy(this.matrix);
-            this.startMatrix.invert();
-            this.leftStart.applyMatrix4(this.startMatrix);
-            ;
-            if (this.rightStart) {
-                this.rightStart.copy(this.grips[1].position);
-                this.rightStart.applyMatrix4(this.startMatrix);
-            }
-        });
-        this.grips[1].addEventListener('selectstart', () => {
-            this.rightStart = new THREE.Vector3();
-            this.rightStart.copy(this.grips[1].position);
-            this.startMatrix.invert();
-            this.rightStart.applyMatrix4(this.startMatrix);
-            ;
-            if (this.leftStart) {
-                this.leftStart.copy(this.grips[0].position);
-                this.leftStart.applyMatrix4(this.startMatrix);
-            }
-        });
-        this.grips[0].addEventListener('selectend', () => {
-            if (this.leftStart && this.rightStart) {
-                this.zoomEnd();
-            }
-            this.leftStart = null;
-        });
-        this.grips[1].addEventListener('selectend', () => {
-            if (this.leftStart && this.rightStart) {
-                this.zoomEnd();
-            }
-            this.rightStart = null;
-        });
+        //   this.grips[0].addEventListener('selectstart', () => {
+        //     this.leftStart = new THREE.Vector3();
+        //     this.leftStart.copy(this.grips[0].position);
+        //     this.startMatrix.copy(this.matrix);
+        //     this.startMatrix.invert();
+        //     this.leftStart.applyMatrix4(this.startMatrix);;
+        //     if (this.rightStart) {
+        //       this.rightStart.copy(this.grips[1].position);
+        //       this.rightStart.applyMatrix4(this.startMatrix);
+        //     }
+        //   });
+        //   this.grips[1].addEventListener('selectstart', () => {
+        //     this.rightStart = new THREE.Vector3();
+        //     this.rightStart.copy(this.grips[1].position);
+        //     this.startMatrix.invert();
+        //     this.rightStart.applyMatrix4(this.startMatrix);;
+        //     if (this.leftStart) {
+        //       this.leftStart.copy(this.grips[0].position);
+        //       this.leftStart.applyMatrix4(this.startMatrix);
+        //     }
+        //   });
+        //   this.grips[0].addEventListener('selectend', () => {
+        //     if (this.leftStart && this.rightStart) {
+        //       this.zoomEnd();
+        //     }
+        //     this.leftStart = null;
+        //   });
+        //   this.grips[1].addEventListener('selectend', () => {
+        //     if (this.leftStart && this.rightStart) {
+        //       this.zoomEnd();
+        //     }
+        //     this.rightStart = null;
+        //   });
         this.position.set(0, 0, -1e6);
     }
     leftCurrent = new THREE.Vector3();
@@ -1913,7 +1911,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         if ((leftButtons[1] && rightButtons[1]) || // Squeeze
             this.keysDown.has('ArrowUp')) {
             this.camera.getWorldDirection(this.direction);
-            this.direction.multiplyScalar(t.deltaS * 5.0);
+            this.direction.multiplyScalar(t.deltaS * 50000.0);
             this.position.sub(this.direction);
             this.updateMatrix();
         }
