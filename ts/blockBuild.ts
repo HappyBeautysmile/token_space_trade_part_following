@@ -128,7 +128,7 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
     this.universeGroup.add(Assets.models["ship"]);
-    Debug.log("added back in ship.");
+    Debug.log("fix left and right hand?");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -165,7 +165,7 @@ export class BlockBuild {
       // It's still in memory.
       Assets.blocks[i].position.set(0, 0, 0);
       new Hand(grip, Assets.blocks[i], i, this.renderer.xr,
-        this.place, i == 0, this.keysDown, this.construction);
+        this.place, this.keysDown, this.construction);
     }
   }
 }

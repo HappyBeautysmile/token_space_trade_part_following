@@ -120,7 +120,7 @@ class Assets extends THREE.Object3D {
         return Assets.materials[Assets.materialIndex];
     }
     static async loadAllModels() {
-        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster'];
+        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
             const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
@@ -297,7 +297,7 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         this.universeGroup.add(assets_1.Assets.models["ship"]);
-        debug_1.Debug.log("added back in ship.");
+        debug_1.Debug.log("fix left and right hand?");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -328,7 +328,7 @@ class BlockBuild {
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             assets_1.Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.blocks[i], i, this.renderer.xr, this.place, i == 0, this.keysDown, this.construction);
+            new hand_1.Hand(grip, assets_1.Assets.blocks[i], i, this.renderer.xr, this.place, this.keysDown, this.construction);
         }
     }
 }
@@ -615,20 +615,19 @@ class Hand extends THREE.Object3D {
     index;
     xr;
     place;
-    leftHand;
     keysDown;
     construction;
     cube;
     templateCube;
+    leftHand;
     debug;
     debugMaterial;
-    constructor(grip, initialObject, index, xr, place, leftHand, keysDown, construction) {
+    constructor(grip, initialObject, index, xr, place, keysDown, construction) {
         super();
         this.grip = grip;
         this.index = index;
         this.xr = xr;
         this.place = place;
-        this.leftHand = leftHand;
         this.keysDown = keysDown;
         this.construction = construction;
         this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
@@ -641,6 +640,19 @@ class Hand extends THREE.Object3D {
         }
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
+        }
+        let source = null;
+        const session = this.xr.getSession();
+        if (session) {
+            if (session.inputSources && session.inputSources.length > this.index) {
+                source = session.inputSources[this.index];
+            }
+        }
+        if (source.handedness == "left") {
+            this.leftHand = true;
+        }
+        else {
+            this.leftHand = false;
         }
         this.setCube(initialObject);
         this.initialize();
@@ -680,7 +692,7 @@ class Hand extends THREE.Object3D {
         }
         if (source) {
             if (!this.sourceLogged) {
-                debug_1.Debug.log(`Has a source. left:${this.leftHand}`);
+                debug_1.Debug.log(`Has a source. left:${this.leftHand} ${source.handedness}`);
                 this.sourceLogged = true;
             }
             //this.debugMaterial.color = new THREE.Color('blue');

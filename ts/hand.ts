@@ -11,13 +11,14 @@ import { Construction } from "./construction";
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
   private templateCube: THREE.Object3D;
+  private leftHand: boolean;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
 
   constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
     private index: number, private xr: THREE.WebXRManager,
-    private place: Place, private leftHand: boolean,
+    private place: Place,
     private keysDown: Set<string>, private construction: Construction) {
     super();
     this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
@@ -31,6 +32,19 @@ export class Hand extends THREE.Object3D {
     }
     else {
       Debug.log("ERROR: grip or this not defined.")
+    }
+    let source: THREE.XRInputSource = null;
+    const session = this.xr.getSession();
+    if (session) {
+      if (session.inputSources && session.inputSources.length > this.index) {
+        source = session.inputSources[this.index];
+      }
+    }
+    if (source.handedness == "left") {
+      this.leftHand = true;
+    }
+    else {
+      this.leftHand = false;
     }
 
     this.setCube(initialObject);
@@ -79,7 +93,7 @@ export class Hand extends THREE.Object3D {
 
     if (source) {
       if (!this.sourceLogged) {
-        Debug.log(`Has a source. left:${this.leftHand}`);
+        Debug.log(`Has a source. left:${this.leftHand} ${source.handedness}`);
         this.sourceLogged = true;
       }
       //this.debugMaterial.color = new THREE.Color('blue');
