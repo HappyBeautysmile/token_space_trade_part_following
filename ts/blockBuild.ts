@@ -36,6 +36,11 @@ export class BlockBuild {
     this.setScene();
     await Assets.loadAllModels();
     Debug.log("all models loaded.");
+
+    // this.universeGroup.add(Assets.models["ship"]);
+    // this.construction.addCube(Assets.blocks[0]);
+    // this.construction.save();
+
     this.getGrips();
   }
 
@@ -127,8 +132,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    this.universeGroup.add(Assets.models["ship"]);
-    Debug.log("debug material name to save");
+    Debug.log("texture save works?");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

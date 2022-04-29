@@ -12,13 +12,11 @@ class Encode {
         this.position = o.position;
         this.quarternion = o.quaternion;
         this.modelName = o.userData["modelName"];
-        Debug.log("before ... as mesh");
-        let mesh = o as THREE.Mesh;
-        Debug.log("mesh as o worked. before ... as material");
+        let mesh = o.children[0] as THREE.Mesh;
         let mat = mesh.material as THREE.Material;
-        Debug.log(" ... as material worked.  before asigning texture name.");
-        this.textureName = mat.userData["textureName"];
-        Debug.log("asigning texture name worked.");
+        if (mat.userData["textureName"]) {
+            this.textureName = mat.userData["textureName"];
+        }
     }
 }
 

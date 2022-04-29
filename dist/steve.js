@@ -223,6 +223,9 @@ class BlockBuild {
         this.setScene();
         await assets_1.Assets.loadAllModels();
         debug_1.Debug.log("all models loaded.");
+        // this.universeGroup.add(Assets.models["ship"]);
+        // this.construction.addCube(Assets.blocks[0]);
+        // this.construction.save();
         this.getGrips();
     }
     tickEverything(o, tick) {
@@ -303,8 +306,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        this.universeGroup.add(assets_1.Assets.models["ship"]);
-        debug_1.Debug.log("debug material name to save");
+        debug_1.Debug.log("texture save works?");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -345,12 +347,11 @@ exports.BlockBuild = BlockBuild;
 /***/ }),
 
 /***/ 385:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Codec = void 0;
-const debug_1 = __webpack_require__(756);
 class Encode {
     position;
     quarternion;
@@ -360,13 +361,11 @@ class Encode {
         this.position = o.position;
         this.quarternion = o.quaternion;
         this.modelName = o.userData["modelName"];
-        debug_1.Debug.log("before ... as mesh");
-        let mesh = o;
-        debug_1.Debug.log("mesh as o worked. before ... as material");
+        let mesh = o.children[0];
         let mat = mesh.material;
-        debug_1.Debug.log(" ... as material worked.  before asigning texture name.");
-        this.textureName = mat.userData["textureName"];
-        debug_1.Debug.log("asigning texture name worked.");
+        if (mat.userData["textureName"]) {
+            this.textureName = mat.userData["textureName"];
+        }
     }
 }
 class Codec {
