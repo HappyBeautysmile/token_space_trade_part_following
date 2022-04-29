@@ -4,11 +4,16 @@ class Format {
     public position: THREE.Vector3;
     public quarternion: THREE.Quaternion;
     public modelName: string;
+    public textureName: string;
 
     constructor(o: THREE.Object3D) {
+
         this.position = o.position;
         this.quarternion = o.quaternion;
         this.modelName = o.userData["modelName"];
+        let mesh = o as THREE.Mesh;
+        let mat = mesh.material as THREE.Material;
+        this.textureName = mat.userData["textureName"];
     }
 }
 

@@ -40,6 +40,7 @@ export class Assets extends THREE.Object3D {
         Palette.init();
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
+        flatPrimary.userData["textureName"] = "flatPrimary";
         Assets.materials.push(flatPrimary);
         let glossPrimary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -48,9 +49,11 @@ export class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x998877
         });
+        glossPrimary.userData["textureName"] = "glossPrimary";
         Assets.materials.push(glossPrimary);
 
         let flatSecondary = new THREE.MeshPhongMaterial({ color: 0x665544 });
+        flatSecondary.userData["textureName"] = "flatSecondary";
         Assets.materials.push(flatSecondary);
         let glossSecondary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -59,9 +62,11 @@ export class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x665544
         });
+        glossSecondary.userData["textureName"] = "glossSecondary";
         Assets.materials.push(glossSecondary);
 
         let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        flatBlack.userData["textureName"] = "flatBlack";
         Assets.materials.push(flatBlack);
         let glossBlack = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -70,6 +75,7 @@ export class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x111111
         });
+        glossBlack.userData["textureName"] = "glossBlack";
         Assets.materials.push(glossBlack);
     }
 

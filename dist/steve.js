@@ -67,6 +67,7 @@ class Assets extends THREE.Object3D {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
+        flatPrimary.userData["textureName"] = "flatPrimary";
         Assets.materials.push(flatPrimary);
         let glossPrimary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -75,8 +76,10 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x998877
         });
+        glossPrimary.userData["textureName"] = "glossPrimary";
         Assets.materials.push(glossPrimary);
         let flatSecondary = new THREE.MeshPhongMaterial({ color: 0x665544 });
+        flatSecondary.userData["textureName"] = "flatSecondary";
         Assets.materials.push(flatSecondary);
         let glossSecondary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -85,8 +88,10 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x665544
         });
+        glossSecondary.userData["textureName"] = "glossSecondary";
         Assets.materials.push(glossSecondary);
         let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        flatBlack.userData["textureName"] = "flatBlack";
         Assets.materials.push(flatBlack);
         let glossBlack = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -95,6 +100,7 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x111111
         });
+        glossBlack.userData["textureName"] = "glossBlack";
         Assets.materials.push(glossBlack);
     }
     // sets the color of the passed object to the next color in the palette.
@@ -298,7 +304,7 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         this.universeGroup.add(assets_1.Assets.models["ship"]);
-        debug_1.Debug.log("added Codec class");
+        debug_1.Debug.log("added material name to save");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -348,10 +354,14 @@ class Format {
     position;
     quarternion;
     modelName;
+    textureName;
     constructor(o) {
         this.position = o.position;
         this.quarternion = o.quaternion;
         this.modelName = o.userData["modelName"];
+        let mesh = o;
+        let mat = mesh.material;
+        this.textureName = mat.userData["textureName"];
     }
 }
 class Codec {
