@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { PointSetLinear } from "./pointSet";
+import { PointMapLinear, PointMapOctoTree } from "./pointMap";
 import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 import { Zoom } from "./zoom";
@@ -17,9 +17,9 @@ class StarSystem extends THREE.Object3D {
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
 export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
-  private currentStarPosition = new THREE.Vector3();
-  private currentStar: StarSystem = null;
-  private starPositions = new PointSetLinear(1e10);
+  private currentStarMap = new Map<THREE.Vector3, StarSystem>();
+  private starPositions = new PointMapOctoTree<THREE.Vector3>(
+    new THREE.Vector3(), 1e10);
   private leftStart: THREE.Vector3;
   private rightStart: THREE.Vector3;
   private startMatrix = new THREE.Matrix4();
@@ -105,7 +105,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
         Math.round((Math.random() - 0.5) * radius),
         Math.round((Math.random() - 0.5) * radius),
         Math.round((Math.random() - 0.5) * radius));
-      this.starPositions.add(v);
+      this.starPositions.add(v, v);
       positions.push(v.x, v.y, v.z);
     }
     const geometry = new THREE.BufferGeometry();
@@ -152,11 +152,11 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   }
 
   private p1 = new THREE.Vector3();
-  private findClosestStar(): THREE.Vector3 {
-    this.camera.getWorldPosition(this.p1);
-    this.worldToLocal(this.p1);
-    return this.starPositions.getClosest(this.p1);
-  }
+  // private findClosestStar(): THREE.Vector3 {
+  //   this.camera.getWorldPosition(this.p1);
+  //   this.worldToLocal(this.p1);
+  //   return this.starPositions.getClosest(this.p1);
+  // }
 
   private getButtonsFromGrip(index: number): number[] {
     let source: THREE.XRInputSource = null;
@@ -212,17 +212,29 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       this.updateMatrix();
     }
 
-    const closest = this.findClosestStar();
-    if (closest.x != this.currentStarPosition.x ||
-      closest.y != this.currentStarPosition.y ||
-      closest.z != this.currentStarPosition.z) {
-      this.currentStarPosition.copy(closest);
-      if (this.currentStar) {
-        this.remove(this.currentStar);
+    this.camera.getWorldPosition(this.p1);
+    this.worldToLocal(this.p1);
+    for (const closePoint of this.starPositions.getAllWithinRadius(
+      this.p1, 1e3)) {
+      if (!this.currentStarMap.has(closePoint)) {
+        const starSystem = new StarSystem();
+        starSystem.position.copy(closePoint);
+        this.currentStarMap.set(closePoint, starSystem);
+        this.add(starSystem);
       }
-      this.currentStar = new StarSystem();
-      this.add(this.currentStar);
-      this.currentStar.position.copy(this.currentStarPosition);
     }
+
+    // const closest = this.findClosestStar();
+    // if (closest.x != this.currentStarPosition.x ||
+    //   closest.y != this.currentStarPosition.y ||
+    //   closest.z != this.currentStarPosition.z) {
+    //   this.currentStarPosition.copy(closest);
+    //   if (this.currentStar) {
+    //     this.remove(this.currentStar);
+    //   }
+    //   this.currentStar = new StarSystem();
+    //   this.add(this.currentStar);
+    //   this.currentStar.position.copy(this.currentStarPosition);
+    // }
   }
 }

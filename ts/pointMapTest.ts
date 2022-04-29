@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { AABB, PointSetLinear, PointSetOctoTree } from "./pointSet";
+import { AABB, PointMapLinear, PointMapOctoTree } from "./pointMap";
 
 
 const aabb = new AABB(new THREE.Vector3(0.5, 0.5, 0.5), 0.5);
@@ -36,10 +36,10 @@ for (let i = 0; i < 1000; ++i) {
 }
 
 {
-  const pso = new PointSetOctoTree(new THREE.Vector3(0, 0, 0), 1.0);
-  pso.add(new THREE.Vector3(0.1, 0.1, 0.1));
-  pso.add(new THREE.Vector3(-0.5, 0.5, -0.5));
-  pso.add(new THREE.Vector3(1, 1, 1));
+  const pso = new PointMapOctoTree<number>(new THREE.Vector3(0, 0, 0), 1.0);
+  pso.add(new THREE.Vector3(0.1, 0.1, 0.1), 0);
+  pso.add(new THREE.Vector3(-0.5, 0.5, -0.5), 0);
+  pso.add(new THREE.Vector3(1, 1, 1), 0);
   let n = 0;
   for (const pp of pso.getAllWithinRadius(new THREE.Vector3(), 1.0)) {
     ++n;
@@ -49,7 +49,7 @@ for (let i = 0; i < 1000; ++i) {
 
 
 
-const psl = new PointSetLinear();
+const psl = new PointMapLinear<THREE.Vector3>();
 
 function bigRandom() {
   return (Math.random() - 0.5) * 1e10;
@@ -57,13 +57,14 @@ function bigRandom() {
 
 const pslSize = 100;
 for (let i = 0; i < pslSize; ++i) {
-  psl.add(new THREE.Vector3(bigRandom(), bigRandom(), bigRandom()));
+  const randomPoint = new THREE.Vector3(bigRandom(), bigRandom(), bigRandom());
+  psl.add(randomPoint, randomPoint);
 }
 {
-  const pso = new PointSetOctoTree(new THREE.Vector3(0, 0, 0), 1e10);
+  const pso = new PointMapOctoTree(new THREE.Vector3(0, 0, 0), 1e10);
 
   for (let i = 0; i < 100000; ++i) {
-    pso.add(new THREE.Vector3(bigRandom(), bigRandom(), bigRandom()));
+    pso.add(new THREE.Vector3(bigRandom(), bigRandom(), bigRandom()), 0);
   }
 
   let n = 0;
@@ -79,9 +80,9 @@ for (let i = 0; i < pslSize; ++i) {
   console.log(`Total found: ${n}`);
 }
 {
-  const pso = new PointSetLinear();
+  const pso = new PointMapLinear();
   for (let i = 0; i < 100000; ++i) {
-    pso.add(new THREE.Vector3(bigRandom(), bigRandom(), bigRandom()));
+    pso.add(new THREE.Vector3(bigRandom(), bigRandom(), bigRandom()), 0);
   }
 
   let n = 0;

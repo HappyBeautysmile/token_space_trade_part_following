@@ -1,32 +1,38 @@
 import * as THREE from "three";
 
-export interface PointSet {
-  add(p: THREE.Vector3): void;
-  elements(): Iterable<THREE.Vector3>;
-  getAllWithinRadius(p: THREE.Vector3, radius: number): Iterable<THREE.Vector3>;
+export interface PointMap<T> {
+  add(p: THREE.Vector3, value: T): void;
+  elements(): Iterable<T>;
+  getAllWithinRadius(p: THREE.Vector3, radius: number): Iterable<T>;
 }
 
-export class PointSetLinear implements PointSet {
-  private points: THREE.Vector3[] = [];
+class PointKey<T> {
+  constructor(readonly point: THREE.Vector3,
+    readonly value: T) { }
+}
+
+export class PointMapLinear<T> implements PointMap<T> {
+  private points: PointKey<T>[] = [];
   constructor() {
   }
 
-  add(p: THREE.Vector3) {
-    this.points.push(p);
+  add(p: THREE.Vector3, value: T) {
+    this.points.push(new PointKey(p, value));
   }
 
-  elements() {
-    return this.points;
+  *elements() {
+    for (const kv of this.points) {
+      yield kv.value;
+    }
   }
 
   private p2 = new THREE.Vector3();
-  *getAllWithinRadius(p: THREE.Vector3, radius: number): Iterable<THREE.Vector3> {
-
-    for (const starPosition of this.points) {
-      this.p2.copy(starPosition);
+  *getAllWithinRadius(p: THREE.Vector3, radius: number): Iterable<T> {
+    for (const kv of this.points) {
+      this.p2.copy(kv.point);
       this.p2.sub(p);
       if (radius >= this.p2.length()) {
-        yield starPosition;
+        yield kv.value;
       }
     }
   }
@@ -79,33 +85,33 @@ export class AABB {
   }
 }
 
-export class PointSetOctoTree implements PointSet {
-  private points: THREE.Vector3[] = [];
-  private children: PointSetOctoTree[] = null;
+export class PointMapOctoTree<T> implements PointMap<T> {
+  private points: PointKey<T>[] = [];
+  private children: PointMapOctoTree<T>[] = null;
   private bounds: AABB;
 
   constructor(center: THREE.Vector3, radius: number) {
     this.bounds = new AABB(center, radius);
   }
 
-  add(p: THREE.Vector3) {
-    console.assert(this.insert(p));
+  add(p: THREE.Vector3, value: T) {
+    console.assert(this.insert(p, value));
   }
 
   private p1 = new THREE.Vector3;
-  private insert(p: THREE.Vector3): boolean {
+  private insert(p: THREE.Vector3, value: T): boolean {
     if (!this.bounds.contains(p)) {
       return false;
     }
     if (this.points) {
-      this.points.push(p);
+      this.points.push(new PointKey(p, value));
       if (this.points.length > 64) {
         this.split();
       }
       return true;
     } else {
       for (const c of this.children) {
-        if (c.insert(p)) {
+        if (c.insert(p, value)) {
           return true;
         }
       }
@@ -118,11 +124,11 @@ export class PointSetOctoTree implements PointSet {
     const childBoxes = this.bounds.split();
     this.children = [];
     for (const c of childBoxes) {
-      this.children.push(new PointSetOctoTree(c.center, c.radius));
+      this.children.push(new PointMapOctoTree(c.center, c.radius));
     }
-    for (const p of this.points) {
+    for (const kv of this.points) {
       for (const c of this.children) {
-        if (c.insert(p)) {
+        if (c.insert(kv.point, kv.value)) {
           break;
         }
       }
@@ -140,10 +146,12 @@ export class PointSetOctoTree implements PointSet {
     }
   }
 
-  private *getAllWithinAABB(aabb: AABB): Iterable<THREE.Vector3> {
+  private *getAllWithinAABB(aabb: AABB): Iterable<PointKey<T>> {
     if (this.bounds.intersects(aabb)) {
       if (this.points) {
-        yield* this.points;
+        for (const kv of this.points) {
+          yield kv;
+        }
       } else {
         for (const child of this.children) {
           yield* child.getAllWithinAABB(aabb);
@@ -153,13 +161,13 @@ export class PointSetOctoTree implements PointSet {
   }
 
   *getAllWithinRadius(p: THREE.Vector3, radius: number):
-    Iterable<THREE.Vector3> {
+    Iterable<T> {
     const aabb = new AABB(p, radius);
-    for (const pp of this.getAllWithinAABB(aabb)) {
-      this.p1.copy(pp);
+    for (const kv of this.getAllWithinAABB(aabb)) {
+      this.p1.copy(kv.point);
       this.p1.sub(p);
       if (this.p1.length() <= radius) {
-        yield pp;
+        yield kv.value;
       }
     }
   }

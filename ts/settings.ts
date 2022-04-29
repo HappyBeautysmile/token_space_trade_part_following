@@ -22,7 +22,7 @@ export class S {
 
   static {
     S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-    S.setDefault('sr', 1e9, 'Starfield radius');
+    S.setDefault('sr', 1e5, 'Starfield radius');
   }
 
   public static float(name: string): number {
