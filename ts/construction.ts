@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Codec } from "./codec";
 import { FileIO } from "./fileIO";
 
 export class Construction {
@@ -9,8 +10,10 @@ export class Construction {
 
   public save() {
     console.log('Saving...');
-    const o = { 'size': this.allObjects.size };
-    o['objects'] = FileIO.mapToObject(this.allObjects);
+    //const o = { 'size': this.allObjects.size };
+    //o['objects'] = FileIO.mapToObject(this.allObjects);
+    let c = new Codec();
+    const o = c.toSaveFormat(this.allObjects)
     FileIO.saveObject(o, "what_you_built.json");
   }
 

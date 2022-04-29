@@ -128,7 +128,7 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
     this.universeGroup.add(Assets.models["ship"]);
-    Debug.log("different hand fix.");
+    Debug.log("added Codec class");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

@@ -110,6 +110,7 @@ export class Assets extends THREE.Object3D {
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             //this.assets.replaceMaterial(m, newMat);
             m.scale.set(1, 1, 1);
+            m.userData = { "modelName": modelName };
             this.blocks.push(m);
             //this.scene.add(m);
             //this.universeGroup.add(m);
