@@ -320,7 +320,7 @@ void main() {
 }`));
 
       this.snippets.push(new CodeSnippet('fragment', `
-// Lava Fragment Shader
+// Star Fragment Shader
 
 uniform float time;
 varying vec3 vColor;
@@ -328,13 +328,21 @@ varying vec3 vWorldPosition;
 varying vec3 vNormal;
 varying vec3 vIncident;
 
-void main() {
-  vec3 x = vWorldPosition; 
+vec4 brown(in vec3 x) {
   vec4 c1 = openSimplex2_Conventional(x);
   vec4 c2 = 0.5 * openSimplex2_Conventional(x * 2.0);
-  vec4 c3 = 0.1 * openSimplex2_Conventional(x * 3.0);
+  vec4 c3 = 0.3 * openSimplex2_Conventional(x * 4.0);
+  return(c1 + c2 + c3);
+}
 
-  vec4 cTotal = c1 + c2 + c3 * 0.2 + 0.5;
+vec4 orange(in vec3 x) {
+  vec4 b = brown(x * 0.5) * 0.5;
+  b = brown(b.yxz * 0.5 + sin(time * 0.1)) * 0.5;
+  return(brown(vec3(b.xy + cos(time * 0.1), sin(time * 0.5)) * 0.1));
+}
+
+void main() {
+  vec4 cTotal = clamp((orange(vWorldPosition) * 0.1) + 0.5, 0.0, 1.0);
 
   mat3 m = mat3(
       1.0, 0.5, 0.01, 
@@ -342,8 +350,13 @@ void main() {
       1.0, 0.4, 0.03);
   vec3 crgb = m * cTotal.rgb;
 
-  gl_FragColor = vec4(crgb, 1.0);
-}`));
+  float intensity = dot(-vIncident, vNormal);
+
+  float whiteness = clamp(
+    (intensity - 0.5) * 10.0 + length(crgb), 0.0, 1.0);
+  vec3 white = vec3(1.0, 1.0, 1.0) * whiteness;
+  gl_FragColor = vec4(white + (crgb * intensity), 1.0);
+}}`));
 
       this.snippets.push(new CodeSnippet('fragment', `
 // Shiny Fragment Shader
