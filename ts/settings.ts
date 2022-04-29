@@ -22,7 +22,8 @@ export class S {
 
   static {
     S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-    S.setDefault('sr', 1e5, 'Starfield radius');
+    S.setDefault('sr', 1e8, 'Starfield radius');
+    S.setDefault('ns', 20000, 'Number of stars in the VLU');
   }
 
   public static float(name: string): number {

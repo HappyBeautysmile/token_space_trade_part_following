@@ -8,11 +8,7 @@
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -161,11 +157,7 @@ exports.Assets = Assets;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -377,11 +369,7 @@ exports.Construction = Construction;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -483,11 +471,7 @@ exports.FileIO = FileIO;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -583,11 +567,7 @@ exports.Game = Game;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -791,11 +771,7 @@ exports.Hand = Hand;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1178,11 +1154,7 @@ exports.MaterialExplorer = MaterialExplorer;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1372,11 +1344,7 @@ exports.PaletteTest = PaletteTest;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1465,11 +1433,7 @@ exports.Place = Place;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1672,7 +1636,8 @@ class S {
     }
     static {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-        S.setDefault('sr', 1e5, 'Starfield radius');
+        S.setDefault('sr', 1e8, 'Starfield radius');
+        S.setDefault('ns', 20000, 'Number of stars in the VLU');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -1720,11 +1685,7 @@ exports.Tick = Tick;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1750,7 +1711,7 @@ const zoom_1 = __webpack_require__(950);
 class StarSystem extends THREE.Object3D {
     constructor() {
         super();
-        this.add(new THREE.Mesh(new THREE.BoxBufferGeometry(1e1, 1e1, 1e1), new THREE.MeshBasicMaterial({ color: '#fff' })));
+        this.add(new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1e3, 2), new THREE.MeshBasicMaterial({ color: '#fff' })));
     }
 }
 // A collection of StarSystems.  We only instantiate the StarSystem object
@@ -1774,41 +1735,40 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.xr = xr;
         this.keysDown = keysDown;
         this.addStars();
-        this.grips[0].addEventListener('selectstart', () => {
-            this.leftStart = new THREE.Vector3();
-            this.leftStart.copy(this.grips[0].position);
-            this.startMatrix.copy(this.matrix);
-            this.startMatrix.invert();
-            this.leftStart.applyMatrix4(this.startMatrix);
-            ;
-            if (this.rightStart) {
-                this.rightStart.copy(this.grips[1].position);
-                this.rightStart.applyMatrix4(this.startMatrix);
-            }
-        });
-        this.grips[1].addEventListener('selectstart', () => {
-            this.rightStart = new THREE.Vector3();
-            this.rightStart.copy(this.grips[1].position);
-            this.startMatrix.invert();
-            this.rightStart.applyMatrix4(this.startMatrix);
-            ;
-            if (this.leftStart) {
-                this.leftStart.copy(this.grips[0].position);
-                this.leftStart.applyMatrix4(this.startMatrix);
-            }
-        });
-        this.grips[0].addEventListener('selectend', () => {
-            if (this.leftStart && this.rightStart) {
-                this.zoomEnd();
-            }
-            this.leftStart = null;
-        });
-        this.grips[1].addEventListener('selectend', () => {
-            if (this.leftStart && this.rightStart) {
-                this.zoomEnd();
-            }
-            this.rightStart = null;
-        });
+        //   this.grips[0].addEventListener('selectstart', () => {
+        //     this.leftStart = new THREE.Vector3();
+        //     this.leftStart.copy(this.grips[0].position);
+        //     this.startMatrix.copy(this.matrix);
+        //     this.startMatrix.invert();
+        //     this.leftStart.applyMatrix4(this.startMatrix);;
+        //     if (this.rightStart) {
+        //       this.rightStart.copy(this.grips[1].position);
+        //       this.rightStart.applyMatrix4(this.startMatrix);
+        //     }
+        //   });
+        //   this.grips[1].addEventListener('selectstart', () => {
+        //     this.rightStart = new THREE.Vector3();
+        //     this.rightStart.copy(this.grips[1].position);
+        //     this.startMatrix.invert();
+        //     this.rightStart.applyMatrix4(this.startMatrix);;
+        //     if (this.leftStart) {
+        //       this.leftStart.copy(this.grips[0].position);
+        //       this.leftStart.applyMatrix4(this.startMatrix);
+        //     }
+        //   });
+        //   this.grips[0].addEventListener('selectend', () => {
+        //     if (this.leftStart && this.rightStart) {
+        //       this.zoomEnd();
+        //     }
+        //     this.leftStart = null;
+        //   });
+        //   this.grips[1].addEventListener('selectend', () => {
+        //     if (this.leftStart && this.rightStart) {
+        //       this.zoomEnd();
+        //     }
+        //     this.rightStart = null;
+        //   });
+        this.position.set(0, 0, -1e6);
     }
     leftCurrent = new THREE.Vector3();
     rightCurrent = new THREE.Vector3();
@@ -1834,11 +1794,23 @@ class VeryLargeUniverse extends THREE.Object3D {
     zoomEnd() {
         this.oldZoom = null;
     }
+    gaussian(sd) {
+        const n = 6;
+        let x = 0;
+        for (let i = 0; i < n; ++i) {
+            x += Math.random();
+            x -= Math.random();
+        }
+        return sd * (x / Math.sqrt(n));
+    }
     addStars() {
         const positions = [];
         const radius = settings_1.S.float('sr');
-        for (let i = 0; i < 100000; ++i) {
-            const v = new THREE.Vector3(Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius));
+        for (let i = 0; i < settings_1.S.float('ns'); ++i) {
+            const orbitalRadius = this.gaussian(radius);
+            const orbitalHeight = this.gaussian(radius / 10);
+            const theta = Math.random() * Math.PI * 2;
+            const v = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
             this.starPositions.add(v, v);
             positions.push(v.x, v.y, v.z);
         }
@@ -1854,7 +1826,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         uniform float sizeScale;
         varying vec3 vColor;
         void main() {
-          vColor = vec3(0.5, 1.0, 1.0);
+          vColor = vec3(1.0, 1.0, 1.0);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           float distance = length(mvPosition.xyz);
           if (distance > 1000.0) {
@@ -1905,15 +1877,20 @@ class VeryLargeUniverse extends THREE.Object3D {
     m2 = new THREE.Matrix4();
     m3 = new THREE.Matrix4();
     zoomAroundWorldOrigin(zoomFactor) {
-        this.p1.set(0, 0, 0);
-        this.worldToLocal(this.p1);
-        this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
-        this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
-        this.m3.makeTranslation(this.p1.x, this.p1.y, this.p1.z);
-        this.matrix.multiply(this.m3);
-        this.matrix.multiply(this.m2);
-        this.matrix.multiply(this.m1);
-        this.matrix.decompose(this.position, this.quaternion, this.scale);
+        this.position.multiplyScalar(zoomFactor);
+        this.scale.multiplyScalar(zoomFactor);
+        // this.p1.set(0, 0, 0);
+        //    this.worldToLocal(this.p1);
+        // this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
+        // this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
+        // this.m3.makeTranslation(
+        //   this.p1.x * zoomFactor,
+        //   this.p1.y * zoomFactor,
+        //   this.p1.z * zoomFactor);
+        // this.matrix.multiply(this.m3);
+        // this.matrix.multiply(this.m2);
+        // this.matrix.multiply(this.m1);
+        // this.matrix.decompose(this.position, this.quaternion, this.scale);
     }
     tick(t) {
         if (this.rightStart && this.leftStart) {
@@ -1929,6 +1906,13 @@ class VeryLargeUniverse extends THREE.Object3D {
             || this.keysDown.has('Minus')) {
             this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
         }
+        if ((leftButtons[0] && rightButtons[0]) || // Trigger
+            this.keysDown.has('ArrowDown')) {
+            this.camera.getWorldDirection(this.direction);
+            this.direction.multiplyScalar(-t.deltaS * 5.0);
+            this.position.sub(this.direction);
+            this.updateMatrix();
+        }
         if ((leftButtons[1] && rightButtons[1]) || // Squeeze
             this.keysDown.has('ArrowUp')) {
             this.camera.getWorldDirection(this.direction);
@@ -1938,7 +1922,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         }
         this.camera.getWorldPosition(this.p1);
         this.worldToLocal(this.p1);
-        for (const closePoint of this.starPositions.getAllWithinRadius(this.p1, 1e3)) {
+        for (const closePoint of this.starPositions.getAllWithinRadius(this.p1, 1e5)) {
             if (!this.currentStarMap.has(closePoint)) {
                 const starSystem = new StarSystem();
                 starSystem.position.copy(closePoint);
@@ -1971,11 +1955,7 @@ exports.VeryLargeUniverse = VeryLargeUniverse;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];

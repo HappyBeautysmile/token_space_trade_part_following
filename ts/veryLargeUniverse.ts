@@ -8,7 +8,7 @@ class StarSystem extends THREE.Object3D {
   constructor() {
     super();
     this.add(new THREE.Mesh(
-      new THREE.BoxBufferGeometry(1e1, 1e1, 1e1),
+      new THREE.IcosahedronBufferGeometry(1e3, 2),
       new THREE.MeshBasicMaterial({ color: '#fff' })
     ));
   }
@@ -33,40 +33,42 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     super();
     this.addStars();
 
-    this.grips[0].addEventListener('selectstart', () => {
-      this.leftStart = new THREE.Vector3();
-      this.leftStart.copy(this.grips[0].position);
-      this.startMatrix.copy(this.matrix);
-      this.startMatrix.invert();
-      this.leftStart.applyMatrix4(this.startMatrix);;
-      if (this.rightStart) {
-        this.rightStart.copy(this.grips[1].position);
-        this.rightStart.applyMatrix4(this.startMatrix);
-      }
-    });
-    this.grips[1].addEventListener('selectstart', () => {
-      this.rightStart = new THREE.Vector3();
-      this.rightStart.copy(this.grips[1].position);
-      this.startMatrix.invert();
-      this.rightStart.applyMatrix4(this.startMatrix);;
-      if (this.leftStart) {
-        this.leftStart.copy(this.grips[0].position);
-        this.leftStart.applyMatrix4(this.startMatrix);
-      }
-    });
+    //   this.grips[0].addEventListener('selectstart', () => {
+    //     this.leftStart = new THREE.Vector3();
+    //     this.leftStart.copy(this.grips[0].position);
+    //     this.startMatrix.copy(this.matrix);
+    //     this.startMatrix.invert();
+    //     this.leftStart.applyMatrix4(this.startMatrix);;
+    //     if (this.rightStart) {
+    //       this.rightStart.copy(this.grips[1].position);
+    //       this.rightStart.applyMatrix4(this.startMatrix);
+    //     }
+    //   });
+    //   this.grips[1].addEventListener('selectstart', () => {
+    //     this.rightStart = new THREE.Vector3();
+    //     this.rightStart.copy(this.grips[1].position);
+    //     this.startMatrix.invert();
+    //     this.rightStart.applyMatrix4(this.startMatrix);;
+    //     if (this.leftStart) {
+    //       this.leftStart.copy(this.grips[0].position);
+    //       this.leftStart.applyMatrix4(this.startMatrix);
+    //     }
+    //   });
 
-    this.grips[0].addEventListener('selectend', () => {
-      if (this.leftStart && this.rightStart) {
-        this.zoomEnd();
-      }
-      this.leftStart = null;
-    });
-    this.grips[1].addEventListener('selectend', () => {
-      if (this.leftStart && this.rightStart) {
-        this.zoomEnd();
-      }
-      this.rightStart = null;
-    });
+    //   this.grips[0].addEventListener('selectend', () => {
+    //     if (this.leftStart && this.rightStart) {
+    //       this.zoomEnd();
+    //     }
+    //     this.leftStart = null;
+    //   });
+    //   this.grips[1].addEventListener('selectend', () => {
+    //     if (this.leftStart && this.rightStart) {
+    //       this.zoomEnd();
+    //     }
+    //     this.rightStart = null;
+    //   });
+
+    this.position.set(0, 0, -1e6);
   }
 
   private leftCurrent = new THREE.Vector3();
@@ -97,14 +99,27 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     this.oldZoom = null;
   }
 
+  private gaussian(sd: number): number {
+    const n = 6;
+    let x = 0;
+    for (let i = 0; i < n; ++i) {
+      x += Math.random();
+      x -= Math.random();
+    }
+    return sd * (x / Math.sqrt(n));
+  }
+
   private addStars() {
     const positions: number[] = [];
     const radius = S.float('sr');
-    for (let i = 0; i < 100000; ++i) {
+    for (let i = 0; i < S.float('ns'); ++i) {
+      const orbitalRadius = this.gaussian(radius);
+      const orbitalHeight = this.gaussian(radius / 10);
+      const theta = Math.random() * Math.PI * 2;
       const v = new THREE.Vector3(
-        Math.round((Math.random() - 0.5) * radius),
-        Math.round((Math.random() - 0.5) * radius),
-        Math.round((Math.random() - 0.5) * radius));
+        orbitalRadius * Math.cos(theta),
+        orbitalHeight,
+        orbitalRadius * Math.sin(theta));
       this.starPositions.add(v, v);
       positions.push(v.x, v.y, v.z);
     }
@@ -122,7 +137,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
         uniform float sizeScale;
         varying vec3 vColor;
         void main() {
-          vColor = vec3(0.5, 1.0, 1.0);
+          vColor = vec3(1.0, 1.0, 1.0);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           float distance = length(mvPosition.xyz);
           if (distance > 1000.0) {
@@ -176,15 +191,20 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   private m2 = new THREE.Matrix4();
   private m3 = new THREE.Matrix4();
   zoomAroundWorldOrigin(zoomFactor: number) {
-    this.p1.set(0, 0, 0);
-    this.worldToLocal(this.p1);
-    this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
-    this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
-    this.m3.makeTranslation(this.p1.x, this.p1.y, this.p1.z);
-    this.matrix.multiply(this.m3);
-    this.matrix.multiply(this.m2);
-    this.matrix.multiply(this.m1);
-    this.matrix.decompose(this.position, this.quaternion, this.scale);
+    this.position.multiplyScalar(zoomFactor);
+    this.scale.multiplyScalar(zoomFactor);
+    // this.p1.set(0, 0, 0);
+    //    this.worldToLocal(this.p1);
+    // this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
+    // this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
+    // this.m3.makeTranslation(
+    //   this.p1.x * zoomFactor,
+    //   this.p1.y * zoomFactor,
+    //   this.p1.z * zoomFactor);
+    // this.matrix.multiply(this.m3);
+    // this.matrix.multiply(this.m2);
+    // this.matrix.multiply(this.m1);
+    // this.matrix.decompose(this.position, this.quaternion, this.scale);
   }
 
   tick(t: Tick) {
@@ -204,6 +224,14 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
     }
 
+    if ((leftButtons[0] && rightButtons[0]) ||  // Trigger
+      this.keysDown.has('ArrowDown')) {
+      this.camera.getWorldDirection(this.direction);
+      this.direction.multiplyScalar(-t.deltaS * 5.0);
+      this.position.sub(this.direction);
+      this.updateMatrix();
+    }
+
     if ((leftButtons[1] && rightButtons[1]) ||  // Squeeze
       this.keysDown.has('ArrowUp')) {
       this.camera.getWorldDirection(this.direction);
@@ -215,7 +243,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     this.camera.getWorldPosition(this.p1);
     this.worldToLocal(this.p1);
     for (const closePoint of this.starPositions.getAllWithinRadius(
-      this.p1, 1e3)) {
+      this.p1, 1e5)) {
       if (!this.currentStarMap.has(closePoint)) {
         const starSystem = new StarSystem();
         starSystem.position.copy(closePoint);
