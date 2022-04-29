@@ -33,19 +33,19 @@ export class Hand extends THREE.Object3D {
     else {
       Debug.log("ERROR: grip or this not defined.")
     }
-    let source: THREE.XRInputSource = null;
-    const session = this.xr.getSession();
-    if (session) {
-      if (session.inputSources && session.inputSources.length > this.index) {
-        source = session.inputSources[this.index];
-      }
-    }
-    if (source.handedness == "left") {
-      this.leftHand = true;
-    }
-    else {
-      this.leftHand = false;
-    }
+    // let source: THREE.XRInputSource = null;
+    // const session = this.xr.getSession();
+    // if (session) {
+    //   if (session.inputSources && session.inputSources.length > this.index) {
+    //     source = session.inputSources[this.index];
+    //   }
+    // }
+    // if (source.handedness == "left") {
+    //   this.leftHand = true;
+    // }
+    // else {
+    //   this.leftHand = false;
+    // }
 
     this.setCube(initialObject);
     this.initialize();

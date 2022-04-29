@@ -120,7 +120,7 @@ class Assets extends THREE.Object3D {
         return Assets.materials[Assets.materialIndex];
     }
     static async loadAllModels() {
-        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue'];
+        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
             const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
@@ -297,7 +297,7 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         this.universeGroup.add(assets_1.Assets.models["ship"]);
-        debug_1.Debug.log("fix left and right hand?");
+        debug_1.Debug.log("back out hand fix.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -641,19 +641,19 @@ class Hand extends THREE.Object3D {
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
         }
-        let source = null;
-        const session = this.xr.getSession();
-        if (session) {
-            if (session.inputSources && session.inputSources.length > this.index) {
-                source = session.inputSources[this.index];
-            }
-        }
-        if (source.handedness == "left") {
-            this.leftHand = true;
-        }
-        else {
-            this.leftHand = false;
-        }
+        // let source: THREE.XRInputSource = null;
+        // const session = this.xr.getSession();
+        // if (session) {
+        //   if (session.inputSources && session.inputSources.length > this.index) {
+        //     source = session.inputSources[this.index];
+        //   }
+        // }
+        // if (source.handedness == "left") {
+        //   this.leftHand = true;
+        // }
+        // else {
+        //   this.leftHand = false;
+        // }
         this.setCube(initialObject);
         this.initialize();
     }
@@ -1466,7 +1466,7 @@ exports.Place = Place;
 
 /***/ }),
 
-/***/ 147:
+/***/ 228:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1494,87 +1494,118 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PointSetOctoTree = exports.PointSetLinear = void 0;
+exports.PointMapOctoTree = exports.AABB = exports.PointMapLinear = void 0;
 const THREE = __importStar(__webpack_require__(232));
-class PointSetLinear {
-    radius;
-    points = [];
-    constructor(radius) {
-        this.radius = radius;
-    }
-    add(p) {
-        this.points.push(p);
-    }
-    elements() {
-        return this.points;
-    }
-    p2 = new THREE.Vector3();
-    closest = new THREE.Vector3();
-    getClosest(p) {
-        let closestDistance = 2 * this.radius;
-        for (const starPosition of this.points) {
-            this.p2.copy(starPosition);
-            this.p2.sub(p);
-            if (closestDistance > this.p2.length()) {
-                closestDistance = this.p2.length();
-                this.closest.copy(starPosition);
-            }
-        }
-        return this.closest;
+class PointKey {
+    point;
+    value;
+    constructor(point, value) {
+        this.point = point;
+        this.value = value;
     }
 }
-exports.PointSetLinear = PointSetLinear;
-class PointSetOctoTree {
+class PointMapLinear {
+    points = [];
+    constructor() {
+    }
+    add(p, value) {
+        this.points.push(new PointKey(p, value));
+    }
+    *elements() {
+        for (const kv of this.points) {
+            yield kv.value;
+        }
+    }
+    p2 = new THREE.Vector3();
+    *getAllWithinRadius(p, radius) {
+        for (const kv of this.points) {
+            this.p2.copy(kv.point);
+            this.p2.sub(p);
+            if (radius >= this.p2.length()) {
+                yield kv.value;
+            }
+        }
+    }
+}
+exports.PointMapLinear = PointMapLinear;
+class AABB {
+    center;
     radius;
+    // Represents an Axis Aligned Bounding Box cube.
+    constructor(center, radius) {
+        this.center = center;
+        this.radius = radius;
+    }
+    p = new THREE.Vector3();
+    intersects(other) {
+        this.p.copy(other.center);
+        this.p.sub(this.center);
+        const distance = Math.max(Math.abs(this.p.x), Math.abs(this.p.y), Math.abs(this.p.z));
+        return distance <= this.radius + other.radius;
+    }
+    contains(point) {
+        this.p.copy(point);
+        this.p.sub(this.center);
+        const distance = Math.max(Math.abs(this.p.x), Math.abs(this.p.y), Math.abs(this.p.z));
+        return distance <= this.radius;
+    }
+    split() {
+        const halfRadius = this.radius / 2;
+        const children = [];
+        for (const cx of [-halfRadius, halfRadius]) {
+            for (const cy of [-halfRadius, halfRadius]) {
+                for (const cz of [-halfRadius, halfRadius]) {
+                    const aabb = new AABB(new THREE.Vector3(cx + this.center.x, cy + this.center.y, cz + this.center.z), halfRadius);
+                    // console.log(`AABB: ${JSON.stringify(aabb)}`);
+                    children.push(aabb);
+                }
+            }
+        }
+        return children;
+    }
+}
+exports.AABB = AABB;
+class PointMapOctoTree {
     points = [];
     children = null;
-    center = new THREE.Vector3();
+    bounds;
     constructor(center, radius) {
-        this.radius = radius;
-        this.center.copy(center);
+        this.bounds = new AABB(center, radius);
     }
-    add(p) {
-        console.assert(this.insert(p));
+    add(p, value) {
+        console.assert(this.insert(p, value));
     }
     p1 = new THREE.Vector3;
-    insert(p) {
-        // console.log(`Insert ${JSON.stringify(p)} into ${this.center}`);
-        this.p1.copy(this.center);
-        this.p1.sub(p);
-        const r = Math.max(Math.abs(this.p1.x), Math.abs(this.p1.y), Math.abs(this.p1.z));
-        if (r > this.radius) {
+    insert(p, value) {
+        if (!this.bounds.contains(p)) {
             return false;
         }
         if (this.points) {
-            this.points.push(p);
-            if (this.points.length > 2) {
+            this.points.push(new PointKey(p, value));
+            if (this.points.length > 64) {
                 this.split();
             }
             return true;
         }
         else {
             for (const c of this.children) {
-                if (c.insert(p)) {
+                if (c.insert(p, value)) {
                     return true;
                 }
             }
-            console.log(`${JSON.stringify(p)} is not in ${JSON.stringify(this.center)}`);
+            console.log(`${JSON.stringify(p)} is not in ${JSON.stringify(this.bounds)}`);
             console.log(`Failed to insert.`);
         }
     }
     split() {
-        const halfRadius = this.radius / 2;
+        const childBoxes = this.bounds.split();
         this.children = [];
-        for (const cx of [-halfRadius, halfRadius]) {
-            for (const cy of [-halfRadius, halfRadius]) {
-                for (const cz of [-halfRadius, halfRadius]) {
-                    this.children.push(new PointSetOctoTree(new THREE.Vector3(cx, cy, cz), halfRadius));
-                }
-            }
+        for (const c of childBoxes) {
+            this.children.push(new PointMapOctoTree(c.center, c.radius));
         }
-        for (const p of this.points) {
+        for (const kv of this.points) {
             for (const c of this.children) {
-                if (c.insert(p)) {
+                if (c.insert(kv.point, kv.value)) {
                     break;
                 }
             }
@@ -1591,42 +1622,33 @@ class PointSetOctoTree {
             }
         }
     }
-    p2 = new THREE.Vector3();
-    closest = new THREE.Vector3();
-    getClosestPoint(p) {
-        let closestDistance = this.radius * 3;
-        for (const starPosition of this.points) {
-            this.p2.copy(starPosition);
-            this.p2.sub(p);
-            if (closestDistance > this.p2.length()) {
-                closestDistance = this.p2.length();
-                this.closest.copy(starPosition);
-            }
-        }
-        return this.closest;
-    }
-    getClosest(p) {
-        if (this.points) {
-            return this.getClosestPoint(p);
-        }
-        else {
-            let closestDistance = this.radius * 4;
-            let closestOcto;
-            for (const child of this.children) {
-                this.p2.copy(child.center);
-                this.p2.sub(p);
-                if (closestDistance > this.p2.length()) {
-                    closestOcto = child;
-                    closestDistance = this.p2.length();
+    *getAllWithinAABB(aabb) {
+        if (this.bounds.intersects(aabb)) {
+            if (this.points) {
+                for (const kv of this.points) {
+                    yield kv;
                 }
             }
-            console.log(`Closest distance: ${closestDistance}`);
-            return closestOcto.getClosest(p);
+            else {
+                for (const child of this.children) {
+                    yield* child.getAllWithinAABB(aabb);
+                }
+            }
+        }
+    }
+    *getAllWithinRadius(p, radius) {
+        const aabb = new AABB(p, radius);
+        for (const kv of this.getAllWithinAABB(aabb)) {
+            this.p1.copy(kv.point);
+            this.p1.sub(p);
+            if (this.p1.length() <= radius) {
+                yield kv.value;
+            }
         }
     }
 }
-exports.PointSetOctoTree = PointSetOctoTree;
-//# sourceMappingURL=pointSet.js.map
+exports.PointMapOctoTree = PointMapOctoTree;
+//# sourceMappingURL=pointMap.js.map
 
 /***/ }),
 
@@ -1657,7 +1679,7 @@ class S {
     }
     static {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-        S.setDefault('sr', 1e9, 'Starfield radius');
+        S.setDefault('sr', 1e5, 'Starfield radius');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -1729,7 +1751,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VeryLargeUniverse = void 0;
 const THREE = __importStar(__webpack_require__(232));
-const pointSet_1 = __webpack_require__(147);
+const pointMap_1 = __webpack_require__(228);
 const settings_1 = __webpack_require__(451);
 const zoom_1 = __webpack_require__(950);
 class StarSystem extends THREE.Object3D {
@@ -1745,9 +1767,8 @@ class VeryLargeUniverse extends THREE.Object3D {
     camera;
     xr;
     keysDown;
-    currentStarPosition = new THREE.Vector3();
-    currentStar = null;
-    starPositions = new pointSet_1.PointSetLinear(1e10);
+    currentStarMap = new Map();
+    starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     leftStart;
     rightStart;
     startMatrix = new THREE.Matrix4();
@@ -1825,7 +1846,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         const radius = settings_1.S.float('sr');
         for (let i = 0; i < 100000; ++i) {
             const v = new THREE.Vector3(Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius));
-            this.starPositions.add(v);
+            this.starPositions.add(v, v);
             positions.push(v.x, v.y, v.z);
         }
         const geometry = new THREE.BufferGeometry();
@@ -1868,11 +1889,11 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.add(points);
     }
     p1 = new THREE.Vector3();
-    findClosestStar() {
-        this.camera.getWorldPosition(this.p1);
-        this.worldToLocal(this.p1);
-        return this.starPositions.getClosest(this.p1);
-    }
+    // private findClosestStar(): THREE.Vector3 {
+    //   this.camera.getWorldPosition(this.p1);
+    //   this.worldToLocal(this.p1);
+    //   return this.starPositions.getClosest(this.p1);
+    // }
     getButtonsFromGrip(index) {
         let source = null;
         const session = this.xr.getSession();
@@ -1922,18 +1943,28 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.position.sub(this.direction);
             this.updateMatrix();
         }
-        const closest = this.findClosestStar();
-        if (closest.x != this.currentStarPosition.x ||
-            closest.y != this.currentStarPosition.y ||
-            closest.z != this.currentStarPosition.z) {
-            this.currentStarPosition.copy(closest);
-            if (this.currentStar) {
-                this.remove(this.currentStar);
+        this.camera.getWorldPosition(this.p1);
+        this.worldToLocal(this.p1);
+        for (const closePoint of this.starPositions.getAllWithinRadius(this.p1, 1e3)) {
+            if (!this.currentStarMap.has(closePoint)) {
+                const starSystem = new StarSystem();
+                starSystem.position.copy(closePoint);
+                this.currentStarMap.set(closePoint, starSystem);
+                this.add(starSystem);
             }
-            this.currentStar = new StarSystem();
-            this.add(this.currentStar);
-            this.currentStar.position.copy(this.currentStarPosition);
         }
+        // const closest = this.findClosestStar();
+        // if (closest.x != this.currentStarPosition.x ||
+        //   closest.y != this.currentStarPosition.y ||
+        //   closest.z != this.currentStarPosition.z) {
+        //   this.currentStarPosition.copy(closest);
+        //   if (this.currentStar) {
+        //     this.remove(this.currentStar);
+        //   }
+        //   this.currentStar = new StarSystem();
+        //   this.add(this.currentStar);
+        //   this.currentStar.position.copy(this.currentStarPosition);
+        // }
     }
 }
 exports.VeryLargeUniverse = VeryLargeUniverse;
