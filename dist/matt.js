@@ -1643,7 +1643,8 @@ class S {
     }
     static {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-        S.setDefault('sr', 1e5, 'Starfield radius');
+        S.setDefault('sr', 1e8, 'Starfield radius');
+        S.setDefault('ns', 20000, 'Number of stars in the VLU');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -1717,7 +1718,7 @@ const zoom_1 = __webpack_require__(950);
 class StarSystem extends THREE.Object3D {
     constructor() {
         super();
-        this.add(new THREE.Mesh(new THREE.BoxBufferGeometry(1e1, 1e1, 1e1), new THREE.MeshBasicMaterial({ color: '#fff' })));
+        this.add(new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1e3, 2), new THREE.MeshBasicMaterial({ color: '#fff' })));
     }
 }
 // A collection of StarSystems.  We only instantiate the StarSystem object
@@ -1776,6 +1777,7 @@ class VeryLargeUniverse extends THREE.Object3D {
             }
             this.rightStart = null;
         });
+        this.position.set(0, 0, -1e6);
     }
     leftCurrent = new THREE.Vector3();
     rightCurrent = new THREE.Vector3();
@@ -1801,11 +1803,23 @@ class VeryLargeUniverse extends THREE.Object3D {
     zoomEnd() {
         this.oldZoom = null;
     }
+    gaussian(sd) {
+        const n = 6;
+        let x = 0;
+        for (let i = 0; i < n; ++i) {
+            x += Math.random();
+            x -= Math.random();
+        }
+        return sd * (x / Math.sqrt(n));
+    }
     addStars() {
         const positions = [];
         const radius = settings_1.S.float('sr');
-        for (let i = 0; i < 100000; ++i) {
-            const v = new THREE.Vector3(Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius), Math.round((Math.random() - 0.5) * radius));
+        for (let i = 0; i < settings_1.S.float('ns'); ++i) {
+            const orbitalRadius = this.gaussian(radius);
+            const orbitalHeight = this.gaussian(radius / 10);
+            const theta = Math.random() * Math.PI * 2;
+            const v = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
             this.starPositions.add(v, v);
             positions.push(v.x, v.y, v.z);
         }
@@ -1877,9 +1891,9 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
         this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
         this.m3.makeTranslation(this.p1.x, this.p1.y, this.p1.z);
-        this.matrix.multiply(this.m3);
-        this.matrix.multiply(this.m2);
         this.matrix.multiply(this.m1);
+        this.matrix.multiply(this.m2);
+        this.matrix.multiply(this.m3);
         this.matrix.decompose(this.position, this.quaternion, this.scale);
     }
     tick(t) {
@@ -1905,7 +1919,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         }
         this.camera.getWorldPosition(this.p1);
         this.worldToLocal(this.p1);
-        for (const closePoint of this.starPositions.getAllWithinRadius(this.p1, 1e3)) {
+        for (const closePoint of this.starPositions.getAllWithinRadius(this.p1, 1e5)) {
             if (!this.currentStarMap.has(closePoint)) {
                 const starSystem = new StarSystem();
                 starSystem.position.copy(closePoint);
