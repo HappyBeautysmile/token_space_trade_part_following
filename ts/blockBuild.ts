@@ -34,6 +34,11 @@ export class BlockBuild {
 
   private async initialize() {
     this.setScene();
+    // NOTE: if you want the JSON to be loaded before execution reaches
+    // this point, you will need to put "await" before the previous line.
+    // Read the Debug.log statements carefully to check that the order
+    // makes sense.
+    Debug.log('setScene complete');
     await Assets.LoadAllModels();
     Debug.log("all models loaded.");
 
@@ -87,7 +92,7 @@ export class BlockBuild {
     }
   }
 
-  private setScene() {
+  private async setScene() {
     Assets.init();
     document.body.innerHTML = "";
     this.scene.add(this.playerGroup);
@@ -133,8 +138,6 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
 
-    FileIO.httpGetAsync("./test.json", console.log);
-
     Debug.log("texture save works?");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -153,6 +156,11 @@ export class BlockBuild {
       this.renderer.render(this.scene, this.camera);
     });
     document.body.appendChild(VRButton.createButton(this.renderer));
+
+    Debug.log('loading test.json...')
+    const loadedObject = await FileIO.httpGetAsync("./test.json");
+    console.log(JSON.stringify(loadedObject, null, 2));
+    Debug.log('test.json loaded.')
   }
 
   getGrips() {

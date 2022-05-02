@@ -11,14 +11,12 @@ export class FileIO {
     a.click();
   }
 
-  static httpGetAsync(theUrl: string, callback) {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function () {
-      if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-        callback(xmlHttp.responseText);
-    }
-    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-    xmlHttp.send(null);
+  static async httpGetAsync(theUrl: string): Promise<Object> {
+    return new Promise<Object>(async (resolve) => {
+      const response = await fetch(theUrl);
+      const jso = await response.json();
+      resolve(jso);
+    });
   }
 
   static mapToObject(m: Map<string, Object>): Object {
