@@ -11,8 +11,8 @@ export class FileIO {
     a.click();
   }
 
-  static async httpGetAsync(theUrl: string): Promise<Object> {
-    return new Promise<Object>(async (resolve) => {
+  static async httpGetAsync(theUrl: string): Promise<Object[]> {
+    return new Promise<Object[]>(async (resolve) => {
       const response = await fetch(theUrl);
       const jso = await response.json();
       resolve(jso);

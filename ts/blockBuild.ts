@@ -8,6 +8,7 @@ import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { FileIO } from "./fileIO";
 import { Construction } from "./construction";
+import { Codec, Decode } from "./codec";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -161,6 +162,7 @@ export class BlockBuild {
     const loadedObject = await FileIO.httpGetAsync("./test.json");
     console.log(JSON.stringify(loadedObject, null, 2));
     Debug.log('test.json loaded.')
+    const loaded = Decode.arrayOfObject3D(loadedObject);
   }
 
   getGrips() {
