@@ -67,7 +67,7 @@ class Assets extends THREE.Object3D {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
-        flatPrimary.userData["textureName"] = "flatPrimary";
+        flatPrimary.userData["materialName"] = "flatPrimary";
         Assets.materials.push(flatPrimary);
         let glossPrimary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -76,10 +76,10 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x998877
         });
-        glossPrimary.userData["textureName"] = "glossPrimary";
+        glossPrimary.userData["materialName"] = "glossPrimary";
         Assets.materials.push(glossPrimary);
         let flatSecondary = new THREE.MeshPhongMaterial({ color: 0x665544 });
-        flatSecondary.userData["textureName"] = "flatSecondary";
+        flatSecondary.userData["materialName"] = "flatSecondary";
         Assets.materials.push(flatSecondary);
         let glossSecondary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -88,10 +88,10 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x665544
         });
-        glossSecondary.userData["textureName"] = "glossSecondary";
+        glossSecondary.userData["materialName"] = "glossSecondary";
         Assets.materials.push(glossSecondary);
         let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
-        flatBlack.userData["textureName"] = "flatBlack";
+        flatBlack.userData["materialName"] = "flatBlack";
         Assets.materials.push(flatBlack);
         let glossBlack = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -100,7 +100,7 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x111111
         });
-        glossBlack.userData["textureName"] = "glossBlack";
+        glossBlack.userData["materialName"] = "glossBlack";
         Assets.materials.push(glossBlack);
     }
     // sets the color of the passed object to the next color in the palette.
@@ -125,7 +125,7 @@ class Assets extends THREE.Object3D {
         debug_1.Debug.log('materials.length=' + Assets.materials.length.toString());
         return Assets.materials[Assets.materialIndex];
     }
-    static async loadAllModels() {
+    static async LoadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
@@ -199,6 +199,7 @@ const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
+const fileIO_1 = __webpack_require__(3);
 const construction_1 = __webpack_require__(844);
 class BlockBuild {
     scene = new THREE.Scene();
@@ -221,7 +222,7 @@ class BlockBuild {
     }
     async initialize() {
         this.setScene();
-        await assets_1.Assets.loadAllModels();
+        await assets_1.Assets.LoadAllModels();
         debug_1.Debug.log("all models loaded.");
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
@@ -306,6 +307,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
+        fileIO_1.FileIO.httpGetAsync("./test.json", console.log);
         debug_1.Debug.log("texture save works?");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
@@ -347,24 +349,49 @@ exports.BlockBuild = BlockBuild;
 /***/ }),
 
 /***/ 385:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Codec = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const assets_1 = __webpack_require__(398);
 class Encode {
     position;
     quarternion;
     modelName;
-    textureName;
+    materialName;
     constructor(o) {
         this.position = o.position;
         this.quarternion = o.quaternion;
         this.modelName = o.userData["modelName"];
         let mesh = o.children[0];
         let mat = mesh.material;
-        if (mat.userData["textureName"]) {
-            this.textureName = mat.userData["textureName"];
+        if (mat.userData["materialName"]) {
+            this.materialName = mat.userData["materialName"];
         }
     }
 }
@@ -376,7 +403,30 @@ class Codec {
         });
         return output;
     }
-    fromSaveFormat() {
+    fromSaveFormat(input) {
+        let output = [];
+        input.forEach((value) => {
+            let o = new THREE.Mesh(this.findModelByName(value.modelName), this.findMaterialByName(value.materialName));
+            o.position.set(value.position.x, value.position.y, value.position.z);
+            o.applyQuaternion(value.quarternion);
+            output.push(o);
+        });
+    }
+    findModelByName(name) {
+        assets_1.Assets.blocks.forEach((mesh) => {
+            if (mesh.userData["modelName"] == name) {
+                return mesh;
+            }
+        });
+        return null;
+    }
+    findMaterialByName(name) {
+        assets_1.Assets.materials.forEach((material) => {
+            if (material.userData["materialName"] == name) {
+                return material;
+            }
+        });
+        return null;
     }
 }
 exports.Codec = Codec;
@@ -512,7 +562,14 @@ class FileIO {
         a.download = fileName;
         a.click();
     }
-    static loadObject(fileName) {
+    static httpGetAsync(theUrl, callback) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                callback(xmlHttp.responseText);
+        };
+        xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+        xmlHttp.send(null);
     }
     static mapToObject(m) {
         const result = {};

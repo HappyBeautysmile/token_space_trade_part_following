@@ -34,7 +34,7 @@ export class BlockBuild {
 
   private async initialize() {
     this.setScene();
-    await Assets.loadAllModels();
+    await Assets.LoadAllModels();
     Debug.log("all models loaded.");
 
     // this.universeGroup.add(Assets.models["ship"]);
@@ -132,6 +132,9 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
+
+    FileIO.httpGetAsync("./test.json", console.log);
+
     Debug.log("texture save works?");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
