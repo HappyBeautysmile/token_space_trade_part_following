@@ -40,6 +40,7 @@ export class Assets extends THREE.Object3D {
         Palette.init();
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
+        flatPrimary.userData["materialName"] = "flatPrimary";
         Assets.materials.push(flatPrimary);
         let glossPrimary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -48,9 +49,11 @@ export class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x998877
         });
+        glossPrimary.userData["materialName"] = "glossPrimary";
         Assets.materials.push(glossPrimary);
 
         let flatSecondary = new THREE.MeshPhongMaterial({ color: 0x665544 });
+        flatSecondary.userData["materialName"] = "flatSecondary";
         Assets.materials.push(flatSecondary);
         let glossSecondary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -59,9 +62,11 @@ export class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x665544
         });
+        glossSecondary.userData["materialName"] = "glossSecondary";
         Assets.materials.push(glossSecondary);
 
         let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        flatBlack.userData["materialName"] = "flatBlack";
         Assets.materials.push(flatBlack);
         let glossBlack = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -70,6 +75,7 @@ export class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x111111
         });
+        glossBlack.userData["materialName"] = "glossBlack";
         Assets.materials.push(glossBlack);
     }
 
@@ -99,7 +105,7 @@ export class Assets extends THREE.Object3D {
         return Assets.materials[Assets.materialIndex];
     }
 
-    static async loadAllModels() {
+    static async LoadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port']
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
@@ -110,6 +116,7 @@ export class Assets extends THREE.Object3D {
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             //this.assets.replaceMaterial(m, newMat);
             m.scale.set(1, 1, 1);
+            m.userData = { "modelName": modelName };
             this.blocks.push(m);
             //this.scene.add(m);
             //this.universeGroup.add(m);

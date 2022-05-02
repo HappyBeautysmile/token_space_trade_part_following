@@ -8,7 +8,11 @@
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -63,6 +67,7 @@ class Assets extends THREE.Object3D {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
+        flatPrimary.userData["materialName"] = "flatPrimary";
         Assets.materials.push(flatPrimary);
         let glossPrimary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -71,8 +76,10 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x998877
         });
+        glossPrimary.userData["materialName"] = "glossPrimary";
         Assets.materials.push(glossPrimary);
         let flatSecondary = new THREE.MeshPhongMaterial({ color: 0x665544 });
+        flatSecondary.userData["materialName"] = "flatSecondary";
         Assets.materials.push(flatSecondary);
         let glossSecondary = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -81,8 +88,10 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x665544
         });
+        glossSecondary.userData["materialName"] = "glossSecondary";
         Assets.materials.push(glossSecondary);
         let flatBlack = new THREE.MeshPhongMaterial({ color: 0x111111 });
+        flatBlack.userData["materialName"] = "flatBlack";
         Assets.materials.push(flatBlack);
         let glossBlack = new THREE.MeshPhysicalMaterial({
             roughness: 0.5,
@@ -91,6 +100,7 @@ class Assets extends THREE.Object3D {
             clearcoatRoughness: 0.2,
             color: 0x111111
         });
+        glossBlack.userData["materialName"] = "glossBlack";
         Assets.materials.push(glossBlack);
     }
     // sets the color of the passed object to the next color in the palette.
@@ -115,7 +125,7 @@ class Assets extends THREE.Object3D {
         debug_1.Debug.log('materials.length=' + Assets.materials.length.toString());
         return Assets.materials[Assets.materialIndex];
     }
-    static async loadAllModels() {
+    static async LoadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
@@ -126,6 +136,7 @@ class Assets extends THREE.Object3D {
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             //this.assets.replaceMaterial(m, newMat);
             m.scale.set(1, 1, 1);
+            m.userData = { "modelName": modelName };
             this.blocks.push(m);
             //this.scene.add(m);
             //this.universeGroup.add(m);
@@ -157,7 +168,11 @@ exports.Assets = Assets;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -184,6 +199,7 @@ const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
+const fileIO_1 = __webpack_require__(3);
 const construction_1 = __webpack_require__(844);
 class BlockBuild {
     scene = new THREE.Scene();
@@ -206,8 +222,11 @@ class BlockBuild {
     }
     async initialize() {
         this.setScene();
-        await assets_1.Assets.loadAllModels();
+        await assets_1.Assets.LoadAllModels();
         debug_1.Debug.log("all models loaded.");
+        // this.universeGroup.add(Assets.models["ship"]);
+        // this.construction.addCube(Assets.blocks[0]);
+        // this.construction.save();
         this.getGrips();
     }
     tickEverything(o, tick) {
@@ -288,8 +307,8 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        this.universeGroup.add(assets_1.Assets.models["ship"]);
-        debug_1.Debug.log("different hand fix.");
+        fileIO_1.FileIO.httpGetAsync("./test.json", console.log);
+        debug_1.Debug.log("texture save works?");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -329,12 +348,99 @@ exports.BlockBuild = BlockBuild;
 
 /***/ }),
 
+/***/ 385:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Codec = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const assets_1 = __webpack_require__(398);
+class Encode {
+    position;
+    quarternion;
+    modelName;
+    materialName;
+    constructor(o) {
+        this.position = o.position;
+        this.quarternion = o.quaternion;
+        this.modelName = o.userData["modelName"];
+        let mesh = o.children[0];
+        let mat = mesh.material;
+        if (mat.userData["materialName"]) {
+            this.materialName = mat.userData["materialName"];
+        }
+    }
+}
+class Codec {
+    toSaveFormat(input) {
+        let output = [];
+        input.forEach((value, key) => {
+            output.push(new Encode(value));
+        });
+        return output;
+    }
+    fromSaveFormat(input) {
+        let output = [];
+        input.forEach((value) => {
+            let o = new THREE.Mesh(this.findModelByName(value.modelName), this.findMaterialByName(value.materialName));
+            o.position.set(value.position.x, value.position.y, value.position.z);
+            o.applyQuaternion(value.quarternion);
+            output.push(o);
+        });
+    }
+    findModelByName(name) {
+        assets_1.Assets.blocks.forEach((mesh) => {
+            if (mesh.userData["modelName"] == name) {
+                return mesh;
+            }
+        });
+        return null;
+    }
+    findMaterialByName(name) {
+        assets_1.Assets.materials.forEach((material) => {
+            if (material.userData["materialName"] == name) {
+                return material;
+            }
+        });
+        return null;
+    }
+}
+exports.Codec = Codec;
+//# sourceMappingURL=codec.js.map
+
+/***/ }),
+
 /***/ 844:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Construction = void 0;
+const codec_1 = __webpack_require__(385);
 const fileIO_1 = __webpack_require__(3);
 class Construction {
     // TODO: Make this private and instead have some nicer methods for
@@ -343,8 +449,10 @@ class Construction {
     allObjects = new Map();
     save() {
         console.log('Saving...');
-        const o = { 'size': this.allObjects.size };
-        o['objects'] = fileIO_1.FileIO.mapToObject(this.allObjects);
+        //const o = { 'size': this.allObjects.size };
+        //o['objects'] = FileIO.mapToObject(this.allObjects);
+        let c = new codec_1.Codec();
+        const o = c.toSaveFormat(this.allObjects);
         fileIO_1.FileIO.saveObject(o, "what_you_built.json");
     }
     // TODO: change this to private and fix the code that breaks.
@@ -369,7 +477,11 @@ exports.Construction = Construction;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -450,7 +562,14 @@ class FileIO {
         a.download = fileName;
         a.click();
     }
-    static loadObject(fileName) {
+    static httpGetAsync(theUrl, callback) {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function () {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+                callback(xmlHttp.responseText);
+        };
+        xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+        xmlHttp.send(null);
     }
     static mapToObject(m) {
         const result = {};
@@ -471,7 +590,11 @@ exports.FileIO = FileIO;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -567,7 +690,11 @@ exports.Game = Game;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -771,7 +898,11 @@ exports.Hand = Hand;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1154,7 +1285,11 @@ exports.MaterialExplorer = MaterialExplorer;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1344,7 +1479,11 @@ exports.PaletteTest = PaletteTest;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1433,7 +1572,11 @@ exports.Place = Place;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1685,7 +1828,11 @@ exports.Tick = Tick;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -1955,7 +2102,11 @@ exports.VeryLargeUniverse = VeryLargeUniverse;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
