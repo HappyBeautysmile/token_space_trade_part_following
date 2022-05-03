@@ -1,18 +1,8 @@
 import * as THREE from "three";
-import { PointMapLinear, PointMapOctoTree } from "./pointMap";
+import { PointMapOctoTree } from "./pointMap";
 import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
-import { Zoom } from "./zoom";
-
-class StarSystem extends THREE.Object3D {
-  constructor() {
-    super();
-    this.add(new THREE.Mesh(
-      new THREE.IcosahedronBufferGeometry(1e3, 2),
-      new THREE.MeshBasicMaterial({ color: '#fff' })
-    ));
-  }
-}
+import { StarSystem } from "./starSystem";
 
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
@@ -67,11 +57,9 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       },
       vertexShader: `
         uniform float sizeScale;
-        varying vec3 vColor;
         void main() {
-          vColor = vec3(1.0, 1.0, 1.0);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          float distance = length(mvPosition.xyz);
+          float distance = abs(mvPosition.z);
           if (distance > 1000.0) {
             mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
           }
@@ -80,12 +68,11 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
           
         }`,
       fragmentShader: `
-      uniform sampler2D diffuseTexture;
-      varying vec3 vColor;
       void main() {
+        vec3 c = vec3(1.0, 1.0, 1.0);
         vec2 coords = gl_PointCoord;
         float intensity = 2.0 * (0.5 - length(gl_PointCoord - 0.5));
-        gl_FragColor = vec4(vColor.rgb * intensity, 1.0);
+        gl_FragColor = vec4(c.rgb * intensity, 1.0);
       }`,
       blending: THREE.AdditiveBlending,
       depthTest: true,
@@ -162,5 +149,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
         this.add(starSystem);
       }
     }
+    this.material.uniforms['sizeScale'].value = this.scale.x;
+    this.material.uniformsNeedUpdate = true;
   }
 }
