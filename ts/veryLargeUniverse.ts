@@ -123,19 +123,32 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     }
 
     if ((leftButtons[0] && rightButtons[0]) ||  // Trigger
-      this.keysDown.has('ArrowDown')) {
+      this.keysDown.has('KeyW')) {
       this.camera.getWorldDirection(this.direction);
-      this.direction.multiplyScalar(-t.deltaS * 5.0);
+      this.direction.multiplyScalar(-t.deltaS * 1.0);
       this.position.sub(this.direction);
       this.updateMatrix();
     }
 
     if ((leftButtons[1] && rightButtons[1]) ||  // Squeeze
-      this.keysDown.has('ArrowUp')) {
+      this.keysDown.has('KeyS')) {
       this.camera.getWorldDirection(this.direction);
-      this.direction.multiplyScalar(t.deltaS * 5.0);
+      this.direction.multiplyScalar(t.deltaS * 1.0);
       this.position.sub(this.direction);
       this.updateMatrix();
+    }
+
+    if (this.keysDown.has('ArrowLeft')) {
+      this.camera.rotateY(2 * t.deltaS);
+    }
+    if (this.keysDown.has('ArrowRight')) {
+      this.camera.rotateY(-2 * t.deltaS);
+    }
+    if (this.keysDown.has('ArrowUp')) {
+      this.camera.rotateX(2 * t.deltaS);
+    }
+    if (this.keysDown.has('ArrowDown')) {
+      this.camera.rotateX(-2 * t.deltaS);
     }
 
     this.camera.getWorldPosition(this.p1);
