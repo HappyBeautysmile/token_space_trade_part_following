@@ -30,17 +30,16 @@ export class Game {
     this.renderer.xr.enabled = true;
 
 
-    const renderScene = new RenderPass(this.scene, this.camera);
+    // const renderScene = new RenderPass(this.scene, this.camera);
 
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    bloomPass.threshold = 0.25;
-    bloomPass.strength = 3.0;
-    bloomPass.radius = 0.5;
+    // const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    // bloomPass.threshold = 0.25;
+    // bloomPass.strength = 3.0;
+    // bloomPass.radius = 0.5;
 
-    const composer = new EffectComposer(this.renderer);
-    composer.addPass(renderScene);
-    composer.addPass(bloomPass);
-
+    // const composer = new EffectComposer(this.renderer);
+    // composer.addPass(renderScene);
+    // composer.addPass(bloomPass);
 
     const clock = new THREE.Clock();
     let elapsedS = 0.0;
@@ -49,8 +48,8 @@ export class Game {
       elapsedS += deltaS;
       const tick = new Tick(elapsedS, deltaS);
       this.tickEverything(this.scene, tick);
-      // this.renderer.render(this.scene, this.camera);
-      composer.render();
+      this.renderer.render(this.scene, this.camera);
+      // composer.render();
     });
 
     this.getGrips();
