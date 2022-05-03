@@ -122,7 +122,7 @@ class Assets extends THREE.Object3D {
         return Assets.materials[Assets.materialIndex];
     }
     static async LoadAllModels() {
-        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port'];
+        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port', 'console'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
             const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
