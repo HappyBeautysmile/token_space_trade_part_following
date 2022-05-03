@@ -126,7 +126,7 @@ class Assets extends THREE.Object3D {
         return Assets.materials[Assets.materialIndex];
     }
     static async LoadAllModels() {
-        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port'];
+        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port', 'console'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
             const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
@@ -201,6 +201,7 @@ const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const fileIO_1 = __webpack_require__(3);
 const construction_1 = __webpack_require__(844);
+const codec_1 = __webpack_require__(385);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -222,11 +223,17 @@ class BlockBuild {
     }
     async initialize() {
         this.setScene();
+        // NOTE: if you want the JSON to be loaded before execution reaches
+        // this point, you will need to put "await" before the previous line.
+        // Read the Debug.log statements carefully to check that the order
+        // makes sense.
+        debug_1.Debug.log('setScene complete');
         await assets_1.Assets.LoadAllModels();
         debug_1.Debug.log("all models loaded.");
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
+        this.buildGeometry();
         this.getGrips();
     }
     tickEverything(o, tick) {
@@ -270,7 +277,24 @@ class BlockBuild {
             this.isSaving = false;
         }
     }
-    setScene() {
+    buildGeometry() {
+        for (let x = -20; x < 20; x++) {
+            for (let y = -20; y < 20; y++) {
+                for (let z = 0; z < 20; z++) {
+                    if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
+                        let o = new THREE.Object3D();
+                        o = assets_1.Assets.blocks[0].clone();
+                        o.translateX(x);
+                        o.translateY(y);
+                        o.translateZ(-z - 10);
+                        this.place.universeGroup.add(o);
+                        this.construction.addCube(o);
+                    }
+                }
+            }
+        }
+    }
+    async setScene() {
         assets_1.Assets.init();
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
@@ -307,8 +331,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        fileIO_1.FileIO.httpGetAsync("./test.json", console.log);
-        debug_1.Debug.log("texture save works?");
+        debug_1.Debug.log("build cone.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -323,6 +346,11 @@ class BlockBuild {
             this.renderer.render(this.scene, this.camera);
         });
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
+        debug_1.Debug.log('loading test.json...');
+        const loadedObject = await fileIO_1.FileIO.httpGetAsync("./test.json");
+        console.log(JSON.stringify(loadedObject, null, 2));
+        debug_1.Debug.log('test.json loaded.');
+        const loaded = codec_1.Decode.arrayOfObject3D(loadedObject);
     }
     getGrips() {
         //const debugMaterial = new THREE.MeshStandardMaterial({ color: '#0f0' });
@@ -376,43 +404,51 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Codec = void 0;
+exports.Codec = exports.Decode = exports.Encode = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
 class Encode {
-    position;
-    quarternion;
-    modelName;
-    materialName;
-    constructor(o) {
-        this.position = o.position;
-        this.quarternion = o.quaternion;
-        this.modelName = o.userData["modelName"];
+    static object3D(o) {
+        const result = {};
+        result['position'] = o.position;
+        result['quarternion'] = o.quaternion;
+        result['modelName'] = o.userData["modelName"];
         let mesh = o.children[0];
         let mat = mesh.material;
         if (mat.userData["materialName"]) {
-            this.materialName = mat.userData["materialName"];
+            this['materialName'] = mat.userData["materialName"];
         }
+        return result;
+    }
+    static arrayOfObject3D(cubes) {
+        const result = [];
+        for (const cube of cubes) {
+            result.push(Encode.object3D(cube));
+        }
+        return result;
     }
 }
+exports.Encode = Encode;
+class Decode {
+    static object3D(o) {
+        let mesh = new THREE.Mesh(Codec.findModelByName(o['modelName']), Codec.findMaterialByName(o['materialName']));
+        mesh.position.set(o['position'].x, o['position'].y, o['position'].z);
+        const quaternion = new THREE.Quaternion();
+        Object.assign(quaternion, o['quaternion']);
+        mesh.applyQuaternion(quaternion);
+        return mesh;
+    }
+    static arrayOfObject3D(obs) {
+        const result = [];
+        for (const o of obs) {
+            result.push(Decode.object3D(o));
+        }
+        return result;
+    }
+}
+exports.Decode = Decode;
 class Codec {
-    toSaveFormat(input) {
-        let output = [];
-        input.forEach((value, key) => {
-            output.push(new Encode(value));
-        });
-        return output;
-    }
-    fromSaveFormat(input) {
-        let output = [];
-        input.forEach((value) => {
-            let o = new THREE.Mesh(this.findModelByName(value.modelName), this.findMaterialByName(value.materialName));
-            o.position.set(value.position.x, value.position.y, value.position.z);
-            o.applyQuaternion(value.quarternion);
-            output.push(o);
-        });
-    }
-    findModelByName(name) {
+    static findModelByName(name) {
         assets_1.Assets.blocks.forEach((mesh) => {
             if (mesh.userData["modelName"] == name) {
                 return mesh;
@@ -420,7 +456,7 @@ class Codec {
         });
         return null;
     }
-    findMaterialByName(name) {
+    static findMaterialByName(name) {
         assets_1.Assets.materials.forEach((material) => {
             if (material.userData["materialName"] == name) {
                 return material;
@@ -452,7 +488,7 @@ class Construction {
         //const o = { 'size': this.allObjects.size };
         //o['objects'] = FileIO.mapToObject(this.allObjects);
         let c = new codec_1.Codec();
-        const o = c.toSaveFormat(this.allObjects);
+        const o = codec_1.Encode.arrayOfObject3D(this.allObjects.values());
         fileIO_1.FileIO.saveObject(o, "what_you_built.json");
     }
     // TODO: change this to private and fix the code that breaks.
@@ -562,14 +598,12 @@ class FileIO {
         a.download = fileName;
         a.click();
     }
-    static httpGetAsync(theUrl, callback) {
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.onreadystatechange = function () {
-            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-                callback(xmlHttp.responseText);
-        };
-        xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-        xmlHttp.send(null);
+    static async httpGetAsync(theUrl) {
+        return new Promise(async (resolve) => {
+            const response = await fetch(theUrl);
+            const jso = await response.json();
+            resolve(jso);
+        });
     }
     static mapToObject(m) {
         const result = {};
@@ -635,6 +669,14 @@ class Game {
         document.body.appendChild(this.renderer.domElement);
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
         this.renderer.xr.enabled = true;
+        // const renderScene = new RenderPass(this.scene, this.camera);
+        // const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        // bloomPass.threshold = 0.25;
+        // bloomPass.strength = 3.0;
+        // bloomPass.radius = 0.5;
+        // const composer = new EffectComposer(this.renderer);
+        // composer.addPass(renderScene);
+        // composer.addPass(bloomPass);
         const clock = new THREE.Clock();
         let elapsedS = 0.0;
         this.renderer.setAnimationLoop(() => {
@@ -643,6 +685,7 @@ class Game {
             const tick = new tick_1.Tick(elapsedS, deltaS);
             this.tickEverything(this.scene, tick);
             this.renderer.render(this.scene, this.camera);
+            // composer.render();
         });
         this.getGrips();
         const keysDown = new Set();
@@ -827,6 +870,9 @@ class Hand extends THREE.Object3D {
             }
             if (buttons[1] === 1 && this.lastButtons[1] != 1) { // squeeze
                 //this.debugMaterial.color = new THREE.Color('yellow');
+            }
+            if (buttons[2] === 1 && this.lastButtons[2] != 1) { // 
+                debug_1.Debug.log(`Button 2 pressed on ${source.handedness} hand.`);
             }
             if (buttons[3] === 1 && this.lastButtons[3] != 1) {
                 //this.debugMaterial.color = new THREE.Color('blue');
@@ -1232,21 +1278,32 @@ varying vec3 vWorldPosition;
 varying vec3 vNormal;
 varying vec3 vIncident;
 
-void main() {
-  vec3 x = vWorldPosition; 
-  vec4 c1 = openSimplex2_Conventional(x);
-  vec4 c2 = 0.5 * openSimplex2_Conventional(x * 2.0);
-  vec4 c3 = 0.1 * openSimplex2_Conventional(x * 3.0);
+vec4 brown(in vec3 x) {
+  return (
+    openSimplex2_Conventional(x) 
+    + openSimplex2_Conventional(x * 2.0)
+    + openSimplex2_Conventional(x * 4.0)
+    + openSimplex2_Conventional(x * 8.0)
+  );
+}
 
-  vec4 cTotal = c1 + c2 + c3 * 0.2 + 0.5;
+void main() {
+  vec4 c1 = brown(vWorldPosition * 0.3); 
+  c1 = brown(vec3(c1.xy * 0.05, time*0.1)) * 0.05 + 0.5;
+  float intensity = dot(-vIncident, vNormal);
 
   mat3 m = mat3(
       1.0, 0.5, 0.01, 
       1.0, 0.5, 0.02, 
       1.0, 0.4, 0.03);
-  vec3 crgb = m * cTotal.rgb;
+  vec3 crgb = m * c1.rgb * pow(intensity, 0.3);
 
-  gl_FragColor = vec4(crgb, 1.0);
+  float whiteness = clamp(
+    (intensity - 0.5) * 10.0 + length(crgb), 0.0, 1.0);
+  vec3 white = vec3(1.0, 1.0, 1.0) * whiteness;
+
+
+  gl_FragColor = vec4(crgb + white, 1.0) * 0.4;
 }`));
             this.snippets.push(new CodeSnippet('fragment', `
 // Shiny Fragment Shader
@@ -1780,7 +1837,7 @@ class S {
     static {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e8, 'Starfield radius');
-        S.setDefault('ns', 20000, 'Number of stars in the VLU');
+        S.setDefault('ns', 1e5, 'Number of stars in the VLU');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -1800,6 +1857,177 @@ class S {
 }
 exports.S = S;
 //# sourceMappingURL=settings.js.map
+
+/***/ }),
+
+/***/ 445:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.StarSystem = void 0;
+const THREE = __importStar(__webpack_require__(232));
+class StarSystem extends THREE.Object3D {
+    material;
+    constructor() {
+        super();
+        this.material = StarSystem.makeStarMaterial();
+        const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 2), this.material);
+        mesh.scale.setLength(1e3);
+        this.add(mesh);
+    }
+    static makeStarMaterial() {
+        return new THREE.ShaderMaterial({
+            vertexShader: `
+// Paint Vertex Shader
+varying vec3 vColor;
+varying vec3 vNormal;
+varying vec3 vIncident;
+varying vec3 vModelPosition;
+
+void main() {
+  vModelPosition = position;
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vIncident = normalize(worldPosition.xyz - cameraPosition.xyz);
+  vColor = vec3(1.0, 0.4, 0.8);
+  vNormal = normalMatrix * normal;
+
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mvPosition;
+}`,
+            fragmentShader: `
+// Simplex Fragment Shader Code
+// https://github.com/KdotJPG/OpenSimplex2/blob/master/glsl/OpenSimplex2.glsl
+
+vec4 permute(vec4 t) {
+  return t * (t * 34.0 + 133.0);
+}
+vec3 grad(float hash) {
+  vec3 cube = mod(floor(hash / vec3(1.0, 2.0, 4.0)), 2.0) * 2.0 - 1.0;
+  vec3 cuboct = cube;
+  cuboct[int(hash / 16.0)] = 0.0;
+  float type = mod(floor(hash / 8.0), 2.0);
+  vec3 rhomb = (1.0 - type) * cube + type * (cuboct + cross(cube, cuboct));
+  vec3 grad = cuboct * 1.22474487139 + rhomb;
+  grad *= (1.0 - 0.042942436724648037 * type) * 32.80201376986577;
+  return grad;
+}
+
+vec4 openSimplex2Base(vec3 X) {
+  vec3 v1 = round(X);
+  vec3 d1 = X - v1;
+  vec3 score1 = abs(d1);
+  vec3 dir1 = step(max(score1.yzx, score1.zxy), score1);
+  vec3 v2 = v1 + dir1 * sign(d1);
+  vec3 d2 = X - v2;
+  vec3 X2 = X + 144.5;
+  vec3 v3 = round(X2);
+  vec3 d3 = X2 - v3;
+  vec3 score2 = abs(d3);
+  vec3 dir2 = step(max(score2.yzx, score2.zxy), score2);
+  vec3 v4 = v3 + dir2 * sign(d3);
+  vec3 d4 = X2 - v4;
+  
+  vec4 hashes = permute(mod(vec4(v1.x, v2.x, v3.x, v4.x), 289.0));
+  hashes = permute(mod(hashes + vec4(v1.y, v2.y, v3.y, v4.y), 289.0));
+  hashes = mod(permute(mod(hashes + vec4(v1.z, v2.z, v3.z, v4.z), 289.0)), 48.0);
+  
+  vec4 a = max(0.5 - vec4(dot(d1, d1), dot(d2, d2), dot(d3, d3), dot(d4, d4)), 0.0);
+  vec4 aa = a * a; vec4 aaaa = aa * aa;
+  vec3 g1 = grad(hashes.x); vec3 g2 = grad(hashes.y);
+  vec3 g3 = grad(hashes.z); vec3 g4 = grad(hashes.w);
+  vec4 extrapolations = vec4(dot(d1, g1), dot(d2, g2), dot(d3, g3), dot(d4, g4));
+  
+  vec3 derivative = -8.0 * mat4x3(d1, d2, d3, d4) * (aa * a * extrapolations)
+      + mat4x3(g1, g2, g3, g4) * aaaa;
+  
+  return vec4(derivative, dot(aaaa, extrapolations));
+}
+
+vec4 openSimplex2_Conventional(vec3 X) {
+  vec4 result = openSimplex2Base(dot(X, vec3(2.0/3.0)) - X);
+  return vec4(dot(result.xyz, vec3(2.0/3.0)) - result.xyz, result.w);
+}
+
+// Lava Fragment Shader
+
+uniform float time;
+varying vec3 vColor;
+varying vec3 vModelPosition;
+varying vec3 vNormal;
+varying vec3 vIncident;
+
+vec4 brown(in vec3 x) {
+  return (
+    openSimplex2_Conventional(x) 
+    + openSimplex2_Conventional(x * 2.0)
+    + openSimplex2_Conventional(x * 4.0)
+    + openSimplex2_Conventional(x * 8.0)
+  );
+}
+
+void main() {
+  vec4 c1 = brown(vModelPosition * 0.3); 
+  c1 = brown(vec3(c1.xy * 0.05, time*0.1)) * 0.05 + 0.5;
+  float intensity = dot(-vIncident, vNormal);
+
+  mat3 m = mat3(
+      1.0, 0.5, 0.01, 
+      1.0, 0.5, 0.02, 
+      1.0, 0.4, 0.03);
+  vec3 crgb = m * c1.rgb * pow(intensity, 0.3);
+
+  float whiteness = clamp(
+    (intensity - 0.5) * 10.0 + length(crgb), 0.0, 1.0);
+  vec3 white = vec3(1.0, 1.0, 1.0) * whiteness;
+
+
+  gl_FragColor = vec4(crgb + white, 1.0) * 0.4;
+}
+      `,
+            side: THREE.FrontSide,
+            blending: THREE.AdditiveBlending,
+            depthTest: true,
+            depthWrite: true,
+            transparent: false,
+            vertexColors: false,
+            uniforms: {
+                time: { value: 0.0 }
+            }
+        });
+    }
+    tick(t) {
+        if (this.material !== null) {
+            this.material.uniforms['time'].value = t.elapsedS;
+            this.material.uniformsNeedUpdate = true;
+        }
+    }
+}
+exports.StarSystem = StarSystem;
+//# sourceMappingURL=starSystem.js.map
 
 /***/ }),
 
@@ -1854,13 +2082,7 @@ exports.VeryLargeUniverse = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const pointMap_1 = __webpack_require__(228);
 const settings_1 = __webpack_require__(451);
-const zoom_1 = __webpack_require__(950);
-class StarSystem extends THREE.Object3D {
-    constructor() {
-        super();
-        this.add(new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1e3, 2), new THREE.MeshBasicMaterial({ color: '#fff' })));
-    }
-}
+const starSystem_1 = __webpack_require__(445);
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
 class VeryLargeUniverse extends THREE.Object3D {
@@ -1870,10 +2092,6 @@ class VeryLargeUniverse extends THREE.Object3D {
     keysDown;
     currentStarMap = new Map();
     starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
-    leftStart;
-    rightStart;
-    startMatrix = new THREE.Matrix4();
-    oldZoom = null;
     material;
     constructor(grips, camera, xr, keysDown) {
         super();
@@ -1882,64 +2100,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.xr = xr;
         this.keysDown = keysDown;
         this.addStars();
-        //   this.grips[0].addEventListener('selectstart', () => {
-        //     this.leftStart = new THREE.Vector3();
-        //     this.leftStart.copy(this.grips[0].position);
-        //     this.startMatrix.copy(this.matrix);
-        //     this.startMatrix.invert();
-        //     this.leftStart.applyMatrix4(this.startMatrix);;
-        //     if (this.rightStart) {
-        //       this.rightStart.copy(this.grips[1].position);
-        //       this.rightStart.applyMatrix4(this.startMatrix);
-        //     }
-        //   });
-        //   this.grips[1].addEventListener('selectstart', () => {
-        //     this.rightStart = new THREE.Vector3();
-        //     this.rightStart.copy(this.grips[1].position);
-        //     this.startMatrix.invert();
-        //     this.rightStart.applyMatrix4(this.startMatrix);;
-        //     if (this.leftStart) {
-        //       this.leftStart.copy(this.grips[0].position);
-        //       this.leftStart.applyMatrix4(this.startMatrix);
-        //     }
-        //   });
-        //   this.grips[0].addEventListener('selectend', () => {
-        //     if (this.leftStart && this.rightStart) {
-        //       this.zoomEnd();
-        //     }
-        //     this.leftStart = null;
-        //   });
-        //   this.grips[1].addEventListener('selectend', () => {
-        //     if (this.leftStart && this.rightStart) {
-        //       this.zoomEnd();
-        //     }
-        //     this.rightStart = null;
-        //   });
         this.position.set(0, 0, -1e6);
-    }
-    leftCurrent = new THREE.Vector3();
-    rightCurrent = new THREE.Vector3();
-    zoom() {
-        if (!this.oldZoom) {
-            this.oldZoom = new THREE.Matrix4();
-            this.oldZoom.copy(this.matrix);
-        }
-        this.leftCurrent.copy(this.grips[0].position);
-        this.leftCurrent.applyMatrix4(this.startMatrix);
-        this.rightCurrent.copy(this.grips[1].position);
-        this.rightCurrent.applyMatrix4(this.startMatrix);
-        const m = zoom_1.Zoom.makeZoomMatrix(this.leftStart, this.rightStart, this.leftCurrent, this.rightCurrent);
-        this.matrix.copy(this.oldZoom);
-        this.matrix.multiply(m);
-        this.matrix.decompose(this.position, this.quaternion, this.scale);
-        if (this.material) {
-            const scale = this.scale.length() / Math.sqrt(3);
-            this.material.uniforms['sizeScale'].value = scale;
-            this.material.uniformsNeedUpdate = true;
-        }
-    }
-    zoomEnd() {
-        this.oldZoom = null;
     }
     gaussian(sd) {
         const n = 6;
@@ -1971,11 +2132,9 @@ class VeryLargeUniverse extends THREE.Object3D {
             },
             vertexShader: `
         uniform float sizeScale;
-        varying vec3 vColor;
         void main() {
-          vColor = vec3(1.0, 1.0, 1.0);
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          float distance = length(mvPosition.xyz);
+          float distance = abs(mvPosition.z);
           if (distance > 1000.0) {
             mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
           }
@@ -1984,12 +2143,11 @@ class VeryLargeUniverse extends THREE.Object3D {
           
         }`,
             fragmentShader: `
-      uniform sampler2D diffuseTexture;
-      varying vec3 vColor;
       void main() {
+        vec3 c = vec3(1.0, 1.0, 1.0);
         vec2 coords = gl_PointCoord;
         float intensity = 2.0 * (0.5 - length(gl_PointCoord - 0.5));
-        gl_FragColor = vec4(vColor.rgb * intensity, 1.0);
+        gl_FragColor = vec4(c.rgb * intensity, 1.0);
       }`,
             blending: THREE.AdditiveBlending,
             depthTest: true,
@@ -2001,11 +2159,6 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.add(points);
     }
     p1 = new THREE.Vector3();
-    // private findClosestStar(): THREE.Vector3 {
-    //   this.camera.getWorldPosition(this.p1);
-    //   this.worldToLocal(this.p1);
-    //   return this.starPositions.getClosest(this.p1);
-    // }
     getButtonsFromGrip(index) {
         let source = null;
         const session = this.xr.getSession();
@@ -2026,23 +2179,8 @@ class VeryLargeUniverse extends THREE.Object3D {
     zoomAroundWorldOrigin(zoomFactor) {
         this.position.multiplyScalar(zoomFactor);
         this.scale.multiplyScalar(zoomFactor);
-        // this.p1.set(0, 0, 0);
-        //    this.worldToLocal(this.p1);
-        // this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
-        // this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
-        // this.m3.makeTranslation(
-        //   this.p1.x * zoomFactor,
-        //   this.p1.y * zoomFactor,
-        //   this.p1.z * zoomFactor);
-        // this.matrix.multiply(this.m3);
-        // this.matrix.multiply(this.m2);
-        // this.matrix.multiply(this.m1);
-        // this.matrix.decompose(this.position, this.quaternion, this.scale);
     }
     tick(t) {
-        if (this.rightStart && this.leftStart) {
-            this.zoom();
-        }
         const leftButtons = this.getButtonsFromGrip(0);
         const rightButtons = this.getButtonsFromGrip(1);
         if (leftButtons[4] === 1 || rightButtons[4] === 1 // A or X
@@ -2054,110 +2192,47 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
         }
         if ((leftButtons[0] && rightButtons[0]) || // Trigger
-            this.keysDown.has('ArrowDown')) {
+            this.keysDown.has('KeyW')) {
             this.camera.getWorldDirection(this.direction);
-            this.direction.multiplyScalar(-t.deltaS * 5.0);
+            this.direction.multiplyScalar(-t.deltaS * 1.0);
             this.position.sub(this.direction);
             this.updateMatrix();
         }
         if ((leftButtons[1] && rightButtons[1]) || // Squeeze
-            this.keysDown.has('ArrowUp')) {
+            this.keysDown.has('KeyS')) {
             this.camera.getWorldDirection(this.direction);
-            this.direction.multiplyScalar(t.deltaS * 5.0);
+            this.direction.multiplyScalar(t.deltaS * 1.0);
             this.position.sub(this.direction);
             this.updateMatrix();
+        }
+        if (this.keysDown.has('ArrowLeft')) {
+            this.camera.rotateY(2 * t.deltaS);
+        }
+        if (this.keysDown.has('ArrowRight')) {
+            this.camera.rotateY(-2 * t.deltaS);
+        }
+        if (this.keysDown.has('ArrowUp')) {
+            this.camera.rotateX(2 * t.deltaS);
+        }
+        if (this.keysDown.has('ArrowDown')) {
+            this.camera.rotateX(-2 * t.deltaS);
         }
         this.camera.getWorldPosition(this.p1);
         this.worldToLocal(this.p1);
         for (const closePoint of this.starPositions.getAllWithinRadius(this.p1, 1e5)) {
             if (!this.currentStarMap.has(closePoint)) {
-                const starSystem = new StarSystem();
+                const starSystem = new starSystem_1.StarSystem();
                 starSystem.position.copy(closePoint);
                 this.currentStarMap.set(closePoint, starSystem);
                 this.add(starSystem);
             }
         }
-        // const closest = this.findClosestStar();
-        // if (closest.x != this.currentStarPosition.x ||
-        //   closest.y != this.currentStarPosition.y ||
-        //   closest.z != this.currentStarPosition.z) {
-        //   this.currentStarPosition.copy(closest);
-        //   if (this.currentStar) {
-        //     this.remove(this.currentStar);
-        //   }
-        //   this.currentStar = new StarSystem();
-        //   this.add(this.currentStar);
-        //   this.currentStar.position.copy(this.currentStarPosition);
-        // }
+        this.material.uniforms['sizeScale'].value = this.scale.x;
+        this.material.uniformsNeedUpdate = true;
     }
 }
 exports.VeryLargeUniverse = VeryLargeUniverse;
 //# sourceMappingURL=veryLargeUniverse.js.map
-
-/***/ }),
-
-/***/ 950:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Zoom = void 0;
-const THREE = __importStar(__webpack_require__(232));
-class Zoom {
-    static d = new THREE.Vector3;
-    static seed = new THREE.Vector3();
-    static other = new THREE.Vector3();
-    static makePerpendicular(l, r) {
-        this.d.copy(r);
-        this.d.sub(l);
-        this.seed.set(-this.d.y, this.d.x, 0);
-        this.seed.cross(this.d);
-        this.seed.setLength(this.d.length());
-        this.other.copy(this.d);
-        this.other.cross(this.seed);
-        this.other.setLength(this.d.length());
-        return [
-            new THREE.Vector3(l.x + this.seed.x, l.y + this.seed.y, l.z + this.seed.z),
-            new THREE.Vector3(l.x + this.other.x, l.y + this.other.y, l.z + this.other.z)
-        ];
-    }
-    static makeZoomMatrix(l1, r1, l2, r2) {
-        const [a1, b1] = Zoom.makePerpendicular(l1, r1);
-        const [a2, b2] = Zoom.makePerpendicular(l2, r2);
-        const initialPosition = new THREE.Matrix4();
-        initialPosition.set(l1.x, r1.x, a1.x, b1.x, l1.y, r1.y, a1.y, b1.y, l1.z, r1.z, a1.z, b1.z, 1, 1, 1, 1);
-        const newPosition = new THREE.Matrix4();
-        newPosition.set(l2.x, r2.x, a2.x, b2.x, l2.y, r2.y, a2.y, b2.y, l2.z, r2.z, a2.z, b2.z, 1, 1, 1, 1);
-        initialPosition.invert();
-        newPosition.multiplyMatrices(newPosition, initialPosition);
-        return newPosition;
-    }
-}
-exports.Zoom = Zoom;
-//# sourceMappingURL=zoom.js.map
 
 /***/ }),
 

@@ -47,6 +47,8 @@ export class BlockBuild {
     // this.construction.addCube(Assets.blocks[0]);
     // this.construction.save();
 
+    this.buildGeometry();
+
     this.getGrips();
   }
 
@@ -91,6 +93,26 @@ export class BlockBuild {
     } else {
       this.isSaving = false;
     }
+  }
+
+  private buildGeometry() {
+
+    for (let x = -20; x < 20; x++) {
+      for (let y = -20; y < 20; y++) {
+        for (let z = 0; z < 20; z++) {
+          if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
+            let o = new THREE.Object3D();
+            o = Assets.blocks[0].clone();
+            o.translateX(x);
+            o.translateY(y);
+            o.translateZ(-z - 10);
+            this.place.universeGroup.add(o);
+            this.construction.addCube(o);
+          }
+        }
+      }
+    }
+
   }
 
   private async setScene() {
@@ -138,8 +160,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-
-    Debug.log("Button 2 test.");
+    Debug.log("build cone.");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
