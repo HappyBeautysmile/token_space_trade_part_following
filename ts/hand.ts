@@ -122,6 +122,9 @@ export class Hand extends THREE.Object3D {
       if (buttons[1] === 1 && this.lastButtons[1] != 1) { // squeeze
         //this.debugMaterial.color = new THREE.Color('yellow');
       }
+      if (buttons[2] === 1 && this.lastButtons[2] != 1) { // 
+        Debug.log(`Button 2 pressed on ${source.handedness} hand.`)
+      }
       if (buttons[3] === 1 && this.lastButtons[3] != 1) {
         //this.debugMaterial.color = new THREE.Color('blue');
         this.construction.save();

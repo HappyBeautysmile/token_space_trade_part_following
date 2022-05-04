@@ -126,6 +126,8 @@ export class Assets extends THREE.Object3D {
 
         this.models['ship'] = await ModelLoader.loadModel("Model/ship.glb");
         this.models['guide'] = await ModelLoader.loadModel("Model/guide.glb");
+        this.models['cube-tweek'] = await ModelLoader.loadModel("Model/cube-tweek.glb");
+        this.models['cube-glob'] = await ModelLoader.loadModel("Model/cube-glob.glb");
 
         // TODO: load all glb files int the Model directory into this.models
 
