@@ -48,7 +48,7 @@ export class BlockBuild {
     // this.construction.addCube(Assets.blocks[0]);
     // this.construction.save();
 
-    this.buildAsteroid();
+    this.buildPlatform();
 
     this.getGrips();
   }
@@ -210,7 +210,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("massive asteroid");
+    Debug.log("plannet plane");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

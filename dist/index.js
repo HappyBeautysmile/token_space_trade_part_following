@@ -235,7 +235,7 @@ class BlockBuild {
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
-        this.buildAsteroid();
+        this.buildPlatform();
         this.getGrips();
     }
     tickEverything(o, tick) {
@@ -379,7 +379,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("massive asteroid");
+        debug_1.Debug.log("plannet plane");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
