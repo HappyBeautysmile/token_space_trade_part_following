@@ -1,88 +1,25 @@
 import * as THREE from "three";
-import { PointMapOctoTree } from "./pointMap";
+
 import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 import { StarSystem } from "./starSystem";
+import { PointCloud } from "./pointCloud";
 
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
 export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
+  private starCloud: PointCloud;
   private currentStarMap = new Map<THREE.Vector3, StarSystem>();
-  private starPositions = new PointMapOctoTree<THREE.Vector3>(
-    new THREE.Vector3(), 1e10);
-  private material: THREE.ShaderMaterial;
-
   constructor(private grips: THREE.Object3D[],
     private camera: THREE.Camera,
     private xr: THREE.WebXRManager,
     private keysDown: Set<string>) {
     super();
-    this.addStars();
+
+    this.starCloud = new PointCloud(
+      0, S.float('sr'), S.float('sr') / 10, S.float('ns'));
+    this.add(this.starCloud);
     this.position.set(0, 0, -1e6);
-  }
-
-  private gaussian(sd: number): number {
-    const n = 6;
-    let x = 0;
-    for (let i = 0; i < n; ++i) {
-      x += Math.random();
-      x -= Math.random();
-    }
-    return sd * (x / Math.sqrt(n));
-  }
-
-  private addStars() {
-    const positions: number[] = [];
-    const radius = S.float('sr');
-    for (let i = 0; i < S.float('ns'); ++i) {
-      const orbitalRadius = this.gaussian(radius);
-      const orbitalHeight = this.gaussian(radius / 10);
-      const theta = Math.random() * Math.PI * 2;
-      const v = new THREE.Vector3(
-        orbitalRadius * Math.cos(theta),
-        orbitalHeight,
-        orbitalRadius * Math.sin(theta));
-      this.starPositions.add(v, v);
-      positions.push(v.x, v.y, v.z);
-    }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position',
-      new THREE.Float32BufferAttribute(positions, 3));
-
-    this.material = new THREE.ShaderMaterial({
-      uniforms: {
-        'sizeScale': {
-          value: 1.0
-        },
-      },
-      vertexShader: `
-        uniform float sizeScale;
-        void main() {
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          float distance = abs(mvPosition.z);
-          if (distance > 1000.0) {
-            mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
-          }
-          gl_Position = projectionMatrix * mvPosition;
-          gl_PointSize = max(sizeScale * 800.0 / distance, 2.0);
-          
-        }`,
-      fragmentShader: `
-      void main() {
-        vec3 c = vec3(1.0, 1.0, 1.0);
-        vec2 coords = gl_PointCoord;
-        float intensity = 2.0 * (0.5 - length(gl_PointCoord - 0.5));
-        gl_FragColor = vec4(c.rgb * intensity, 1.0);
-      }`,
-      blending: THREE.AdditiveBlending,
-      depthTest: true,
-      depthWrite: false,
-      transparent: false,
-      vertexColors: true,
-    });
-
-    const points = new THREE.Points(geometry, this.material);
-    this.add(points);
   }
 
   private p1 = new THREE.Vector3();
@@ -105,6 +42,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   private m2 = new THREE.Matrix4();
   private m3 = new THREE.Matrix4();
   zoomAroundWorldOrigin(zoomFactor: number) {
+    // TODO: Fix this - it assumes position is initially zero (I think)
     this.position.multiplyScalar(zoomFactor);
     this.scale.multiplyScalar(zoomFactor);
   }
@@ -153,7 +91,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
 
     this.camera.getWorldPosition(this.p1);
     this.worldToLocal(this.p1);
-    for (const closePoint of this.starPositions.getAllWithinRadius(
+    for (const closePoint of this.starCloud.starPositions.getAllWithinRadius(
       this.p1, 1e5)) {
       if (!this.currentStarMap.has(closePoint)) {
         const starSystem = new StarSystem();
@@ -162,7 +100,5 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
         this.add(starSystem);
       }
     }
-    this.material.uniforms['sizeScale'].value = this.scale.x;
-    this.material.uniformsNeedUpdate = true;
   }
 }

@@ -51,7 +51,7 @@ export class AABB {
       Math.abs(this.p.x),
       Math.abs(this.p.y),
       Math.abs(this.p.z));
-    return distance <= this.radius + other.radius;
+    return distance <= this.radius + other.radius + 0.001;
   }
 
   contains(point: THREE.Vector3) {
@@ -61,7 +61,7 @@ export class AABB {
       Math.abs(this.p.x),
       Math.abs(this.p.y),
       Math.abs(this.p.z));
-    return distance <= this.radius;
+    return distance <= this.radius + 0.001;
   }
 
   split(): AABB[] {
