@@ -378,8 +378,49 @@ void main() {
   gl_FragColor = 
     vec4(vec3(1.0,1.0,1.0) * clamp(intensity, 0.0, 1.0), 1.0) +
     vec4(vColor.rgb, 0.0);
-}`))
+}`));
+      this.snippets.push(new CodeSnippet('fragment', `
+// Sinplex
+uniform float time;
+varying vec3 vColor;
+varying vec3 vWorldPosition;
+varying vec3 vNormal;
+varying vec3 vIncident;
 
+float mono(in vec3 v) {
+  return(sin(v.x + 17.2) * sin(v.y + 72.9) * sin(v.z + 29.1));
+}
+
+vec3 noise(in vec3 x) {
+  x = mat3(
+    1.0, 0.0, 0.0,
+    0.5, 0.866, 0.289,
+    0.5, 0.0, 0.866) * x;
+  return(vec3(mono(x.xxy + x.yzz), mono(x.xyy + x.zzx + 4123.1), mono(x.yyz + x.zxx + 3213.1)));
+}
+
+vec3 brown(in vec3 v) {
+  return(1.0 * noise(v) + 0.5 * noise(v * 2.0 + 827.2) + 0.33 * noise(v * 3.0 + 3182.7));
+}
+
+vec3 orange(in vec3 v) {
+  return brown(brown(v * 0.4) * 3.0);
+}
+
+vec3 green(in vec3 v) {
+  return orange(orange(v * 0.5) * 3.0);
+}
+      `));
+
+      this.snippets.push(new CodeSnippet('fragment', `
+// Sun Texture
+void main() {
+  vec3 x = vWorldPosition;
+  float density = 15.0;
+  vec3 c = green(x * density);
+  c = c * 0.5 + 0.5;
+  gl_FragColor = vec4(c, 1.0);
+}`));
     }
   }
 }
