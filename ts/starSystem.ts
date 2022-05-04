@@ -1,8 +1,10 @@
 import * as THREE from "three";
+import { PointCloud } from "./pointCloud";
 import { Tick } from "./tick";
 
 export class StarSystem extends THREE.Object3D {
   private material: THREE.ShaderMaterial;
+
   constructor() {
     super();
     this.material = StarSystem.makeStarMaterial();
@@ -11,8 +13,10 @@ export class StarSystem extends THREE.Object3D {
       this.material);
     mesh.scale.setLength(1e3);
     this.add(mesh);
-  }
 
+    const belt = new PointCloud(1e3, 1e2, 1e1, 10000);
+    this.add(belt);
+  }
   static makeStarMaterial() {
     return new THREE.ShaderMaterial({
       vertexShader: `
