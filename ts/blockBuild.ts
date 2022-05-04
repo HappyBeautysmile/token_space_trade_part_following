@@ -9,6 +9,7 @@ import { Assets } from "./assets";
 import { FileIO } from "./fileIO";
 import { Construction } from "./construction";
 import { Codec, Decode } from "./codec";
+import { MaterialExplorer } from "./materialExplorer";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -95,7 +96,7 @@ export class BlockBuild {
     }
   }
 
-  private buildGeometry() {
+  private buildCone() {
 
     for (let x = -20; x < 20; x++) {
       for (let y = -20; y < 20; y++) {
@@ -105,14 +106,46 @@ export class BlockBuild {
             o = Assets.blocks[0].clone();
             o.translateX(x);
             o.translateY(y);
-            o.translateZ(-z - 10);
+            o.translateZ(-z * 2 - 10);
             this.place.universeGroup.add(o);
             this.construction.addCube(o);
           }
         }
       }
     }
+  }
 
+  private addAt(x, y, z) {
+    let o = new THREE.Object3D();
+    o = Assets.models['cube-tweek'].clone();
+    o.translateX(x);
+    o.translateY(y);
+    o.translateZ(z);
+    o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
+    o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
+    o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
+    this.place.universeGroup.add(o);
+    this.construction.addCube(o);
+  }
+
+  private buildGeometry() {
+
+    const xDim = 20;
+    const yDim = 10;
+    const zDim = 30;
+    for (let x = -xDim; x < xDim; x++) {
+      for (let y = -yDim; y < 0; y++) {
+        for (let z = -zDim; z < zDim; z++) {
+          let xProb = (xDim - Math.abs(x)) / xDim;
+          let yProb = (yDim - Math.abs(y)) / yDim;
+          let zProb = (zDim - Math.abs(z)) / zDim;
+
+          if (xProb * yProb * zProb > (Math.random() / 10) + 0.5) {
+            this.addAt(x, y, z);
+          }
+        }
+      }
+    }
   }
 
   private async setScene() {
@@ -160,7 +193,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("build cone.");
+    Debug.log("build platform");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
