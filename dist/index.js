@@ -235,7 +235,7 @@ class BlockBuild {
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
-        this.buildGeometry();
+        this.buildAsteroid();
         this.getGrips();
     }
     tickEverything(o, tick) {
@@ -298,7 +298,12 @@ class BlockBuild {
     }
     addAt(x, y, z) {
         let o = new THREE.Object3D();
-        o = assets_1.Assets.models['cube-tweek'].clone();
+        if (Math.random() < 0.9) {
+            o = assets_1.Assets.models['cube-tweek'].clone();
+        }
+        else {
+            o = assets_1.Assets.models['cube-glob'].clone();
+        }
         o.translateX(x);
         o.translateY(y);
         o.translateZ(z);
@@ -308,7 +313,7 @@ class BlockBuild {
         this.place.universeGroup.add(o);
         this.construction.addCube(o);
     }
-    buildGeometry() {
+    buildPlatform() {
         const xDim = 20;
         const yDim = 10;
         const zDim = 30;
@@ -319,6 +324,18 @@ class BlockBuild {
                     let yProb = (yDim - Math.abs(y)) / yDim;
                     let zProb = (zDim - Math.abs(z)) / zDim;
                     if (xProb * yProb * zProb > (Math.random() / 10) + 0.5) {
+                        this.addAt(x, y, z);
+                    }
+                }
+            }
+        }
+    }
+    buildAsteroid() {
+        const r = 20;
+        for (let x = -r; x < r; x++) {
+            for (let y = -r; y < r; y++) {
+                for (let z = -r; z < r; z++) {
+                    if (Math.sqrt(x * x + y * y + z * z) < r + Math.random() - 0.5) {
                         this.addAt(x, y, z);
                     }
                 }
@@ -362,7 +379,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("build platform");
+        debug_1.Debug.log("massive asteroid");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
