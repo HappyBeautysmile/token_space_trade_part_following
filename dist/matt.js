@@ -26,7 +26,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Assets = void 0;
+exports.Assets = exports.Item = void 0;
 const THREE = __importStar(__webpack_require__(578));
 //import * as fs from "fs";
 const debug_1 = __webpack_require__(756);
@@ -53,13 +53,21 @@ class ModelLoader {
         }
     }
 }
+class Item {
+    name;
+    description;
+    baseValue;
+    modelName;
+}
+exports.Item = Item;
 class Assets extends THREE.Object3D {
     static blocks = [];
     static modelIndex = 0;
     static materials = [];
     static materialIndex = 0;
     static models = new Map();
-    static init() {
+    static items = [];
+    static async init() {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
@@ -98,6 +106,8 @@ class Assets extends THREE.Object3D {
         });
         glossBlack.userData["materialName"] = "glossBlack";
         Assets.materials.push(glossBlack);
+        await Assets.LoadAllModels();
+        this.initItems();
     }
     // sets the color of the passed object to the next color in the palette.
     static nextColor(source) {
@@ -121,6 +131,16 @@ class Assets extends THREE.Object3D {
         debug_1.Debug.log('materials.length=' + Assets.materials.length.toString());
         return Assets.materials[Assets.materialIndex];
     }
+    // static meshOnly(o: THREE.Object3D) {
+    //     let newChildren = [];
+    //     for (let element of o.children) {
+    //         if (element instanceof THREE.Mesh) {
+    //             newChildren.push(element);
+    //         }
+    //     }
+    //     o.children = newChildren;
+    //     return o;
+    // }
     static async LoadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port', 'console'];
         for (const modelName of models) {
@@ -154,9 +174,145 @@ class Assets extends THREE.Object3D {
         //     });
         // });
     }
+    // TODO: this is called twice, it should only be called once. There is probably something calling Asset.init twice.
+    static initItems() {
+        Assets.items = [];
+        for (const b of Assets.blocks) {
+            let i = new Item();
+            i.baseValue = 0;
+            i.description = "This is a wonderful thing.";
+            i.name = b.userData["modelName"];
+            i.modelName = b.userData["modelName"];
+            Assets.items.push(i);
+        }
+        // TODO: models has items in it, but is not itterated.
+        Assets.models.forEach((value, key, map) => {
+            let i = new Item();
+            i.baseValue = 0;
+            i.description = "This is a wonderful thing.";
+            i.name = key;
+            i.modelName = key;
+            Assets.items.push(i);
+        });
+    }
 }
 exports.Assets = Assets;
 //# sourceMappingURL=assets.js.map
+
+/***/ }),
+
+/***/ 419:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AstroGen = void 0;
+const THREE = __importStar(__webpack_require__(578));
+const assets_1 = __webpack_require__(398);
+class AstroGen {
+    place;
+    construction;
+    constructor(place, construction) {
+        this.place = place;
+        this.construction = construction;
+    }
+    buildCone() {
+        for (let x = -20; x < 20; x++) {
+            for (let y = -20; y < 20; y++) {
+                for (let z = 0; z < 20; z++) {
+                    if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
+                        let o = new THREE.Object3D();
+                        o = assets_1.Assets.blocks[0].clone();
+                        o.translateX(x);
+                        o.translateY(y);
+                        o.translateZ(-z * 2 - 10);
+                        this.place.universeGroup.add(o);
+                        this.construction.addCube(o);
+                    }
+                }
+            }
+        }
+    }
+    addAt(x, y, z) {
+        let o = new THREE.Object3D();
+        if (Math.random() < 0.9) {
+            o = assets_1.Assets.models['cube-tweek'].clone();
+        }
+        else {
+            o = assets_1.Assets.models['cube-glob'].clone();
+        }
+        // // TODO: color change not working.  It seems that clone isn't deep.
+        // let mesh = o.children[0].clone() as THREE.Mesh;
+        // let material = mesh.material as THREE.MeshStandardMaterial;
+        // let rgb = { r: 0, g: 0, b: 0 }
+        // if (material) {
+        //     if (material.color) {
+        //         material.color.getRGB(rgb);
+        //         rgb.r = rgb.r + (Math.random() - 0.5) * .1;
+        //         rgb.g = rgb.g + (Math.random() - 0.5) * .1;
+        //         rgb.b = rgb.b + (Math.random() - 0.5) * .1;
+        //         let newMaterial = material.clone();
+        //         newMaterial.color.setRGB(rgb.r, rgb.g, rgb.b);
+        //         mesh.material = newMaterial;
+        //     }
+        // }
+        // o.children[0] = mesh;
+        o.translateX(x);
+        o.translateY(y);
+        o.translateZ(z);
+        o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
+        o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
+        o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
+        this.place.universeGroup.add(o);
+        this.construction.addCube(o);
+    }
+    buildPlatform(xDim, yDim, zDim, xOffset, yOffset, zOffset) {
+        for (let x = -xDim; x < xDim; x++) {
+            for (let y = -yDim; y < 0; y++) {
+                for (let z = -zDim; z < zDim; z++) {
+                    let xProb = (xDim - Math.abs(x)) / xDim;
+                    let yProb = (yDim - Math.abs(y)) / yDim;
+                    let zProb = (zDim - Math.abs(z)) / zDim;
+                    if (xProb * yProb * zProb > (Math.random() / 10) + 0.5) {
+                        this.addAt(x + xOffset, y + yOffset, z + zOffset);
+                    }
+                }
+            }
+        }
+    }
+    buildAsteroid(r = 20, xOffset, yOffset, zOffset) {
+        for (let x = -r; x < r; x++) {
+            for (let y = -r; y < r; y++) {
+                for (let z = -r; z < r; z++) {
+                    if (Math.sqrt(x * x + y * y + z * z) < r + Math.random() - 0.5) {
+                        this.addAt(x + xOffset, y + yOffset, z + zOffset);
+                    }
+                }
+            }
+        }
+    }
+}
+exports.AstroGen = AstroGen;
+//# sourceMappingURL=astroGen.js.map
 
 /***/ }),
 
@@ -196,6 +352,7 @@ const assets_1 = __webpack_require__(398);
 const fileIO_1 = __webpack_require__(3);
 const construction_1 = __webpack_require__(844);
 const codec_1 = __webpack_require__(385);
+const astroGen_1 = __webpack_require__(419);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -222,12 +379,13 @@ class BlockBuild {
         // Read the Debug.log statements carefully to check that the order
         // makes sense.
         debug_1.Debug.log('setScene complete');
-        await assets_1.Assets.LoadAllModels();
+        await assets_1.Assets.init();
         debug_1.Debug.log("all models loaded.");
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
-        this.buildPlatform();
+        let ab = new astroGen_1.AstroGen(this.place, this.construction);
+        ab.buildPlatform(20, 10, 30, 0, 0, 0);
         this.getGrips();
     }
     tickEverything(o, tick) {
@@ -271,69 +429,6 @@ class BlockBuild {
             this.isSaving = false;
         }
     }
-    buildCone() {
-        for (let x = -20; x < 20; x++) {
-            for (let y = -20; y < 20; y++) {
-                for (let z = 0; z < 20; z++) {
-                    if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
-                        let o = new THREE.Object3D();
-                        o = assets_1.Assets.blocks[0].clone();
-                        o.translateX(x);
-                        o.translateY(y);
-                        o.translateZ(-z * 2 - 10);
-                        this.place.universeGroup.add(o);
-                        this.construction.addCube(o);
-                    }
-                }
-            }
-        }
-    }
-    addAt(x, y, z) {
-        let o = new THREE.Object3D();
-        if (Math.random() < 0.9) {
-            o = assets_1.Assets.models['cube-tweek'].clone();
-        }
-        else {
-            o = assets_1.Assets.models['cube-glob'].clone();
-        }
-        o.translateX(x);
-        o.translateY(y);
-        o.translateZ(z);
-        o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
-        o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
-        o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
-        this.place.universeGroup.add(o);
-        this.construction.addCube(o);
-    }
-    buildPlatform() {
-        const xDim = 20;
-        const yDim = 10;
-        const zDim = 30;
-        for (let x = -xDim; x < xDim; x++) {
-            for (let y = -yDim; y < 0; y++) {
-                for (let z = -zDim; z < zDim; z++) {
-                    let xProb = (xDim - Math.abs(x)) / xDim;
-                    let yProb = (yDim - Math.abs(y)) / yDim;
-                    let zProb = (zDim - Math.abs(z)) / zDim;
-                    if (xProb * yProb * zProb > (Math.random() / 10) + 0.5) {
-                        this.addAt(x, y, z);
-                    }
-                }
-            }
-        }
-    }
-    buildAsteroid() {
-        const r = 20;
-        for (let x = -r; x < r; x++) {
-            for (let y = -r; y < r; y++) {
-                for (let z = -r; z < r; z++) {
-                    if (Math.sqrt(x * x + y * y + z * z) < r + Math.random() - 0.5) {
-                        this.addAt(x, y, z);
-                    }
-                }
-            }
-        }
-    }
     async setScene() {
         assets_1.Assets.init();
         document.body.innerHTML = "";
@@ -358,7 +453,7 @@ class BlockBuild {
         this.renderer.setSize(512, 512);
         document.body.appendChild(this.renderer.domElement);
         this.renderer.xr.enabled = true;
-        const light = new THREE.AmbientLight(0x404040); // soft white light
+        const light = new THREE.AmbientLight(0x101020); // dark blue light
         this.scene.add(light);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(2, 40, 10);
@@ -371,7 +466,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("plannet plane");
+        debug_1.Debug.log("add astroGen");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -688,7 +783,7 @@ class Game {
     grips = [];
     constructor() {
         document.body.innerHTML = '';
-        this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
+        this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.01, 2000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
         this.scene.add(this.camera);
@@ -1703,11 +1798,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PointCloud = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const pointMap_1 = __webpack_require__(228);
+const settings_1 = __webpack_require__(451);
 class PointCloud extends THREE.Object3D {
+    color;
+    pointRadius;
     starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     material;
-    constructor(radius, radiusSd, ySd, count) {
+    constructor(radius, radiusSd, ySd, count, color, pointRadius) {
         super();
+        this.color = color;
+        this.pointRadius = pointRadius;
         this.addStars(radius, radiusSd, ySd, count);
     }
     static gaussian(sd) {
@@ -1733,28 +1833,34 @@ class PointCloud extends THREE.Object3D {
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
         this.material = new THREE.ShaderMaterial({
             uniforms: {
-                'sizeScale': {
-                    value: 1.0
-                },
+                'sizeScale': { value: 1.0 },
+                'uColor': { value: this.color },
             },
             vertexShader: `
         uniform float sizeScale;
+        varying float vDistance;
         void main() {
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          float distance = abs(mvPosition.z);
-          if (distance > 1000.0) {
-            mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
+          vDistance = abs(mvPosition.z);
+          if (vDistance > 1000.0) {
+            mvPosition.xyz = mvPosition.xyz * (1000.0 / vDistance);
           }
           gl_Position = projectionMatrix * mvPosition;
-          gl_PointSize = max(sizeScale * 800.0 / distance, 2.0);
+          gl_PointSize = max(sizeScale * 800.0 / vDistance, 2.0);
           
         }`,
             fragmentShader: `
+      uniform vec3 uColor;
+      varying float vDistance;
       void main() {
-        vec3 c = vec3(1.0, 1.0, 1.0);
         vec2 coords = gl_PointCoord;
-        float intensity = 2.0 * (0.5 - length(gl_PointCoord - 0.5));
-        gl_FragColor = vec4(c.rgb * intensity, 1.0);
+        float intensity = clamp(
+          10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
+        float brightness = clamp(${settings_1.S.float('pbf').toFixed(1)} / vDistance, 0.1, 1.0);
+        vec3 color = uColor;
+        // intensity = 0.2;
+        // brightness = 0.2;
+        gl_FragColor = vec4(uColor * intensity * brightness, 1.0);
       }`,
             blending: THREE.AdditiveBlending,
             depthTest: true,
@@ -1770,7 +1876,8 @@ class PointCloud extends THREE.Object3D {
     worldScale = new THREE.Vector3();
     tick(t) {
         this.worldScale.setFromMatrixScale(this.matrixWorld);
-        this.material.uniforms['sizeScale'].value = this.worldScale.x;
+        this.material.uniforms['sizeScale'].value =
+            this.worldScale.x * this.pointRadius;
         this.material.uniformsNeedUpdate = true;
     }
 }
@@ -1990,6 +2097,7 @@ class S {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e8, 'Starfield radius');
         S.setDefault('ns', 1e5, 'Number of stars in the VLU');
+        S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -2047,8 +2155,14 @@ class StarSystem extends THREE.Object3D {
         const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 2), this.material);
         mesh.scale.setLength(1e3);
         this.add(mesh);
-        const belt = new pointCloud_1.PointCloud(1e3, 1e2, 1e1, 10000);
+        const belt = new pointCloud_1.PointCloud(
+        /*radius=*/ 1e4, /*radiusSd=*/ 1e3, 1e2, 10000, new THREE.Color('#888'), 
+        /*pointRadius=*/ 1e2);
         this.add(belt);
+        const planets = new pointCloud_1.PointCloud(
+        /*radius=*/ 1e4, /*radiusSd=*/ 2e4, 1e3, 10, new THREE.Color('#8ff'), 
+        /*pointRadius=*/ 1e3);
+        this.add(planets);
     }
     static makeStarMaterial() {
         return new THREE.ShaderMaterial({
@@ -2208,7 +2322,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.camera = camera;
         this.xr = xr;
         this.keysDown = keysDown;
-        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'));
+        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ff4'), /*pointRadius=*/ 1.0);
         this.add(this.starCloud);
         this.position.set(0, 0, -1e6);
     }

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { PointMapOctoTree } from "./pointMap";
+import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 
 export class PointCloud extends THREE.Object3D implements Ticker {
@@ -7,7 +8,8 @@ export class PointCloud extends THREE.Object3D implements Ticker {
     new THREE.Vector3(), 1e10);
   private material: THREE.ShaderMaterial;
 
-  constructor(radius: number, radiusSd: number, ySd: number, count: number) {
+  constructor(radius: number, radiusSd: number, ySd: number,
+    count: number, private color: THREE.Color, private pointRadius: number) {
     super();
     this.addStars(radius, radiusSd, ySd, count)
   }
@@ -41,28 +43,34 @@ export class PointCloud extends THREE.Object3D implements Ticker {
 
     this.material = new THREE.ShaderMaterial({
       uniforms: {
-        'sizeScale': {
-          value: 1.0
-        },
+        'sizeScale': { value: 1.0 },
+        'uColor': { value: this.color },
       },
       vertexShader: `
         uniform float sizeScale;
+        varying float vDistance;
         void main() {
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          float distance = abs(mvPosition.z);
-          if (distance > 1000.0) {
-            mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
+          vDistance = abs(mvPosition.z);
+          if (vDistance > 1000.0) {
+            mvPosition.xyz = mvPosition.xyz * (1000.0 / vDistance);
           }
           gl_Position = projectionMatrix * mvPosition;
-          gl_PointSize = max(sizeScale * 800.0 / distance, 2.0);
+          gl_PointSize = max(sizeScale * 800.0 / vDistance, 2.0);
           
         }`,
       fragmentShader: `
+      uniform vec3 uColor;
+      varying float vDistance;
       void main() {
-        vec3 c = vec3(1.0, 1.0, 1.0);
         vec2 coords = gl_PointCoord;
-        float intensity = 2.0 * (0.5 - length(gl_PointCoord - 0.5));
-        gl_FragColor = vec4(c.rgb * intensity, 1.0);
+        float intensity = clamp(
+          10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
+        float brightness = clamp(${S.float('pbf').toFixed(1)} / vDistance, 0.1, 1.0);
+        vec3 color = uColor;
+        // intensity = 0.2;
+        // brightness = 0.2;
+        gl_FragColor = vec4(uColor * intensity * brightness, 1.0);
       }`,
       blending: THREE.AdditiveBlending,
       depthTest: true,
@@ -80,7 +88,8 @@ export class PointCloud extends THREE.Object3D implements Ticker {
   private worldScale = new THREE.Vector3();
   tick(t: Tick) {
     this.worldScale.setFromMatrixScale(this.matrixWorld);
-    this.material.uniforms['sizeScale'].value = this.worldScale.x;
+    this.material.uniforms['sizeScale'].value =
+      this.worldScale.x * this.pointRadius;
     this.material.uniformsNeedUpdate = true;
   }
 

@@ -18,7 +18,7 @@ export class Game {
   constructor() {
     document.body.innerHTML = '';
     this.camera = new THREE.PerspectiveCamera(75,
-      1.0, 0.1, 2000);
+      1.0, 0.01, 2000);
     this.camera.position.set(0, 1.7, 0);
     this.camera.lookAt(0, 1.7, -1.5);
     this.scene.add(this.camera);

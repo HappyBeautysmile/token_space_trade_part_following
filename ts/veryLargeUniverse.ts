@@ -17,7 +17,8 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     super();
 
     this.starCloud = new PointCloud(
-      0, S.float('sr'), S.float('sr') / 10, S.float('ns'));
+      0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
+      new THREE.Color('#ff4'), /*pointRadius=*/1.0);
     this.add(this.starCloud);
     this.position.set(0, 0, -1e6);
   }

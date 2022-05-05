@@ -14,8 +14,16 @@ export class StarSystem extends THREE.Object3D {
     mesh.scale.setLength(1e3);
     this.add(mesh);
 
-    const belt = new PointCloud(1e3, 1e2, 1e1, 10000);
+    const belt = new PointCloud(
+      /*radius=*/1e4, /*radiusSd=*/1e3, 1e2, 10000, new THREE.Color('#888'),
+      /*pointRadius=*/1e2);
     this.add(belt);
+
+    const planets = new PointCloud(
+      /*radius=*/1e4, /*radiusSd=*/2e4, 1e3, 10, new THREE.Color('#8ff'),
+      /*pointRadius=*/1e3);
+    this.add(planets);
+
   }
   static makeStarMaterial() {
     return new THREE.ShaderMaterial({
