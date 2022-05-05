@@ -42,7 +42,7 @@ export class BlockBuild {
     // Read the Debug.log statements carefully to check that the order
     // makes sense.
     Debug.log('setScene complete');
-    await Assets.LoadAllModels();
+    await Assets.init();
     Debug.log("all models loaded.");
 
     // this.universeGroup.add(Assets.models["ship"]);

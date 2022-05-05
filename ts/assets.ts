@@ -27,6 +27,12 @@ class ModelLoader {
     }
 }
 
+export class Item {
+    name: string;
+    description: string;
+    baseValue: number;
+    modelName: string;
+}
 
 export class Assets extends THREE.Object3D {
 
@@ -35,8 +41,9 @@ export class Assets extends THREE.Object3D {
     static materials: THREE.Material[] = [];
     static materialIndex = 0;
     static models: Map<string, THREE.Object3D> = new Map<string, THREE.Object3D>();
+    static items: Item[] = [];
 
-    static init() {
+    static async init() {
         Palette.init();
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
@@ -77,6 +84,8 @@ export class Assets extends THREE.Object3D {
         });
         glossBlack.userData["materialName"] = "glossBlack";
         Assets.materials.push(glossBlack);
+        await Assets.LoadAllModels();
+        this.initItems();
     }
 
     // sets the color of the passed object to the next color in the palette.
@@ -152,5 +161,27 @@ export class Assets extends THREE.Object3D {
         //         this.models[filename.split('.')[0]] = m;
         //     });
         // });
+    }
+
+    // TODO: this is called twice, it should only be called once. There is probably something calling Asset.init twice.
+    static initItems() {
+        Assets.items = [];
+        for (const b of Assets.blocks) {
+            let i = new Item();
+            i.baseValue = 0;
+            i.description = "This is a wonderful thing.";
+            i.name = b.userData["modelName"];
+            i.modelName = b.userData["modelName"];
+            Assets.items.push(i);
+        }
+        // TODO: models has items in it, but is not itterated.
+        Assets.models.forEach((value, key, map) => {
+            let i = new Item();
+            i.baseValue = 0;
+            i.description = "This is a wonderful thing.";
+            i.name = key;
+            i.modelName = key;
+            Assets.items.push(i);
+        });
     }
 }

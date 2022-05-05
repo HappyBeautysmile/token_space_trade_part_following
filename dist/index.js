@@ -30,7 +30,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Assets = void 0;
+exports.Assets = exports.Item = void 0;
 const THREE = __importStar(__webpack_require__(232));
 //import * as fs from "fs";
 const debug_1 = __webpack_require__(756);
@@ -57,13 +57,21 @@ class ModelLoader {
         }
     }
 }
+class Item {
+    name;
+    description;
+    baseValue;
+    modelName;
+}
+exports.Item = Item;
 class Assets extends THREE.Object3D {
     static blocks = [];
     static modelIndex = 0;
     static materials = [];
     static materialIndex = 0;
     static models = new Map();
-    static init() {
+    static items = [];
+    static async init() {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
         let flatPrimary = new THREE.MeshPhongMaterial({ color: 0x998877 });
@@ -102,6 +110,8 @@ class Assets extends THREE.Object3D {
         });
         glossBlack.userData["materialName"] = "glossBlack";
         Assets.materials.push(glossBlack);
+        await Assets.LoadAllModels();
+        this.initItems();
     }
     // sets the color of the passed object to the next color in the palette.
     static nextColor(source) {
@@ -167,6 +177,27 @@ class Assets extends THREE.Object3D {
         //         this.models[filename.split('.')[0]] = m;
         //     });
         // });
+    }
+    // TODO: this is called twice, it should only be called once. There is probably something calling Asset.init twice.
+    static initItems() {
+        Assets.items = [];
+        for (const b of Assets.blocks) {
+            let i = new Item();
+            i.baseValue = 0;
+            i.description = "This is a wonderful thing.";
+            i.name = b.userData["modelName"];
+            i.modelName = b.userData["modelName"];
+            Assets.items.push(i);
+        }
+        // TODO: models has items in it, but is not itterated.
+        Assets.models.forEach((value, key, map) => {
+            let i = new Item();
+            i.baseValue = 0;
+            i.description = "This is a wonderful thing.";
+            i.name = key;
+            i.modelName = key;
+            Assets.items.push(i);
+        });
     }
 }
 exports.Assets = Assets;
@@ -237,18 +268,22 @@ class AstroGen {
         else {
             o = assets_1.Assets.models['cube-glob'].clone();
         }
-        let mesh = o.children[0];
-        let material = mesh.material;
-        let rgb = { r: 0, g: 0, b: 0 };
-        if (material) {
-            if (material.color) {
-                material.color.getRGB(rgb);
-                rgb.r = rgb.r + (Math.random() - 0.5) * .1;
-                rgb.g = rgb.g + (Math.random() - 0.5) * .1;
-                rgb.b = rgb.b + (Math.random() - 0.5) * .1;
-                material.color.setRGB(rgb.r, rgb.g, rgb.b);
-            }
-        }
+        // // TODO: color change not working.  It seems that clone isn't deep.
+        // let mesh = o.children[0].clone() as THREE.Mesh;
+        // let material = mesh.material as THREE.MeshStandardMaterial;
+        // let rgb = { r: 0, g: 0, b: 0 }
+        // if (material) {
+        //     if (material.color) {
+        //         material.color.getRGB(rgb);
+        //         rgb.r = rgb.r + (Math.random() - 0.5) * .1;
+        //         rgb.g = rgb.g + (Math.random() - 0.5) * .1;
+        //         rgb.b = rgb.b + (Math.random() - 0.5) * .1;
+        //         let newMaterial = material.clone();
+        //         newMaterial.color.setRGB(rgb.r, rgb.g, rgb.b);
+        //         mesh.material = newMaterial;
+        //     }
+        // }
+        // o.children[0] = mesh;
         o.translateX(x);
         o.translateY(y);
         o.translateZ(z);
@@ -272,13 +307,12 @@ class AstroGen {
             }
         }
     }
-    buildAsteroid() {
-        const r = 20;
+    buildAsteroid(r = 20, xOffset, yOffset, zOffset) {
         for (let x = -r; x < r; x++) {
             for (let y = -r; y < r; y++) {
                 for (let z = -r; z < r; z++) {
                     if (Math.sqrt(x * x + y * y + z * z) < r + Math.random() - 0.5) {
-                        this.addAt(x, y, z);
+                        this.addAt(x + xOffset, y + yOffset, z + zOffset);
                     }
                 }
             }
@@ -357,7 +391,7 @@ class BlockBuild {
         // Read the Debug.log statements carefully to check that the order
         // makes sense.
         debug_1.Debug.log('setScene complete');
-        await assets_1.Assets.LoadAllModels();
+        await assets_1.Assets.init();
         debug_1.Debug.log("all models loaded.");
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
