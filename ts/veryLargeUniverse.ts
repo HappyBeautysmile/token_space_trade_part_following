@@ -23,8 +23,6 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     this.position.set(0, 0, -1e6);
   }
 
-  private p1 = new THREE.Vector3();
-
   private getButtonsFromGrip(index: number): number[] {
     let source: THREE.XRInputSource = null;
     const session = this.xr.getSession();
@@ -39,13 +37,17 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   }
 
   private direction = new THREE.Vector3();
-  private m1 = new THREE.Matrix4();
-  private m2 = new THREE.Matrix4();
-  private m3 = new THREE.Matrix4();
+  private p1 = new THREE.Vector3();
   zoomAroundWorldOrigin(zoomFactor: number) {
-    // TODO: Fix this - it assumes position is initially zero (I think)
-    this.position.multiplyScalar(zoomFactor);
+    // TODO: This probably could be much simpler. :-/
+    this.p1.copy(this.camera.position); // World Origin
+    this.worldToLocal(this.p1);  // Local
     this.scale.multiplyScalar(zoomFactor);
+    this.updateMatrix();
+    this.updateMatrixWorld();
+    this.localToWorld(this.p1);  // World Again
+    this.p1.sub(this.camera.position);
+    this.position.sub(this.p1);  // Now we should be centered again.
   }
 
   tick(t: Tick) {
@@ -62,7 +64,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     }
 
     if ((leftButtons[0] && rightButtons[0]) ||  // Trigger
-      this.keysDown.has('KeyW')) {
+      this.keysDown.has('KeyS')) {
       this.camera.getWorldDirection(this.direction);
       this.direction.multiplyScalar(-t.deltaS * 1.0);
       this.position.sub(this.direction);
@@ -70,7 +72,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     }
 
     if ((leftButtons[1] && rightButtons[1]) ||  // Squeeze
-      this.keysDown.has('KeyS')) {
+      this.keysDown.has('KeyW')) {
       this.camera.getWorldDirection(this.direction);
       this.direction.multiplyScalar(t.deltaS * 1.0);
       this.position.sub(this.direction);

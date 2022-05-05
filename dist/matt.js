@@ -1858,8 +1858,6 @@ class PointCloud extends THREE.Object3D {
           10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
         float brightness = clamp(${settings_1.S.float('pbf').toFixed(1)} / vDistance, 0.1, 1.0);
         vec3 color = uColor;
-        // intensity = 0.2;
-        // brightness = 0.2;
         gl_FragColor = vec4(uColor * intensity * brightness, 1.0);
       }`,
             blending: THREE.AdditiveBlending,
@@ -2326,7 +2324,6 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.add(this.starCloud);
         this.position.set(0, 0, -1e6);
     }
-    p1 = new THREE.Vector3();
     getButtonsFromGrip(index) {
         let source = null;
         const session = this.xr.getSession();
@@ -2341,13 +2338,16 @@ class VeryLargeUniverse extends THREE.Object3D {
         }
     }
     direction = new THREE.Vector3();
-    m1 = new THREE.Matrix4();
-    m2 = new THREE.Matrix4();
-    m3 = new THREE.Matrix4();
+    p1 = new THREE.Vector3();
     zoomAroundWorldOrigin(zoomFactor) {
-        // TODO: Fix this - it assumes position is initially zero (I think)
-        this.position.multiplyScalar(zoomFactor);
+        this.p1.copy(this.camera.position); // World Origin
+        this.worldToLocal(this.p1); // Local
         this.scale.multiplyScalar(zoomFactor);
+        this.updateMatrix();
+        this.updateMatrixWorld();
+        this.localToWorld(this.p1); // World Again
+        this.p1.sub(this.camera.position);
+        this.position.sub(this.p1); // Now we should be centered again.
     }
     tick(t) {
         const leftButtons = this.getButtonsFromGrip(0);
@@ -2361,14 +2361,14 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
         }
         if ((leftButtons[0] && rightButtons[0]) || // Trigger
-            this.keysDown.has('KeyW')) {
+            this.keysDown.has('KeyS')) {
             this.camera.getWorldDirection(this.direction);
             this.direction.multiplyScalar(-t.deltaS * 1.0);
             this.position.sub(this.direction);
             this.updateMatrix();
         }
         if ((leftButtons[1] && rightButtons[1]) || // Squeeze
-            this.keysDown.has('KeyS')) {
+            this.keysDown.has('KeyW')) {
             this.camera.getWorldDirection(this.direction);
             this.direction.multiplyScalar(t.deltaS * 1.0);
             this.position.sub(this.direction);

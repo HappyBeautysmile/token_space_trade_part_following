@@ -68,8 +68,6 @@ export class PointCloud extends THREE.Object3D implements Ticker {
           10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
         float brightness = clamp(${S.float('pbf').toFixed(1)} / vDistance, 0.1, 1.0);
         vec3 color = uColor;
-        // intensity = 0.2;
-        // brightness = 0.2;
         gl_FragColor = vec4(uColor * intensity * brightness, 1.0);
       }`,
       blending: THREE.AdditiveBlending,
