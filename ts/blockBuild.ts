@@ -10,6 +10,7 @@ import { FileIO } from "./fileIO";
 import { Construction } from "./construction";
 import { Codec, Decode } from "./codec";
 import { MaterialExplorer } from "./materialExplorer";
+import { AstroGen } from "./astroGen";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -48,7 +49,8 @@ export class BlockBuild {
     // this.construction.addCube(Assets.blocks[0]);
     // this.construction.save();
 
-    this.buildPlatform();
+    let ab = new AstroGen(this.place, this.construction);
+    ab.buildPlatform(20, 10, 30, 0, 0, 0);
 
     this.getGrips();
   }
@@ -95,76 +97,6 @@ export class BlockBuild {
       this.isSaving = false;
     }
   }
-
-  private buildCone() {
-
-    for (let x = -20; x < 20; x++) {
-      for (let y = -20; y < 20; y++) {
-        for (let z = 0; z < 20; z++) {
-          if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
-            let o = new THREE.Object3D();
-            o = Assets.blocks[0].clone();
-            o.translateX(x);
-            o.translateY(y);
-            o.translateZ(-z * 2 - 10);
-            this.place.universeGroup.add(o);
-            this.construction.addCube(o);
-          }
-        }
-      }
-    }
-  }
-
-  private addAt(x, y, z) {
-    let o = new THREE.Object3D();
-    if (Math.random() < 0.9) {
-      o = Assets.models['cube-tweek'].clone();
-    }
-    else {
-      o = Assets.models['cube-glob'].clone();
-    }
-
-    o.translateX(x);
-    o.translateY(y);
-    o.translateZ(z);
-    o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
-    o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
-    o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
-    this.place.universeGroup.add(o);
-    this.construction.addCube(o);
-  }
-
-  private buildPlatform() {
-    const xDim = 20;
-    const yDim = 10;
-    const zDim = 30;
-    for (let x = -xDim; x < xDim; x++) {
-      for (let y = -yDim; y < 0; y++) {
-        for (let z = -zDim; z < zDim; z++) {
-          let xProb = (xDim - Math.abs(x)) / xDim;
-          let yProb = (yDim - Math.abs(y)) / yDim;
-          let zProb = (zDim - Math.abs(z)) / zDim;
-
-          if (xProb * yProb * zProb > (Math.random() / 10) + 0.5) {
-            this.addAt(x, y, z);
-          }
-        }
-      }
-    }
-  }
-  private buildAsteroid() {
-    const r = 20;
-    for (let x = -r; x < r; x++) {
-      for (let y = -r; y < r; y++) {
-        for (let z = -r; z < r; z++) {
-          if (Math.sqrt(x * x + y * y + z * z) < r + Math.random() - 0.5) {
-            this.addAt(x, y, z);
-          }
-        }
-      }
-    }
-  }
-
   private async setScene() {
     Assets.init();
     document.body.innerHTML = "";
@@ -195,7 +127,7 @@ export class BlockBuild {
     document.body.appendChild(this.renderer.domElement);
     this.renderer.xr.enabled = true;
 
-    const light = new THREE.AmbientLight(0x404040); // soft white light
+    const light = new THREE.AmbientLight(0x101020); // dark blue light
     this.scene.add(light);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(2, 40, 10);
@@ -210,7 +142,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("plannet plane");
+    Debug.log("add astroGen");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

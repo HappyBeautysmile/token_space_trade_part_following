@@ -105,17 +105,26 @@ export class Assets extends THREE.Object3D {
         return Assets.materials[Assets.materialIndex];
     }
 
+    static meshOnly(o: THREE.Object3D) {
+        let newChildren = [];
+        for (let element of o.children) {
+            if (element instanceof THREE.Mesh) {
+                newChildren.push(element);
+            }
+        }
+        o.children = newChildren;
+        return o;
+    }
+
     static async LoadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port', 'console']
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
-            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+            let m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
             if (!m) {
                 continue;
             }
-            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-            //this.assets.replaceMaterial(m, newMat);
-            m.scale.set(1, 1, 1);
+            m = this.meshOnly(m);
             m.userData = { "modelName": modelName };
             this.blocks.push(m);
             //this.scene.add(m);

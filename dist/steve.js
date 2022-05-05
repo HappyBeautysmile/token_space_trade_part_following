@@ -125,17 +125,25 @@ class Assets extends THREE.Object3D {
         debug_1.Debug.log('materials.length=' + Assets.materials.length.toString());
         return Assets.materials[Assets.materialIndex];
     }
+    static meshOnly(o) {
+        let newChildren = [];
+        for (let element of o.children) {
+            if (element instanceof THREE.Mesh) {
+                newChildren.push(element);
+            }
+        }
+        o.children = newChildren;
+        return o;
+    }
     static async LoadAllModels() {
-        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port'];
+        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port', 'console'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
-            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+            let m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
             if (!m) {
                 continue;
             }
-            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-            //this.assets.replaceMaterial(m, newMat);
-            m.scale.set(1, 1, 1);
+            m = this.meshOnly(m);
             m.userData = { "modelName": modelName };
             this.blocks.push(m);
             //this.scene.add(m);
@@ -145,6 +153,8 @@ class Assets extends THREE.Object3D {
         }
         this.models['ship'] = await ModelLoader.loadModel("Model/ship.glb");
         this.models['guide'] = await ModelLoader.loadModel("Model/guide.glb");
+        this.models['cube-tweek'] = await ModelLoader.loadModel("Model/cube-tweek.glb");
+        this.models['cube-glob'] = await ModelLoader.loadModel("Model/cube-glob.glb");
         // TODO: load all glb files int the Model directory into this.models
         // const testFolder = 'Model/*.glb';
         // const fs = require('fs');
@@ -159,6 +169,122 @@ class Assets extends THREE.Object3D {
 }
 exports.Assets = Assets;
 //# sourceMappingURL=assets.js.map
+
+/***/ }),
+
+/***/ 419:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AstroGen = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const assets_1 = __webpack_require__(398);
+class AstroGen {
+    place;
+    construction;
+    constructor(place, construction) {
+        this.place = place;
+        this.construction = construction;
+    }
+    buildCone() {
+        for (let x = -20; x < 20; x++) {
+            for (let y = -20; y < 20; y++) {
+                for (let z = 0; z < 20; z++) {
+                    if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
+                        let o = new THREE.Object3D();
+                        o = assets_1.Assets.blocks[0].clone();
+                        o.translateX(x);
+                        o.translateY(y);
+                        o.translateZ(-z * 2 - 10);
+                        this.place.universeGroup.add(o);
+                        this.construction.addCube(o);
+                    }
+                }
+            }
+        }
+    }
+    addAt(x, y, z) {
+        let o = new THREE.Object3D();
+        if (Math.random() < 0.9) {
+            o = assets_1.Assets.models['cube-tweek'].clone();
+        }
+        else {
+            o = assets_1.Assets.models['cube-glob'].clone();
+        }
+        let mesh = o.children[0];
+        let material = mesh.material;
+        let rgb = { r: 0, g: 0, b: 0 };
+        if (material) {
+            if (material.color) {
+                material.color.getRGB(rgb);
+                rgb.r = rgb.r + (Math.random() - 0.5) * .1;
+                rgb.g = rgb.g + (Math.random() - 0.5) * .1;
+                rgb.b = rgb.b + (Math.random() - 0.5) * .1;
+                material.color.setRGB(rgb.r, rgb.g, rgb.b);
+            }
+        }
+        o.translateX(x);
+        o.translateY(y);
+        o.translateZ(z);
+        o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
+        o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
+        o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
+        this.place.universeGroup.add(o);
+        this.construction.addCube(o);
+    }
+    buildPlatform(xDim, yDim, zDim, xOffset, yOffset, zOffset) {
+        for (let x = -xDim; x < xDim; x++) {
+            for (let y = -yDim; y < 0; y++) {
+                for (let z = -zDim; z < zDim; z++) {
+                    let xProb = (xDim - Math.abs(x)) / xDim;
+                    let yProb = (yDim - Math.abs(y)) / yDim;
+                    let zProb = (zDim - Math.abs(z)) / zDim;
+                    if (xProb * yProb * zProb > (Math.random() / 10) + 0.5) {
+                        this.addAt(x + xOffset, y + yOffset, z + zOffset);
+                    }
+                }
+            }
+        }
+    }
+    buildAsteroid() {
+        const r = 20;
+        for (let x = -r; x < r; x++) {
+            for (let y = -r; y < r; y++) {
+                for (let z = -r; z < r; z++) {
+                    if (Math.sqrt(x * x + y * y + z * z) < r + Math.random() - 0.5) {
+                        this.addAt(x, y, z);
+                    }
+                }
+            }
+        }
+    }
+}
+exports.AstroGen = AstroGen;
+//# sourceMappingURL=astroGen.js.map
 
 /***/ }),
 
@@ -201,6 +327,8 @@ const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const fileIO_1 = __webpack_require__(3);
 const construction_1 = __webpack_require__(844);
+const codec_1 = __webpack_require__(385);
+const astroGen_1 = __webpack_require__(419);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -222,11 +350,18 @@ class BlockBuild {
     }
     async initialize() {
         this.setScene();
+        // NOTE: if you want the JSON to be loaded before execution reaches
+        // this point, you will need to put "await" before the previous line.
+        // Read the Debug.log statements carefully to check that the order
+        // makes sense.
+        debug_1.Debug.log('setScene complete');
         await assets_1.Assets.LoadAllModels();
         debug_1.Debug.log("all models loaded.");
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
+        let ab = new astroGen_1.AstroGen(this.place, this.construction);
+        ab.buildPlatform(20, 10, 30, 0, 0, 0);
         this.getGrips();
     }
     tickEverything(o, tick) {
@@ -270,7 +405,7 @@ class BlockBuild {
             this.isSaving = false;
         }
     }
-    setScene() {
+    async setScene() {
         assets_1.Assets.init();
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
@@ -294,7 +429,7 @@ class BlockBuild {
         this.renderer.setSize(512, 512);
         document.body.appendChild(this.renderer.domElement);
         this.renderer.xr.enabled = true;
-        const light = new THREE.AmbientLight(0x404040); // soft white light
+        const light = new THREE.AmbientLight(0x101020); // dark blue light
         this.scene.add(light);
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
         directionalLight.position.set(2, 40, 10);
@@ -307,8 +442,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        fileIO_1.FileIO.httpGetAsync("./test.json", console.log);
-        debug_1.Debug.log("texture save works?");
+        debug_1.Debug.log("add astroGen");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -323,6 +457,11 @@ class BlockBuild {
             this.renderer.render(this.scene, this.camera);
         });
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
+        debug_1.Debug.log('loading test.json...');
+        const loadedObject = await fileIO_1.FileIO.httpGetAsync("./test.json");
+        console.log(JSON.stringify(loadedObject, null, 2));
+        debug_1.Debug.log('test.json loaded.');
+        const loaded = codec_1.Decode.arrayOfObject3D(loadedObject);
     }
     getGrips() {
         //const debugMaterial = new THREE.MeshStandardMaterial({ color: '#0f0' });
@@ -376,43 +515,51 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Codec = void 0;
+exports.Codec = exports.Decode = exports.Encode = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
 class Encode {
-    position;
-    quarternion;
-    modelName;
-    materialName;
-    constructor(o) {
-        this.position = o.position;
-        this.quarternion = o.quaternion;
-        this.modelName = o.userData["modelName"];
+    static object3D(o) {
+        const result = {};
+        result['position'] = o.position;
+        result['quarternion'] = o.quaternion;
+        result['modelName'] = o.userData["modelName"];
         let mesh = o.children[0];
         let mat = mesh.material;
         if (mat.userData["materialName"]) {
-            this.materialName = mat.userData["materialName"];
+            this['materialName'] = mat.userData["materialName"];
         }
+        return result;
+    }
+    static arrayOfObject3D(cubes) {
+        const result = [];
+        for (const cube of cubes) {
+            result.push(Encode.object3D(cube));
+        }
+        return result;
     }
 }
+exports.Encode = Encode;
+class Decode {
+    static object3D(o) {
+        let mesh = new THREE.Mesh(Codec.findModelByName(o['modelName']), Codec.findMaterialByName(o['materialName']));
+        mesh.position.set(o['position'].x, o['position'].y, o['position'].z);
+        const quaternion = new THREE.Quaternion();
+        Object.assign(quaternion, o['quaternion']);
+        mesh.applyQuaternion(quaternion);
+        return mesh;
+    }
+    static arrayOfObject3D(obs) {
+        const result = [];
+        for (const o of obs) {
+            result.push(Decode.object3D(o));
+        }
+        return result;
+    }
+}
+exports.Decode = Decode;
 class Codec {
-    toSaveFormat(input) {
-        let output = [];
-        input.forEach((value, key) => {
-            output.push(new Encode(value));
-        });
-        return output;
-    }
-    fromSaveFormat(input) {
-        let output = [];
-        input.forEach((value) => {
-            let o = new THREE.Mesh(this.findModelByName(value.modelName), this.findMaterialByName(value.materialName));
-            o.position.set(value.position.x, value.position.y, value.position.z);
-            o.applyQuaternion(value.quarternion);
-            output.push(o);
-        });
-    }
-    findModelByName(name) {
+    static findModelByName(name) {
         assets_1.Assets.blocks.forEach((mesh) => {
             if (mesh.userData["modelName"] == name) {
                 return mesh;
@@ -420,7 +567,7 @@ class Codec {
         });
         return null;
     }
-    findMaterialByName(name) {
+    static findMaterialByName(name) {
         assets_1.Assets.materials.forEach((material) => {
             if (material.userData["materialName"] == name) {
                 return material;
@@ -452,7 +599,7 @@ class Construction {
         //const o = { 'size': this.allObjects.size };
         //o['objects'] = FileIO.mapToObject(this.allObjects);
         let c = new codec_1.Codec();
-        const o = c.toSaveFormat(this.allObjects);
+        const o = codec_1.Encode.arrayOfObject3D(this.allObjects.values());
         fileIO_1.FileIO.saveObject(o, "what_you_built.json");
     }
     // TODO: change this to private and fix the code that breaks.
@@ -562,14 +709,12 @@ class FileIO {
         a.download = fileName;
         a.click();
     }
-    static httpGetAsync(theUrl, callback) {
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.onreadystatechange = function () {
-            if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-                callback(xmlHttp.responseText);
-        };
-        xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-        xmlHttp.send(null);
+    static async httpGetAsync(theUrl) {
+        return new Promise(async (resolve) => {
+            const response = await fetch(theUrl);
+            const jso = await response.json();
+            resolve(jso);
+        });
     }
     static mapToObject(m) {
         const result = {};
@@ -635,6 +780,14 @@ class Game {
         document.body.appendChild(this.renderer.domElement);
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
         this.renderer.xr.enabled = true;
+        // const renderScene = new RenderPass(this.scene, this.camera);
+        // const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        // bloomPass.threshold = 0.25;
+        // bloomPass.strength = 3.0;
+        // bloomPass.radius = 0.5;
+        // const composer = new EffectComposer(this.renderer);
+        // composer.addPass(renderScene);
+        // composer.addPass(bloomPass);
         const clock = new THREE.Clock();
         let elapsedS = 0.0;
         this.renderer.setAnimationLoop(() => {
@@ -643,6 +796,7 @@ class Game {
             const tick = new tick_1.Tick(elapsedS, deltaS);
             this.tickEverything(this.scene, tick);
             this.renderer.render(this.scene, this.camera);
+            // composer.render();
         });
         this.getGrips();
         const keysDown = new Set();
@@ -827,6 +981,9 @@ class Hand extends THREE.Object3D {
             }
             if (buttons[1] === 1 && this.lastButtons[1] != 1) { // squeeze
                 //this.debugMaterial.color = new THREE.Color('yellow');
+            }
+            if (buttons[2] === 1 && this.lastButtons[2] != 1) { // 
+                debug_1.Debug.log(`Button 2 pressed on ${source.handedness} hand.`);
             }
             if (buttons[3] === 1 && this.lastButtons[3] != 1) {
                 //this.debugMaterial.color = new THREE.Color('blue');
@@ -1232,21 +1389,32 @@ varying vec3 vWorldPosition;
 varying vec3 vNormal;
 varying vec3 vIncident;
 
-void main() {
-  vec3 x = vWorldPosition; 
-  vec4 c1 = openSimplex2_Conventional(x);
-  vec4 c2 = 0.5 * openSimplex2_Conventional(x * 2.0);
-  vec4 c3 = 0.1 * openSimplex2_Conventional(x * 3.0);
+vec4 brown(in vec3 x) {
+  return (
+    openSimplex2_Conventional(x) 
+    + openSimplex2_Conventional(x * 2.0)
+    + openSimplex2_Conventional(x * 4.0)
+    + openSimplex2_Conventional(x * 8.0)
+  );
+}
 
-  vec4 cTotal = c1 + c2 + c3 * 0.2 + 0.5;
+void main() {
+  vec4 c1 = brown(vWorldPosition * 0.3); 
+  c1 = brown(vec3(c1.xy * 0.05, time*0.1)) * 0.05 + 0.5;
+  float intensity = dot(-vIncident, vNormal);
 
   mat3 m = mat3(
       1.0, 0.5, 0.01, 
       1.0, 0.5, 0.02, 
       1.0, 0.4, 0.03);
-  vec3 crgb = m * cTotal.rgb;
+  vec3 crgb = m * c1.rgb * pow(intensity, 0.3);
 
-  gl_FragColor = vec4(crgb, 1.0);
+  float whiteness = clamp(
+    (intensity - 0.5) * 10.0 + length(crgb), 0.0, 1.0);
+  vec3 white = vec3(1.0, 1.0, 1.0) * whiteness;
+
+
+  gl_FragColor = vec4(crgb + white, 1.0) * 0.4;
 }`));
             this.snippets.push(new CodeSnippet('fragment', `
 // Shiny Fragment Shader
@@ -1270,6 +1438,47 @@ void main() {
   gl_FragColor = 
     vec4(vec3(1.0,1.0,1.0) * clamp(intensity, 0.0, 1.0), 1.0) +
     vec4(vColor.rgb, 0.0);
+}`));
+            this.snippets.push(new CodeSnippet('fragment', `
+// Sinplex
+uniform float time;
+varying vec3 vColor;
+varying vec3 vWorldPosition;
+varying vec3 vNormal;
+varying vec3 vIncident;
+
+float mono(in vec3 v) {
+  return(sin(v.x + 17.2) * sin(v.y + 72.9) * sin(v.z + 29.1));
+}
+
+vec3 noise(in vec3 x) {
+  x = mat3(
+    1.0, 0.0, 0.0,
+    0.5, 0.866, 0.289,
+    0.5, 0.0, 0.866) * x;
+  return(vec3(mono(x.xxy + x.yzz), mono(x.xyy + x.zzx + 4123.1), mono(x.yyz + x.zxx + 3213.1)));
+}
+
+vec3 brown(in vec3 v) {
+  return(1.0 * noise(v) + 0.5 * noise(v * 2.0 + 827.2) + 0.33 * noise(v * 3.0 + 3182.7));
+}
+
+vec3 orange(in vec3 v) {
+  return brown(brown(v * 0.4) * 3.0);
+}
+
+vec3 green(in vec3 v) {
+  return orange(orange(v * 0.5) * 3.0);
+}
+      `));
+            this.snippets.push(new CodeSnippet('fragment', `
+// Sun Texture
+void main() {
+  vec3 x = vWorldPosition;
+  float density = 15.0;
+  vec3 c = green(x * density);
+  c = c * 0.5 + 0.5;
+  gl_FragColor = vec4(c, 1.0);
 }`));
         }
     }
@@ -1566,6 +1775,113 @@ exports.Place = Place;
 
 /***/ }),
 
+/***/ 996:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PointCloud = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const pointMap_1 = __webpack_require__(228);
+class PointCloud extends THREE.Object3D {
+    starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
+    material;
+    constructor(radius, radiusSd, ySd, count) {
+        super();
+        this.addStars(radius, radiusSd, ySd, count);
+    }
+    static gaussian(sd) {
+        const n = 6;
+        let x = 0;
+        for (let i = 0; i < n; ++i) {
+            x += Math.random();
+            x -= Math.random();
+        }
+        return sd * (x / Math.sqrt(n));
+    }
+    addStars(radius, radiusSd, ySd, count) {
+        const positions = [];
+        for (let i = 0; i < count; ++i) {
+            const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
+            const orbitalHeight = PointCloud.gaussian(ySd);
+            const theta = Math.random() * Math.PI * 2;
+            const v = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
+            this.starPositions.add(v, v);
+            positions.push(v.x, v.y, v.z);
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        this.material = new THREE.ShaderMaterial({
+            uniforms: {
+                'sizeScale': {
+                    value: 1.0
+                },
+            },
+            vertexShader: `
+        uniform float sizeScale;
+        void main() {
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          float distance = abs(mvPosition.z);
+          if (distance > 1000.0) {
+            mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
+          }
+          gl_Position = projectionMatrix * mvPosition;
+          gl_PointSize = max(sizeScale * 800.0 / distance, 2.0);
+          
+        }`,
+            fragmentShader: `
+      void main() {
+        vec3 c = vec3(1.0, 1.0, 1.0);
+        vec2 coords = gl_PointCoord;
+        float intensity = 2.0 * (0.5 - length(gl_PointCoord - 0.5));
+        gl_FragColor = vec4(c.rgb * intensity, 1.0);
+      }`,
+            blending: THREE.AdditiveBlending,
+            depthTest: true,
+            depthWrite: false,
+            transparent: false,
+            vertexColors: false,
+        });
+        const points = new THREE.Points(geometry, this.material);
+        this.add(points);
+    }
+    // private worldPosition = new THREE.Vector3();
+    // private worldRotation = new THREE.Quaternion();
+    worldScale = new THREE.Vector3();
+    tick(t) {
+        this.worldScale.setFromMatrixScale(this.matrixWorld);
+        this.material.uniforms['sizeScale'].value = this.worldScale.x;
+        this.material.uniformsNeedUpdate = true;
+    }
+}
+exports.PointCloud = PointCloud;
+//# sourceMappingURL=pointCloud.js.map
+
+/***/ }),
+
 /***/ 228:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1641,13 +1957,13 @@ class AABB {
         this.p.copy(other.center);
         this.p.sub(this.center);
         const distance = Math.max(Math.abs(this.p.x), Math.abs(this.p.y), Math.abs(this.p.z));
-        return distance <= this.radius + other.radius;
+        return distance <= this.radius + other.radius + 0.001;
     }
     contains(point) {
         this.p.copy(point);
         this.p.sub(this.center);
         const distance = Math.max(Math.abs(this.p.x), Math.abs(this.p.y), Math.abs(this.p.z));
-        return distance <= this.radius;
+        return distance <= this.radius + 0.001;
     }
     split() {
         const halfRadius = this.radius / 2;
@@ -1780,7 +2096,7 @@ class S {
     static {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e8, 'Starfield radius');
-        S.setDefault('ns', 20000, 'Number of stars in the VLU');
+        S.setDefault('ns', 1e5, 'Number of stars in the VLU');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -1800,6 +2116,143 @@ class S {
 }
 exports.S = S;
 //# sourceMappingURL=settings.js.map
+
+/***/ }),
+
+/***/ 445:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.StarSystem = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const pointCloud_1 = __webpack_require__(996);
+class StarSystem extends THREE.Object3D {
+    material;
+    constructor() {
+        super();
+        this.material = StarSystem.makeStarMaterial();
+        const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 2), this.material);
+        mesh.scale.setLength(1e3);
+        this.add(mesh);
+        const belt = new pointCloud_1.PointCloud(1e3, 1e2, 1e1, 10000);
+        this.add(belt);
+    }
+    static makeStarMaterial() {
+        return new THREE.ShaderMaterial({
+            vertexShader: `
+// Paint Vertex Shader
+varying vec3 vColor;
+varying vec3 vNormal;
+varying vec3 vIncident;
+varying vec3 vModelPosition;
+
+void main() {
+  vModelPosition = position;
+  vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+  vIncident = normalize(worldPosition.xyz - cameraPosition.xyz);
+  vColor = vec3(1.0, 0.4, 0.8);
+  vNormal = normalMatrix * normal;
+
+  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mvPosition;
+}`,
+            fragmentShader: `
+// Sinplex
+float mono(in vec3 v) {
+  return(sin(v.x + 17.2) * sin(v.y + 72.9) * sin(v.z + 29.1));
+}
+
+vec3 noise(in vec3 x) {
+  x = mat3(
+    1.0, 0.0, 0.0,
+    0.5, 0.866, 0.289,
+    0.5, 0.0, 0.866) * x;
+  return(vec3(mono(x.xxy + x.yzz), mono(x.xyy + x.zzx + 4123.1), mono(x.yyz + x.zxx + 3213.1)));
+}
+
+vec3 brown(in vec3 v) {
+  return(1.0 * noise(v) + 0.5 * noise(v * 2.0 + 827.2) + 0.33 * noise(v * 3.0 + 3182.7));
+}
+
+vec3 orange(in vec3 v) {
+  return brown(brown(v * 0.4) * 3.0);
+}
+
+vec3 green(in vec3 v) {
+  return orange(orange(v * 0.5) * 3.0);
+}
+
+// Lava Fragment Shader
+
+uniform float time;
+varying vec3 vColor;
+varying vec3 vModelPosition;
+varying vec3 vNormal;
+varying vec3 vIncident;
+
+void main() {
+  vec3 c1 = green(vModelPosition * 0.9) * 0.5 + 0.5; 
+  // float intensity = dot(-vIncident, vNormal);
+  float intensity = 1.0;  // TODO: Fix vIncident!
+
+  mat3 m = mat3(
+      1.0, 0.5, 0.01, 
+      1.0, 0.5, 0.02, 
+      1.0, 0.4, 0.03);
+  vec3 crgb = m * c1.rgb * pow(intensity, 0.3);
+
+  // float whiteness = clamp(
+  //   (intensity - 0.5) * 10.0 + length(crgb), 0.0, 1.0);
+  float whiteness = 0.0;
+  vec3 white = vec3(1.0, 1.0, 1.0) * whiteness;
+
+  gl_FragColor = vec4(crgb + white, 1.0);
+}
+      `,
+            side: THREE.FrontSide,
+            blending: THREE.AdditiveBlending,
+            depthTest: true,
+            depthWrite: true,
+            transparent: false,
+            vertexColors: false,
+            uniforms: {
+                time: { value: 0.0 }
+            }
+        });
+    }
+    tick(t) {
+        if (this.material !== null) {
+            this.material.uniforms['time'].value = t.elapsedS;
+            this.material.uniformsNeedUpdate = true;
+        }
+    }
+}
+exports.StarSystem = StarSystem;
+//# sourceMappingURL=starSystem.js.map
 
 /***/ }),
 
@@ -1852,15 +2305,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VeryLargeUniverse = void 0;
 const THREE = __importStar(__webpack_require__(232));
-const pointMap_1 = __webpack_require__(228);
 const settings_1 = __webpack_require__(451);
-const zoom_1 = __webpack_require__(950);
-class StarSystem extends THREE.Object3D {
-    constructor() {
-        super();
-        this.add(new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1e3, 2), new THREE.MeshBasicMaterial({ color: '#fff' })));
-    }
-}
+const starSystem_1 = __webpack_require__(445);
+const pointCloud_1 = __webpack_require__(996);
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
 class VeryLargeUniverse extends THREE.Object3D {
@@ -1868,144 +2315,19 @@ class VeryLargeUniverse extends THREE.Object3D {
     camera;
     xr;
     keysDown;
+    starCloud;
     currentStarMap = new Map();
-    starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
-    leftStart;
-    rightStart;
-    startMatrix = new THREE.Matrix4();
-    oldZoom = null;
-    material;
     constructor(grips, camera, xr, keysDown) {
         super();
         this.grips = grips;
         this.camera = camera;
         this.xr = xr;
         this.keysDown = keysDown;
-        this.addStars();
-        //   this.grips[0].addEventListener('selectstart', () => {
-        //     this.leftStart = new THREE.Vector3();
-        //     this.leftStart.copy(this.grips[0].position);
-        //     this.startMatrix.copy(this.matrix);
-        //     this.startMatrix.invert();
-        //     this.leftStart.applyMatrix4(this.startMatrix);;
-        //     if (this.rightStart) {
-        //       this.rightStart.copy(this.grips[1].position);
-        //       this.rightStart.applyMatrix4(this.startMatrix);
-        //     }
-        //   });
-        //   this.grips[1].addEventListener('selectstart', () => {
-        //     this.rightStart = new THREE.Vector3();
-        //     this.rightStart.copy(this.grips[1].position);
-        //     this.startMatrix.invert();
-        //     this.rightStart.applyMatrix4(this.startMatrix);;
-        //     if (this.leftStart) {
-        //       this.leftStart.copy(this.grips[0].position);
-        //       this.leftStart.applyMatrix4(this.startMatrix);
-        //     }
-        //   });
-        //   this.grips[0].addEventListener('selectend', () => {
-        //     if (this.leftStart && this.rightStart) {
-        //       this.zoomEnd();
-        //     }
-        //     this.leftStart = null;
-        //   });
-        //   this.grips[1].addEventListener('selectend', () => {
-        //     if (this.leftStart && this.rightStart) {
-        //       this.zoomEnd();
-        //     }
-        //     this.rightStart = null;
-        //   });
+        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'));
+        this.add(this.starCloud);
         this.position.set(0, 0, -1e6);
     }
-    leftCurrent = new THREE.Vector3();
-    rightCurrent = new THREE.Vector3();
-    zoom() {
-        if (!this.oldZoom) {
-            this.oldZoom = new THREE.Matrix4();
-            this.oldZoom.copy(this.matrix);
-        }
-        this.leftCurrent.copy(this.grips[0].position);
-        this.leftCurrent.applyMatrix4(this.startMatrix);
-        this.rightCurrent.copy(this.grips[1].position);
-        this.rightCurrent.applyMatrix4(this.startMatrix);
-        const m = zoom_1.Zoom.makeZoomMatrix(this.leftStart, this.rightStart, this.leftCurrent, this.rightCurrent);
-        this.matrix.copy(this.oldZoom);
-        this.matrix.multiply(m);
-        this.matrix.decompose(this.position, this.quaternion, this.scale);
-        if (this.material) {
-            const scale = this.scale.length() / Math.sqrt(3);
-            this.material.uniforms['sizeScale'].value = scale;
-            this.material.uniformsNeedUpdate = true;
-        }
-    }
-    zoomEnd() {
-        this.oldZoom = null;
-    }
-    gaussian(sd) {
-        const n = 6;
-        let x = 0;
-        for (let i = 0; i < n; ++i) {
-            x += Math.random();
-            x -= Math.random();
-        }
-        return sd * (x / Math.sqrt(n));
-    }
-    addStars() {
-        const positions = [];
-        const radius = settings_1.S.float('sr');
-        for (let i = 0; i < settings_1.S.float('ns'); ++i) {
-            const orbitalRadius = this.gaussian(radius);
-            const orbitalHeight = this.gaussian(radius / 10);
-            const theta = Math.random() * Math.PI * 2;
-            const v = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
-            this.starPositions.add(v, v);
-            positions.push(v.x, v.y, v.z);
-        }
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-        this.material = new THREE.ShaderMaterial({
-            uniforms: {
-                'sizeScale': {
-                    value: 1.0
-                },
-            },
-            vertexShader: `
-        uniform float sizeScale;
-        varying vec3 vColor;
-        void main() {
-          vColor = vec3(1.0, 1.0, 1.0);
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          float distance = length(mvPosition.xyz);
-          if (distance > 1000.0) {
-            mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
-          }
-          gl_Position = projectionMatrix * mvPosition;
-          gl_PointSize = max(sizeScale * 800.0 / distance, 2.0);
-          
-        }`,
-            fragmentShader: `
-      uniform sampler2D diffuseTexture;
-      varying vec3 vColor;
-      void main() {
-        vec2 coords = gl_PointCoord;
-        float intensity = 2.0 * (0.5 - length(gl_PointCoord - 0.5));
-        gl_FragColor = vec4(vColor.rgb * intensity, 1.0);
-      }`,
-            blending: THREE.AdditiveBlending,
-            depthTest: true,
-            depthWrite: false,
-            transparent: false,
-            vertexColors: true,
-        });
-        const points = new THREE.Points(geometry, this.material);
-        this.add(points);
-    }
     p1 = new THREE.Vector3();
-    // private findClosestStar(): THREE.Vector3 {
-    //   this.camera.getWorldPosition(this.p1);
-    //   this.worldToLocal(this.p1);
-    //   return this.starPositions.getClosest(this.p1);
-    // }
     getButtonsFromGrip(index) {
         let source = null;
         const session = this.xr.getSession();
@@ -2024,25 +2346,11 @@ class VeryLargeUniverse extends THREE.Object3D {
     m2 = new THREE.Matrix4();
     m3 = new THREE.Matrix4();
     zoomAroundWorldOrigin(zoomFactor) {
+        // TODO: Fix this - it assumes position is initially zero (I think)
         this.position.multiplyScalar(zoomFactor);
         this.scale.multiplyScalar(zoomFactor);
-        // this.p1.set(0, 0, 0);
-        //    this.worldToLocal(this.p1);
-        // this.m1.makeTranslation(-this.p1.x, -this.p1.y, -this.p1.z);
-        // this.m2.makeScale(zoomFactor, zoomFactor, zoomFactor);
-        // this.m3.makeTranslation(
-        //   this.p1.x * zoomFactor,
-        //   this.p1.y * zoomFactor,
-        //   this.p1.z * zoomFactor);
-        // this.matrix.multiply(this.m3);
-        // this.matrix.multiply(this.m2);
-        // this.matrix.multiply(this.m1);
-        // this.matrix.decompose(this.position, this.quaternion, this.scale);
     }
     tick(t) {
-        if (this.rightStart && this.leftStart) {
-            this.zoom();
-        }
         const leftButtons = this.getButtonsFromGrip(0);
         const rightButtons = this.getButtonsFromGrip(1);
         if (leftButtons[4] === 1 || rightButtons[4] === 1 // A or X
@@ -2054,110 +2362,45 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
         }
         if ((leftButtons[0] && rightButtons[0]) || // Trigger
-            this.keysDown.has('ArrowDown')) {
+            this.keysDown.has('KeyW')) {
             this.camera.getWorldDirection(this.direction);
-            this.direction.multiplyScalar(-t.deltaS * 5.0);
+            this.direction.multiplyScalar(-t.deltaS * 1.0);
             this.position.sub(this.direction);
             this.updateMatrix();
         }
         if ((leftButtons[1] && rightButtons[1]) || // Squeeze
-            this.keysDown.has('ArrowUp')) {
+            this.keysDown.has('KeyS')) {
             this.camera.getWorldDirection(this.direction);
-            this.direction.multiplyScalar(t.deltaS * 5.0);
+            this.direction.multiplyScalar(t.deltaS * 1.0);
             this.position.sub(this.direction);
             this.updateMatrix();
         }
+        if (this.keysDown.has('ArrowLeft')) {
+            this.camera.rotateY(2 * t.deltaS);
+        }
+        if (this.keysDown.has('ArrowRight')) {
+            this.camera.rotateY(-2 * t.deltaS);
+        }
+        if (this.keysDown.has('ArrowUp')) {
+            this.camera.rotateX(2 * t.deltaS);
+        }
+        if (this.keysDown.has('ArrowDown')) {
+            this.camera.rotateX(-2 * t.deltaS);
+        }
         this.camera.getWorldPosition(this.p1);
         this.worldToLocal(this.p1);
-        for (const closePoint of this.starPositions.getAllWithinRadius(this.p1, 1e5)) {
+        for (const closePoint of this.starCloud.starPositions.getAllWithinRadius(this.p1, 1e5)) {
             if (!this.currentStarMap.has(closePoint)) {
-                const starSystem = new StarSystem();
+                const starSystem = new starSystem_1.StarSystem();
                 starSystem.position.copy(closePoint);
                 this.currentStarMap.set(closePoint, starSystem);
                 this.add(starSystem);
             }
         }
-        // const closest = this.findClosestStar();
-        // if (closest.x != this.currentStarPosition.x ||
-        //   closest.y != this.currentStarPosition.y ||
-        //   closest.z != this.currentStarPosition.z) {
-        //   this.currentStarPosition.copy(closest);
-        //   if (this.currentStar) {
-        //     this.remove(this.currentStar);
-        //   }
-        //   this.currentStar = new StarSystem();
-        //   this.add(this.currentStar);
-        //   this.currentStar.position.copy(this.currentStarPosition);
-        // }
     }
 }
 exports.VeryLargeUniverse = VeryLargeUniverse;
 //# sourceMappingURL=veryLargeUniverse.js.map
-
-/***/ }),
-
-/***/ 950:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Zoom = void 0;
-const THREE = __importStar(__webpack_require__(232));
-class Zoom {
-    static d = new THREE.Vector3;
-    static seed = new THREE.Vector3();
-    static other = new THREE.Vector3();
-    static makePerpendicular(l, r) {
-        this.d.copy(r);
-        this.d.sub(l);
-        this.seed.set(-this.d.y, this.d.x, 0);
-        this.seed.cross(this.d);
-        this.seed.setLength(this.d.length());
-        this.other.copy(this.d);
-        this.other.cross(this.seed);
-        this.other.setLength(this.d.length());
-        return [
-            new THREE.Vector3(l.x + this.seed.x, l.y + this.seed.y, l.z + this.seed.z),
-            new THREE.Vector3(l.x + this.other.x, l.y + this.other.y, l.z + this.other.z)
-        ];
-    }
-    static makeZoomMatrix(l1, r1, l2, r2) {
-        const [a1, b1] = Zoom.makePerpendicular(l1, r1);
-        const [a2, b2] = Zoom.makePerpendicular(l2, r2);
-        const initialPosition = new THREE.Matrix4();
-        initialPosition.set(l1.x, r1.x, a1.x, b1.x, l1.y, r1.y, a1.y, b1.y, l1.z, r1.z, a1.z, b1.z, 1, 1, 1, 1);
-        const newPosition = new THREE.Matrix4();
-        newPosition.set(l2.x, r2.x, a2.x, b2.x, l2.y, r2.y, a2.y, b2.y, l2.z, r2.z, a2.z, b2.z, 1, 1, 1, 1);
-        initialPosition.invert();
-        newPosition.multiplyMatrices(newPosition, initialPosition);
-        return newPosition;
-    }
-}
-exports.Zoom = Zoom;
-//# sourceMappingURL=zoom.js.map
 
 /***/ }),
 
