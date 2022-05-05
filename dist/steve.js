@@ -125,25 +125,27 @@ class Assets extends THREE.Object3D {
         debug_1.Debug.log('materials.length=' + Assets.materials.length.toString());
         return Assets.materials[Assets.materialIndex];
     }
-    static meshOnly(o) {
-        let newChildren = [];
-        for (let element of o.children) {
-            if (element instanceof THREE.Mesh) {
-                newChildren.push(element);
-            }
-        }
-        o.children = newChildren;
-        return o;
-    }
+    // static meshOnly(o: THREE.Object3D) {
+    //     let newChildren = [];
+    //     for (let element of o.children) {
+    //         if (element instanceof THREE.Mesh) {
+    //             newChildren.push(element);
+    //         }
+    //     }
+    //     o.children = newChildren;
+    //     return o;
+    // }
     static async LoadAllModels() {
         const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port', 'console'];
         for (const modelName of models) {
             console.log(`Loading ${modelName}`);
-            let m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
             if (!m) {
                 continue;
             }
-            m = this.meshOnly(m);
+            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+            //this.assets.replaceMaterial(m, newMat);
+            m.scale.set(1, 1, 1);
             m.userData = { "modelName": modelName };
             this.blocks.push(m);
             //this.scene.add(m);
