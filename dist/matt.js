@@ -1865,6 +1865,7 @@ class PointCloud extends THREE.Object3D {
             depthWrite: false,
             transparent: false,
             vertexColors: false,
+            clipping: false,
         });
         const points = new THREE.Points(geometry, this.material);
         this.add(points);
@@ -2093,8 +2094,10 @@ class S {
     }
     static {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-        S.setDefault('sr', 1e8, 'Starfield radius');
+        S.setDefault('sr', 1e9, 'Starfield radius');
+        S.setDefault('ar', 3e4, 'Asteroid radius');
         S.setDefault('ns', 1e5, 'Number of stars in the VLU');
+        S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {
@@ -2145,6 +2148,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StarSystem = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const pointCloud_1 = __webpack_require__(996);
+const settings_1 = __webpack_require__(451);
 class StarSystem extends THREE.Object3D {
     material;
     constructor() {
@@ -2154,11 +2158,13 @@ class StarSystem extends THREE.Object3D {
         mesh.scale.setLength(1e3);
         this.add(mesh);
         const belt = new pointCloud_1.PointCloud(
-        /*radius=*/ 1e4, /*radiusSd=*/ 1e3, 1e2, 10000, new THREE.Color('#888'), 
+        /*radius=*/ settings_1.S.float('ar'), 
+        /*radiusSd=*/ settings_1.S.float('ar') / 10, /*ySd=*/ settings_1.S.float('ar') / 20, settings_1.S.float('na'), new THREE.Color('#888'), 
         /*pointRadius=*/ 1e2);
         this.add(belt);
         const planets = new pointCloud_1.PointCloud(
-        /*radius=*/ 1e4, /*radiusSd=*/ 2e4, 1e3, 10, new THREE.Color('#8ff'), 
+        /*radius=*/ settings_1.S.float('ar'), 
+        /*radiusSd=*/ settings_1.S.float('ar') * 3, /*ySd=*/ settings_1.S.float('ar') / 2, 10, new THREE.Color('#8ff'), 
         /*pointRadius=*/ 1e3);
         this.add(planets);
     }
@@ -2320,9 +2326,38 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.camera = camera;
         this.xr = xr;
         this.keysDown = keysDown;
-        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ff4'), /*pointRadius=*/ 1.0);
+        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ffa'), /*pointRadius=*/ 1e4);
         this.add(this.starCloud);
         this.position.set(0, 0, -1e6);
+    }
+    direction = new THREE.Vector3();
+    getDirectionFromGrips(leftButtons, rightButtons) {
+        this.direction.set(0, 0, 0);
+        if (this.keysDown.has('KeyS')) {
+            this.camera.getWorldDirection(this.p1);
+            this.direction.sub(this.p1);
+        }
+        if (this.keysDown.has('KeyW')) {
+            this.camera.getWorldDirection(this.p1);
+            this.direction.add(this.p1);
+        }
+        if (leftButtons[0]) {
+            this.grips[0].getWorldDirection(this.p1);
+            this.direction.add(this.p1);
+        }
+        if (rightButtons[0]) {
+            this.grips[1].getWorldDirection(this.p1);
+            this.direction.add(this.p1);
+        }
+        if (leftButtons[1]) {
+            this.grips[0].getWorldDirection(this.p1);
+            this.direction.sub(this.p1);
+        }
+        if (rightButtons[1]) {
+            this.grips[1].getWorldDirection(this.p1);
+            this.direction.sub(this.p1);
+        }
+        return this.direction;
     }
     getButtonsFromGrip(index) {
         let source = null;
@@ -2337,9 +2372,9 @@ class VeryLargeUniverse extends THREE.Object3D {
             return [];
         }
     }
-    direction = new THREE.Vector3();
     p1 = new THREE.Vector3();
     zoomAroundWorldOrigin(zoomFactor) {
+        // TODO: This probably could be much simpler. :-/
         this.p1.copy(this.camera.position); // World Origin
         this.worldToLocal(this.p1); // Local
         this.scale.multiplyScalar(zoomFactor);
@@ -2360,19 +2395,9 @@ class VeryLargeUniverse extends THREE.Object3D {
             || this.keysDown.has('Minus')) {
             this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
         }
-        if ((leftButtons[0] && rightButtons[0]) || // Trigger
-            this.keysDown.has('KeyS')) {
-            this.camera.getWorldDirection(this.direction);
-            this.direction.multiplyScalar(-t.deltaS * 1.0);
+        this.direction = this.getDirectionFromGrips(leftButtons, rightButtons);
+        if (this.direction.lengthSq() > 0) {
             this.position.sub(this.direction);
-            this.updateMatrix();
-        }
-        if ((leftButtons[1] && rightButtons[1]) || // Squeeze
-            this.keysDown.has('KeyW')) {
-            this.camera.getWorldDirection(this.direction);
-            this.direction.multiplyScalar(t.deltaS * 1.0);
-            this.position.sub(this.direction);
-            this.updateMatrix();
         }
         if (this.keysDown.has('ArrowLeft')) {
             this.camera.rotateY(2 * t.deltaS);
