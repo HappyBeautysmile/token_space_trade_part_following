@@ -4,12 +4,12 @@ import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 import { StarSystem } from "./starSystem";
 import { PointCloud } from "./pointCloud";
+import { ModelCloud } from "./modelCloud";
 
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
 export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   private starCloud: PointCloud;
-  private currentStarMap = new Map<THREE.Vector3, StarSystem>();
   constructor(private grips: THREE.Object3D[],
     private camera: THREE.Camera,
     private xr: THREE.WebXRManager,
@@ -19,7 +19,11 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     this.starCloud = new PointCloud(
       0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
       new THREE.Color('#ffa'), /*pointRadius=*/1e4);
-    this.add(this.starCloud);
+    const modelCloud = new ModelCloud((pos: THREE.Vector3) => {
+      return new StarSystem();
+    }, this.starCloud, 1e6, camera);
+
+    this.add(modelCloud);
     this.position.set(0, 0, -1e6);
   }
 
@@ -110,36 +114,6 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     }
     if (this.keysDown.has('ArrowDown')) {
       this.camera.rotateX(-2 * t.deltaS);
-    }
-
-    this.camera.getWorldPosition(this.p1);
-    this.worldToLocal(this.p1);
-
-    const currentStars = new Set<THREE.Vector3>();
-    for (const k of this.currentStarMap.keys()) {
-      currentStars.add(k);
-    }
-
-    for (const closePoint of this.starCloud.starPositions.getAllWithinRadius(
-      this.p1, 1e6)) {
-      if (!this.currentStarMap.has(closePoint)) {
-        const starSystem = new StarSystem();
-        starSystem.position.copy(closePoint);
-        this.currentStarMap.set(closePoint, starSystem);
-        this.add(starSystem);
-        // Hide the star when we show the model.
-        this.starCloud.hideStar(closePoint);
-        console.log(`Pop in: ${JSON.stringify(closePoint)}`)
-      } else {
-        currentStars.delete(closePoint);
-      }
-    }
-    for (const tooFar of currentStars) {
-      console.log(`Pop out: ${JSON.stringify(tooFar)}`)
-      const starToRemove = this.currentStarMap.get(tooFar);
-      this.remove(starToRemove);
-      this.currentStarMap.delete(tooFar);
-      this.starCloud.showStar(tooFar);
     }
   }
 }
