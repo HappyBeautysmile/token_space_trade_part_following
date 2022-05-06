@@ -54,12 +54,15 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     return this.direction;
   }
 
+  private session: THREE.XRSession;
   private getButtonsFromGrip(index: number): number[] {
     let source: THREE.XRInputSource = null;
-    const session = this.xr.getSession();
-    if (session) {
-      if (session.inputSources) {
-        source = session.inputSources[index];
+    if (!this.session) {
+      this.session = this.xr.getSession();
+    }
+    if (this.session) {
+      if (this.session.inputSources) {
+        source = this.session.inputSources[index];
       }
       return source.gamepad.buttons.map((b) => b.value);
     } else {
@@ -124,6 +127,8 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
         starSystem.position.copy(closePoint);
         this.currentStarMap.set(closePoint, starSystem);
         this.add(starSystem);
+        // Hide the star when we show the model.
+        this.starCloud.hideStar(closePoint);
         console.log(`Pop in: ${JSON.stringify(closePoint)}`)
       } else {
         currentStars.delete(closePoint);
@@ -134,6 +139,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       const starToRemove = this.currentStarMap.get(tooFar);
       this.remove(starToRemove);
       this.currentStarMap.delete(tooFar);
+      this.starCloud.showStar(tooFar);
     }
   }
 }

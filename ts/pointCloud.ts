@@ -7,6 +7,8 @@ export class PointCloud extends THREE.Object3D implements Ticker {
   readonly starPositions = new PointMapOctoTree<THREE.Vector3>(
     new THREE.Vector3(), 1e10);
   private material: THREE.ShaderMaterial;
+  private pointIndex = new Map<THREE.Vector3, number>();
+  private geometry: THREE.BufferGeometry;
 
   constructor(radius: number, radiusSd: number, ySd: number,
     count: number, private color: THREE.Color, private pointRadius: number) {
@@ -24,8 +26,25 @@ export class PointCloud extends THREE.Object3D implements Ticker {
     return sd * (x / Math.sqrt(n));
   }
 
+  public showStar(point: THREE.Vector3) {
+    const colorAttribute =
+      this.geometry.getAttribute('color');
+    colorAttribute.setXYZ(
+      this.pointIndex.get(point), this.color.r, this.color.g, this.color.b);
+    colorAttribute.needsUpdate = true;
+  }
+
+  public hideStar(point: THREE.Vector3) {
+    const colorAttribute =
+      this.geometry.getAttribute('color');
+    colorAttribute.setXYZ(
+      this.pointIndex.get(point), 0, 0, 0);
+    colorAttribute.needsUpdate = true;
+  }
+
   private addStars(radius: number, radiusSd: number, ySd: number, count: number) {
     const positions: number[] = [];
+    const colors: number[] = [];
     for (let i = 0; i < count; ++i) {
       const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
       const orbitalHeight = PointCloud.gaussian(ySd);
@@ -36,20 +55,25 @@ export class PointCloud extends THREE.Object3D implements Ticker {
         orbitalRadius * Math.sin(theta));
       this.starPositions.add(v, v);
       positions.push(v.x, v.y, v.z);
+      colors.push(this.color.r, this.color.g, this.color.b);
+      this.pointIndex.set(v, i);
     }
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position',
+    this.geometry = new THREE.BufferGeometry();
+    this.geometry.setAttribute('position',
       new THREE.Float32BufferAttribute(positions, 3));
+    this.geometry.setAttribute('color', new THREE.Float32BufferAttribute(
+      colors, 3));
 
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         'sizeScale': { value: 1.0 },
-        'uColor': { value: this.color },
       },
       vertexShader: `
+        varying vec3 vColor;
         uniform float sizeScale;
         varying float vDistance;
         void main() {
+          vColor = color;
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           vDistance = abs(mvPosition.z);
           if (vDistance > 1000.0) {
@@ -60,25 +84,24 @@ export class PointCloud extends THREE.Object3D implements Ticker {
           
         }`,
       fragmentShader: `
-      uniform vec3 uColor;
+      varying vec3 vColor;
       varying float vDistance;
       void main() {
         vec2 coords = gl_PointCoord;
         float intensity = clamp(
           10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
         float brightness = clamp(${S.float('pbf').toFixed(1)} / vDistance, 0.1, 1.0);
-        vec3 color = uColor;
-        gl_FragColor = vec4(uColor * intensity * brightness, 1.0);
+        gl_FragColor = vec4(vColor * intensity * brightness, 1.0);
       }`,
       blending: THREE.AdditiveBlending,
       depthTest: true,
       depthWrite: false,
       transparent: false,
-      vertexColors: false,
+      vertexColors: true,
       clipping: false,
     });
 
-    const points = new THREE.Points(geometry, this.material);
+    const points = new THREE.Points(this.geometry, this.material);
     this.add(points);
   }
 
@@ -91,5 +114,4 @@ export class PointCloud extends THREE.Object3D implements Ticker {
       this.worldScale.x * this.pointRadius;
     this.material.uniformsNeedUpdate = true;
   }
-
 }
