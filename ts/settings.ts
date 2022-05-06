@@ -24,7 +24,7 @@ export class S {
     S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
     S.setDefault('sr', 1e9, 'Starfield radius');
     S.setDefault('ar', 3e4, 'Asteroid radius');
-    S.setDefault('ns', 1e5, 'Number of stars in the VLU');
+    S.setDefault('ns', 1e4, 'Number of stars in the VLU');
     S.setDefault('na', 700, 'Number of asteroids in a belt.')
 
     S.setDefault('pbf', 1e7, 'Point brightness factor');

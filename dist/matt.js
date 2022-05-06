@@ -2096,7 +2096,7 @@ class S {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e9, 'Starfield radius');
         S.setDefault('ar', 3e4, 'Asteroid radius');
-        S.setDefault('ns', 1e5, 'Number of stars in the VLU');
+        S.setDefault('ns', 1e4, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
@@ -2376,13 +2376,22 @@ class VeryLargeUniverse extends THREE.Object3D {
     zoomAroundWorldOrigin(zoomFactor) {
         // TODO: This probably could be much simpler. :-/
         this.p1.copy(this.camera.position); // World Origin
-        this.worldToLocal(this.p1); // Local
+        this.p1.sub(this.position);
+        this.p1.multiplyScalar(1 / this.scale.x);
         this.scale.multiplyScalar(zoomFactor);
-        this.updateMatrix();
-        this.updateMatrixWorld();
-        this.localToWorld(this.p1); // World Again
+        this.p1.multiplyScalar(this.scale.x);
+        this.p1.add(this.position);
         this.p1.sub(this.camera.position);
         this.position.sub(this.p1); // Now we should be centered again.
+        // // TODO: This probably could be much simpler. :-/
+        // this.p1.copy(this.camera.position); // World Origin
+        // this.worldToLocal(this.p1);  // Divide by this.matrix
+        // this.scale.multiplyScalar(zoomFactor);
+        // this.updateMatrix();
+        // this.updateMatrixWorld();
+        // this.localToWorld(this.p1);  // Multiply by this.matrix
+        // this.p1.sub(this.camera.position);
+        // this.position.sub(this.p1);  // Now we should be centered again.
     }
     tick(t) {
         const leftButtons = this.getButtonsFromGrip(0);
@@ -2413,13 +2422,27 @@ class VeryLargeUniverse extends THREE.Object3D {
         }
         this.camera.getWorldPosition(this.p1);
         this.worldToLocal(this.p1);
-        for (const closePoint of this.starCloud.starPositions.getAllWithinRadius(this.p1, 1e5)) {
+        const currentStars = new Set();
+        for (const k of this.currentStarMap.keys()) {
+            currentStars.add(k);
+        }
+        for (const closePoint of this.starCloud.starPositions.getAllWithinRadius(this.p1, 1e6)) {
             if (!this.currentStarMap.has(closePoint)) {
                 const starSystem = new starSystem_1.StarSystem();
                 starSystem.position.copy(closePoint);
                 this.currentStarMap.set(closePoint, starSystem);
                 this.add(starSystem);
+                console.log(`Pop in: ${JSON.stringify(closePoint)}`);
             }
+            else {
+                currentStars.delete(closePoint);
+            }
+        }
+        for (const tooFar of currentStars) {
+            console.log(`Pop out: ${JSON.stringify(tooFar)}`);
+            const starToRemove = this.currentStarMap.get(tooFar);
+            this.remove(starToRemove);
+            this.currentStarMap.delete(tooFar);
         }
     }
 }

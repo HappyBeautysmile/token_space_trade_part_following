@@ -23,7 +23,6 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     this.position.set(0, 0, -1e6);
   }
 
-
   private direction = new THREE.Vector3();
   private getDirectionFromGrips(
     leftButtons: number[], rightButtons: number[]): THREE.Vector3 {
@@ -70,13 +69,12 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
 
   private p1 = new THREE.Vector3();
   zoomAroundWorldOrigin(zoomFactor: number) {
-    // TODO: This probably could be much simpler. :-/
     this.p1.copy(this.camera.position); // World Origin
-    this.worldToLocal(this.p1);  // Local
+    this.p1.sub(this.position);
+    this.p1.multiplyScalar(1 / this.scale.x);
     this.scale.multiplyScalar(zoomFactor);
-    this.updateMatrix();
-    this.updateMatrixWorld();
-    this.localToWorld(this.p1);  // World Again
+    this.p1.multiplyScalar(this.scale.x);
+    this.p1.add(this.position);
     this.p1.sub(this.camera.position);
     this.position.sub(this.p1);  // Now we should be centered again.
   }
@@ -113,14 +111,29 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
 
     this.camera.getWorldPosition(this.p1);
     this.worldToLocal(this.p1);
+
+    const currentStars = new Set<THREE.Vector3>();
+    for (const k of this.currentStarMap.keys()) {
+      currentStars.add(k);
+    }
+
     for (const closePoint of this.starCloud.starPositions.getAllWithinRadius(
-      this.p1, 1e5)) {
+      this.p1, 1e6)) {
       if (!this.currentStarMap.has(closePoint)) {
         const starSystem = new StarSystem();
         starSystem.position.copy(closePoint);
         this.currentStarMap.set(closePoint, starSystem);
         this.add(starSystem);
+        console.log(`Pop in: ${JSON.stringify(closePoint)}`)
+      } else {
+        currentStars.delete(closePoint);
       }
+    }
+    for (const tooFar of currentStars) {
+      console.log(`Pop out: ${JSON.stringify(tooFar)}`)
+      const starToRemove = this.currentStarMap.get(tooFar);
+      this.remove(starToRemove);
+      this.currentStarMap.delete(tooFar);
     }
   }
 }
