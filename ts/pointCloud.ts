@@ -75,6 +75,7 @@ export class PointCloud extends THREE.Object3D implements Ticker {
       depthWrite: false,
       transparent: false,
       vertexColors: false,
+      clipping: false,
     });
 
     const points = new THREE.Points(geometry, this.material);

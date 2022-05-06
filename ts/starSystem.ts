@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { PointCloud } from "./pointCloud";
+import { S } from "./settings";
 import { Tick } from "./tick";
 
 export class StarSystem extends THREE.Object3D {
@@ -15,12 +16,16 @@ export class StarSystem extends THREE.Object3D {
     this.add(mesh);
 
     const belt = new PointCloud(
-      /*radius=*/1e4, /*radiusSd=*/1e3, 1e2, 10000, new THREE.Color('#888'),
+      /*radius=*/S.float('ar'),
+      /*radiusSd=*/S.float('ar') / 10, /*ySd=*/S.float('ar') / 20,
+      S.float('na'), new THREE.Color('#888'),
       /*pointRadius=*/1e2);
     this.add(belt);
 
     const planets = new PointCloud(
-      /*radius=*/1e4, /*radiusSd=*/2e4, 1e3, 10, new THREE.Color('#8ff'),
+      /*radius=*/S.float('ar'),
+      /*radiusSd=*/S.float('ar') * 3, /*ySd=*/S.float('ar') / 2,
+      10, new THREE.Color('#8ff'),
       /*pointRadius=*/1e3);
     this.add(planets);
 

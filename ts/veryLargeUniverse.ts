@@ -18,9 +18,41 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
 
     this.starCloud = new PointCloud(
       0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
-      new THREE.Color('#ff4'), /*pointRadius=*/1.0);
+      new THREE.Color('#ffa'), /*pointRadius=*/1e4);
     this.add(this.starCloud);
     this.position.set(0, 0, -1e6);
+  }
+
+
+  private direction = new THREE.Vector3();
+  private getDirectionFromGrips(
+    leftButtons: number[], rightButtons: number[]): THREE.Vector3 {
+    this.direction.set(0, 0, 0);
+    if (this.keysDown.has('KeyS')) {
+      this.camera.getWorldDirection(this.p1);
+      this.direction.sub(this.p1);
+    }
+    if (this.keysDown.has('KeyW')) {
+      this.camera.getWorldDirection(this.p1);
+      this.direction.add(this.p1);
+    }
+    if (leftButtons[0]) {
+      this.grips[0].getWorldDirection(this.p1);
+      this.direction.add(this.p1);
+    }
+    if (rightButtons[0]) {
+      this.grips[1].getWorldDirection(this.p1);
+      this.direction.add(this.p1);
+    }
+    if (leftButtons[1]) {
+      this.grips[0].getWorldDirection(this.p1);
+      this.direction.sub(this.p1);
+    }
+    if (rightButtons[1]) {
+      this.grips[1].getWorldDirection(this.p1);
+      this.direction.sub(this.p1);
+    }
+    return this.direction;
   }
 
   private getButtonsFromGrip(index: number): number[] {
@@ -36,7 +68,6 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     }
   }
 
-  private direction = new THREE.Vector3();
   private p1 = new THREE.Vector3();
   zoomAroundWorldOrigin(zoomFactor: number) {
     // TODO: This probably could be much simpler. :-/
@@ -62,21 +93,9 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       || this.keysDown.has('Minus')) {
       this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
     }
-
-    if ((leftButtons[0] && rightButtons[0]) ||  // Trigger
-      this.keysDown.has('KeyS')) {
-      this.camera.getWorldDirection(this.direction);
-      this.direction.multiplyScalar(-t.deltaS * 1.0);
+    this.direction = this.getDirectionFromGrips(leftButtons, rightButtons);
+    if (this.direction.lengthSq() > 0) {
       this.position.sub(this.direction);
-      this.updateMatrix();
-    }
-
-    if ((leftButtons[1] && rightButtons[1]) ||  // Squeeze
-      this.keysDown.has('KeyW')) {
-      this.camera.getWorldDirection(this.direction);
-      this.direction.multiplyScalar(t.deltaS * 1.0);
-      this.position.sub(this.direction);
-      this.updateMatrix();
     }
 
     if (this.keysDown.has('ArrowLeft')) {
