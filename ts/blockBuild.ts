@@ -36,20 +36,12 @@ export class BlockBuild {
   }
 
   private async initialize() {
-    this.setScene();
-    // NOTE: if you want the JSON to be loaded before execution reaches
-    // this point, you will need to put "await" before the previous line.
-    // Read the Debug.log statements carefully to check that the order
-    // makes sense.
-    Debug.log('setScene complete');
-    await Assets.init();
-    Debug.log("all models loaded.");
-
+    await this.setScene();
     // this.universeGroup.add(Assets.models["ship"]);
     // this.construction.addCube(Assets.blocks[0]);
     // this.construction.save();
 
-    let ab = new AstroGen(this.place, this.construction);
+    let ab = new AstroGen(this.place.universeGroup, this.construction);
     ab.buildPlatform(20, 10, 30, 0, 0, 0);
 
     this.getGrips();
@@ -98,7 +90,7 @@ export class BlockBuild {
     }
   }
   private async setScene() {
-    Assets.init();
+    await Assets.init();
     document.body.innerHTML = "";
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
@@ -166,6 +158,7 @@ export class BlockBuild {
     console.log(JSON.stringify(loadedObject, null, 2));
     Debug.log('test.json loaded.')
     const loaded = Decode.arrayOfObject3D(loadedObject);
+    return;  // We need an explicit 'return' because this is async (?)
   }
 
   getGrips() {

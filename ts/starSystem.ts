@@ -1,12 +1,14 @@
 import * as THREE from "three";
+import { ModelCloud } from "./modelCloud";
+import { PlanetPlatform } from "./planetPlatform";
 import { PointCloud } from "./pointCloud";
 import { S } from "./settings";
-import { Tick } from "./tick";
+import { Tick, Ticker } from "./tick";
 
-export class StarSystem extends THREE.Object3D {
+export class StarSystem extends THREE.Object3D implements Ticker {
   private material: THREE.ShaderMaterial;
 
-  constructor() {
+  constructor(camera: THREE.Camera) {
     super();
     this.material = StarSystem.makeStarMaterial();
     const mesh = new THREE.Mesh(
@@ -27,6 +29,11 @@ export class StarSystem extends THREE.Object3D {
       /*radiusSd=*/S.float('ar') * 3, /*ySd=*/S.float('ar') / 2,
       10, new THREE.Color('#8ff'),
       /*pointRadius=*/1e3);
+    const planetModelCloud = new ModelCloud((pos: THREE.Vector3) => {
+      return new PlanetPlatform(pos, camera);
+    }, planets, /*showRadius=*/1e6,
+      camera)
+
     this.add(planets);
 
   }
@@ -84,7 +91,7 @@ varying vec3 vNormal;
 varying vec3 vIncident;
 
 void main() {
-  vec3 c1 = green(vModelPosition * 0.9) * 0.5 + 0.5; 
+  vec3 c1 = green(vModelPosition * 0.9 + time * 0.2) * 0.5 + 0.5; 
   // float intensity = dot(-vIncident, vNormal);
   float intensity = 1.0;  // TODO: Fix vIncident!
 

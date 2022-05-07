@@ -1,3 +1,4 @@
+import { assert } from "console";
 import * as THREE from "three";
 import { Assets } from "./assets";
 import { Debug } from "./debug";
@@ -26,10 +27,12 @@ export class Encode {
 
 export class Decode {
   static object3D(o: Object): THREE.Object3D {
-    let mesh = new THREE.Mesh(
-      Codec.findModelByName(o['modelName']),
-      Codec.findMaterialByName(o['materialName'])
-    );
+    const model = Codec.findModelByName(o['modelName']);
+    console.assert(!!model, `No model for ${o['modelName']}`);
+    // TODO: Material loading isn't working.
+    // const material = Codec.findMaterialByName(o['materialName']);
+    // console.assert(!!material, `No material for ${o['materialName']}`)
+    let mesh = model.clone();
     mesh.position.set(
       o['position'].x, o['position'].y, o['position'].z);
     const quaternion = new THREE.Quaternion();
@@ -48,21 +51,23 @@ export class Decode {
 }
 
 export class Codec {
-  public static findModelByName(name: string) {
-    Assets.blocks.forEach((mesh: THREE.Mesh) => {
+  public static findModelByName(name: string): THREE.Mesh {
+    for (const mesh of Assets.blocks) {
       if (mesh.userData["modelName"] == name) {
-        return mesh;
+        console.assert(mesh.type === 'Mesh');
+        return mesh as THREE.Mesh;
       }
-    });
+    };
     return null;
   }
 
   public static findMaterialByName(name: string) {
-    Assets.materials.forEach((material: THREE.Material) => {
+    for (const material of Assets.materials) {
       if (material.userData["materialName"] == name) {
+        console.assert(material.type === "Material");
         return material;
       }
-    });
+    };
     return null;
   }
 
