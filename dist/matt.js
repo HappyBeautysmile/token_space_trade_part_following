@@ -131,38 +131,45 @@ class Assets extends THREE.Object3D {
         debug_1.Debug.log('materials.length=' + Assets.materials.length.toString());
         return Assets.materials[Assets.materialIndex];
     }
-    // static meshOnly(o: THREE.Object3D) {
-    //     let newChildren = [];
-    //     for (let element of o.children) {
-    //         if (element instanceof THREE.Mesh) {
-    //             newChildren.push(element);
-    //         }
-    //     }
-    //     o.children = newChildren;
-    //     return o;
-    // }
+    static findFirstMesh(o) {
+        if (o.type === "Mesh") {
+            console.log(`Mesh found: ${o.name}`);
+            const matrix = new THREE.Matrix4();
+            matrix.compose(o.position, o.quaternion, o.scale);
+            o.matrix.copy(matrix);
+            return o;
+        }
+        for (const child of o.children) {
+            const mesh = Assets.findFirstMesh(child);
+            if (!!mesh) {
+                return mesh;
+            }
+        }
+        return null;
+    }
     static async LoadAllModels() {
-        const models = ['cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold', 'thruster', 'tank', 'light-blue', 'port', 'console'];
-        for (const modelName of models) {
+        const modelNames = [
+            'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
+            'thruster', 'tank', 'light-blue', 'port', 'console',
+            'cube-tweek', 'cube-glob'
+        ];
+        for (const modelName of modelNames) {
             console.log(`Loading ${modelName}`);
-            const m = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+            const model = await ModelLoader.loadModel(`Model/${modelName}.glb`);
+            const m = Assets.findFirstMesh(model);
             if (!m) {
                 continue;
             }
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             //this.assets.replaceMaterial(m, newMat);
-            m.scale.set(1, 1, 1);
             m.userData = { "modelName": modelName };
             this.blocks.push(m);
             //this.scene.add(m);
             //this.universeGroup.add(m);
-            m.position.set((this.blocks.length - models.length / 2) * 1.4, 0, -15);
+            m.position.set((this.blocks.length - modelNames.length / 2) * 1.4, 0, -15);
+            Assets.models.set(modelName, m);
             console.log(`Added ${modelName}`);
         }
-        this.models['ship'] = await ModelLoader.loadModel("Model/ship.glb");
-        this.models['guide'] = await ModelLoader.loadModel("Model/guide.glb");
-        this.models['cube-tweek'] = await ModelLoader.loadModel("Model/cube-tweek.glb");
-        this.models['cube-glob'] = await ModelLoader.loadModel("Model/cube-glob.glb");
         // TODO: load all glb files int the Model directory into this.models
         // const testFolder = 'Model/*.glb';
         // const fs = require('fs');
@@ -174,7 +181,6 @@ class Assets extends THREE.Object3D {
         //     });
         // });
     }
-    // TODO: this is called twice, it should only be called once. There is probably something calling Asset.init twice.
     static initItems() {
         Assets.items = [];
         for (const b of Assets.blocks) {
@@ -186,14 +192,15 @@ class Assets extends THREE.Object3D {
             Assets.items.push(i);
         }
         // TODO: models has items in it, but is not itterated.
-        Assets.models.forEach((value, key, map) => {
+        for (const [key, value] of Assets.models.entries()) {
             let i = new Item();
             i.baseValue = 0;
             i.description = "This is a wonderful thing.";
             i.name = key;
             i.modelName = key;
             Assets.items.push(i);
-        });
+        }
+        ;
     }
 }
 exports.Assets = Assets;
@@ -229,10 +236,10 @@ exports.AstroGen = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const assets_1 = __webpack_require__(398);
 class AstroGen {
-    place;
+    universeGroup;
     construction;
-    constructor(place, construction) {
-        this.place = place;
+    constructor(universeGroup, construction) {
+        this.universeGroup = universeGroup;
         this.construction = construction;
     }
     buildCone() {
@@ -245,44 +252,41 @@ class AstroGen {
                         o.translateX(x);
                         o.translateY(y);
                         o.translateZ(-z * 2 - 10);
-                        this.place.universeGroup.add(o);
+                        this.universeGroup.add(o);
                         this.construction.addCube(o);
                     }
                 }
             }
         }
     }
+    changeColor(mesh) {
+        console.assert(mesh.type === "Mesh");
+        const material = new THREE.MeshStandardMaterial();
+        Object.assign(material, mesh.material);
+        let r = material.color.r;
+        let g = material.color.g;
+        let b = material.color.b;
+        r += (Math.random() - 0.5) * .1;
+        g += (Math.random() - 0.5) * .1;
+        b += (Math.random() - 0.5) * .1;
+        material.color = new THREE.Color(r, g, b);
+        material.needsUpdate = true;
+        mesh.material = material;
+    }
     addAt(x, y, z) {
-        let o = new THREE.Object3D();
+        let o;
         if (Math.random() < 0.9) {
-            o = assets_1.Assets.models['cube-tweek'].clone();
+            o = assets_1.Assets.models.get('cube-tweek').clone();
         }
         else {
-            o = assets_1.Assets.models['cube-glob'].clone();
+            o = assets_1.Assets.models.get('cube-glob').clone();
         }
-        // // TODO: color change not working.  It seems that clone isn't deep.
-        // let mesh = o.children[0].clone() as THREE.Mesh;
-        // let material = mesh.material as THREE.MeshStandardMaterial;
-        // let rgb = { r: 0, g: 0, b: 0 }
-        // if (material) {
-        //     if (material.color) {
-        //         material.color.getRGB(rgb);
-        //         rgb.r = rgb.r + (Math.random() - 0.5) * .1;
-        //         rgb.g = rgb.g + (Math.random() - 0.5) * .1;
-        //         rgb.b = rgb.b + (Math.random() - 0.5) * .1;
-        //         let newMaterial = material.clone();
-        //         newMaterial.color.setRGB(rgb.r, rgb.g, rgb.b);
-        //         mesh.material = newMaterial;
-        //     }
-        // }
-        // o.children[0] = mesh;
-        o.translateX(x);
-        o.translateY(y);
-        o.translateZ(z);
+        this.changeColor(o);
+        o.position.set(x, y, z);
         o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
         o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
         o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
-        this.place.universeGroup.add(o);
+        this.universeGroup.add(o);
         this.construction.addCube(o);
     }
     buildPlatform(xDim, yDim, zDim, xOffset, yOffset, zOffset) {
@@ -299,7 +303,7 @@ class AstroGen {
             }
         }
     }
-    buildAsteroid(r = 20, xOffset, yOffset, zOffset) {
+    buildAsteroid(r, xOffset, yOffset, zOffset) {
         for (let x = -r; x < r; x++) {
             for (let y = -r; y < r; y++) {
                 for (let z = -r; z < r; z++) {
@@ -373,18 +377,11 @@ class BlockBuild {
         });
     }
     async initialize() {
-        this.setScene();
-        // NOTE: if you want the JSON to be loaded before execution reaches
-        // this point, you will need to put "await" before the previous line.
-        // Read the Debug.log statements carefully to check that the order
-        // makes sense.
-        debug_1.Debug.log('setScene complete');
-        await assets_1.Assets.init();
-        debug_1.Debug.log("all models loaded.");
+        await this.setScene();
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
-        let ab = new astroGen_1.AstroGen(this.place, this.construction);
+        let ab = new astroGen_1.AstroGen(this.place.universeGroup, this.construction);
         ab.buildPlatform(20, 10, 30, 0, 0, 0);
         this.getGrips();
     }
@@ -430,7 +427,7 @@ class BlockBuild {
         }
     }
     async setScene() {
-        assets_1.Assets.init();
+        await assets_1.Assets.init();
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
@@ -486,6 +483,7 @@ class BlockBuild {
         console.log(JSON.stringify(loadedObject, null, 2));
         debug_1.Debug.log('test.json loaded.');
         const loaded = codec_1.Decode.arrayOfObject3D(loadedObject);
+        return; // We need an explicit 'return' because this is async (?)
     }
     getGrips() {
         //const debugMaterial = new THREE.MeshStandardMaterial({ color: '#0f0' });
@@ -562,7 +560,12 @@ class Encode {
 exports.Encode = Encode;
 class Decode {
     static object3D(o) {
-        let mesh = new THREE.Mesh(Codec.findModelByName(o['modelName']), Codec.findMaterialByName(o['materialName']));
+        const model = Codec.findModelByName(o['modelName']);
+        console.assert(!!model, `No model for ${o['modelName']}`);
+        // TODO: Material loading isn't working.
+        // const material = Codec.findMaterialByName(o['materialName']);
+        // console.assert(!!material, `No material for ${o['materialName']}`)
+        let mesh = model.clone();
         mesh.position.set(o['position'].x, o['position'].y, o['position'].z);
         const quaternion = new THREE.Quaternion();
         Object.assign(quaternion, o['quaternion']);
@@ -580,19 +583,23 @@ class Decode {
 exports.Decode = Decode;
 class Codec {
     static findModelByName(name) {
-        assets_1.Assets.blocks.forEach((mesh) => {
+        for (const mesh of assets_1.Assets.blocks) {
             if (mesh.userData["modelName"] == name) {
+                console.assert(mesh.type === 'Mesh');
                 return mesh;
             }
-        });
+        }
+        ;
         return null;
     }
     static findMaterialByName(name) {
-        assets_1.Assets.materials.forEach((material) => {
+        for (const material of assets_1.Assets.materials) {
             if (material.userData["materialName"] == name) {
+                console.assert(material.type === "Material");
                 return material;
             }
-        });
+        }
+        ;
         return null;
     }
 }
@@ -776,12 +783,19 @@ const VRButton_js_1 = __webpack_require__(652);
 const veryLargeUniverse_1 = __webpack_require__(453);
 const settings_1 = __webpack_require__(451);
 const materialExplorer_1 = __webpack_require__(587);
+const assets_1 = __webpack_require__(398);
 class Game {
     scene = new THREE.Scene();
     camera;
     renderer;
     grips = [];
     constructor() {
+        this.initialize();
+    }
+    async initialize() {
+        console.log('Loading...');
+        await assets_1.Assets.init();
+        console.log('Done loading assets.');
         document.body.innerHTML = '';
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.01, 2000);
         this.camera.position.set(0, 1.7, 0);
@@ -1492,6 +1506,82 @@ exports.MaterialExplorer = MaterialExplorer;
 
 /***/ }),
 
+/***/ 879:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ModelCloud = void 0;
+const THREE = __importStar(__webpack_require__(578));
+class ModelCloud extends THREE.Object3D {
+    factory;
+    cloud;
+    showRadius;
+    camera;
+    constructor(factory, cloud, showRadius, camera) {
+        super();
+        this.factory = factory;
+        this.cloud = cloud;
+        this.showRadius = showRadius;
+        this.camera = camera;
+        this.add(cloud);
+    }
+    currentStarMap = new Map();
+    p1 = new THREE.Vector3();
+    tick(t) {
+        this.camera.getWorldPosition(this.p1);
+        this.worldToLocal(this.p1);
+        const currentStars = new Set();
+        for (const k of this.currentStarMap.keys()) {
+            currentStars.add(k);
+        }
+        for (const closePoint of this.cloud.starPositions.getAllWithinRadius(this.p1, this.showRadius)) {
+            if (!this.currentStarMap.has(closePoint)) {
+                const starSystem = this.factory(closePoint);
+                starSystem.position.copy(closePoint);
+                this.currentStarMap.set(closePoint, starSystem);
+                this.add(starSystem);
+                // Hide the star when we show the model.
+                this.cloud.hideStar(closePoint);
+                console.log(`Pop in: ${JSON.stringify(closePoint)}`);
+            }
+            else {
+                currentStars.delete(closePoint);
+            }
+        }
+        for (const tooFar of currentStars) {
+            console.log(`Pop out: ${JSON.stringify(tooFar)}`);
+            const starToRemove = this.currentStarMap.get(tooFar);
+            this.remove(starToRemove);
+            this.currentStarMap.delete(tooFar);
+            this.cloud.showStar(tooFar);
+        }
+    }
+}
+exports.ModelCloud = ModelCloud;
+//# sourceMappingURL=modelCloud.js.map
+
+/***/ }),
+
 /***/ 812:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1771,6 +1861,60 @@ exports.Place = Place;
 
 /***/ }),
 
+/***/ 57:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PlanetPlatform = void 0;
+const THREE = __importStar(__webpack_require__(578));
+const astroGen_1 = __webpack_require__(419);
+const construction_1 = __webpack_require__(844);
+class PlanetPlatform extends THREE.Group {
+    camera;
+    constructor(pos, camera) {
+        super();
+        this.camera = camera;
+        // TODO: we scale the planet by a huge amount because
+        // rendering this many cubes is too slow.  Once we have high
+        // performance rendering, we can remove this scaling.
+        const deleteMeScale = new THREE.Group();
+        const construction = new construction_1.Construction();
+        const astroGen = new astroGen_1.AstroGen(deleteMeScale, construction);
+        astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
+        deleteMeScale.scale.set(200, 200, 200);
+        this.add(deleteMeScale);
+        // const cube = new THREE.Mesh(
+        //   new THREE.BoxBufferGeometry(1e2, 1e3, 1e2),
+        //   new THREE.MeshBasicMaterial({ color: 'red' })
+        // );
+        // this.add(cube);
+    }
+}
+exports.PlanetPlatform = PlanetPlatform;
+//# sourceMappingURL=planetPlatform.js.map
+
+/***/ }),
+
 /***/ 996:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1804,6 +1948,8 @@ class PointCloud extends THREE.Object3D {
     pointRadius;
     starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     material;
+    pointIndex = new Map();
+    geometry;
     constructor(radius, radiusSd, ySd, count, color, pointRadius) {
         super();
         this.color = color;
@@ -1819,8 +1965,19 @@ class PointCloud extends THREE.Object3D {
         }
         return sd * (x / Math.sqrt(n));
     }
+    showStar(point) {
+        const colorAttribute = this.geometry.getAttribute('color');
+        colorAttribute.setXYZ(this.pointIndex.get(point), this.color.r, this.color.g, this.color.b);
+        colorAttribute.needsUpdate = true;
+    }
+    hideStar(point) {
+        const colorAttribute = this.geometry.getAttribute('color');
+        colorAttribute.setXYZ(this.pointIndex.get(point), 0, 0, 0);
+        colorAttribute.needsUpdate = true;
+    }
     addStars(radius, radiusSd, ySd, count) {
         const positions = [];
+        const colors = [];
         for (let i = 0; i < count; ++i) {
             const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
             const orbitalHeight = PointCloud.gaussian(ySd);
@@ -1828,18 +1985,22 @@ class PointCloud extends THREE.Object3D {
             const v = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
             this.starPositions.add(v, v);
             positions.push(v.x, v.y, v.z);
+            colors.push(this.color.r, this.color.g, this.color.b);
+            this.pointIndex.set(v, i);
         }
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        this.geometry = new THREE.BufferGeometry();
+        this.geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        this.geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
         this.material = new THREE.ShaderMaterial({
             uniforms: {
                 'sizeScale': { value: 1.0 },
-                'uColor': { value: this.color },
             },
             vertexShader: `
+        varying vec3 vColor;
         uniform float sizeScale;
         varying float vDistance;
         void main() {
+          vColor = color;
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           vDistance = abs(mvPosition.z);
           if (vDistance > 1000.0) {
@@ -1850,24 +2011,23 @@ class PointCloud extends THREE.Object3D {
           
         }`,
             fragmentShader: `
-      uniform vec3 uColor;
+      varying vec3 vColor;
       varying float vDistance;
       void main() {
         vec2 coords = gl_PointCoord;
         float intensity = clamp(
           10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
         float brightness = clamp(${settings_1.S.float('pbf').toFixed(1)} / vDistance, 0.1, 1.0);
-        vec3 color = uColor;
-        gl_FragColor = vec4(uColor * intensity * brightness, 1.0);
+        gl_FragColor = vec4(vColor * intensity * brightness, 1.0);
       }`,
             blending: THREE.AdditiveBlending,
             depthTest: true,
             depthWrite: false,
             transparent: false,
-            vertexColors: false,
+            vertexColors: true,
             clipping: false,
         });
-        const points = new THREE.Points(geometry, this.material);
+        const points = new THREE.Points(this.geometry, this.material);
         this.add(points);
     }
     // private worldPosition = new THREE.Vector3();
@@ -2147,11 +2307,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StarSystem = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const modelCloud_1 = __webpack_require__(879);
+const planetPlatform_1 = __webpack_require__(57);
 const pointCloud_1 = __webpack_require__(996);
 const settings_1 = __webpack_require__(451);
 class StarSystem extends THREE.Object3D {
     material;
-    constructor() {
+    constructor(camera) {
         super();
         this.material = StarSystem.makeStarMaterial();
         const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 2), this.material);
@@ -2166,7 +2328,10 @@ class StarSystem extends THREE.Object3D {
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') * 3, /*ySd=*/ settings_1.S.float('ar') / 2, 10, new THREE.Color('#8ff'), 
         /*pointRadius=*/ 1e3);
-        this.add(planets);
+        const planetModelCloud = new modelCloud_1.ModelCloud((pos) => {
+            return new planetPlatform_1.PlanetPlatform(pos, camera);
+        }, planets, /*showRadius=*/ 1e6, camera);
+        this.add(planetModelCloud);
     }
     static makeStarMaterial() {
         return new THREE.ShaderMaterial({
@@ -2222,7 +2387,7 @@ varying vec3 vNormal;
 varying vec3 vIncident;
 
 void main() {
-  vec3 c1 = green(vModelPosition * 0.9) * 0.5 + 0.5; 
+  vec3 c1 = green(vModelPosition * 0.9 + time * 0.2) * 0.5 + 0.5; 
   // float intensity = dot(-vIncident, vNormal);
   float intensity = 1.0;  // TODO: Fix vIncident!
 
@@ -2311,6 +2476,7 @@ const THREE = __importStar(__webpack_require__(578));
 const settings_1 = __webpack_require__(451);
 const starSystem_1 = __webpack_require__(445);
 const pointCloud_1 = __webpack_require__(996);
+const modelCloud_1 = __webpack_require__(879);
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
 class VeryLargeUniverse extends THREE.Object3D {
@@ -2319,7 +2485,6 @@ class VeryLargeUniverse extends THREE.Object3D {
     xr;
     keysDown;
     starCloud;
-    currentStarMap = new Map();
     constructor(grips, camera, xr, keysDown) {
         super();
         this.grips = grips;
@@ -2327,7 +2492,10 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.xr = xr;
         this.keysDown = keysDown;
         this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ffa'), /*pointRadius=*/ 1e4);
-        this.add(this.starCloud);
+        const modelCloud = new modelCloud_1.ModelCloud((pos) => {
+            return new starSystem_1.StarSystem(this.camera);
+        }, this.starCloud, /*showRadius=*/ 1e6, camera);
+        this.add(modelCloud);
         this.position.set(0, 0, -1e6);
     }
     direction = new THREE.Vector3();
@@ -2359,12 +2527,15 @@ class VeryLargeUniverse extends THREE.Object3D {
         }
         return this.direction;
     }
+    session;
     getButtonsFromGrip(index) {
         let source = null;
-        const session = this.xr.getSession();
-        if (session) {
-            if (session.inputSources) {
-                source = session.inputSources[index];
+        if (!this.session) {
+            this.session = this.xr.getSession();
+        }
+        if (this.session) {
+            if (this.session.inputSources) {
+                source = this.session.inputSources[index];
             }
             return source.gamepad.buttons.map((b) => b.value);
         }
@@ -2374,7 +2545,6 @@ class VeryLargeUniverse extends THREE.Object3D {
     }
     p1 = new THREE.Vector3();
     zoomAroundWorldOrigin(zoomFactor) {
-        // TODO: This probably could be much simpler. :-/
         this.p1.copy(this.camera.position); // World Origin
         this.p1.sub(this.position);
         this.p1.multiplyScalar(1 / this.scale.x);
@@ -2383,15 +2553,6 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.p1.add(this.position);
         this.p1.sub(this.camera.position);
         this.position.sub(this.p1); // Now we should be centered again.
-        // // TODO: This probably could be much simpler. :-/
-        // this.p1.copy(this.camera.position); // World Origin
-        // this.worldToLocal(this.p1);  // Divide by this.matrix
-        // this.scale.multiplyScalar(zoomFactor);
-        // this.updateMatrix();
-        // this.updateMatrixWorld();
-        // this.localToWorld(this.p1);  // Multiply by this.matrix
-        // this.p1.sub(this.camera.position);
-        // this.position.sub(this.p1);  // Now we should be centered again.
     }
     tick(t) {
         const leftButtons = this.getButtonsFromGrip(0);
@@ -2419,30 +2580,6 @@ class VeryLargeUniverse extends THREE.Object3D {
         }
         if (this.keysDown.has('ArrowDown')) {
             this.camera.rotateX(-2 * t.deltaS);
-        }
-        this.camera.getWorldPosition(this.p1);
-        this.worldToLocal(this.p1);
-        const currentStars = new Set();
-        for (const k of this.currentStarMap.keys()) {
-            currentStars.add(k);
-        }
-        for (const closePoint of this.starCloud.starPositions.getAllWithinRadius(this.p1, 1e6)) {
-            if (!this.currentStarMap.has(closePoint)) {
-                const starSystem = new starSystem_1.StarSystem();
-                starSystem.position.copy(closePoint);
-                this.currentStarMap.set(closePoint, starSystem);
-                this.add(starSystem);
-                console.log(`Pop in: ${JSON.stringify(closePoint)}`);
-            }
-            else {
-                currentStars.delete(closePoint);
-            }
-        }
-        for (const tooFar of currentStars) {
-            console.log(`Pop out: ${JSON.stringify(tooFar)}`);
-            const starToRemove = this.currentStarMap.get(tooFar);
-            this.remove(starToRemove);
-            this.currentStarMap.delete(tooFar);
         }
     }
 }
