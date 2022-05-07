@@ -7,6 +7,7 @@ import { MaterialExplorer } from "./materialExplorer";
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { Assets } from "./assets";
 
 export class Game {
   private scene = new THREE.Scene();
@@ -16,6 +17,13 @@ export class Game {
   private grips: THREE.Object3D[] = [];
 
   constructor() {
+    this.initialize();
+  }
+
+  private async initialize() {
+    console.log('Loading...');
+    await Assets.init();
+    console.log('Done loading assets.');
     document.body.innerHTML = '';
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.01, 2000);
@@ -74,9 +82,10 @@ export class Game {
         this.scene.add(materialExplorer);
         break;
     }
+
   }
 
-  getGrips() {
+  private getGrips() {
     for (const i of [0, 1]) {
       const grip = this.renderer.xr.getControllerGrip(i);
       this.scene.add(grip);

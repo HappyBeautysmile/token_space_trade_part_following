@@ -34,7 +34,7 @@ export class StarSystem extends THREE.Object3D implements Ticker {
     }, planets, /*showRadius=*/1e6,
       camera)
 
-    this.add(planets);
+    this.add(planetModelCloud);
 
   }
   static makeStarMaterial() {

@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { MeshStandardMaterial } from "three";
 import { Assets } from "./assets";
 import { Construction } from "./construction";
 
