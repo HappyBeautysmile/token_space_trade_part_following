@@ -40,19 +40,24 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       this.direction.add(this.p1);
     }
     if (leftButtons[0]) {
+      this.p1.set(0, -1, 0);
+      this.p1.applyMatrix3(this.grips[0].normalMatrix);
       this.grips[0].getWorldDirection(this.p1);
       this.direction.add(this.p1);
     }
     if (rightButtons[0]) {
-      this.grips[1].getWorldDirection(this.p1);
+      this.p1.set(0, -1, 0);
+      this.p1.applyMatrix3(this.grips[1].normalMatrix);
       this.direction.add(this.p1);
     }
     if (leftButtons[1]) {
-      this.grips[0].getWorldDirection(this.p1);
+      this.p1.set(0, 1, 0);
+      this.p1.applyMatrix3(this.grips[0].normalMatrix);
       this.direction.sub(this.p1);
     }
     if (rightButtons[1]) {
-      this.grips[1].getWorldDirection(this.p1);
+      this.p1.set(0, 1, 0);
+      this.p1.applyMatrix3(this.grips[1].normalMatrix);
       this.direction.sub(this.p1);
     }
     return this.direction;
