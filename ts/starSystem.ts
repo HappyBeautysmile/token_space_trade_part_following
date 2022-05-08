@@ -21,14 +21,14 @@ export class StarSystem extends THREE.Object3D implements Ticker {
       /*radius=*/S.float('ar'),
       /*radiusSd=*/S.float('ar') / 10, /*ySd=*/S.float('ar') / 20,
       S.float('na'), new THREE.Color('#888'),
-      /*pointRadius=*/1e2);
+      /*pointRadius=*/1e2, /*visibleDistance=*/S.float('sp'));
     this.add(belt);
 
     const planets = new PointCloud(
       /*radius=*/S.float('ar'),
       /*radiusSd=*/S.float('ar') * 3, /*ySd=*/S.float('ar') / 2,
       10, new THREE.Color('#8ff'),
-      /*pointRadius=*/1e3);
+      /*pointRadius=*/1e3, /*visibleDistance=*/S.float('sp'));
     const planetModelCloud = new ModelCloud((pos: THREE.Vector3) => {
       return new PlanetPlatform(pos, camera);
     }, planets, /*showRadius=*/1e6,

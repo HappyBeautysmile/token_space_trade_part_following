@@ -18,10 +18,11 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
 
     this.starCloud = new PointCloud(
       0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
-      new THREE.Color('#ffa'), /*pointRadius=*/1e4);
+      new THREE.Color('#ffa'), /*pointRadius=*/1e4,
+      /*visibleDistance=*/S.float('sr'));
     const modelCloud = new ModelCloud((pos: THREE.Vector3) => {
       return new StarSystem(this.camera);
-    }, this.starCloud, /*showRadius=*/1e6, camera);
+    }, this.starCloud, /*showRadius=*/S.float('sp'), camera);
 
     this.add(modelCloud);
     this.position.set(0, 0, -1e6);

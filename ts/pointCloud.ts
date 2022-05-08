@@ -11,7 +11,8 @@ export class PointCloud extends THREE.Object3D implements Ticker {
   private geometry: THREE.BufferGeometry;
 
   constructor(radius: number, radiusSd: number, ySd: number,
-    count: number, private color: THREE.Color, private pointRadius: number) {
+    count: number, private color: THREE.Color, private pointRadius: number,
+    private visibleDistance: number) {
     super();
     this.addStars(radius, radiusSd, ySd, count)
   }
@@ -90,7 +91,10 @@ export class PointCloud extends THREE.Object3D implements Ticker {
         vec2 coords = gl_PointCoord;
         float intensity = clamp(
           10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
-        float brightness = clamp(${S.float('pbf').toFixed(1)} / vDistance, 0.1, 1.0);
+        float brightness = 
+          (${this.visibleDistance.toFixed(1)} - vDistance) /
+          ${this.visibleDistance.toFixed(1)};
+        brightness = clamp(brightness * brightness, 0.0, 1.0);
         gl_FragColor = vec4(vColor * intensity * brightness, 1.0);
       }`,
       blending: THREE.AdditiveBlending,
@@ -100,6 +104,8 @@ export class PointCloud extends THREE.Object3D implements Ticker {
       vertexColors: true,
       clipping: false,
     });
+
+    this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3, 1e30);
 
     const points = new THREE.Points(this.geometry, this.material);
     this.add(points);
