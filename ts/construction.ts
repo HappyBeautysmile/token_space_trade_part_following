@@ -25,17 +25,18 @@ export class ObjectConstruction implements Construction {
     FileIO.saveObject(o, "what_you_built.json");
   }
 
-  // TODO: change this to private and fix the code that breaks.
-  public posToKey(p: THREE.Vector3): string {
+  private posToKey(p: THREE.Vector3): string {
     return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
   }
 
+  // TODO: Change the input type to InWorldItem.
   public addCube(o: THREE.Object3D) {
     const key = this.posToKey(o.position);
     this.allObjects.set(key, o);
     this.container.add(o);
   }
 
+  // TODO: Return the InWorldItem.
   public removeCube(p: THREE.Vector3): void {
     const key = this.posToKey(p);
     if (this.allObjects.has(key)) {
