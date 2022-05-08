@@ -1942,18 +1942,19 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PointCloud = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const pointMap_1 = __webpack_require__(228);
-const settings_1 = __webpack_require__(451);
 class PointCloud extends THREE.Object3D {
     color;
     pointRadius;
+    visibleDistance;
     starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     material;
     pointIndex = new Map();
     geometry;
-    constructor(radius, radiusSd, ySd, count, color, pointRadius) {
+    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance) {
         super();
         this.color = color;
         this.pointRadius = pointRadius;
+        this.visibleDistance = visibleDistance;
         this.addStars(radius, radiusSd, ySd, count);
     }
     static gaussian(sd) {
@@ -2017,7 +2018,10 @@ class PointCloud extends THREE.Object3D {
         vec2 coords = gl_PointCoord;
         float intensity = clamp(
           10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
-        float brightness = clamp(${settings_1.S.float('pbf').toFixed(1)} / vDistance, 0.1, 1.0);
+        float brightness = 
+          (${this.visibleDistance.toFixed(1)} - vDistance) /
+          (${this.visibleDistance.toFixed(1)} + vDistance);
+        brightness = clamp(brightness * brightness, 0.0, 1.0);
         gl_FragColor = vec4(vColor * intensity * brightness, 1.0);
       }`,
             blending: THREE.AdditiveBlending,
@@ -2027,6 +2031,7 @@ class PointCloud extends THREE.Object3D {
             vertexColors: true,
             clipping: false,
         });
+        this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3, 1e30);
         const points = new THREE.Points(this.geometry, this.material);
         this.add(points);
     }
@@ -2256,8 +2261,10 @@ class S {
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e9, 'Starfield radius');
         S.setDefault('ar', 3e4, 'Asteroid radius');
-        S.setDefault('ns', 1e4, 'Number of stars in the VLU');
+        S.setDefault('ns', 1e5, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
+        S.setDefault('sa', 1e3, 'Starship Acceleration');
+        S.setDefault('sp', 3e6, 'Star System "Pop" radius');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {
@@ -2317,17 +2324,19 @@ class StarSystem extends THREE.Object3D {
         super();
         this.material = StarSystem.makeStarMaterial();
         const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 2), this.material);
+        mesh.geometry.boundingSphere =
+            new THREE.Sphere(new THREE.Vector3, 1e30);
         mesh.scale.setLength(1e3);
         this.add(mesh);
         const belt = new pointCloud_1.PointCloud(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') / 10, /*ySd=*/ settings_1.S.float('ar') / 20, settings_1.S.float('na'), new THREE.Color('#888'), 
-        /*pointRadius=*/ 1e2);
+        /*pointRadius=*/ 1e2, /*visibleDistance=*/ settings_1.S.float('sp'));
         this.add(belt);
         const planets = new pointCloud_1.PointCloud(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') * 3, /*ySd=*/ settings_1.S.float('ar') / 2, 10, new THREE.Color('#8ff'), 
-        /*pointRadius=*/ 1e3);
+        /*pointRadius=*/ 1e3, /*visibleDistance=*/ settings_1.S.float('sp'));
         const planetModelCloud = new modelCloud_1.ModelCloud((pos) => {
             return new planetPlatform_1.PlanetPlatform(pos, camera);
         }, planets, /*showRadius=*/ 1e6, camera);
@@ -2350,6 +2359,10 @@ void main() {
   vNormal = normalMatrix * normal;
 
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  float distance = abs(mvPosition.z);
+  if (distance > 1000.0) {
+    mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
+  }
   gl_Position = projectionMatrix * mvPosition;
 }`,
             fragmentShader: `
@@ -2491,16 +2504,20 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.camera = camera;
         this.xr = xr;
         this.keysDown = keysDown;
-        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ffa'), /*pointRadius=*/ 1e4);
+        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ffa'), /*pointRadius=*/ 1e4, 
+        /*visibleDistance=*/ settings_1.S.float('sr'));
         const modelCloud = new modelCloud_1.ModelCloud((pos) => {
             return new starSystem_1.StarSystem(this.camera);
-        }, this.starCloud, /*showRadius=*/ 1e6, camera);
+        }, this.starCloud, /*showRadius=*/ settings_1.S.float('sp'), camera);
         this.add(modelCloud);
         this.position.set(0, 0, -1e6);
     }
     direction = new THREE.Vector3();
+    cameraNormalMatrix = new THREE.Matrix3();
     getDirectionFromGrips(leftButtons, rightButtons) {
         this.direction.set(0, 0, 0);
+        // this.camera.updateMatrixWorld();
+        this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
         if (this.keysDown.has('KeyS')) {
             this.camera.getWorldDirection(this.p1);
             this.direction.sub(this.p1);
@@ -2509,27 +2526,60 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.camera.getWorldDirection(this.p1);
             this.direction.add(this.p1);
         }
-        if (leftButtons[0]) {
-            this.p1.set(0, -1, 0);
-            this.p1.applyMatrix3(this.grips[0].normalMatrix);
-            this.grips[0].getWorldDirection(this.p1);
+        if (this.keysDown.has('KeyA')) {
+            this.p1.set(-1, 0, 0);
+            this.p1.applyMatrix3(this.cameraNormalMatrix);
             this.direction.add(this.p1);
         }
-        if (rightButtons[0]) {
-            this.p1.set(0, -1, 0);
-            this.p1.applyMatrix3(this.grips[1].normalMatrix);
+        if (this.keysDown.has('KeyD')) {
+            this.p1.set(1, 0, 0);
+            this.p1.applyMatrix3(this.cameraNormalMatrix);
             this.direction.add(this.p1);
         }
-        if (leftButtons[1]) {
+        if (this.keysDown.has('ArrowUp')) {
             this.p1.set(0, 1, 0);
-            this.p1.applyMatrix3(this.grips[0].normalMatrix);
-            this.direction.sub(this.p1);
+            this.p1.applyMatrix3(this.cameraNormalMatrix);
+            this.direction.add(this.p1);
         }
-        if (rightButtons[1]) {
-            this.p1.set(0, 1, 0);
-            this.p1.applyMatrix3(this.grips[1].normalMatrix);
-            this.direction.sub(this.p1);
+        if (this.keysDown.has('ArrowDown')) {
+            this.p1.set(0, -1, 0);
+            this.p1.applyMatrix3(this.cameraNormalMatrix);
+            this.direction.add(this.p1);
         }
+        const leftAxes = this.getAxesFromGrip(0);
+        const rightAxes = this.getAxesFromGrip(1);
+        if (leftAxes && rightAxes) {
+            this.p1.set(0, 0, 0);
+            if (leftAxes[2] || leftAxes[3]) {
+                this.p1.x = leftAxes[2];
+                this.p1.z = leftAxes[3];
+            }
+            if (rightAxes[3]) {
+                this.p1.y = rightAxes[3];
+            }
+            this.direction.add(this.p1);
+        }
+        // if (leftButtons[0]) {
+        //   this.p1.set(0, -1, 0);
+        //   this.p1.applyMatrix3(this.grips[0].normalMatrix);
+        //   this.grips[0].getWorldDirection(this.p1);
+        //   this.direction.add(this.p1);
+        // }
+        // if (rightButtons[0]) {
+        //   this.p1.set(0, -1, 0);
+        //   this.p1.applyMatrix3(this.grips[1].normalMatrix);
+        //   this.direction.add(this.p1);
+        // }
+        // if (leftButtons[1]) {
+        //   this.p1.set(0, 1, 0);
+        //   this.p1.applyMatrix3(this.grips[0].normalMatrix);
+        //   this.direction.sub(this.p1);
+        // }
+        // if (rightButtons[1]) {
+        //   this.p1.set(0, 1, 0);
+        //   this.p1.applyMatrix3(this.grips[1].normalMatrix);
+        //   this.direction.sub(this.p1);
+        // }
         return this.direction;
     }
     session;
@@ -2548,6 +2598,20 @@ class VeryLargeUniverse extends THREE.Object3D {
             return [];
         }
     }
+    getAxesFromGrip(index) {
+        let source = null;
+        if (!this.session) {
+            this.session = this.xr.getSession();
+        }
+        if (this.session) {
+            if (this.session.inputSources) {
+                return this.session.inputSources[index].gamepad.axes.slice(0);
+            }
+        }
+        else {
+            return null;
+        }
+    }
     p1 = new THREE.Vector3();
     zoomAroundWorldOrigin(zoomFactor) {
         this.p1.copy(this.camera.position); // World Origin
@@ -2559,6 +2623,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.p1.sub(this.camera.position);
         this.position.sub(this.p1); // Now we should be centered again.
     }
+    velocity = new THREE.Vector3();
     tick(t) {
         const leftButtons = this.getButtonsFromGrip(0);
         const rightButtons = this.getButtonsFromGrip(1);
@@ -2571,20 +2636,21 @@ class VeryLargeUniverse extends THREE.Object3D {
             this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
         }
         this.direction = this.getDirectionFromGrips(leftButtons, rightButtons);
-        if (this.direction.lengthSq() > 0) {
-            this.position.sub(this.direction);
+        this.direction.multiplyScalar(settings_1.S.float('sa') * t.deltaS);
+        this.velocity.add(this.direction);
+        if (this.velocity.lengthSq() > 0) {
+            this.p1.copy(this.velocity);
+            this.p1.multiplyScalar(t.deltaS);
+            this.position.sub(this.p1);
+            if (Math.random() < 0.05) {
+                console.log(`Velocity: ${this.velocity.length().toFixed(2)}`);
+            }
         }
         if (this.keysDown.has('ArrowLeft')) {
             this.camera.rotateY(2 * t.deltaS);
         }
         if (this.keysDown.has('ArrowRight')) {
             this.camera.rotateY(-2 * t.deltaS);
-        }
-        if (this.keysDown.has('ArrowUp')) {
-            this.camera.rotateX(2 * t.deltaS);
-        }
-        if (this.keysDown.has('ArrowDown')) {
-            this.camera.rotateX(-2 * t.deltaS);
         }
     }
 }

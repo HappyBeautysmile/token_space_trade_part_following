@@ -9,7 +9,6 @@ import { Assets } from "./assets";
 import { FileIO } from "./fileIO";
 import { Construction } from "./construction";
 import { Codec, Decode } from "./codec";
-import { MaterialExplorer } from "./materialExplorer";
 import { AstroGen } from "./astroGen";
 
 export class BlockBuild {

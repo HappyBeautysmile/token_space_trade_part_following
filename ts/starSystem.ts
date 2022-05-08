@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { cli } from "webpack";
 import { ModelCloud } from "./modelCloud";
 import { PlanetPlatform } from "./planetPlatform";
 import { PointCloud } from "./pointCloud";
@@ -14,6 +15,9 @@ export class StarSystem extends THREE.Object3D implements Ticker {
     const mesh = new THREE.Mesh(
       new THREE.IcosahedronBufferGeometry(1, 2),
       this.material);
+    mesh.geometry.boundingSphere =
+      new THREE.Sphere(new THREE.Vector3, 1e30);
+
     mesh.scale.setLength(1e3);
     this.add(mesh);
 
@@ -54,6 +58,10 @@ void main() {
   vNormal = normalMatrix * normal;
 
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  float distance = abs(mvPosition.z);
+  if (distance > 1000.0) {
+    mvPosition.xyz = mvPosition.xyz * (1000.0 / distance);
+  }
   gl_Position = projectionMatrix * mvPosition;
 }`,
       fragmentShader: `
@@ -118,7 +126,7 @@ void main() {
       uniforms: {
         time: { value: 0.0 }
       }
-    })
+    });
   }
   tick(t: Tick) {
     if (this.material !== null) {

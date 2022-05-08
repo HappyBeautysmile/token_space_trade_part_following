@@ -77,7 +77,6 @@ export class Hand extends THREE.Object3D {
       }
     }
 
-
     if (source) {
       if (!this.sourceLogged) {
         if (source.handedness == "left") {

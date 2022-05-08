@@ -64,7 +64,19 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       this.direction.add(this.p1);
     }
 
-
+    const leftAxes = this.getAxesFromGrip(0);
+    const rightAxes = this.getAxesFromGrip(1);
+    if (leftAxes && rightAxes) {
+      this.p1.set(0, 0, 0);
+      if (leftAxes[2] || leftAxes[3]) {
+        this.p1.x = leftAxes[2];
+        this.p1.z = leftAxes[3];
+      }
+      if (rightAxes[3]) {
+        this.p1.y = rightAxes[3];
+      }
+      this.direction.add(this.p1);
+    }
 
     // if (leftButtons[0]) {
     //   this.p1.set(0, -1, 0);
@@ -103,6 +115,20 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       return source.gamepad.buttons.map((b) => b.value);
     } else {
       return [];
+    }
+  }
+
+  private getAxesFromGrip(index: number): Float32Array {
+    let source: THREE.XRInputSource = null;
+    if (!this.session) {
+      this.session = this.xr.getSession();
+    }
+    if (this.session) {
+      if (this.session.inputSources) {
+        return this.session.inputSources[index].gamepad.axes.slice(0);
+      }
+    } else {
+      return null;
     }
   }
 
