@@ -176,7 +176,6 @@ export class Hand extends THREE.Object3D {
       this.place.quantizePosition(p);
       this.place.quantizeRotation(o.rotation);
       //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
-      this.place.universeGroup.add(o);
       this.construction.addCube(o);
     });
 

@@ -10,6 +10,7 @@ export interface Construction {
 }
 
 export class ObjectConstruction implements Construction {
+  public constructor(private container: THREE.Object3D) { }
   // TODO: Make this private and instead have some nicer methods for
   // inserting and deleting.  This is where code to make sure we have only
   // one block per location would go, also where Vector3 to key would go.
@@ -32,13 +33,15 @@ export class ObjectConstruction implements Construction {
   public addCube(o: THREE.Object3D) {
     const key = this.posToKey(o.position);
     this.allObjects.set(key, o);
+    this.container.add(o);
   }
 
   public removeCube(p: THREE.Vector3): void {
     const key = this.posToKey(p);
     if (this.allObjects.has(key)) {
       const o = this.allObjects.get(key);
-      o.parent.remove(o);
+      console.assert(o.parent === this.container, 'Invalid parent!');
+      this.container.remove(o);
       this.allObjects.delete(key);
     }
   }

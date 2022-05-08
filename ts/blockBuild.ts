@@ -20,7 +20,7 @@ export class BlockBuild {
   private universeGroup = new THREE.Group();
   private place: Place;
   private keysDown = new Set<string>();
-  private construction: Construction = new ObjectConstruction();
+  private construction: ObjectConstruction;
   //private assets = new Assets();
 
   constructor() {
@@ -40,6 +40,7 @@ export class BlockBuild {
     // this.construction.addCube(Assets.blocks[0]);
     // this.construction.save();
 
+    this.construction = new ObjectConstruction(this.place.universeGroup);
     let ab = new AstroGen(this.place.universeGroup, this.construction);
     ab.buildPlatform(20, 10, 30, 0, 0, 0);
 

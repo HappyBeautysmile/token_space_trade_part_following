@@ -16,7 +16,6 @@ export class AstroGen {
             o.translateX(x);
             o.translateY(y);
             o.translateZ(-z * 2 - 10);
-            this.universeGroup.add(o);
             this.construction.addCube(o);
           }
         }
@@ -51,7 +50,6 @@ export class AstroGen {
     o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
     o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
     o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
-    this.universeGroup.add(o);
     this.construction.addCube(o);
   }
 
