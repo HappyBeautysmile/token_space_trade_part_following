@@ -28,9 +28,12 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
   }
 
   private direction = new THREE.Vector3();
+  private cameraNormalMatrix = new THREE.Matrix3();
   private getDirectionFromGrips(
     leftButtons: number[], rightButtons: number[]): THREE.Vector3 {
     this.direction.set(0, 0, 0);
+    // this.camera.updateMatrixWorld();
+    this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
     if (this.keysDown.has('KeyS')) {
       this.camera.getWorldDirection(this.p1);
       this.direction.sub(this.p1);
@@ -39,27 +42,50 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       this.camera.getWorldDirection(this.p1);
       this.direction.add(this.p1);
     }
-    if (leftButtons[0]) {
-      this.p1.set(0, -1, 0);
-      this.p1.applyMatrix3(this.grips[0].normalMatrix);
-      this.grips[0].getWorldDirection(this.p1);
+    if (this.keysDown.has('KeyA')) {
+      this.p1.set(-1, 0, 0);
+      this.p1.applyMatrix3(this.cameraNormalMatrix);
       this.direction.add(this.p1);
     }
-    if (rightButtons[0]) {
-      this.p1.set(0, -1, 0);
-      this.p1.applyMatrix3(this.grips[1].normalMatrix);
+    if (this.keysDown.has('KeyD')) {
+      this.p1.set(1, 0, 0);
+      this.p1.applyMatrix3(this.cameraNormalMatrix);
       this.direction.add(this.p1);
     }
-    if (leftButtons[1]) {
+    if (this.keysDown.has('ArrowUp')) {
       this.p1.set(0, 1, 0);
-      this.p1.applyMatrix3(this.grips[0].normalMatrix);
-      this.direction.sub(this.p1);
+      this.p1.applyMatrix3(this.cameraNormalMatrix);
+      this.direction.add(this.p1);
     }
-    if (rightButtons[1]) {
-      this.p1.set(0, 1, 0);
-      this.p1.applyMatrix3(this.grips[1].normalMatrix);
-      this.direction.sub(this.p1);
+    if (this.keysDown.has('ArrowDown')) {
+      this.p1.set(0, -1, 0);
+      this.p1.applyMatrix3(this.cameraNormalMatrix);
+      this.direction.add(this.p1);
     }
+
+
+
+    // if (leftButtons[0]) {
+    //   this.p1.set(0, -1, 0);
+    //   this.p1.applyMatrix3(this.grips[0].normalMatrix);
+    //   this.grips[0].getWorldDirection(this.p1);
+    //   this.direction.add(this.p1);
+    // }
+    // if (rightButtons[0]) {
+    //   this.p1.set(0, -1, 0);
+    //   this.p1.applyMatrix3(this.grips[1].normalMatrix);
+    //   this.direction.add(this.p1);
+    // }
+    // if (leftButtons[1]) {
+    //   this.p1.set(0, 1, 0);
+    //   this.p1.applyMatrix3(this.grips[0].normalMatrix);
+    //   this.direction.sub(this.p1);
+    // }
+    // if (rightButtons[1]) {
+    //   this.p1.set(0, 1, 0);
+    //   this.p1.applyMatrix3(this.grips[1].normalMatrix);
+    //   this.direction.sub(this.p1);
+    // }
     return this.direction;
   }
 
@@ -113,12 +139,6 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     }
     if (this.keysDown.has('ArrowRight')) {
       this.camera.rotateY(-2 * t.deltaS);
-    }
-    if (this.keysDown.has('ArrowUp')) {
-      this.camera.rotateX(2 * t.deltaS);
-    }
-    if (this.keysDown.has('ArrowDown')) {
-      this.camera.rotateX(-2 * t.deltaS);
     }
   }
 }
