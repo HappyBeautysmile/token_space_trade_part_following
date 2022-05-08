@@ -117,6 +117,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     this.position.sub(this.p1);  // Now we should be centered again.
   }
 
+  private velocity = new THREE.Vector3();
   tick(t: Tick) {
     const leftButtons = this.getButtonsFromGrip(0);
     const rightButtons = this.getButtonsFromGrip(1);
@@ -130,8 +131,15 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
       this.zoomAroundWorldOrigin(Math.pow(0.5, t.deltaS));
     }
     this.direction = this.getDirectionFromGrips(leftButtons, rightButtons);
-    if (this.direction.lengthSq() > 0) {
-      this.position.sub(this.direction);
+    this.direction.multiplyScalar(S.float('sa') * t.deltaS);
+    this.velocity.add(this.direction);
+    if (this.velocity.lengthSq() > 0) {
+      this.p1.copy(this.velocity);
+      this.p1.multiplyScalar(t.deltaS);
+      this.position.sub(this.p1);
+      if (Math.random() < 0.05) {
+        console.log(`Velocity: ${this.velocity.length().toFixed(2)}`);
+      }
     }
 
     if (this.keysDown.has('ArrowLeft')) {
