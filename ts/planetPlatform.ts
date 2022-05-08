@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { AstroGen } from "./astroGen";
-import { Construction } from "./construction";
+import { Construction, ObjectConstruction } from "./construction";
 import { Place } from "./place";
 
 export class PlanetPlatform extends THREE.Group {
@@ -11,7 +11,7 @@ export class PlanetPlatform extends THREE.Group {
     // rendering this many cubes is too slow.  Once we have high
     // performance rendering, we can remove this scaling.
     const deleteMeScale = new THREE.Group();
-    const construction = new Construction();
+    const construction: Construction = new ObjectConstruction();
     const astroGen = new AstroGen(deleteMeScale, construction);
     astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
     deleteMeScale.scale.set(200, 200, 200);

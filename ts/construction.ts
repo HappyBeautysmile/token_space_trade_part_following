@@ -2,11 +2,18 @@ import * as THREE from "three";
 import { Codec, Encode } from "./codec";
 import { FileIO } from "./fileIO";
 
-export class Construction {
+export interface Construction {
+  // Adds an object to this collection.
+  addCube(o: THREE.Object3D): void;
+  removeCube(p: THREE.Vector3): void;
+  save(): void;
+}
+
+export class ObjectConstruction implements Construction {
   // TODO: Make this private and instead have some nicer methods for
   // inserting and deleting.  This is where code to make sure we have only
   // one block per location would go, also where Vector3 to key would go.
-  readonly allObjects = new Map<string, THREE.Object3D>();
+  private allObjects = new Map<string, THREE.Object3D>();
 
   public save() {
     console.log('Saving...');
@@ -27,8 +34,12 @@ export class Construction {
     this.allObjects.set(key, o);
   }
 
-  public removeCube(o: THREE.Object3D) {
-
+  public removeCube(p: THREE.Vector3): void {
+    const key = this.posToKey(p);
+    if (this.allObjects.has(key)) {
+      const o = this.allObjects.get(key);
+      o.parent.remove(o);
+      this.allObjects.delete(key);
+    }
   }
-
 }

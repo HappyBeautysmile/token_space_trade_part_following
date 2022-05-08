@@ -153,11 +153,7 @@ export class Hand extends THREE.Object3D {
     this.p.copy(this.cube.position);
     this.place.playerToUniverse(this.p);
     this.place.quantizePosition(this.p);
-    const key = this.construction.posToKey(this.p);
-    if (this.construction.allObjects.has(key)) {
-      this.place.universeGroup.remove(this.construction.allObjects.get(key));
-      this.construction.allObjects.delete(key);
-    }
+    this.construction.removeCube(this.p);
   }
 
   private p = new THREE.Vector3();

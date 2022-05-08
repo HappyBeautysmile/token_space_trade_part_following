@@ -7,7 +7,7 @@ import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { FileIO } from "./fileIO";
-import { Construction } from "./construction";
+import { Construction, ObjectConstruction } from "./construction";
 import { Codec, Decode } from "./codec";
 import { AstroGen } from "./astroGen";
 
@@ -20,7 +20,7 @@ export class BlockBuild {
   private universeGroup = new THREE.Group();
   private place: Place;
   private keysDown = new Set<string>();
-  private construction = new Construction();
+  private construction: Construction = new ObjectConstruction();
   //private assets = new Assets();
 
   constructor() {
