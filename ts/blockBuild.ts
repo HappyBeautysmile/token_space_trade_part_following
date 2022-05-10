@@ -8,7 +8,7 @@ import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { FileIO } from "./fileIO";
 import { Construction, ObjectConstruction } from "./construction";
-import { Codec, Decode } from "./codec";
+import { Decode } from "./codec";
 import { AstroGen } from "./astroGen";
 
 export class BlockBuild {
@@ -20,7 +20,7 @@ export class BlockBuild {
   private universeGroup = new THREE.Group();
   private place: Place;
   private keysDown = new Set<string>();
-  private construction: ObjectConstruction;
+  private construction: Construction;
   //private assets = new Assets();
 
   constructor() {

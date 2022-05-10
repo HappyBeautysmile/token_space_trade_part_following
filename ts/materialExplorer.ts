@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Object3D } from "three";
+import { MergedGeometryContainer } from "./megedGeometryContainer";
 import { Tick, Ticker } from "./tick";
 
 type CodeType = 'config' | 'vertex' | 'fragment';
@@ -43,12 +44,27 @@ export class MaterialExplorer extends THREE.Object3D implements Ticker {
     this.cube.position.set(1, 2.5, -2);
     this.add(this.cube);
 
+    const merged = new MergedGeometryContainer();
     const sphere = new THREE.Mesh(
       new THREE.IcosahedronBufferGeometry(0.9, 4),
       new THREE.MeshBasicMaterial({ color: '#f0f' })
-    )
+    );
     sphere.position.set(-1, 2.5, -2);
-    this.add(sphere);
+    // const cylinder = new THREE.Mesh(
+    //   new THREE.CylinderBufferGeometry(0.1, 0.1, 3),
+    //   new THREE.MeshBasicMaterial({ color: '#f0f' })
+    // );
+    // cylinder.position.set(-1, 0, -2);
+    const cube = new THREE.Mesh(
+      new THREE.BoxBufferGeometry(0.1, 3.0, 0.1),
+      new THREE.MeshBasicMaterial({ color: '#f0f' })
+    );
+    cube.position.set(-1, 0, -2);
+
+    merged.mergeIn('trunk', cube);
+    merged.mergeIn('sphere', sphere);
+
+    this.add(merged);
 
     for (let i = 0; i < 10; ++i) {
       const platform = new THREE.Mesh(
