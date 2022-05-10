@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Object3D } from "three";
+import { Assets } from "./assets";
 import { MergedGeometryContainer } from "./megedGeometryContainer";
 import { Tick, Ticker } from "./tick";
 
@@ -36,7 +37,7 @@ export class MaterialExplorer extends THREE.Object3D implements Ticker {
     this.updateMaterial(this);
   }
 
-  buildScene() {
+  async buildScene() {
     this.cube = new THREE.Mesh(
       new THREE.IcosahedronBufferGeometry(1, 0),
       new THREE.MeshBasicMaterial({ color: '#f0f' })
@@ -45,16 +46,8 @@ export class MaterialExplorer extends THREE.Object3D implements Ticker {
     this.add(this.cube);
 
     const merged = new MergedGeometryContainer();
-    const sphere = new THREE.Mesh(
-      new THREE.IcosahedronBufferGeometry(0.9, 4),
-      new THREE.MeshBasicMaterial({ color: '#f0f' })
-    );
-    sphere.position.set(-1, 2.5, -2);
-    // const cylinder = new THREE.Mesh(
-    //   new THREE.CylinderBufferGeometry(0.1, 0.1, 3),
-    //   new THREE.MeshBasicMaterial({ color: '#f0f' })
-    // );
-    // cylinder.position.set(-1, 0, -2);
+    const sphere = Assets.models.get('cube-glob').clone();
+    sphere.position.set(-1, 1.5, -2);
     const cube = new THREE.Mesh(
       new THREE.BoxBufferGeometry(0.1, 3.0, 0.1),
       new THREE.MeshBasicMaterial({ color: '#f0f' })
