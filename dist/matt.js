@@ -1074,7 +1074,7 @@ class Hand extends THREE.Object3D {
             this.deleteCube();
             debug_1.Debug.log('deleted');
             const p = new THREE.Vector3();
-            p.copy(this.grip.position);
+            p.copy(this.cube.position);
             this.place.playerToUniverse(p);
             this.place.quantizePosition(p);
             const rotation = new THREE.Quaternion();
