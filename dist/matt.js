@@ -242,6 +242,7 @@ exports.AstroGen = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const three_1 = __webpack_require__(578);
 const assets_1 = __webpack_require__(398);
+const debug_1 = __webpack_require__(756);
 const inWorldItem_1 = __webpack_require__(116);
 class AstroGen {
     universeGroup;
@@ -265,7 +266,7 @@ class AstroGen {
         }
     }
     changeColor(mesh) {
-        console.assert(mesh.type === "Mesh");
+        debug_1.Debug.assert(mesh.type === "Mesh");
         const material = new THREE.MeshStandardMaterial();
         Object.assign(material, mesh.material);
         let r = material.color.r;
@@ -548,6 +549,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Codec = exports.Decode = exports.Encode = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const assets_1 = __webpack_require__(398);
+const debug_1 = __webpack_require__(756);
 class Encode {
     static inWorldItem(o) {
         const result = {};
@@ -568,10 +570,10 @@ exports.Encode = Encode;
 class Decode {
     static object3D(o) {
         const model = assets_1.Assets.models.get(o['modelName']).clone();
-        console.assert(!!model, `No model for ${o['modelName']}`);
+        debug_1.Debug.assert(!!model, `No model for ${o['modelName']}`);
         // TODO: Material loading isn't working.
         // const material = Codec.findMaterialByName(o['materialName']);
-        // console.assert(!!material, `No material for ${o['materialName']}`)
+        // Debug.assert(!!material, `No material for ${o['materialName']}`)
         let mesh = model.clone();
         mesh.position.set(o['position'].x, o['position'].y, o['position'].z);
         const quaternion = new THREE.Quaternion();
@@ -592,7 +594,7 @@ class Codec {
     static findMaterialByName(name) {
         for (const material of assets_1.Assets.materials) {
             if (material.userData["materialName"] == name) {
-                console.assert(material.type === "Material");
+                debug_1.Debug.assert(material.type === "Material");
                 return material;
             }
         }
@@ -612,6 +614,7 @@ exports.Codec = Codec;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ObjectConstruction = void 0;
 const codec_1 = __webpack_require__(385);
+const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
 class ObjectConstruction {
     container;
@@ -642,7 +645,7 @@ class ObjectConstruction {
         const object = o.getObject();
         object.position.copy(o.position);
         object.quaternion.copy(o.quaternion);
-        console.assert(!!object);
+        debug_1.Debug.assert(!!object);
         this.objects.set(key, object);
         this.container.add(object);
     }
@@ -651,7 +654,7 @@ class ObjectConstruction {
         const key = this.posToKey(p);
         if (this.objects.has(key)) {
             const o = this.objects.get(key);
-            console.assert(o.parent === this.container, 'Invalid parent!');
+            debug_1.Debug.assert(o.parent === this.container, 'Invalid parent!');
             this.container.remove(o);
             this.items.delete(key);
             this.objects.delete(key);
@@ -725,6 +728,12 @@ class Debug extends THREE.Object3D {
         Debug.texture.needsUpdate = true;
         if (Debug.material) {
             Debug.material.needsUpdate = true;
+        }
+    }
+    static assert(condition, message) {
+        if (!condition) {
+            Debug.log(`FAIL: ${message}`);
+            console.assert(condition, message);
         }
     }
 }
@@ -1068,6 +1077,7 @@ class Hand extends THREE.Object3D {
             this.place.quantizePosition(p);
             const rotation = new THREE.Quaternion();
             debug_1.Debug.log(`Cube: ${!!this.cube}`);
+            debug_1.Debug.log(`Itme: ${JSON.stringify(this.item)}`);
             rotation.copy(this.cube.quaternion);
             rotation.multiply(this.place.playerGroup.quaternion);
             const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
@@ -1090,6 +1100,7 @@ exports.Hand = Hand;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InWorldItem = void 0;
 const assets_1 = __webpack_require__(398);
+const debug_1 = __webpack_require__(756);
 // Represents an item which exists in the universe.
 class InWorldItem {
     item;
@@ -1102,7 +1113,7 @@ class InWorldItem {
         this.item = item;
         this.position = position;
         this.quaternion = quaternion;
-        console.assert(assets_1.Assets.models.has(item.name), 'Unknown item.  Call Assets.init first.');
+        debug_1.Debug.assert(assets_1.Assets.models.has(item.name), 'Unknown item.  Call Assets.init first.');
         this.modelPrototype = assets_1.Assets.models.get(item.name);
     }
     // Returns a clone of the model prototype.
@@ -1585,6 +1596,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MergedGeometryContainer = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const debug_1 = __webpack_require__(756);
 class MergedGeometryContainer extends THREE.Object3D {
     geometry = new THREE.BufferGeometry();
     keyIndex = new Map();
@@ -1707,15 +1719,15 @@ class MergedGeometryContainer extends THREE.Object3D {
                         transform.identity();
                 }
                 const att = mesh.geometry.getAttribute(attributeName);
-                console.assert(!!att);
-                console.assert(vertexCount < 0 || vertexCount === att.count);
+                debug_1.Debug.assert(!!att);
+                debug_1.Debug.assert(vertexCount < 0 || vertexCount === att.count);
                 vertexCount = att.count;
                 if (mesh.geometry.index) {
                     console.log(`Indexed: ${key}`);
                 }
                 this.append(attributeName, att, mesh.geometry.index, transform);
             }
-            console.assert(vertexCount > 0);
+            debug_1.Debug.assert(vertexCount > 0);
             totalVertexCount += vertexCount;
         }
         const objectIndex = this.keyIndex.size;
@@ -2302,6 +2314,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PointMapOctoTree = exports.AABB = exports.PointMapLinear = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const debug_1 = __webpack_require__(756);
 class PointKey {
     point;
     value;
@@ -2379,7 +2392,7 @@ class PointMapOctoTree {
         this.bounds = new AABB(center, radius);
     }
     add(p, value) {
-        console.assert(this.insert(p, value));
+        debug_1.Debug.assert(this.insert(p, value));
     }
     p1 = new THREE.Vector3;
     insert(p, value) {
