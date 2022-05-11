@@ -6,9 +6,7 @@ import { Debug } from "./debug";
 import { InWorldItem } from "./inWorldItem";
 
 export class AstroGen {
-  constructor(private universeGroup: THREE.Object3D,
-    private construction: Construction) {
-  }
+  constructor(private construction: Construction) { }
 
   private buildCone() {
     for (let x = -20; x < 20; x++) {

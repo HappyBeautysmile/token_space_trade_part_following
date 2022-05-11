@@ -44,7 +44,7 @@ export class BlockBuild {
     // this.construction.save();
 
     this.construction = new ObjectConstruction(this.place.universeGroup);
-    let ab = new AstroGen(this.place.universeGroup, this.construction);
+    let ab = new AstroGen(this.construction);
     ab.buildPlatform(20, 10, 30, 0, 0, 0);
 
     this.getGrips();

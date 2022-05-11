@@ -6,16 +6,11 @@ import { Place } from "./place";
 export class PlanetPlatform extends THREE.Group {
   constructor(pos: THREE.Vector3, private camera: THREE.Camera) {
     super();
-
-    // TODO: we scale the planet by a huge amount because
-    // rendering this many cubes is too slow.  Once we have high
-    // performance rendering, we can remove this scaling.
-    const deleteMeScale = new THREE.Group();
     const construction: Construction = new ObjectConstruction(this);
-    const astroGen = new AstroGen(deleteMeScale, construction);
+    const astroGen = new AstroGen(construction);
     astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
-    deleteMeScale.scale.set(200, 200, 200);
-    this.add(deleteMeScale);
+    // We scale the planet up because otherwise it's really slow.
+    this.scale.set(200, 200, 200);
 
     // const cube = new THREE.Mesh(
     //   new THREE.BoxBufferGeometry(1e2, 1e3, 1e2),
