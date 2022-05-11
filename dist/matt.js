@@ -28,7 +28,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assets = exports.Item = void 0;
 const THREE = __importStar(__webpack_require__(578));
-//import * as fs from "fs";
 const debug_1 = __webpack_require__(756);
 const palette_1 = __webpack_require__(812);
 const GLTFLoader_js_1 = __webpack_require__(687);
@@ -53,20 +52,38 @@ class ModelLoader {
         }
     }
 }
+// Items are unique - there is only one of each name.
+// This allows us to use them as keys in maps and use == for comparison.
+// For now, items are also immutable.  We may allow things to be mutable
+// and that would change the property for all references to that item.
 class Item {
     name;
     description;
     baseValue;
     modelName;
+    constructor(name, description, baseValue, modelName) {
+        this.name = name;
+        this.description = description;
+        this.baseValue = baseValue;
+        this.modelName = modelName;
+    }
+    static allItems = new Map();
+    static make(name, description, baseValue, modelName) {
+        if (this.allItems.has(name)) {
+            throw new Error(`Item already exists: ${name}`);
+        }
+        return new Item(name, description, baseValue, modelName);
+    }
 }
 exports.Item = Item;
 class Assets extends THREE.Object3D {
-    static blocks = [];
-    static modelIndex = 0;
+    // static blocks: THREE.Object3D[] = [];
+    static itemIndex = 0;
     static materials = [];
     static materialIndex = 0;
     static models = new Map();
     static items = [];
+    static itemsByName = new Map();
     static async init() {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
@@ -115,15 +132,15 @@ class Assets extends THREE.Object3D {
         this.replaceMaterial(source, newMat);
     }
     static replaceMaterial(source, mat) {
-        console.log(`${source.name} (${source.type})`);
+        // console.log(`${source.name} (${source.type})`);
         for (let i = 0; i < source.children.length; i++) {
             let mesh = source.children[i];
             mesh.material = mat;
         }
     }
-    static nextModel() {
-        Assets.modelIndex = (Assets.modelIndex + 1) % Assets.blocks.length;
-        return Assets.blocks[Assets.modelIndex];
+    static nextItem() {
+        Assets.itemIndex = (Assets.itemIndex + 1) % Assets.items.length;
+        return Assets.items[Assets.itemIndex];
     }
     static nextMaterial() {
         Assets.materialIndex = (Assets.materialIndex + 1) % Assets.materials.length;
@@ -133,7 +150,7 @@ class Assets extends THREE.Object3D {
     }
     static findFirstMesh(o) {
         if (o.type === "Mesh") {
-            console.log(`Mesh found: ${o.name}`);
+            // console.log(`Mesh found: ${o.name}`);
             const matrix = new THREE.Matrix4();
             matrix.compose(o.position, o.quaternion, o.scale);
             o.matrix.copy(matrix);
@@ -154,7 +171,7 @@ class Assets extends THREE.Object3D {
             'cube-tweek', 'cube-glob'
         ];
         for (const modelName of modelNames) {
-            console.log(`Loading ${modelName}`);
+            // console.log(`Loading ${modelName}`);
             const model = await ModelLoader.loadModel(`Model/${modelName}.glb`);
             const m = Assets.findFirstMesh(model);
             if (!m) {
@@ -163,12 +180,11 @@ class Assets extends THREE.Object3D {
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             //this.assets.replaceMaterial(m, newMat);
             m.userData = { "modelName": modelName };
-            this.blocks.push(m);
             //this.scene.add(m);
             //this.universeGroup.add(m);
-            m.position.set((this.blocks.length - modelNames.length / 2) * 1.4, 0, -15);
+            m.position.set((this.models.size - modelNames.length / 2) * 1.4, 0, -15);
             Assets.models.set(modelName, m);
-            console.log(`Added ${modelName}`);
+            // console.log(`Added ${modelName}`);
         }
         // TODO: load all glb files int the Model directory into this.models
         // const testFolder = 'Model/*.glb';
@@ -183,22 +199,10 @@ class Assets extends THREE.Object3D {
     }
     static initItems() {
         Assets.items = [];
-        for (const b of Assets.blocks) {
-            let i = new Item();
-            i.baseValue = 0;
-            i.description = "This is a wonderful thing.";
-            i.name = b.userData["modelName"];
-            i.modelName = b.userData["modelName"];
-            Assets.items.push(i);
-        }
-        // TODO: models has items in it, but is not itterated.
         for (const [key, value] of Assets.models.entries()) {
-            let i = new Item();
-            i.baseValue = 0;
-            i.description = "This is a wonderful thing.";
-            i.name = key;
-            i.modelName = key;
+            const i = Item.make(key, "A wonderful item.", 0, key);
             Assets.items.push(i);
+            this.itemsByName.set(key, i);
         }
         ;
     }
@@ -234,7 +238,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AstroGen = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const three_1 = __webpack_require__(578);
 const assets_1 = __webpack_require__(398);
+const inWorldItem_1 = __webpack_require__(116);
 class AstroGen {
     universeGroup;
     construction;
@@ -247,13 +253,10 @@ class AstroGen {
             for (let y = -20; y < 20; y++) {
                 for (let z = 0; z < 20; z++) {
                     if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
-                        let o = new THREE.Object3D();
-                        o = assets_1.Assets.blocks[0].clone();
-                        o.translateX(x);
-                        o.translateY(y);
-                        o.translateZ(-z * 2 - 10);
-                        this.universeGroup.add(o);
-                        this.construction.addCube(o);
+                        const baseItem = assets_1.Assets.items[0];
+                        const position = new THREE.Vector3(x, y, -z * 2 - 10);
+                        const quaterion = new THREE.Quaternion();
+                        this.construction.addCube(new inWorldItem_1.InWorldItem(baseItem, position, quaterion));
                     }
                 }
             }
@@ -274,20 +277,12 @@ class AstroGen {
         mesh.material = material;
     }
     addAt(x, y, z) {
-        let o;
-        if (Math.random() < 0.9) {
-            o = assets_1.Assets.models.get('cube-tweek').clone();
-        }
-        else {
-            o = assets_1.Assets.models.get('cube-glob').clone();
-        }
-        this.changeColor(o);
-        o.position.set(x, y, z);
-        o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
-        o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
-        o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
-        this.universeGroup.add(o);
-        this.construction.addCube(o);
+        const rotation = new three_1.Matrix4();
+        rotation.makeRotationFromEuler(new THREE.Euler(Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2));
+        const quaterion = new THREE.Quaternion();
+        quaterion.setFromRotationMatrix(rotation);
+        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube-tweek'), new THREE.Vector3(x, y, z), quaterion);
+        this.construction.addCube(inWorldItem);
     }
     buildPlatform(xDim, yDim, zDim, xOffset, yOffset, zOffset) {
         for (let x = -xDim; x < xDim; x++) {
@@ -365,9 +360,11 @@ class BlockBuild {
     universeGroup = new THREE.Group();
     place;
     keysDown = new Set();
-    construction = new construction_1.Construction();
+    construction;
     //private assets = new Assets();
     constructor() {
+        this.playerGroup.name = 'Player Group';
+        this.universeGroup.name = 'Universe Group';
         this.initialize();
         document.body.addEventListener('keydown', (ev) => {
             this.keysDown.add(ev.code);
@@ -381,9 +378,20 @@ class BlockBuild {
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
+        this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
         let ab = new astroGen_1.AstroGen(this.place.universeGroup, this.construction);
         ab.buildPlatform(20, 10, 30, 0, 0, 0);
         this.getGrips();
+        this.dumpScene(this.scene, '');
+    }
+    dumpScene(o, prefix) {
+        if (!o.visible) {
+            prefix = '#' + prefix;
+        }
+        console.log(`${prefix}${o.name} (${o.type})`);
+        for (const c of o.children) {
+            this.dumpScene(c, prefix + ' ');
+        }
     }
     tickEverything(o, tick) {
         if (o['tick']) {
@@ -480,7 +488,7 @@ class BlockBuild {
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
         debug_1.Debug.log('loading test.json...');
         const loadedObject = await fileIO_1.FileIO.httpGetAsync("./test.json");
-        console.log(JSON.stringify(loadedObject, null, 2));
+        // console.log(JSON.stringify(loadedObject, null, 2));
         debug_1.Debug.log('test.json loaded.');
         const loaded = codec_1.Decode.arrayOfObject3D(loadedObject);
         return; // We need an explicit 'return' because this is async (?)
@@ -499,8 +507,8 @@ class BlockBuild {
             }
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
-            assets_1.Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.blocks[i], i, this.renderer.xr, this.place, this.keysDown, this.construction);
+            // Assets.blocks[i].position.set(0, 0, 0);
+            new hand_1.Hand(grip, assets_1.Assets.items[i], i, this.renderer.xr, this.place, this.keysDown, this.construction);
         }
     }
 }
@@ -537,22 +545,17 @@ exports.Codec = exports.Decode = exports.Encode = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const assets_1 = __webpack_require__(398);
 class Encode {
-    static object3D(o) {
+    static inWorldItem(o) {
         const result = {};
         result['position'] = o.position;
         result['quarternion'] = o.quaternion;
-        result['modelName'] = o.userData["modelName"];
-        let mesh = o.children[0];
-        let mat = mesh.material;
-        if (mat.userData["materialName"]) {
-            this['materialName'] = mat.userData["materialName"];
-        }
+        result['modelName'] = o.item.modelName;
         return result;
     }
-    static arrayOfObject3D(cubes) {
+    static arrayOfInWorldItems(cubes) {
         const result = [];
         for (const cube of cubes) {
-            result.push(Encode.object3D(cube));
+            result.push(Encode.inWorldItem(cube));
         }
         return result;
     }
@@ -560,7 +563,7 @@ class Encode {
 exports.Encode = Encode;
 class Decode {
     static object3D(o) {
-        const model = Codec.findModelByName(o['modelName']);
+        const model = assets_1.Assets.models.get(o['modelName']).clone();
         console.assert(!!model, `No model for ${o['modelName']}`);
         // TODO: Material loading isn't working.
         // const material = Codec.findMaterialByName(o['materialName']);
@@ -582,16 +585,6 @@ class Decode {
 }
 exports.Decode = Decode;
 class Codec {
-    static findModelByName(name) {
-        for (const mesh of assets_1.Assets.blocks) {
-            if (mesh.userData["modelName"] == name) {
-                console.assert(mesh.type === 'Mesh');
-                return mesh;
-            }
-        }
-        ;
-        return null;
-    }
     static findMaterialByName(name) {
         for (const material of assets_1.Assets.materials) {
             if (material.userData["materialName"] == name) {
@@ -613,34 +606,55 @@ exports.Codec = Codec;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Construction = void 0;
+exports.ObjectConstruction = void 0;
 const codec_1 = __webpack_require__(385);
 const fileIO_1 = __webpack_require__(3);
-class Construction {
+class ObjectConstruction {
+    container;
+    constructor(container) {
+        this.container = container;
+    }
     // TODO: Make this private and instead have some nicer methods for
     // inserting and deleting.  This is where code to make sure we have only
     // one block per location would go, also where Vector3 to key would go.
-    allObjects = new Map();
+    items = new Map();
+    objects = new Map();
     save() {
         console.log('Saving...');
         //const o = { 'size': this.allObjects.size };
         //o['objects'] = FileIO.mapToObject(this.allObjects);
         let c = new codec_1.Codec();
-        const o = codec_1.Encode.arrayOfObject3D(this.allObjects.values());
+        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
         fileIO_1.FileIO.saveObject(o, "what_you_built.json");
     }
-    // TODO: change this to private and fix the code that breaks.
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
+    // TODO: Change the input type to InWorldItem.
     addCube(o) {
+        console.log(`Adding: ${o.item.name}`);
         const key = this.posToKey(o.position);
-        this.allObjects.set(key, o);
+        this.items.set(key, o);
+        const object = o.getObject();
+        object.position.copy(o.position);
+        object.quaternion.copy(o.quaternion);
+        console.assert(!!object);
+        this.objects.set(key, object);
+        this.container.add(object);
     }
-    removeCube(o) {
+    // TODO: Return the InWorldItem.
+    removeCube(p) {
+        const key = this.posToKey(p);
+        if (this.objects.has(key)) {
+            const o = this.objects.get(key);
+            console.assert(o.parent === this.container, 'Invalid parent!');
+            this.container.remove(o);
+            this.items.delete(key);
+            this.objects.delete(key);
+        }
     }
 }
-exports.Construction = Construction;
+exports.ObjectConstruction = ObjectConstruction;
 //# sourceMappingURL=construction.js.map
 
 /***/ }),
@@ -893,6 +907,7 @@ const THREE = __importStar(__webpack_require__(578));
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const three_1 = __webpack_require__(578);
+const inWorldItem_1 = __webpack_require__(116);
 class Hand extends THREE.Object3D {
     grip;
     index;
@@ -900,8 +915,8 @@ class Hand extends THREE.Object3D {
     place;
     keysDown;
     construction;
+    item;
     cube;
-    templateCube;
     leftHand;
     debug;
     debugMaterial;
@@ -1012,7 +1027,7 @@ class Hand extends THREE.Object3D {
                 this.construction.save();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-                this.setCube(assets_1.Assets.nextModel());
+                this.setCube(assets_1.Assets.nextItem());
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
                 assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
@@ -1021,24 +1036,18 @@ class Hand extends THREE.Object3D {
             this.lastButtons = buttons;
         }
     }
-    setCube(o) {
+    setCube(item) {
         if (this.cube) {
             this.place.playerGroup.remove(this.cube);
         }
-        this.templateCube = o.clone();
-        //this.cube = new InHandObject(o, this.place);
-        this.cube = o.clone();
+        this.cube = assets_1.Assets.models.get(item.modelName).clone();
         this.place.playerGroup.add(this.cube);
     }
     deleteCube() {
         this.p.copy(this.cube.position);
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);
-        const key = this.construction.posToKey(this.p);
-        if (this.construction.allObjects.has(key)) {
-            this.place.universeGroup.remove(this.construction.allObjects.get(key));
-            this.construction.allObjects.delete(key);
-        }
+        this.construction.removeCube(this.p);
     }
     p = new THREE.Vector3();
     async initialize() {
@@ -1047,20 +1056,15 @@ class Hand extends THREE.Object3D {
         });
         this.grip.addEventListener('selectstart', () => {
             this.deleteCube();
-            const o = this.cube.clone();
-            //Debug.log("this.cube.quaternion=" + JSON.stringify(this.cube.quaternion));
-            o.position.copy(this.cube.position);
-            o.rotation.copy(this.cube.rotation);
-            //Debug.log("o.quaternion=" + JSON.stringify(o.quaternion));
-            o.applyQuaternion(this.place.playerGroup.quaternion);
-            //Debug.log("post applyQuarternion o.quaternion=" + JSON.stringify(o.quaternion));
-            const p = o.position;
+            const p = new THREE.Vector3();
+            p.copy(this.grip.position);
             this.place.playerToUniverse(p);
             this.place.quantizePosition(p);
-            this.place.quantizeRotation(o.rotation);
-            //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
-            this.place.universeGroup.add(o);
-            this.construction.addCube(o);
+            const rotation = new THREE.Quaternion();
+            rotation.copy(this.cube.quaternion);
+            rotation.multiply(this.place.playerGroup.quaternion);
+            const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
+            this.construction.addCube(inWorldItem);
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -1068,6 +1072,40 @@ class Hand extends THREE.Object3D {
 }
 exports.Hand = Hand;
 //# sourceMappingURL=hand.js.map
+
+/***/ }),
+
+/***/ 116:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.InWorldItem = void 0;
+const assets_1 = __webpack_require__(398);
+// Represents an item which exists in the universe.
+class InWorldItem {
+    item;
+    position;
+    quaternion;
+    modelPrototype;
+    // TODO: instead of passing position and quaternion, perhaps we
+    // need an ItemProperties class. E.g. the base color of the model.
+    constructor(item, position, quaternion) {
+        this.item = item;
+        this.position = position;
+        this.quaternion = quaternion;
+        console.assert(assets_1.Assets.models.has(item.name), 'Unknown item.  Call Assets.init first.');
+        this.modelPrototype = assets_1.Assets.models.get(item.name);
+    }
+    // Returns a clone of the model prototype.
+    // Caller needs to set the position of this object and add it to the scene
+    // graph.
+    getObject() {
+        return this.modelPrototype.clone();
+    }
+}
+exports.InWorldItem = InWorldItem;
+//# sourceMappingURL=inWorldItem.js.map
 
 /***/ }),
 
@@ -1097,6 +1135,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MaterialExplorer = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const assets_1 = __webpack_require__(398);
+const megedGeometryContainer_1 = __webpack_require__(192);
 class CodeSnippet {
     codeType;
     code;
@@ -1131,13 +1171,18 @@ class MaterialExplorer extends THREE.Object3D {
         this.material = this.makeMaterial();
         this.updateMaterial(this);
     }
-    buildScene() {
+    async buildScene() {
         this.cube = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f0f' }));
         this.cube.position.set(1, 2.5, -2);
         this.add(this.cube);
-        const sphere = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.9, 4), new THREE.MeshBasicMaterial({ color: '#f0f' }));
-        sphere.position.set(-1, 2.5, -2);
-        this.add(sphere);
+        const merged = new megedGeometryContainer_1.MergedGeometryContainer();
+        const sphere = assets_1.Assets.models.get('cube-glob').clone();
+        sphere.position.set(-1, 1.5, -2);
+        const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 3.0, 0.1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
+        cube.position.set(-1, 0, -2);
+        merged.mergeIn('trunk', cube);
+        merged.mergeIn('sphere', sphere);
+        this.add(merged);
         for (let i = 0; i < 10; ++i) {
             const platform = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.1, 1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
             platform.position.set(Math.sin(i * 0.4), i * 0.1, -i * 0.5);
@@ -1503,6 +1548,179 @@ void main() {
 }
 exports.MaterialExplorer = MaterialExplorer;
 //# sourceMappingURL=materialExplorer.js.map
+
+/***/ }),
+
+/***/ 192:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MergedGeometryContainer = void 0;
+const THREE = __importStar(__webpack_require__(578));
+class MergedGeometryContainer extends THREE.Object3D {
+    geometry = new THREE.BufferGeometry();
+    keyIndex = new Map();
+    // The first attribute index of the coresponding object. This is always
+    // one longer than the number of keys. The difference between adjacent
+    // entries is the number of verticies for that entry.
+    attributeIndex = [0];
+    static supportedAttributes = ['position', 'normal'];
+    constructor() {
+        super();
+        const mesh = new THREE.Mesh(this.geometry, new THREE.MeshBasicMaterial({ color: '#0f0' }));
+        this.add(mesh);
+    }
+    // Removes `count` values from `att` starting at `start`
+    spliceAttribute(attributeName, start, count) {
+        const oldAtt = this.geometry.getAttribute(attributeName);
+        const values = new Float32Array((oldAtt.count - count) * oldAtt.itemSize);
+        for (let i = 0; i < start * oldAtt.itemSize; ++i) {
+            values[i] = oldAtt.array[i];
+        }
+        for (let i = start * oldAtt.itemSize; i < start * (oldAtt.count - count); ++i) {
+            values[i] = oldAtt.array[i + count * oldAtt.itemSize];
+        }
+        this.geometry.setAttribute(attributeName, new THREE.BufferAttribute(values, oldAtt.itemSize));
+    }
+    values(att, index) {
+        if (!index) {
+            return new Float32Array(att.array);
+        }
+        else {
+            console.log(`Indexed!`);
+            const result = new Float32Array(index.count * att.itemSize);
+            for (let i = 0; i < index.count; ++i) {
+                const attributePosition = index.getX(i);
+                for (let j = 0; j < att.itemSize; ++j) {
+                    result[i * att.itemSize + j] =
+                        att.array[attributePosition * att.itemSize + j];
+                }
+            }
+            return result;
+        }
+    }
+    oldValues(attributeName) {
+        const oldAtt = this.geometry.getAttribute(attributeName);
+        if (oldAtt) {
+            return oldAtt.array;
+        }
+        else {
+            return [];
+        }
+    }
+    append(attributeName, att, index, transform) {
+        const attValues = this.values(att, index);
+        if (att.itemSize == 3) {
+            const v = new THREE.Vector3();
+            for (let i = 0; i < attValues.length; i += 3) {
+                v.set(attValues[i + 0], attValues[i + 1], attValues[i + 2]);
+                v.applyMatrix4(transform);
+                attValues[i + 0] = v.x;
+                attValues[i + 1] = v.y;
+                attValues[i + 2] = v.z;
+            }
+        }
+        const oldValues = this.oldValues(attributeName);
+        console.log(`Append ${attributeName}`);
+        const values = new Float32Array(oldValues.length + attValues.length);
+        for (let i = 0; i < oldValues.length; ++i) {
+            values[i] = oldValues[i];
+        }
+        for (let i = 0; i < attValues.length; ++i) {
+            const targetIndex = i + oldValues.length;
+            values[targetIndex] = attValues[i];
+        }
+        const newAtt = new THREE.BufferAttribute(values, att.itemSize);
+        this.geometry.setAttribute(attributeName, newAtt);
+        newAtt.needsUpdate = true;
+    }
+    *allMeshes(o) {
+        if (o.type === 'Mesh') {
+            yield o;
+        }
+        for (const c of o.children) {
+            yield* this.allMeshes(c);
+        }
+    }
+    tmpM = new THREE.Matrix4();
+    getTransform(o, p) {
+        const m = new THREE.Matrix4();
+        m.identity();
+        while (o != p && o) {
+            this.tmpM.compose(o.position, o.quaternion, o.scale);
+            m.premultiply(this.tmpM);
+            o = o.parent;
+        }
+        return m;
+    }
+    // Adds the geometry of `o` to this, and associates it with `key`.  This
+    // `key` can be used later to remove this chunk of geometry.
+    mergeIn(key, o) {
+        let totalVertexCount = 0;
+        if (this.keyIndex.has(key)) {
+            throw new Error(`Key already in use: ${key}`);
+        }
+        // TODO: transform positions and normals by parent matricies.
+        let vertexCount = -1;
+        for (const mesh of this.allMeshes(o)) {
+            const transform = new THREE.Matrix4();
+            for (const attributeName of MergedGeometryContainer.supportedAttributes) {
+                switch (attributeName) {
+                    case 'position':
+                        transform.copy(this.getTransform(mesh, o.parent));
+                        break;
+                    case 'normal':
+                        transform.copy(this.getTransform(mesh, o.parent));
+                        const m3 = new THREE.Matrix3();
+                        m3.getNormalMatrix(transform);
+                        transform.setFromMatrix3(m3);
+                        break;
+                    default:
+                        transform.identity();
+                }
+                const att = mesh.geometry.getAttribute(attributeName);
+                console.assert(!!att);
+                console.assert(vertexCount < 0 || vertexCount === att.count);
+                vertexCount = att.count;
+                if (mesh.geometry.index) {
+                    console.log(`Indexed: ${key}`);
+                }
+                this.append(attributeName, att, mesh.geometry.index, transform);
+            }
+            console.assert(vertexCount > 0);
+            totalVertexCount += vertexCount;
+        }
+        const objectIndex = this.keyIndex.size;
+        this.keyIndex.set(key, objectIndex);
+        this.attributeIndex.push(this.attributeIndex[objectIndex] + totalVertexCount);
+    }
+    // Removes the geometry associated with `key` from this.
+    removeKey(key) {
+        throw new Error("Not implemented.");
+    }
+}
+exports.MergedGeometryContainer = MergedGeometryContainer;
+//# sourceMappingURL=megedGeometryContainer.js.map
 
 /***/ }),
 
@@ -1898,7 +2116,7 @@ class PlanetPlatform extends THREE.Group {
         // rendering this many cubes is too slow.  Once we have high
         // performance rendering, we can remove this scaling.
         const deleteMeScale = new THREE.Group();
-        const construction = new construction_1.Construction();
+        const construction = new construction_1.ObjectConstruction(this);
         const astroGen = new astroGen_1.AstroGen(deleteMeScale, construction);
         astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
         deleteMeScale.scale.set(200, 200, 200);
