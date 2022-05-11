@@ -84,6 +84,7 @@ class Assets extends THREE.Object3D {
     static models = new Map();
     static items = [];
     static itemsByName = new Map();
+    static flight_computer = new THREE.Object3D();
     static async init() {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
@@ -167,7 +168,7 @@ class Assets extends THREE.Object3D {
     static async LoadAllModels() {
         const modelNames = [
             'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
-            'thruster', 'tank', 'light-blue', 'port', 'console',
+            'thruster', 'tank', 'light-blue', 'port',
             'cube-tweek', 'cube-glob'
         ];
         for (const modelName of modelNames) {
@@ -186,6 +187,7 @@ class Assets extends THREE.Object3D {
             Assets.models.set(modelName, m);
             // console.log(`Added ${modelName}`);
         }
+        this.flight_computer = await ModelLoader.loadModel(`Model/flight computer.glb`);
         // TODO: load all glb files int the Model directory into this.models
         // const testFolder = 'Model/*.glb';
         // const fs = require('fs');
@@ -471,7 +473,9 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        debug_1.Debug.log("add astroGen");
+        assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
+        this.universeGroup.add(assets_1.Assets.flight_computer);
+        debug_1.Debug.log("add flight computer");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1055,15 +1059,19 @@ class Hand extends THREE.Object3D {
             this.deleteCube();
         });
         this.grip.addEventListener('selectstart', () => {
+            debug_1.Debug.log('selectstart');
             this.deleteCube();
+            debug_1.Debug.log('deleted');
             const p = new THREE.Vector3();
             p.copy(this.grip.position);
             this.place.playerToUniverse(p);
             this.place.quantizePosition(p);
             const rotation = new THREE.Quaternion();
+            debug_1.Debug.log(`Cube: ${!!this.cube}`);
             rotation.copy(this.cube.quaternion);
             rotation.multiply(this.place.playerGroup.quaternion);
             const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
+            debug_1.Debug.log(`Adding ${JSON.stringify(inWorldItem)}`);
             this.construction.addCube(inWorldItem);
         });
         // this.grip.addEventListener('selectend', () => {
