@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { Object3D } from "three";
 import { Assets } from "./assets";
 import { AstroGen } from "./astroGen";
-import { ObjectConstruction } from "./construction";
+import { MergedConstruction, ObjectConstruction } from "./construction";
 import { MergedGeometryContainer } from "./megedGeometryContainer";
 import { Tick, Ticker } from "./tick";
 
@@ -47,7 +47,7 @@ export class MaterialExplorer extends THREE.Object3D implements Ticker {
     this.cube.position.set(1, 2.5, -2);
     this.add(this.cube);
 
-    const construction = new ObjectConstruction(this);
+    const construction = new MergedConstruction(this);
     const gen = new AstroGen(construction);
     gen.buildAsteroid(5, -3, 2, -10);
   }
