@@ -1,9 +1,12 @@
 import * as THREE from "three";
+import { Matrix3, Matrix4 } from "three";
 import { Assets } from "./assets";
 import { Construction } from "./construction";
+import { InWorldItem } from "./inWorldItem";
 
 export class AstroGen {
-  constructor(private universeGroup: THREE.Object3D, private construction: Construction) {
+  constructor(private universeGroup: THREE.Object3D,
+    private construction: Construction) {
   }
 
   private buildCone() {
@@ -11,12 +14,11 @@ export class AstroGen {
       for (let y = -20; y < 20; y++) {
         for (let z = 0; z < 20; z++) {
           if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
-            let o = new THREE.Object3D();
-            o = Assets.blocks[0].clone();
-            o.translateX(x);
-            o.translateY(y);
-            o.translateZ(-z * 2 - 10);
-            this.construction.addCube(o);
+            const baseItem = Assets.items[0];
+            const position = new THREE.Vector3(x, y, -z * 2 - 10);
+            const quaterion = new THREE.Quaternion();
+            this.construction.addCube(
+              new InWorldItem(baseItem, position, quaterion));
           }
         }
       }
@@ -39,18 +41,19 @@ export class AstroGen {
   }
 
   private addAt(x: number, y: number, z: number) {
-    let o: THREE.Mesh;
-    if (Math.random() < 0.9) {
-      o = Assets.models.get('cube-tweek').clone();
-    } else {
-      o = Assets.models.get('cube-glob').clone();
-    }
-    this.changeColor(o);
-    o.position.set(x, y, z);
-    o.rotateX(Math.round(Math.random() * 4) * Math.PI / 2);
-    o.rotateY(Math.round(Math.random() * 4) * Math.PI / 2);
-    o.rotateZ(Math.round(Math.random() * 4) * Math.PI / 2);
-    this.construction.addCube(o);
+    const rotation = new Matrix4();
+    rotation.makeRotationFromEuler(new THREE.Euler(
+      Math.round(Math.random() * 4) * Math.PI / 2,
+      Math.round(Math.random() * 4) * Math.PI / 2,
+      Math.round(Math.random() * 4) * Math.PI / 2
+    ));
+    const quaterion = new THREE.Quaternion();
+    quaterion.setFromRotationMatrix(rotation);
+    const inWorldItem = new InWorldItem(
+      Assets.itemsByName.get('cube-tweek'),
+      new THREE.Vector3(x, y, z),
+      quaterion);
+    this.construction.addCube(inWorldItem);
   }
 
   buildPlatform(xDim: number, yDim: number, zDim: number,

@@ -2,21 +2,22 @@ import * as THREE from "three";
 import { Place } from "./place";
 import { Tick } from "./tick";
 import { Debug } from "./debug";
-import { Assets } from "./assets";
+import { Assets, Item } from "./assets";
 import { InHandObject } from "./inHandObject";
 import { Vector3 } from "three";
 import { FileIO } from "./fileIO";
 import { Construction } from "./construction";
+import { InWorldItem } from "./inWorldItem";
 
 export class Hand extends THREE.Object3D {
+  private item: Item;
   private cube: THREE.Object3D;
-  private templateCube: THREE.Object3D;
   private leftHand: boolean;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
 
-  constructor(private grip: THREE.Object3D, initialObject: THREE.Object3D,
+  constructor(private grip: THREE.Object3D, initialObject: Item,
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private keysDown: Set<string>, private construction: Construction) {
@@ -129,7 +130,7 @@ export class Hand extends THREE.Object3D {
         this.construction.save();
       }
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-        this.setCube(Assets.nextModel());
+        this.setCube(Assets.nextItem());
       }
       if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
         Assets.replaceMaterial(this.cube, Assets.nextMaterial());
@@ -139,13 +140,11 @@ export class Hand extends THREE.Object3D {
     }
   }
 
-  public setCube(o: THREE.Object3D) {
+  public setCube(item: Item) {
     if (this.cube) {
       this.place.playerGroup.remove(this.cube);
     }
-    this.templateCube = o.clone();
-    //this.cube = new InHandObject(o, this.place);
-    this.cube = o.clone();
+    this.cube = Assets.models.get(item.modelName).clone();
     this.place.playerGroup.add(this.cube);
   }
 
@@ -164,19 +163,16 @@ export class Hand extends THREE.Object3D {
 
     this.grip.addEventListener('selectstart', () => {
       this.deleteCube();
-      const o = this.cube.clone();
-      //Debug.log("this.cube.quaternion=" + JSON.stringify(this.cube.quaternion));
-      o.position.copy(this.cube.position);
-      o.rotation.copy(this.cube.rotation);
-      //Debug.log("o.quaternion=" + JSON.stringify(o.quaternion));
-      o.applyQuaternion(this.place.playerGroup.quaternion);
-      //Debug.log("post applyQuarternion o.quaternion=" + JSON.stringify(o.quaternion));
-      const p = o.position;
+      const p = new THREE.Vector3();
+      p.copy(this.grip.position);
       this.place.playerToUniverse(p);
       this.place.quantizePosition(p);
-      this.place.quantizeRotation(o.rotation);
-      //Debug.log("post quantize o.quaternion=" + JSON.stringify(o.quaternion));
-      this.construction.addCube(o);
+      const rotation = new THREE.Quaternion();
+      rotation.copy(this.cube.quaternion);
+      rotation.multiply(this.place.playerGroup.quaternion);
+      const inWorldItem = new InWorldItem(this.item,
+        p, rotation);
+      this.construction.addCube(inWorldItem);
     });
 
     // this.grip.addEventListener('selectend', () => {

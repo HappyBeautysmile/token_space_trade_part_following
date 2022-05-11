@@ -1,5 +1,5 @@
 import * as THREE from "three";
-//import * as fs from "fs";
+
 import { Debug } from "./debug";
 import { Palette } from "./palette";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -26,20 +26,34 @@ class ModelLoader {
   }
 }
 
+// Items are unique - there is only one of each name.
+// This allows us to use them as keys in maps and use == for comparison.
+// For now, items are also immutable.  We may allow things to be mutable
+// and that would change the property for all references to that item.
 export class Item {
-  name: string;
-  description: string;
-  baseValue: number;
-  modelName: string;
+  private constructor(
+    readonly name: string, readonly description: string,
+    readonly baseValue: number, readonly modelName: string) { }
+
+  private static allItems = new Map<string, Item>();
+
+  public static make(name: string, description: string,
+    baseValue: number, modelName: string): Item {
+    if (this.allItems.has(name)) {
+      throw new Error(`Item already exists: ${name}`);
+    }
+    return new Item(name, description, baseValue, modelName);
+  }
 }
 
 export class Assets extends THREE.Object3D {
-  static blocks: THREE.Object3D[] = [];
-  static modelIndex = 0;
+  // static blocks: THREE.Object3D[] = [];
+  static itemIndex = 0;
   static materials: THREE.Material[] = [];
   static materialIndex = 0;
   static models = new Map<string, THREE.Mesh>();
   static items: Item[] = [];
+  static itemsByName = new Map<string, Item>();
 
   static async init() {
     Palette.init();
@@ -93,16 +107,16 @@ export class Assets extends THREE.Object3D {
   }
 
   static replaceMaterial(source: THREE.Object3D, mat: THREE.Material) {
-    console.log(`${source.name} (${source.type})`);
+    // console.log(`${source.name} (${source.type})`);
     for (let i = 0; i < source.children.length; i++) {
       let mesh = source.children[i] as THREE.Mesh;
       mesh.material = mat;
     }
   }
 
-  static nextModel() {
-    Assets.modelIndex = (Assets.modelIndex + 1) % Assets.blocks.length;
-    return Assets.blocks[Assets.modelIndex];
+  static nextItem(): Item {
+    Assets.itemIndex = (Assets.itemIndex + 1) % Assets.items.length;
+    return Assets.items[Assets.itemIndex];
   }
 
   static nextMaterial() {
@@ -114,7 +128,7 @@ export class Assets extends THREE.Object3D {
 
   static findFirstMesh(o: THREE.Object3D): THREE.Mesh {
     if (o.type === "Mesh") {
-      console.log(`Mesh found: ${o.name}`);
+      // console.log(`Mesh found: ${o.name}`);
       const matrix = new THREE.Matrix4();
       matrix.compose(o.position, o.quaternion, o.scale);
       o.matrix.copy(matrix);
@@ -133,7 +147,7 @@ export class Assets extends THREE.Object3D {
       'thruster', 'tank', 'light-blue', 'port', 'console',
       'cube-tweek', 'cube-glob']
     for (const modelName of modelNames) {
-      console.log(`Loading ${modelName}`);
+      // console.log(`Loading ${modelName}`);
       const model = await ModelLoader.loadModel(`Model/${modelName}.glb`);
       const m = Assets.findFirstMesh(model);
       if (!m) {
@@ -142,12 +156,11 @@ export class Assets extends THREE.Object3D {
       const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
       //this.assets.replaceMaterial(m, newMat);
       m.userData = { "modelName": modelName };
-      this.blocks.push(m);
       //this.scene.add(m);
       //this.universeGroup.add(m);
-      m.position.set((this.blocks.length - modelNames.length / 2) * 1.4, 0, -15);
+      m.position.set((this.models.size - modelNames.length / 2) * 1.4, 0, -15);
       Assets.models.set(modelName, m);
-      console.log(`Added ${modelName}`);
+      // console.log(`Added ${modelName}`);
     }
 
     // TODO: load all glb files int the Model directory into this.models
@@ -166,22 +179,10 @@ export class Assets extends THREE.Object3D {
 
   static initItems() {
     Assets.items = [];
-    for (const b of Assets.blocks) {
-      let i = new Item();
-      i.baseValue = 0;
-      i.description = "This is a wonderful thing.";
-      i.name = b.userData["modelName"];
-      i.modelName = b.userData["modelName"];
-      Assets.items.push(i);
-    }
-    // TODO: models has items in it, but is not itterated.
     for (const [key, value] of Assets.models.entries()) {
-      let i = new Item();
-      i.baseValue = 0;
-      i.description = "This is a wonderful thing.";
-      i.name = key;
-      i.modelName = key;
+      const i = Item.make(key, "A wonderful item.", 0, key);
       Assets.items.push(i);
+      this.itemsByName.set(key, i)
     };
   }
 }

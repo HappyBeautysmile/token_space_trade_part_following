@@ -24,6 +24,8 @@ export class BlockBuild {
   //private assets = new Assets();
 
   constructor() {
+    this.playerGroup.name = 'Player Group';
+    this.universeGroup.name = 'Universe Group';
     this.initialize();
     document.body.addEventListener('keydown', (ev: KeyboardEvent) => {
       this.keysDown.add(ev.code);
@@ -45,6 +47,17 @@ export class BlockBuild {
     ab.buildPlatform(20, 10, 30, 0, 0, 0);
 
     this.getGrips();
+    this.dumpScene(this.scene, '');
+  }
+
+  private dumpScene(o: THREE.Object3D, prefix: string) {
+    if (!o.visible) {
+      prefix = '#' + prefix;
+    }
+    console.log(`${prefix}${o.name} (${o.type})`);
+    for (const c of o.children) {
+      this.dumpScene(c, prefix + ' ');
+    }
   }
 
   private tickEverything(o: THREE.Object3D, tick: Tick) {
@@ -155,7 +168,7 @@ export class BlockBuild {
 
     Debug.log('loading test.json...')
     const loadedObject = await FileIO.httpGetAsync("./test.json");
-    console.log(JSON.stringify(loadedObject, null, 2));
+    // console.log(JSON.stringify(loadedObject, null, 2));
     Debug.log('test.json loaded.')
     const loaded = Decode.arrayOfObject3D(loadedObject);
     return;  // We need an explicit 'return' because this is async (?)
@@ -176,8 +189,8 @@ export class BlockBuild {
       }
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
-      Assets.blocks[i].position.set(0, 0, 0);
-      new Hand(grip, Assets.blocks[i], i, this.renderer.xr,
+      // Assets.blocks[i].position.set(0, 0, 0);
+      new Hand(grip, Assets.items[i], i, this.renderer.xr,
         this.place, this.keysDown, this.construction);
     }
   }
