@@ -1,25 +1,26 @@
 import * as THREE from "three";
+import { Debug } from "./debug";
 
 import { AABB, PointMapLinear, PointMapOctoTree } from "./pointMap";
 
 
 const aabb = new AABB(new THREE.Vector3(0.5, 0.5, 0.5), 0.5);
 for (let i = 0; i < 100; ++i) {
-  console.assert(aabb.contains(new THREE.Vector3(
+  Debug.assert(aabb.contains(new THREE.Vector3(
     Math.random(), Math.random(), Math.random())));
 }
 
 for (let i = 0; i < 100; ++i) {
-  console.assert(!aabb.contains(new THREE.Vector3(
+  Debug.assert(!aabb.contains(new THREE.Vector3(
     Math.random() + 1, Math.random(), Math.random())));
-  console.assert(!aabb.contains(new THREE.Vector3(
+  Debug.assert(!aabb.contains(new THREE.Vector3(
     Math.random() - 1, Math.random() + 1, Math.random())));
-  console.assert(!aabb.contains(new THREE.Vector3(
+  Debug.assert(!aabb.contains(new THREE.Vector3(
     Math.random(), Math.random(), Math.random() - 1)));
 }
 
 const children = aabb.split();
-console.assert(children.length === 8,
+Debug.assert(children.length === 8,
   `Wrong children: ${JSON.stringify(children)}`)
 
 for (let i = 0; i < 1000; ++i) {
@@ -31,7 +32,7 @@ for (let i = 0; i < 1000; ++i) {
       ++numMatching;
     }
   }
-  console.assert(numMatching === 1,
+  Debug.assert(numMatching === 1,
     `Match count: ${numMatching}; p = ${JSON.stringify(p)}`);
 }
 
@@ -44,7 +45,7 @@ for (let i = 0; i < 1000; ++i) {
   for (const pp of pso.getAllWithinRadius(new THREE.Vector3(), 1.0)) {
     ++n;
   }
-  console.assert(n === 2, `n=${n}`);
+  Debug.assert(n === 2, `n=${n}`);
 }
 
 

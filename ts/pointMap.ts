@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Debug } from "./debug";
 
 export interface PointMap<T> {
   add(p: THREE.Vector3, value: T): void;
@@ -95,7 +96,7 @@ export class PointMapOctoTree<T> implements PointMap<T> {
   }
 
   add(p: THREE.Vector3, value: T) {
-    console.assert(this.insert(p, value));
+    Debug.assert(this.insert(p, value));
   }
 
   private p1 = new THREE.Vector3;

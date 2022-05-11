@@ -10,14 +10,13 @@ import { Construction } from "./construction";
 import { InWorldItem } from "./inWorldItem";
 
 export class Hand extends THREE.Object3D {
-  private item: Item;
   private cube: THREE.Object3D;
   private leftHand: boolean;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
 
-  constructor(private grip: THREE.Object3D, initialObject: Item,
+  constructor(private grip: THREE.Object3D, private item: Item,
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private keysDown: Set<string>, private construction: Construction) {
@@ -35,7 +34,7 @@ export class Hand extends THREE.Object3D {
       Debug.log("ERROR: grip or this not defined.")
     }
 
-    this.setCube(initialObject);
+    this.setCube(item);
     this.initialize();
   }
 
@@ -146,6 +145,7 @@ export class Hand extends THREE.Object3D {
     }
     this.cube = Assets.models.get(item.modelName).clone();
     this.place.playerGroup.add(this.cube);
+    this.item = item;
   }
 
   private deleteCube() {
@@ -164,12 +164,13 @@ export class Hand extends THREE.Object3D {
     this.grip.addEventListener('selectstart', () => {
       this.deleteCube();
       const p = new THREE.Vector3();
-      p.copy(this.grip.position);
+      p.copy(this.cube.position);
       this.place.playerToUniverse(p);
       this.place.quantizePosition(p);
       const rotation = new THREE.Quaternion();
       rotation.copy(this.cube.quaternion);
       rotation.multiply(this.place.playerGroup.quaternion);
+      this.place.quantizeQuaternion(rotation);
       const inWorldItem = new InWorldItem(this.item,
         p, rotation);
       this.construction.addCube(inWorldItem);

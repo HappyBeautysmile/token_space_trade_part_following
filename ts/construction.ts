@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Codec, Encode } from "./codec";
+import { Debug } from "./debug";
 import { FileIO } from "./fileIO";
 import { InWorldItem } from "./inWorldItem";
 
@@ -39,7 +40,7 @@ export class ObjectConstruction implements Construction {
     const object = o.getObject();
     object.position.copy(o.position);
     object.quaternion.copy(o.quaternion);
-    console.assert(!!object);
+    Debug.assert(!!object);
     this.objects.set(key, object);
     this.container.add(object);
   }
@@ -49,7 +50,7 @@ export class ObjectConstruction implements Construction {
     const key = this.posToKey(p);
     if (this.objects.has(key)) {
       const o = this.objects.get(key);
-      console.assert(o.parent === this.container, 'Invalid parent!');
+      Debug.assert(o.parent === this.container, 'Invalid parent!');
       this.container.remove(o);
       this.items.delete(key);
       this.objects.delete(key);

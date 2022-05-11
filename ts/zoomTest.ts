@@ -1,5 +1,6 @@
 import { Zoom } from "./zoom";
 import * as THREE from "three";
+import { Debug } from "./debug";
 
 {
   const l1 = new THREE.Vector3(0, 0, 0);
@@ -44,9 +45,9 @@ function testOne(c1: THREE.Vector3, c2: THREE.Vector3, transform: THREE.Matrix4)
   before.applyMatrix4(transform);
   console.log(before);
   console.log(c2)
-  console.assert(Math.abs(before.x - c2.x) < 0.01);
-  console.assert(Math.abs(before.y - c2.y) < 0.01);
-  console.assert(Math.abs(before.z - c2.z) < 0.01);
+  Debug.assert(Math.abs(before.x - c2.x) < 0.01);
+  Debug.assert(Math.abs(before.y - c2.y) < 0.01);
+  Debug.assert(Math.abs(before.z - c2.z) < 0.01);
 }
 
 function testInOut(l1: THREE.Vector3, r1: THREE.Vector3, l2: THREE.Vector3, r2: THREE.Vector3) {

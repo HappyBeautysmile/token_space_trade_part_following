@@ -24,10 +24,10 @@ export class Encode {
 export class Decode {
   static object3D(o: Object): THREE.Object3D {
     const model = Assets.models.get(o['modelName']).clone();
-    console.assert(!!model, `No model for ${o['modelName']}`);
+    Debug.assert(!!model, `No model for ${o['modelName']}`);
     // TODO: Material loading isn't working.
     // const material = Codec.findMaterialByName(o['materialName']);
-    // console.assert(!!material, `No material for ${o['materialName']}`)
+    // Debug.assert(!!material, `No material for ${o['materialName']}`)
     let mesh = model.clone();
     mesh.position.set(
       o['position'].x, o['position'].y, o['position'].z);
@@ -50,7 +50,7 @@ export class Codec {
   public static findMaterialByName(name: string) {
     for (const material of Assets.materials) {
       if (material.userData["materialName"] == name) {
-        console.assert(material.type === "Material");
+        Debug.assert(material.type === "Material");
         return material;
       }
     };

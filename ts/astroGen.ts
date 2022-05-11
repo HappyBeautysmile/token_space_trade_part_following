@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Matrix3, Matrix4 } from "three";
 import { Assets } from "./assets";
 import { Construction } from "./construction";
+import { Debug } from "./debug";
 import { InWorldItem } from "./inWorldItem";
 
 export class AstroGen {
@@ -26,7 +27,7 @@ export class AstroGen {
   }
 
   private changeColor(mesh: THREE.Mesh) {
-    console.assert(mesh.type === "Mesh");
+    Debug.assert(mesh.type === "Mesh");
     const material = new THREE.MeshStandardMaterial();
     Object.assign(material, mesh.material);
     let r = material.color.r;

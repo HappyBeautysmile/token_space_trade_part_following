@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import { Assets, Item } from "./assets";
+import { Debug } from "./debug";
 
 // Represents an item which exists in the universe.
 export class InWorldItem {
@@ -11,7 +12,7 @@ export class InWorldItem {
   constructor(readonly item: Item,
     readonly position: THREE.Vector3,
     readonly quaternion: THREE.Quaternion) {
-    console.assert(Assets.models.has(item.name),
+    Debug.assert(Assets.models.has(item.name),
       'Unknown item.  Call Assets.init first.');
     this.modelPrototype = Assets.models.get(item.name);
   }

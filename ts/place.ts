@@ -51,6 +51,14 @@ export class Place {
     v.z = q * Math.round(v.z / q);
   }
 
+  // Quantizes the Quaternion angles to be cube-aligned
+  public quantizeQuaternion(quaternion: THREE.Quaternion) {
+    const v = new THREE.Euler();
+    v.setFromQuaternion(quaternion);
+    this.quantizeRotation(v);
+    quaternion.setFromEuler(v);
+  }
+
   // Quantize position to 1 meter 3D grid.
   public quantizePosition(p: THREE.Vector3) {
     p.x = Math.round(p.x);

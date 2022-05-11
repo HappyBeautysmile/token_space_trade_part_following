@@ -1,6 +1,5 @@
-import { assert } from "console";
 import * as THREE from "three";
-import { BufferAttribute } from "three";
+import { Debug } from "./debug";
 
 export class MergedGeometryContainer extends THREE.Object3D {
   private geometry = new THREE.BufferGeometry();
@@ -138,15 +137,15 @@ export class MergedGeometryContainer extends THREE.Object3D {
         }
         const att = mesh.geometry.getAttribute(attributeName) as
           THREE.BufferAttribute;
-        console.assert(!!att);
-        console.assert(vertexCount < 0 || vertexCount === att.count);
+        Debug.assert(!!att);
+        Debug.assert(vertexCount < 0 || vertexCount === att.count);
         vertexCount = att.count;
         if (mesh.geometry.index) {
           console.log(`Indexed: ${key}`);
         }
         this.append(attributeName, att, mesh.geometry.index, transform);
       }
-      console.assert(vertexCount > 0);
+      Debug.assert(vertexCount > 0);
       totalVertexCount += vertexCount;
     }
     const objectIndex = this.keyIndex.size;

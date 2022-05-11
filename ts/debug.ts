@@ -42,4 +42,10 @@ export class Debug extends THREE.Object3D {
       Debug.material.needsUpdate = true;
     }
   }
+  static assert(condition: boolean, message?: string) {
+    if (!condition) {
+      Debug.log(`FAIL: ${message}`);
+      console.assert(condition, message);
+    }
+  }
 }
