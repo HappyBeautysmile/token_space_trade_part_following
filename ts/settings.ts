@@ -29,6 +29,7 @@ export class S {
     S.setDefault('na', 700, 'Number of asteroids in a belt.');
     S.setDefault('sa', 1e3, 'Starship Acceleration');
     S.setDefault('sp', 3e6, 'Star System "Pop" radius');
+    S.setDefault('m', 0, 'Use merged geometry in Block Build.');
 
     S.setDefault('pbf', 1e7, 'Point brightness factor');
   }

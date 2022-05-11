@@ -7,7 +7,7 @@ import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { FileIO } from "./fileIO";
-import { Construction, ObjectConstruction } from "./construction";
+import { Construction, MergedConstruction, ObjectConstruction } from "./construction";
 import { Decode } from "./codec";
 import { AstroGen } from "./astroGen";
 import { S } from "./settings";
@@ -43,7 +43,11 @@ export class BlockBuild {
     // this.construction.addCube(Assets.blocks[0]);
     // this.construction.save();
 
-    this.construction = new ObjectConstruction(this.place.universeGroup);
+    if (S.float('m')) {
+      this.construction = new MergedConstruction(this.place.universeGroup);
+    } else {
+      this.construction = new ObjectConstruction(this.place.universeGroup);
+    }
     let ab = new AstroGen(this.construction);
     ab.buildPlatform(20, 10, 30, 0, 0, 0);
 
