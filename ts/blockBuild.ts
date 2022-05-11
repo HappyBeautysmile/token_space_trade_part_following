@@ -147,7 +147,10 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Debug.log("add astroGen");
+    Assets.flight_computer.rotateX(Math.PI / 4);
+    this.universeGroup.add(Assets.flight_computer);
+
+    Debug.log("add flight computer");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

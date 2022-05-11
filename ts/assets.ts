@@ -54,6 +54,7 @@ export class Assets extends THREE.Object3D {
   static models = new Map<string, THREE.Mesh>();
   static items: Item[] = [];
   static itemsByName = new Map<string, Item>();
+  static flight_computer = new THREE.Object3D();
 
   static async init() {
     Palette.init();
@@ -144,7 +145,7 @@ export class Assets extends THREE.Object3D {
   static async LoadAllModels() {
     const modelNames = [
       'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
-      'thruster', 'tank', 'light-blue', 'port', 'flight computer',
+      'thruster', 'tank', 'light-blue', 'port',
       'cube-tweek', 'cube-glob']
     for (const modelName of modelNames) {
       // console.log(`Loading ${modelName}`);
@@ -163,6 +164,7 @@ export class Assets extends THREE.Object3D {
       // console.log(`Added ${modelName}`);
     }
 
+    this.flight_computer = await ModelLoader.loadModel(`Model/flight computer.glb`);
     // TODO: load all glb files int the Model directory into this.models
 
     // const testFolder = 'Model/*.glb';
