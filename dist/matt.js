@@ -923,19 +923,20 @@ const three_1 = __webpack_require__(578);
 const inWorldItem_1 = __webpack_require__(116);
 class Hand extends THREE.Object3D {
     grip;
+    item;
     index;
     xr;
     place;
     keysDown;
     construction;
-    item;
     cube;
     leftHand;
     debug;
     debugMaterial;
-    constructor(grip, initialObject, index, xr, place, keysDown, construction) {
+    constructor(grip, item, index, xr, place, keysDown, construction) {
         super();
         this.grip = grip;
+        this.item = item;
         this.index = index;
         this.xr = xr;
         this.place = place;
@@ -952,7 +953,7 @@ class Hand extends THREE.Object3D {
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
         }
-        this.setCube(initialObject);
+        this.setCube(item);
         this.initialize();
     }
     // We create these private temporary variables here so we aren't
@@ -1055,6 +1056,7 @@ class Hand extends THREE.Object3D {
         }
         this.cube = assets_1.Assets.models.get(item.modelName).clone();
         this.place.playerGroup.add(this.cube);
+        this.item = item;
     }
     deleteCube() {
         this.p.copy(this.cube.position);
