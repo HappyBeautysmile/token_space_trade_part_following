@@ -130,7 +130,7 @@ export class Assets extends THREE.Object3D {
   static async LoadAllModels() {
     const modelNames = [
       'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
-      'thruster', 'tank', 'light-blue', 'port', 'console',
+      'thruster', 'tank', 'light-blue', 'port', 'flight computer',
       'cube-tweek', 'cube-glob']
     for (const modelName of modelNames) {
       console.log(`Loading ${modelName}`);
