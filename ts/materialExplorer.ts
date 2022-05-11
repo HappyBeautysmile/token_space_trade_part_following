@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { Object3D } from "three";
 import { Assets } from "./assets";
+import { AstroGen } from "./astroGen";
+import { MergedConstruction, ObjectConstruction } from "./construction";
 import { MergedGeometryContainer } from "./megedGeometryContainer";
 import { Tick, Ticker } from "./tick";
 
@@ -45,28 +47,9 @@ export class MaterialExplorer extends THREE.Object3D implements Ticker {
     this.cube.position.set(1, 2.5, -2);
     this.add(this.cube);
 
-    const merged = new MergedGeometryContainer();
-    const sphere = Assets.models.get('cube-glob').clone();
-    sphere.position.set(-1, 1.5, -2);
-    const cube = new THREE.Mesh(
-      new THREE.BoxBufferGeometry(0.1, 3.0, 0.1),
-      new THREE.MeshBasicMaterial({ color: '#f0f' })
-    );
-    cube.position.set(-1, 0, -2);
-
-    merged.mergeIn('trunk', cube);
-    merged.mergeIn('sphere', sphere);
-
-    this.add(merged);
-
-    for (let i = 0; i < 10; ++i) {
-      const platform = new THREE.Mesh(
-        new THREE.BoxBufferGeometry(1, 0.1, 1),
-        new THREE.MeshBasicMaterial({ color: '#f0f' })
-      );
-      platform.position.set(Math.sin(i * 0.4), i * 0.1, -i * 0.5);
-      this.add(platform);
-    }
+    const construction = new MergedConstruction(this);
+    const gen = new AstroGen(construction);
+    gen.buildAsteroid(5, -3, 2, -10);
   }
 
   arrange() {

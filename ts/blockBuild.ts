@@ -7,9 +7,10 @@ import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { FileIO } from "./fileIO";
-import { Construction, ObjectConstruction } from "./construction";
+import { Construction, MergedConstruction, ObjectConstruction } from "./construction";
 import { Decode } from "./codec";
 import { AstroGen } from "./astroGen";
+import { S } from "./settings";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -42,8 +43,12 @@ export class BlockBuild {
     // this.construction.addCube(Assets.blocks[0]);
     // this.construction.save();
 
-    this.construction = new ObjectConstruction(this.place.universeGroup);
-    let ab = new AstroGen(this.place.universeGroup, this.construction);
+    if (S.float('m')) {
+      this.construction = new MergedConstruction(this.place.universeGroup);
+    } else {
+      this.construction = new ObjectConstruction(this.place.universeGroup);
+    }
+    let ab = new AstroGen(this.construction);
     ab.buildPlatform(20, 10, 30, 0, 0, 0);
 
     this.getGrips();
@@ -71,7 +76,17 @@ export class BlockBuild {
 
   private v = new THREE.Vector3();
   private isSaving = false;
+  private lastFrameRateUpdate = 0;
+  private frameCount = 0;
   private tick(t: Tick) {
+    ++this.frameCount;
+    const fru = S.float('fru');
+    if (fru && t.elapsedS >= this.lastFrameRateUpdate + fru) {
+      Debug.log(`FPS: ${(this.frameCount / fru).toFixed(1)}`);
+      this.lastFrameRateUpdate = t.elapsedS;
+      this.frameCount = 0;
+    }
+
     this.v.set(0, 0, 0);
     if (this.keysDown.has('KeyA')) {
       this.v.x -= t.deltaS * 5;

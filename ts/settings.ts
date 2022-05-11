@@ -21,6 +21,7 @@ export class S {
   }
 
   static {
+    S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
     S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
     S.setDefault('sr', 1e9, 'Starfield radius');
     S.setDefault('ar', 3e4, 'Asteroid radius');
@@ -28,6 +29,7 @@ export class S {
     S.setDefault('na', 700, 'Number of asteroids in a belt.');
     S.setDefault('sa', 1e3, 'Starship Acceleration');
     S.setDefault('sp', 3e6, 'Star System "Pop" radius');
+    S.setDefault('m', 0, 'Use merged geometry in Block Build.');
 
     S.setDefault('pbf', 1e7, 'Point brightness factor');
   }

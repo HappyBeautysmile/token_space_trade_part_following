@@ -38,7 +38,6 @@ export class MergedGeometryContainer extends THREE.Object3D {
     if (!index) {
       return new Float32Array(att.array);
     } else {
-      console.log(`Indexed!`);
       const result = new Float32Array(index.count * att.itemSize);
       for (let i = 0; i < index.count; ++i) {
         const attributePosition = index.getX(i);
@@ -74,7 +73,6 @@ export class MergedGeometryContainer extends THREE.Object3D {
       }
     }
     const oldValues = this.oldValues(attributeName);
-    console.log(`Append ${attributeName}`);
 
     const values = new Float32Array(oldValues.length + attValues.length);
     for (let i = 0; i < oldValues.length; ++i) {
@@ -140,9 +138,6 @@ export class MergedGeometryContainer extends THREE.Object3D {
         Debug.assert(!!att);
         Debug.assert(vertexCount < 0 || vertexCount === att.count);
         vertexCount = att.count;
-        if (mesh.geometry.index) {
-          console.log(`Indexed: ${key}`);
-        }
         this.append(attributeName, att, mesh.geometry.index, transform);
       }
       Debug.assert(vertexCount > 0);

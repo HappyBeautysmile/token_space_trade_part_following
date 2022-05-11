@@ -245,10 +245,8 @@ const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
 const inWorldItem_1 = __webpack_require__(116);
 class AstroGen {
-    universeGroup;
     construction;
-    constructor(universeGroup, construction) {
-        this.universeGroup = universeGroup;
+    constructor(construction) {
         this.construction = construction;
     }
     buildCone() {
@@ -355,6 +353,7 @@ const fileIO_1 = __webpack_require__(3);
 const construction_1 = __webpack_require__(844);
 const codec_1 = __webpack_require__(385);
 const astroGen_1 = __webpack_require__(419);
+const settings_1 = __webpack_require__(451);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -381,8 +380,13 @@ class BlockBuild {
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
-        this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
-        let ab = new astroGen_1.AstroGen(this.place.universeGroup, this.construction);
+        if (settings_1.S.float('m')) {
+            this.construction = new construction_1.MergedConstruction(this.place.universeGroup);
+        }
+        else {
+            this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
+        }
+        let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(20, 10, 30, 0, 0, 0);
         this.getGrips();
         this.dumpScene(this.scene, '');
@@ -406,7 +410,16 @@ class BlockBuild {
     }
     v = new THREE.Vector3();
     isSaving = false;
+    lastFrameRateUpdate = 0;
+    frameCount = 0;
     tick(t) {
+        ++this.frameCount;
+        const fru = settings_1.S.float('fru');
+        if (fru && t.elapsedS >= this.lastFrameRateUpdate + fru) {
+            debug_1.Debug.log(`FPS: ${(this.frameCount / fru).toFixed(1)}`);
+            this.lastFrameRateUpdate = t.elapsedS;
+            this.frameCount = 0;
+        }
         this.v.set(0, 0, 0);
         if (this.keysDown.has('KeyA')) {
             this.v.x -= t.deltaS * 5;
@@ -612,10 +625,11 @@ exports.Codec = Codec;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ObjectConstruction = void 0;
+exports.MergedConstruction = exports.ObjectConstruction = void 0;
 const codec_1 = __webpack_require__(385);
 const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
+const megedGeometryContainer_1 = __webpack_require__(192);
 class ObjectConstruction {
     container;
     constructor(container) {
@@ -639,7 +653,6 @@ class ObjectConstruction {
     }
     // TODO: Change the input type to InWorldItem.
     addCube(o) {
-        console.log(`Adding: ${o.item.name}`);
         const key = this.posToKey(o.position);
         this.items.set(key, o);
         const object = o.getObject();
@@ -662,6 +675,38 @@ class ObjectConstruction {
     }
 }
 exports.ObjectConstruction = ObjectConstruction;
+class MergedConstruction {
+    mergedContainer = new megedGeometryContainer_1.MergedGeometryContainer();
+    constructor(container) {
+        container.add(this.mergedContainer);
+    }
+    items = new Map();
+    save() {
+        console.log('Saving...');
+        let c = new codec_1.Codec();
+        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
+        fileIO_1.FileIO.saveObject(o, "what_you_built.json");
+    }
+    posToKey(p) {
+        return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
+    }
+    // TODO: Change the input type to InWorldItem.
+    addCube(o) {
+        const key = this.posToKey(o.position);
+        this.items.set(key, o);
+        const object = o.getObject();
+        debug_1.Debug.assert(!!object);
+        object.position.copy(o.position);
+        object.quaternion.copy(o.quaternion);
+        this.mergedContainer.mergeIn(key, object);
+    }
+    // TODO: Return the InWorldItem.
+    removeCube(p) {
+        const key = this.posToKey(p);
+        this.mergedContainer.removeKey(key);
+    }
+}
+exports.MergedConstruction = MergedConstruction;
 //# sourceMappingURL=construction.js.map
 
 /***/ }),
@@ -1152,8 +1197,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MaterialExplorer = void 0;
 const THREE = __importStar(__webpack_require__(578));
-const assets_1 = __webpack_require__(398);
-const megedGeometryContainer_1 = __webpack_require__(192);
+const astroGen_1 = __webpack_require__(419);
+const construction_1 = __webpack_require__(844);
 class CodeSnippet {
     codeType;
     code;
@@ -1192,19 +1237,9 @@ class MaterialExplorer extends THREE.Object3D {
         this.cube = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f0f' }));
         this.cube.position.set(1, 2.5, -2);
         this.add(this.cube);
-        const merged = new megedGeometryContainer_1.MergedGeometryContainer();
-        const sphere = assets_1.Assets.models.get('cube-glob').clone();
-        sphere.position.set(-1, 1.5, -2);
-        const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 3.0, 0.1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
-        cube.position.set(-1, 0, -2);
-        merged.mergeIn('trunk', cube);
-        merged.mergeIn('sphere', sphere);
-        this.add(merged);
-        for (let i = 0; i < 10; ++i) {
-            const platform = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.1, 1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
-            platform.position.set(Math.sin(i * 0.4), i * 0.1, -i * 0.5);
-            this.add(platform);
-        }
+        const construction = new construction_1.MergedConstruction(this);
+        const gen = new astroGen_1.AstroGen(construction);
+        gen.buildAsteroid(5, -3, 2, -10);
     }
     arrange() {
         for (const s of this.snippets) {
@@ -1625,7 +1660,6 @@ class MergedGeometryContainer extends THREE.Object3D {
             return new Float32Array(att.array);
         }
         else {
-            console.log(`Indexed!`);
             const result = new Float32Array(index.count * att.itemSize);
             for (let i = 0; i < index.count; ++i) {
                 const attributePosition = index.getX(i);
@@ -1659,7 +1693,6 @@ class MergedGeometryContainer extends THREE.Object3D {
             }
         }
         const oldValues = this.oldValues(attributeName);
-        console.log(`Append ${attributeName}`);
         const values = new Float32Array(oldValues.length + attValues.length);
         for (let i = 0; i < oldValues.length; ++i) {
             values[i] = oldValues[i];
@@ -1720,9 +1753,6 @@ class MergedGeometryContainer extends THREE.Object3D {
                 debug_1.Debug.assert(!!att);
                 debug_1.Debug.assert(vertexCount < 0 || vertexCount === att.count);
                 vertexCount = att.count;
-                if (mesh.geometry.index) {
-                    console.log(`Indexed: ${key}`);
-                }
                 this.append(attributeName, att, mesh.geometry.index, transform);
             }
             debug_1.Debug.assert(vertexCount > 0);
@@ -2137,15 +2167,11 @@ class PlanetPlatform extends THREE.Group {
     constructor(pos, camera) {
         super();
         this.camera = camera;
-        // TODO: we scale the planet by a huge amount because
-        // rendering this many cubes is too slow.  Once we have high
-        // performance rendering, we can remove this scaling.
-        const deleteMeScale = new THREE.Group();
         const construction = new construction_1.ObjectConstruction(this);
-        const astroGen = new astroGen_1.AstroGen(deleteMeScale, construction);
+        const astroGen = new astroGen_1.AstroGen(construction);
         astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
-        deleteMeScale.scale.set(200, 200, 200);
-        this.add(deleteMeScale);
+        // We scale the planet up because otherwise it's really slow.
+        this.scale.set(200, 200, 200);
         // const cube = new THREE.Mesh(
         //   new THREE.BoxBufferGeometry(1e2, 1e3, 1e2),
         //   new THREE.MeshBasicMaterial({ color: 'red' })
@@ -2502,6 +2528,7 @@ class S {
         container.appendChild(helpText);
     }
     static {
+        S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e9, 'Starfield radius');
         S.setDefault('ar', 3e4, 'Asteroid radius');
@@ -2509,6 +2536,7 @@ class S {
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
+        S.setDefault('m', 0, 'Use merged geometry in Block Build.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {
