@@ -1070,20 +1070,16 @@ class Hand extends THREE.Object3D {
             this.deleteCube();
         });
         this.grip.addEventListener('selectstart', () => {
-            debug_1.Debug.log('selectstart');
             this.deleteCube();
-            debug_1.Debug.log('deleted');
             const p = new THREE.Vector3();
             p.copy(this.cube.position);
             this.place.playerToUniverse(p);
             this.place.quantizePosition(p);
             const rotation = new THREE.Quaternion();
-            debug_1.Debug.log(`Cube: ${!!this.cube}`);
-            debug_1.Debug.log(`Itme: ${JSON.stringify(this.item)}`);
             rotation.copy(this.cube.quaternion);
             rotation.multiply(this.place.playerGroup.quaternion);
+            this.place.quantizeQuaternion(rotation);
             const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
-            debug_1.Debug.log(`Adding ${JSON.stringify(inWorldItem)}`);
             this.construction.addCube(inWorldItem);
         });
         // this.grip.addEventListener('selectend', () => {
@@ -2085,6 +2081,13 @@ class Place {
         v.x = q * Math.round(v.x / q);
         v.y = q * Math.round(v.y / q);
         v.z = q * Math.round(v.z / q);
+    }
+    // Quantizes the Quaternion angles to be cube-aligned
+    quantizeQuaternion(quaternion) {
+        const v = new THREE.Euler();
+        v.setFromQuaternion(quaternion);
+        this.quantizeRotation(v);
+        quaternion.setFromEuler(v);
     }
     // Quantize position to 1 meter 3D grid.
     quantizePosition(p) {
