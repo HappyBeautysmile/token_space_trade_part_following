@@ -11,6 +11,7 @@ import { Construction, MergedConstruction, ObjectConstruction } from "./construc
 import { Decode } from "./codec";
 import { AstroGen } from "./astroGen";
 import { S } from "./settings";
+import { Inventory, Player } from "./player";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -22,7 +23,7 @@ export class BlockBuild {
   private place: Place;
   private keysDown = new Set<string>();
   private construction: Construction;
-  //private assets = new Assets();
+  private player = new Player("FunUserName");
 
   constructor() {
     this.playerGroup.name = 'Player Group';
@@ -170,7 +171,7 @@ export class BlockBuild {
     Assets.flight_computer.rotateX(Math.PI / 4);
     this.universeGroup.add(Assets.flight_computer);
 
-    Debug.log("add flight computer");
+    Debug.log("working on inventory.");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -214,7 +215,7 @@ export class BlockBuild {
       // It's still in memory.
       // Assets.blocks[i].position.set(0, 0, 0);
       new Hand(grip, Assets.items[i], i, this.renderer.xr,
-        this.place, this.keysDown, this.construction);
+        this.place, this.keysDown, this.construction, this.player.inventory);
     }
   }
 }

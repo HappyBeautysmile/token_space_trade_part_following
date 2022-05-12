@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { Debug } from "./debug";
 import { Palette } from "./palette";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FileIO } from "./fileIO";
 
 class ModelLoader {
   static async loadModel(filename: string): Promise<THREE.Object3D> {
@@ -186,5 +187,11 @@ export class Assets extends THREE.Object3D {
       Assets.items.push(i);
       this.itemsByName.set(key, i)
     };
+
+    // TODO load items from JSON
+    // const loadedObject = await FileIO.httpGetAsync("./test.json");
+    // for (const o of loadedObject) {
+    //   Assets.items.push(o as Item);
+    // }
   }
 }

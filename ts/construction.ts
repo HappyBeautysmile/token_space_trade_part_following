@@ -46,15 +46,17 @@ export class ObjectConstruction implements Construction {
   }
 
   // TODO: Return the InWorldItem.
-  public removeCube(p: THREE.Vector3): void {
+  public removeCube(p: THREE.Vector3): THREE.Object3D {
     const key = this.posToKey(p);
+    let o = new THREE.Object3D();
     if (this.objects.has(key)) {
-      const o = this.objects.get(key);
+      o = this.objects.get(key);
       Debug.assert(o.parent === this.container, 'Invalid parent!');
       this.container.remove(o);
       this.items.delete(key);
       this.objects.delete(key);
     }
+    return o;
   }
 }
 

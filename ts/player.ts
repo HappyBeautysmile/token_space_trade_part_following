@@ -1,14 +1,42 @@
 import { BankAccount, Exchange } from "./exchange";
 import * as THREE from "three";
 import { Assets, Item } from "./assets";
+import { Debug } from "./debug";
 
 // this class has one instance per item type.
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
 
 export class Inventory {
-  items: [{ item: Item, color: THREE.Color, qty: Number }];
+  items: [{ item: Item, color: THREE.Color, qty: number }];
+
+  addItem(input) {
+    Debug.log("adding " + JSON.stringify(input));
+    if (typeof (input) == typeof (THREE.Object3D)) {
+
+    }
+    else if (typeof (input) == typeof (Item)) {
+      const index = this.items.findIndex(e => e.item == input)
+      if (index >= 0) {
+        this.items[index].qty++;
+      }
+      else {
+        this.items.push(input);
+      }
+    }
+  }
+
+  removeItem(input) {
+    Debug.log("removing " + JSON.stringify(input));
+    if (typeof (input) == typeof (THREE.Object3D)) {
+
+    }
+    else if (typeof (input) == typeof (Item)) {
+
+    }
+  }
 }
+
 
 export class Player {
   name: string;
@@ -19,10 +47,7 @@ export class Player {
     this.name = name;
     this.bankacount = new BankAccount(1000);
     this.location = new THREE.Vector3();
-    this.inventory.items.push({
-      item: Assets.items[0],
-      color: new THREE.Color(), qty: 10
-    });
+    this.inventory = new Inventory();
   }
 }
 

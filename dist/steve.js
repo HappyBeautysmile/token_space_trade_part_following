@@ -211,6 +211,11 @@ class Assets extends THREE.Object3D {
             this.itemsByName.set(key, i);
         }
         ;
+        // TODO load items from JSON
+        // const loadedObject = await FileIO.httpGetAsync("./test.json");
+        // for (const o of loadedObject) {
+        //   Assets.items.push(o as Item);
+        // }
     }
 }
 exports.Assets = Assets;
@@ -250,12 +255,11 @@ exports.AstroGen = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const three_1 = __webpack_require__(232);
 const assets_1 = __webpack_require__(398);
+const debug_1 = __webpack_require__(756);
 const inWorldItem_1 = __webpack_require__(116);
 class AstroGen {
-    universeGroup;
     construction;
-    constructor(universeGroup, construction) {
-        this.universeGroup = universeGroup;
+    constructor(construction) {
         this.construction = construction;
     }
     buildCone() {
@@ -273,7 +277,7 @@ class AstroGen {
         }
     }
     changeColor(mesh) {
-        console.assert(mesh.type === "Mesh");
+        debug_1.Debug.assert(mesh.type === "Mesh");
         const material = new THREE.MeshStandardMaterial();
         Object.assign(material, mesh.material);
         let r = material.color.r;
@@ -366,6 +370,8 @@ const fileIO_1 = __webpack_require__(3);
 const construction_1 = __webpack_require__(844);
 const codec_1 = __webpack_require__(385);
 const astroGen_1 = __webpack_require__(419);
+const settings_1 = __webpack_require__(451);
+const player_1 = __webpack_require__(507);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -375,7 +381,7 @@ class BlockBuild {
     place;
     keysDown = new Set();
     construction;
-    //private assets = new Assets();
+    player = new player_1.Player("FunUserName");
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -392,8 +398,13 @@ class BlockBuild {
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
-        this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
-        let ab = new astroGen_1.AstroGen(this.place.universeGroup, this.construction);
+        if (settings_1.S.float('m')) {
+            this.construction = new construction_1.MergedConstruction(this.place.universeGroup);
+        }
+        else {
+            this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
+        }
+        let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(20, 10, 30, 0, 0, 0);
         this.getGrips();
         this.dumpScene(this.scene, '');
@@ -417,7 +428,16 @@ class BlockBuild {
     }
     v = new THREE.Vector3();
     isSaving = false;
+    lastFrameRateUpdate = 0;
+    frameCount = 0;
     tick(t) {
+        ++this.frameCount;
+        const fru = settings_1.S.float('fru');
+        if (fru && t.elapsedS >= this.lastFrameRateUpdate + fru) {
+            debug_1.Debug.log(`FPS: ${(this.frameCount / fru).toFixed(1)}`);
+            this.lastFrameRateUpdate = t.elapsedS;
+            this.frameCount = 0;
+        }
         this.v.set(0, 0, 0);
         if (this.keysDown.has('KeyA')) {
             this.v.x -= t.deltaS * 5;
@@ -487,7 +507,7 @@ class BlockBuild {
         this.universeGroup.add(debugPanel);
         assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
         this.universeGroup.add(assets_1.Assets.flight_computer);
-        debug_1.Debug.log("add flight computer");
+        debug_1.Debug.log("working on inventory.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -524,7 +544,7 @@ class BlockBuild {
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.items[i], i, this.renderer.xr, this.place, this.keysDown, this.construction);
+            new hand_1.Hand(grip, assets_1.Assets.items[i], i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
         }
     }
 }
@@ -564,6 +584,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Codec = exports.Decode = exports.Encode = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
+const debug_1 = __webpack_require__(756);
 class Encode {
     static inWorldItem(o) {
         const result = {};
@@ -584,10 +605,10 @@ exports.Encode = Encode;
 class Decode {
     static object3D(o) {
         const model = assets_1.Assets.models.get(o['modelName']).clone();
-        console.assert(!!model, `No model for ${o['modelName']}`);
+        debug_1.Debug.assert(!!model, `No model for ${o['modelName']}`);
         // TODO: Material loading isn't working.
         // const material = Codec.findMaterialByName(o['materialName']);
-        // console.assert(!!material, `No material for ${o['materialName']}`)
+        // Debug.assert(!!material, `No material for ${o['materialName']}`)
         let mesh = model.clone();
         mesh.position.set(o['position'].x, o['position'].y, o['position'].z);
         const quaternion = new THREE.Quaternion();
@@ -608,7 +629,7 @@ class Codec {
     static findMaterialByName(name) {
         for (const material of assets_1.Assets.materials) {
             if (material.userData["materialName"] == name) {
-                console.assert(material.type === "Material");
+                debug_1.Debug.assert(material.type === "Material");
                 return material;
             }
         }
@@ -622,13 +643,39 @@ exports.Codec = Codec;
 /***/ }),
 
 /***/ 844:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ObjectConstruction = void 0;
+exports.MergedConstruction = exports.ObjectConstruction = void 0;
+const THREE = __importStar(__webpack_require__(232));
 const codec_1 = __webpack_require__(385);
+const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
+const megedGeometryContainer_1 = __webpack_require__(192);
 class ObjectConstruction {
     container;
     constructor(container) {
@@ -652,29 +699,62 @@ class ObjectConstruction {
     }
     // TODO: Change the input type to InWorldItem.
     addCube(o) {
-        console.log(`Adding: ${o.item.name}`);
         const key = this.posToKey(o.position);
         this.items.set(key, o);
         const object = o.getObject();
         object.position.copy(o.position);
         object.quaternion.copy(o.quaternion);
-        console.assert(!!object);
+        debug_1.Debug.assert(!!object);
         this.objects.set(key, object);
         this.container.add(object);
     }
     // TODO: Return the InWorldItem.
     removeCube(p) {
         const key = this.posToKey(p);
+        let o = new THREE.Object3D();
         if (this.objects.has(key)) {
-            const o = this.objects.get(key);
-            console.assert(o.parent === this.container, 'Invalid parent!');
+            o = this.objects.get(key);
+            debug_1.Debug.assert(o.parent === this.container, 'Invalid parent!');
             this.container.remove(o);
             this.items.delete(key);
             this.objects.delete(key);
         }
+        return o;
     }
 }
 exports.ObjectConstruction = ObjectConstruction;
+class MergedConstruction {
+    mergedContainer = new megedGeometryContainer_1.MergedGeometryContainer();
+    constructor(container) {
+        container.add(this.mergedContainer);
+    }
+    items = new Map();
+    save() {
+        console.log('Saving...');
+        let c = new codec_1.Codec();
+        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
+        fileIO_1.FileIO.saveObject(o, "what_you_built.json");
+    }
+    posToKey(p) {
+        return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
+    }
+    // TODO: Change the input type to InWorldItem.
+    addCube(o) {
+        const key = this.posToKey(o.position);
+        this.items.set(key, o);
+        const object = o.getObject();
+        debug_1.Debug.assert(!!object);
+        object.position.copy(o.position);
+        object.quaternion.copy(o.quaternion);
+        this.mergedContainer.mergeIn(key, object);
+    }
+    // TODO: Return the InWorldItem.
+    removeCube(p) {
+        const key = this.posToKey(p);
+        this.mergedContainer.removeKey(key);
+    }
+}
+exports.MergedConstruction = MergedConstruction;
 //# sourceMappingURL=construction.js.map
 
 /***/ }),
@@ -747,9 +827,168 @@ class Debug extends THREE.Object3D {
             Debug.material.needsUpdate = true;
         }
     }
+    static assert(condition, message) {
+        if (!condition) {
+            Debug.log(`FAIL: ${message}`);
+            console.assert(condition, message);
+        }
+    }
 }
 exports.Debug = Debug;
 //# sourceMappingURL=debug.js.map
+
+/***/ }),
+
+/***/ 253:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Exchange = exports.SellOrder = exports.BuyOrder = exports.BankAccount = void 0;
+class BankAccount {
+    initialBalance;
+    balance;
+    constructor(initialBalance) {
+        this.initialBalance = initialBalance;
+        this.balance = initialBalance;
+    }
+    removeFunds(ammount) {
+        if (this.balance < ammount) {
+            throw new Error("Insufficient funds.");
+        }
+        this.balance -= ammount;
+    }
+    addFunds(ammount) {
+        this.balance += ammount;
+    }
+    getBalance() { return this.balance; }
+}
+exports.BankAccount = BankAccount;
+// These two types are identical now.  We keep them like this so that
+// the compiler will do type checking and make sure we're not doing
+// something insane.
+class BuyOrder {
+    quantity;
+    priceEach;
+    bankAccount;
+    constructor(quantity, priceEach, bankAccount) {
+        this.quantity = quantity;
+        this.priceEach = priceEach;
+        this.bankAccount = bankAccount;
+    }
+}
+exports.BuyOrder = BuyOrder;
+class SellOrder {
+    quantity;
+    priceEach;
+    bankAccount;
+    constructor(quantity, priceEach, bankAccount) {
+        this.quantity = quantity;
+        this.priceEach = priceEach;
+        this.bankAccount = bankAccount;
+    }
+}
+exports.SellOrder = SellOrder;
+class Exchange {
+    item;
+    constructor(item) {
+        this.item = item;
+    }
+    buyOrders = [];
+    // If `update` is set to true, cancel the existing order and
+    // replace it with this one.
+    placeBuyOrder(buyOrder, update = true) {
+        if (update) {
+            for (let i = 0; i < this.buyOrders.length;) {
+                if (this.buyOrders[i].bankAccount === buyOrder.bankAccount) {
+                    this.buyOrders.splice(i, 1);
+                }
+                else {
+                    ++i;
+                }
+            }
+        }
+        this.buyOrders.push(buyOrder);
+    }
+    // Removes any orders which cannot be filled because the
+    // buyer has insufficient funds.
+    cleanOrders() {
+        for (let i = 0; i < this.buyOrders.length;) {
+            const buyOrder = this.buyOrders[i];
+            if (buyOrder.priceEach * buyOrder.quantity > buyOrder.bankAccount.getBalance()) {
+                this.buyOrders.splice(i, 1);
+            }
+            else {
+                ++i;
+            }
+        }
+    }
+    fillOrders(buy, sell) {
+        const numItems = Math.min(buy.quantity, sell.quantity);
+        const value = numItems * sell.priceEach;
+        buy.bankAccount.removeFunds(value);
+        sell.bankAccount.addFunds(value);
+        return numItems;
+    }
+    // Returns the highest price someone is currently bidding.
+    // Returns zero if there are no bids.
+    getHighestBuyPrice() {
+        let highest = 0;
+        for (const o of this.buyOrders) {
+            highest = Math.max(o.priceEach, highest);
+        }
+        return highest;
+    }
+    sellWithLimit(sell) {
+        if (this.buyOrders.length === 0) {
+            return 0;
+        }
+        this.cleanOrders();
+        // Sort buy orders with most expensive at the top.
+        this.buyOrders.sort((a, b) => {
+            return b.priceEach - a.priceEach;
+        });
+        if (this.buyOrders.length > 1) {
+            if (this.buyOrders[0].priceEach < this.buyOrders[1].priceEach) {
+                throw new Error("Bad sort!!!");
+            }
+        }
+        let numberForSale = sell.quantity;
+        let totalSold = 0;
+        while (this.buyOrders.length > 0) {
+            if (this.buyOrders[0].priceEach >= sell.priceEach) {
+                const buy = this.buyOrders.shift();
+                const numSold = this.fillOrders(buy, sell);
+                totalSold += numSold;
+                if (buy.quantity > numSold) {
+                    this.buyOrders.unshift(new BuyOrder(buy.quantity - numSold, buy.priceEach, buy.bankAccount));
+                }
+                if (numberForSale > numSold) {
+                    numberForSale -= numSold;
+                    if (numberForSale < 0) {
+                        throw new Error('Oversold!!!');
+                    }
+                    sell = new SellOrder(numberForSale, sell.priceEach, sell.bankAccount);
+                }
+                else {
+                    // Everything is sold.
+                    break;
+                }
+                if (numberForSale < 0) {
+                    throw new Error('Oversold!!!');
+                }
+            }
+            else {
+                // The highest bidding buyer won't pay the lowest sale price.
+                // So, there are no more possible matches.
+                break;
+            }
+        }
+        return totalSold;
+    }
+}
+exports.Exchange = Exchange;
+//# sourceMappingURL=exchange.js.map
 
 /***/ }),
 
@@ -942,24 +1181,27 @@ const three_1 = __webpack_require__(232);
 const inWorldItem_1 = __webpack_require__(116);
 class Hand extends THREE.Object3D {
     grip;
+    item;
     index;
     xr;
     place;
     keysDown;
     construction;
-    item;
+    inventory;
     cube;
     leftHand;
     debug;
     debugMaterial;
-    constructor(grip, initialObject, index, xr, place, keysDown, construction) {
+    constructor(grip, item, index, xr, place, keysDown, construction, inventory) {
         super();
         this.grip = grip;
+        this.item = item;
         this.index = index;
         this.xr = xr;
         this.place = place;
         this.keysDown = keysDown;
         this.construction = construction;
+        this.inventory = inventory;
         this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         // this.debug = new THREE.Mesh(
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
@@ -971,7 +1213,7 @@ class Hand extends THREE.Object3D {
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
         }
-        this.setCube(initialObject);
+        this.setCube(item);
         this.initialize();
     }
     // We create these private temporary variables here so we aren't
@@ -1068,35 +1310,42 @@ class Hand extends THREE.Object3D {
             this.lastButtons = buttons;
         }
     }
+    // sets the cube that is in the hand
     setCube(item) {
         if (this.cube) {
             this.place.playerGroup.remove(this.cube);
         }
         this.cube = assets_1.Assets.models.get(item.modelName).clone();
         this.place.playerGroup.add(this.cube);
+        this.item = item;
     }
+    // delete a cube from the world 
     deleteCube() {
         this.p.copy(this.cube.position);
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);
-        this.construction.removeCube(this.p);
+        const removedCube = this.construction.removeCube(this.p);
+        return removedCube;
     }
     p = new THREE.Vector3();
     async initialize() {
         this.grip.addEventListener('squeeze', () => {
-            this.deleteCube();
+            const removedCube = this.deleteCube();
+            this.inventory.addItem(removedCube);
         });
         this.grip.addEventListener('selectstart', () => {
             this.deleteCube();
             const p = new THREE.Vector3();
-            p.copy(this.grip.position);
+            p.copy(this.cube.position);
             this.place.playerToUniverse(p);
             this.place.quantizePosition(p);
             const rotation = new THREE.Quaternion();
             rotation.copy(this.cube.quaternion);
             rotation.multiply(this.place.playerGroup.quaternion);
+            this.place.quantizeQuaternion(rotation);
             const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
             this.construction.addCube(inWorldItem);
+            this.inventory.removeItem(this.item);
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -1114,6 +1363,7 @@ exports.Hand = Hand;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InWorldItem = void 0;
 const assets_1 = __webpack_require__(398);
+const debug_1 = __webpack_require__(756);
 // Represents an item which exists in the universe.
 class InWorldItem {
     item;
@@ -1126,7 +1376,7 @@ class InWorldItem {
         this.item = item;
         this.position = position;
         this.quaternion = quaternion;
-        console.assert(assets_1.Assets.models.has(item.name), 'Unknown item.  Call Assets.init first.');
+        debug_1.Debug.assert(assets_1.Assets.models.has(item.name), 'Unknown item.  Call Assets.init first.');
         this.modelPrototype = assets_1.Assets.models.get(item.name);
     }
     // Returns a clone of the model prototype.
@@ -1171,8 +1421,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MaterialExplorer = void 0;
 const THREE = __importStar(__webpack_require__(232));
-const assets_1 = __webpack_require__(398);
-const megedGeometryContainer_1 = __webpack_require__(192);
+const astroGen_1 = __webpack_require__(419);
+const construction_1 = __webpack_require__(844);
 class CodeSnippet {
     codeType;
     code;
@@ -1211,19 +1461,9 @@ class MaterialExplorer extends THREE.Object3D {
         this.cube = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f0f' }));
         this.cube.position.set(1, 2.5, -2);
         this.add(this.cube);
-        const merged = new megedGeometryContainer_1.MergedGeometryContainer();
-        const sphere = assets_1.Assets.models.get('cube-glob').clone();
-        sphere.position.set(-1, 1.5, -2);
-        const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.1, 3.0, 0.1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
-        cube.position.set(-1, 0, -2);
-        merged.mergeIn('trunk', cube);
-        merged.mergeIn('sphere', sphere);
-        this.add(merged);
-        for (let i = 0; i < 10; ++i) {
-            const platform = new THREE.Mesh(new THREE.BoxBufferGeometry(1, 0.1, 1), new THREE.MeshBasicMaterial({ color: '#f0f' }));
-            platform.position.set(Math.sin(i * 0.4), i * 0.1, -i * 0.5);
-            this.add(platform);
-        }
+        const construction = new construction_1.MergedConstruction(this);
+        const gen = new astroGen_1.AstroGen(construction);
+        gen.buildAsteroid(5, -3, 2, -10);
     }
     arrange() {
         for (const s of this.snippets) {
@@ -1617,6 +1857,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MergedGeometryContainer = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const debug_1 = __webpack_require__(756);
 class MergedGeometryContainer extends THREE.Object3D {
     geometry = new THREE.BufferGeometry();
     keyIndex = new Map();
@@ -1647,7 +1888,6 @@ class MergedGeometryContainer extends THREE.Object3D {
             return new Float32Array(att.array);
         }
         else {
-            console.log(`Indexed!`);
             const result = new Float32Array(index.count * att.itemSize);
             for (let i = 0; i < index.count; ++i) {
                 const attributePosition = index.getX(i);
@@ -1681,7 +1921,6 @@ class MergedGeometryContainer extends THREE.Object3D {
             }
         }
         const oldValues = this.oldValues(attributeName);
-        console.log(`Append ${attributeName}`);
         const values = new Float32Array(oldValues.length + attValues.length);
         for (let i = 0; i < oldValues.length; ++i) {
             values[i] = oldValues[i];
@@ -1739,15 +1978,12 @@ class MergedGeometryContainer extends THREE.Object3D {
                         transform.identity();
                 }
                 const att = mesh.geometry.getAttribute(attributeName);
-                console.assert(!!att);
-                console.assert(vertexCount < 0 || vertexCount === att.count);
+                debug_1.Debug.assert(!!att);
+                debug_1.Debug.assert(vertexCount < 0 || vertexCount === att.count);
                 vertexCount = att.count;
-                if (mesh.geometry.index) {
-                    console.log(`Indexed: ${key}`);
-                }
                 this.append(attributeName, att, mesh.geometry.index, transform);
             }
-            console.assert(vertexCount > 0);
+            debug_1.Debug.assert(vertexCount > 0);
             totalVertexCount += vertexCount;
         }
         const objectIndex = this.keyIndex.size;
@@ -2116,6 +2352,13 @@ class Place {
         v.y = q * Math.round(v.y / q);
         v.z = q * Math.round(v.z / q);
     }
+    // Quantizes the Quaternion angles to be cube-aligned
+    quantizeQuaternion(quaternion) {
+        const v = new THREE.Euler();
+        v.setFromQuaternion(quaternion);
+        this.quantizeRotation(v);
+        quaternion.setFromEuler(v);
+    }
     // Quantize position to 1 meter 3D grid.
     quantizePosition(p) {
         p.x = Math.round(p.x);
@@ -2168,15 +2411,11 @@ class PlanetPlatform extends THREE.Group {
     constructor(pos, camera) {
         super();
         this.camera = camera;
-        // TODO: we scale the planet by a huge amount because
-        // rendering this many cubes is too slow.  Once we have high
-        // performance rendering, we can remove this scaling.
-        const deleteMeScale = new THREE.Group();
         const construction = new construction_1.ObjectConstruction(this);
-        const astroGen = new astroGen_1.AstroGen(deleteMeScale, construction);
+        const astroGen = new astroGen_1.AstroGen(construction);
         astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
-        deleteMeScale.scale.set(200, 200, 200);
-        this.add(deleteMeScale);
+        // We scale the planet up because otherwise it's really slow.
+        this.scale.set(200, 200, 200);
         // const cube = new THREE.Mesh(
         //   new THREE.BoxBufferGeometry(1e2, 1e3, 1e2),
         //   new THREE.MeshBasicMaterial({ color: 'red' })
@@ -2186,6 +2425,92 @@ class PlanetPlatform extends THREE.Group {
 }
 exports.PlanetPlatform = PlanetPlatform;
 //# sourceMappingURL=planetPlatform.js.map
+
+/***/ }),
+
+/***/ 507:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Station = exports.Player = exports.Inventory = void 0;
+const exchange_1 = __webpack_require__(253);
+const THREE = __importStar(__webpack_require__(232));
+const assets_1 = __webpack_require__(398);
+const debug_1 = __webpack_require__(756);
+// this class has one instance per item type.
+// Probably don't want to keep it in player.ts, 
+//    or maybe this file contains more that just player classes.
+class Inventory {
+    items;
+    addItem(input) {
+        debug_1.Debug.log("adding " + JSON.stringify(input));
+        if (typeof (input) == typeof (THREE.Object3D)) {
+        }
+        else if (typeof (input) == typeof (assets_1.Item)) {
+            const index = this.items.findIndex(e => e.item == input);
+            if (index >= 0) {
+                this.items[index].qty++;
+            }
+            else {
+                this.items.push(input);
+            }
+        }
+    }
+    removeItem(input) {
+        debug_1.Debug.log("removing " + JSON.stringify(input));
+        if (typeof (input) == typeof (THREE.Object3D)) {
+        }
+        else if (typeof (input) == typeof (assets_1.Item)) {
+        }
+    }
+}
+exports.Inventory = Inventory;
+class Player {
+    name;
+    bankacount;
+    inventory;
+    location;
+    constructor(name) {
+        this.name = name;
+        this.bankacount = new exchange_1.BankAccount(1000);
+        this.location = new THREE.Vector3();
+        this.inventory = new Inventory();
+    }
+}
+exports.Player = Player;
+class Station {
+    name;
+    owner;
+    inventory;
+    exchange;
+    location;
+}
+exports.Station = Station;
+//# sourceMappingURL=player.js.map
 
 /***/ }),
 
@@ -2358,6 +2683,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PointMapOctoTree = exports.AABB = exports.PointMapLinear = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const debug_1 = __webpack_require__(756);
 class PointKey {
     point;
     value;
@@ -2435,7 +2761,7 @@ class PointMapOctoTree {
         this.bounds = new AABB(center, radius);
     }
     add(p, value) {
-        console.assert(this.insert(p, value));
+        debug_1.Debug.assert(this.insert(p, value));
     }
     p1 = new THREE.Vector3;
     insert(p, value) {
@@ -2540,6 +2866,7 @@ class S {
         container.appendChild(helpText);
     }
     static {
+        S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e9, 'Starfield radius');
         S.setDefault('ar', 3e4, 'Asteroid radius');
@@ -2547,6 +2874,7 @@ class S {
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
+        S.setDefault('m', 0, 'Use merged geometry in Block Build.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {
