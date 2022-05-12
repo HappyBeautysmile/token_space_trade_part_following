@@ -691,15 +691,17 @@ class ObjectConstruction {
     // TODO: Return the InWorldItem.
     removeCube(p) {
         const key = this.posToKey(p);
+        let item = null;
         let o = new THREE.Object3D();
         if (this.objects.has(key)) {
             o = this.objects.get(key);
             debug_1.Debug.assert(o.parent === this.container, 'Invalid parent!');
             this.container.remove(o);
+            item = this.items.get(key).item;
             this.items.delete(key);
             this.objects.delete(key);
         }
-        return o;
+        return item;
     }
 }
 exports.ObjectConstruction = ObjectConstruction;
@@ -732,6 +734,7 @@ class MergedConstruction {
     removeCube(p) {
         const key = this.posToKey(p);
         this.mergedContainer.removeKey(key);
+        return null;
     }
 }
 exports.MergedConstruction = MergedConstruction;
@@ -2445,32 +2448,29 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Station = exports.Player = exports.Inventory = void 0;
 const exchange_1 = __webpack_require__(253);
 const THREE = __importStar(__webpack_require__(578));
-const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
 // this class has one instance per item type.
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
 class Inventory {
-    items;
+    // items: [{ item: Item, color: THREE.Color, qty: number }];
+    itemQty = new Map();
     addItem(input) {
         debug_1.Debug.log("adding " + JSON.stringify(input));
-        if (typeof (input) == typeof (THREE.Object3D)) {
+        if (this.itemQty.has(input)) {
+            this.itemQty.set(input, this.itemQty.get(input) + 1);
         }
-        else if (typeof (input) == typeof (assets_1.Item)) {
-            const index = this.items.findIndex(e => e.item == input);
-            if (index >= 0) {
-                this.items[index].qty++;
-            }
-            else {
-                this.items.push(input);
-            }
+        else {
+            this.itemQty.set(input, 1);
         }
     }
     removeItem(input) {
         debug_1.Debug.log("removing " + JSON.stringify(input));
-        if (typeof (input) == typeof (THREE.Object3D)) {
+        if (this.itemQty.has(input)) {
+            this.itemQty.set(input, this.itemQty.get(input) - 1);
         }
-        else if (typeof (input) == typeof (assets_1.Item)) {
+        else {
+            this.itemQty.set(input, -1);
         }
     }
 }
