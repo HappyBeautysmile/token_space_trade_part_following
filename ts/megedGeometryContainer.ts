@@ -1,6 +1,44 @@
 import * as THREE from "three";
 import { Debug } from "./debug";
 
+class Mergable {
+  private positions: Float32Array;
+  private normals: Float32Array;
+  private index: number[];
+  constructor(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4) {
+    const positionsAtt = geometry.getAttribute('position');
+    if (geometry.index) {
+      for (let i = 0; i < geometry.index.count; ++i) {
+        this.index.push(geometry.index.getX(i));
+      }
+    } else {
+      for (let i = 0; i < positionsAtt.count; ++i) {
+        this.index.push(i);
+      }
+    }
+    this.positions = new Float32Array(this.index.length * 3);
+    this.normals = new Float32Array(this.index.length * 3);
+    this.copyAtt3(positionsAtt, this.positions, matrix);
+    const m3 = new THREE.Matrix3();
+    m3.getNormalMatrix(matrix);
+    matrix.setFromMatrix3(m3);
+    this.copyAtt3(geometry.getAttribute('normal'), this.normals, matrix);
+  }
+
+  private v = new THREE.Vector3();
+  private copyAtt3(
+    att: THREE.BufferAttribute | THREE.InterleavedBufferAttribute,
+    target: Float32Array, matrix: THREE.Matrix4) {
+    for (let i = 0; i < att.count; ++i) {
+      this.v.fromBufferAttribute(att, i);
+      this.v.applyMatrix4(matrix);
+      target[i * 3 + 0] = this.v.x;
+      target[i * 3 + 1] = this.v.y;
+      target[i * 3 + 2] = this.v.z;
+    }
+  }
+}
+
 export class MergedGeometryContainer extends THREE.Object3D {
   private geometry = new THREE.BufferGeometry();
   private keyIndex = new Map<string, number>();
@@ -73,6 +111,11 @@ export class MergedGeometryContainer extends THREE.Object3D {
       }
     }
     const oldValues = this.oldValues(attributeName);
+
+    class Mergable {
+      readonly positions: number[] = [];
+      readonly normals: number[] = [];
+    }
 
     const values = new Float32Array(oldValues.length + attValues.length);
     for (let i = 0; i < oldValues.length; ++i) {

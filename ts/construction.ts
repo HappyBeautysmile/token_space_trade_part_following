@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Item } from "./assets";
 import { Codec, Encode } from "./codec";
 import { Debug } from "./debug";
 import { FileIO } from "./fileIO";
@@ -8,7 +9,7 @@ import { MergedGeometryContainer } from "./megedGeometryContainer";
 export interface Construction {
   // Adds an object to this collection.
   addCube(o: InWorldItem): void;
-  removeCube(p: THREE.Vector3): void;
+  removeCube(p: THREE.Vector3): Item;
   save(): void;
 }
 
@@ -46,17 +47,19 @@ export class ObjectConstruction implements Construction {
   }
 
   // TODO: Return the InWorldItem.
-  public removeCube(p: THREE.Vector3): THREE.Object3D {
+  public removeCube(p: THREE.Vector3): Item {
     const key = this.posToKey(p);
+    let item: Item = null;
     let o = new THREE.Object3D();
     if (this.objects.has(key)) {
       o = this.objects.get(key);
       Debug.assert(o.parent === this.container, 'Invalid parent!');
       this.container.remove(o);
+      item = this.items.get(key).item;
       this.items.delete(key);
       this.objects.delete(key);
     }
-    return o;
+    return item;
   }
 }
 
@@ -90,8 +93,9 @@ export class MergedConstruction implements Construction {
   }
 
   // TODO: Return the InWorldItem.
-  public removeCube(p: THREE.Vector3): void {
+  public removeCube(p: THREE.Vector3): Item {
     const key = this.posToKey(p);
     this.mergedContainer.removeKey(key);
+    return null;
   }
 }

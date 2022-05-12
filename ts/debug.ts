@@ -19,6 +19,7 @@ export class Debug extends THREE.Object3D {
   }
 
   static log(message: string) {
+    message = `${(window.performance.now() / 1000).toFixed(2)} ` + message;
     const textHeight = 64;
     console.log(message);
     const ctx = Debug.canvas.getContext('2d');

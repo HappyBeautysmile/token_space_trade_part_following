@@ -163,11 +163,15 @@ export class Hand extends THREE.Object3D {
   private p = new THREE.Vector3();
   private async initialize() {
     this.grip.addEventListener('squeeze', () => {
+      Debug.log('squeeze');
       const removedCube = this.deleteCube();
+      Debug.log('About to add');
       this.inventory.addItem(removedCube);
+      Debug.log('Add done.');
     });
 
     this.grip.addEventListener('selectstart', () => {
+      Debug.log('selectstart');
       this.deleteCube();
       const p = new THREE.Vector3();
       p.copy(this.cube.position);
@@ -180,7 +184,9 @@ export class Hand extends THREE.Object3D {
       const inWorldItem = new InWorldItem(this.item,
         p, rotation);
       this.construction.addCube(inWorldItem);
+      Debug.log('About to remove.');
       this.inventory.removeItem(this.item);
+      Debug.log('Remove done.');
     });
 
     // this.grip.addEventListener('selectend', () => {
