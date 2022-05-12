@@ -49,7 +49,12 @@ export class BlockBuild {
       this.construction = new ObjectConstruction(this.place.universeGroup);
     }
     let ab = new AstroGen(this.construction);
-    ab.buildPlatform(20, 10, 30, 0, 0, 0);
+
+    ab.buildPlatform(
+      Math.round(S.float('ps') * 2 / 3),
+      10,
+      Math.round(S.float('ps')),
+      0, 0, 0);
 
     this.getGrips();
     this.dumpScene(this.scene, '');

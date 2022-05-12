@@ -387,7 +387,7 @@ class BlockBuild {
             this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
         }
         let ab = new astroGen_1.AstroGen(this.construction);
-        ab.buildPlatform(20, 10, 30, 0, 0, 0);
+        ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -2537,6 +2537,7 @@ class S {
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
         S.setDefault('m', 0, 'Use merged geometry in Block Build.');
+        S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {
