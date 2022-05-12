@@ -207,6 +207,11 @@ class Assets extends THREE.Object3D {
             this.itemsByName.set(key, i);
         }
         ;
+        // TODO load items from JSON
+        // const loadedObject = await FileIO.httpGetAsync("./test.json");
+        // for (const o of loadedObject) {
+        //   Assets.items.push(o as Item);
+        // }
     }
 }
 exports.Assets = Assets;
@@ -354,6 +359,7 @@ const construction_1 = __webpack_require__(844);
 const codec_1 = __webpack_require__(385);
 const astroGen_1 = __webpack_require__(419);
 const settings_1 = __webpack_require__(451);
+const player_1 = __webpack_require__(507);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -363,7 +369,7 @@ class BlockBuild {
     place;
     keysDown = new Set();
     construction;
-    //private assets = new Assets();
+    player = new player_1.Player("FunUserName");
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -489,7 +495,7 @@ class BlockBuild {
         this.universeGroup.add(debugPanel);
         assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
         this.universeGroup.add(assets_1.Assets.flight_computer);
-        debug_1.Debug.log("add flight computer");
+        debug_1.Debug.log("working on inventory.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -526,7 +532,7 @@ class BlockBuild {
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.items[i], i, this.renderer.xr, this.place, this.keysDown, this.construction);
+            new hand_1.Hand(grip, assets_1.Assets.items[i], i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
         }
     }
 }
@@ -621,11 +627,31 @@ exports.Codec = Codec;
 /***/ }),
 
 /***/ 844:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MergedConstruction = exports.ObjectConstruction = void 0;
+const THREE = __importStar(__webpack_require__(578));
 const codec_1 = __webpack_require__(385);
 const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
@@ -665,13 +691,15 @@ class ObjectConstruction {
     // TODO: Return the InWorldItem.
     removeCube(p) {
         const key = this.posToKey(p);
+        let o = new THREE.Object3D();
         if (this.objects.has(key)) {
-            const o = this.objects.get(key);
+            o = this.objects.get(key);
             debug_1.Debug.assert(o.parent === this.container, 'Invalid parent!');
             this.container.remove(o);
             this.items.delete(key);
             this.objects.delete(key);
         }
+        return o;
     }
 }
 exports.ObjectConstruction = ObjectConstruction;
@@ -752,6 +780,7 @@ class Debug extends THREE.Object3D {
         this.add(panel);
     }
     static log(message) {
+        message = `${(window.performance.now() / 1000).toFixed(2)} ` + message;
         const textHeight = 64;
         console.log(message);
         const ctx = Debug.canvas.getContext('2d');
@@ -784,6 +813,159 @@ class Debug extends THREE.Object3D {
 }
 exports.Debug = Debug;
 //# sourceMappingURL=debug.js.map
+
+/***/ }),
+
+/***/ 253:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Exchange = exports.SellOrder = exports.BuyOrder = exports.BankAccount = void 0;
+class BankAccount {
+    initialBalance;
+    balance;
+    constructor(initialBalance) {
+        this.initialBalance = initialBalance;
+        this.balance = initialBalance;
+    }
+    removeFunds(ammount) {
+        if (this.balance < ammount) {
+            throw new Error("Insufficient funds.");
+        }
+        this.balance -= ammount;
+    }
+    addFunds(ammount) {
+        this.balance += ammount;
+    }
+    getBalance() { return this.balance; }
+}
+exports.BankAccount = BankAccount;
+// These two types are identical now.  We keep them like this so that
+// the compiler will do type checking and make sure we're not doing
+// something insane.
+class BuyOrder {
+    quantity;
+    priceEach;
+    bankAccount;
+    constructor(quantity, priceEach, bankAccount) {
+        this.quantity = quantity;
+        this.priceEach = priceEach;
+        this.bankAccount = bankAccount;
+    }
+}
+exports.BuyOrder = BuyOrder;
+class SellOrder {
+    quantity;
+    priceEach;
+    bankAccount;
+    constructor(quantity, priceEach, bankAccount) {
+        this.quantity = quantity;
+        this.priceEach = priceEach;
+        this.bankAccount = bankAccount;
+    }
+}
+exports.SellOrder = SellOrder;
+class Exchange {
+    item;
+    constructor(item) {
+        this.item = item;
+    }
+    buyOrders = [];
+    // If `update` is set to true, cancel the existing order and
+    // replace it with this one.
+    placeBuyOrder(buyOrder, update = true) {
+        if (update) {
+            for (let i = 0; i < this.buyOrders.length;) {
+                if (this.buyOrders[i].bankAccount === buyOrder.bankAccount) {
+                    this.buyOrders.splice(i, 1);
+                }
+                else {
+                    ++i;
+                }
+            }
+        }
+        this.buyOrders.push(buyOrder);
+    }
+    // Removes any orders which cannot be filled because the
+    // buyer has insufficient funds.
+    cleanOrders() {
+        for (let i = 0; i < this.buyOrders.length;) {
+            const buyOrder = this.buyOrders[i];
+            if (buyOrder.priceEach * buyOrder.quantity > buyOrder.bankAccount.getBalance()) {
+                this.buyOrders.splice(i, 1);
+            }
+            else {
+                ++i;
+            }
+        }
+    }
+    fillOrders(buy, sell) {
+        const numItems = Math.min(buy.quantity, sell.quantity);
+        const value = numItems * sell.priceEach;
+        buy.bankAccount.removeFunds(value);
+        sell.bankAccount.addFunds(value);
+        return numItems;
+    }
+    // Returns the highest price someone is currently bidding.
+    // Returns zero if there are no bids.
+    getHighestBuyPrice() {
+        let highest = 0;
+        for (const o of this.buyOrders) {
+            highest = Math.max(o.priceEach, highest);
+        }
+        return highest;
+    }
+    sellWithLimit(sell) {
+        if (this.buyOrders.length === 0) {
+            return 0;
+        }
+        this.cleanOrders();
+        // Sort buy orders with most expensive at the top.
+        this.buyOrders.sort((a, b) => {
+            return b.priceEach - a.priceEach;
+        });
+        if (this.buyOrders.length > 1) {
+            if (this.buyOrders[0].priceEach < this.buyOrders[1].priceEach) {
+                throw new Error("Bad sort!!!");
+            }
+        }
+        let numberForSale = sell.quantity;
+        let totalSold = 0;
+        while (this.buyOrders.length > 0) {
+            if (this.buyOrders[0].priceEach >= sell.priceEach) {
+                const buy = this.buyOrders.shift();
+                const numSold = this.fillOrders(buy, sell);
+                totalSold += numSold;
+                if (buy.quantity > numSold) {
+                    this.buyOrders.unshift(new BuyOrder(buy.quantity - numSold, buy.priceEach, buy.bankAccount));
+                }
+                if (numberForSale > numSold) {
+                    numberForSale -= numSold;
+                    if (numberForSale < 0) {
+                        throw new Error('Oversold!!!');
+                    }
+                    sell = new SellOrder(numberForSale, sell.priceEach, sell.bankAccount);
+                }
+                else {
+                    // Everything is sold.
+                    break;
+                }
+                if (numberForSale < 0) {
+                    throw new Error('Oversold!!!');
+                }
+            }
+            else {
+                // The highest bidding buyer won't pay the lowest sale price.
+                // So, there are no more possible matches.
+                break;
+            }
+        }
+        return totalSold;
+    }
+}
+exports.Exchange = Exchange;
+//# sourceMappingURL=exchange.js.map
 
 /***/ }),
 
@@ -974,11 +1156,12 @@ class Hand extends THREE.Object3D {
     place;
     keysDown;
     construction;
+    inventory;
     cube;
     leftHand;
     debug;
     debugMaterial;
-    constructor(grip, item, index, xr, place, keysDown, construction) {
+    constructor(grip, item, index, xr, place, keysDown, construction, inventory) {
         super();
         this.grip = grip;
         this.item = item;
@@ -987,6 +1170,7 @@ class Hand extends THREE.Object3D {
         this.place = place;
         this.keysDown = keysDown;
         this.construction = construction;
+        this.inventory = inventory;
         this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         // this.debug = new THREE.Mesh(
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
@@ -1095,6 +1279,7 @@ class Hand extends THREE.Object3D {
             this.lastButtons = buttons;
         }
     }
+    // sets the cube that is in the hand
     setCube(item) {
         if (this.cube) {
             this.place.playerGroup.remove(this.cube);
@@ -1103,18 +1288,25 @@ class Hand extends THREE.Object3D {
         this.place.playerGroup.add(this.cube);
         this.item = item;
     }
+    // delete a cube from the world 
     deleteCube() {
         this.p.copy(this.cube.position);
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);
-        this.construction.removeCube(this.p);
+        const removedCube = this.construction.removeCube(this.p);
+        return removedCube;
     }
     p = new THREE.Vector3();
     async initialize() {
         this.grip.addEventListener('squeeze', () => {
-            this.deleteCube();
+            debug_1.Debug.log('squeeze');
+            const removedCube = this.deleteCube();
+            debug_1.Debug.log('About to add');
+            this.inventory.addItem(removedCube);
+            debug_1.Debug.log('Add done.');
         });
         this.grip.addEventListener('selectstart', () => {
+            debug_1.Debug.log('selectstart');
             this.deleteCube();
             const p = new THREE.Vector3();
             p.copy(this.cube.position);
@@ -1126,6 +1318,9 @@ class Hand extends THREE.Object3D {
             this.place.quantizeQuaternion(rotation);
             const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
             this.construction.addCube(inWorldItem);
+            debug_1.Debug.log('About to remove.');
+            this.inventory.removeItem(this.item);
+            debug_1.Debug.log('Remove done.');
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -1630,6 +1825,41 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MergedGeometryContainer = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const debug_1 = __webpack_require__(756);
+class Mergable {
+    positions;
+    normals;
+    index;
+    constructor(geometry, matrix) {
+        const positionsAtt = geometry.getAttribute('position');
+        if (geometry.index) {
+            for (let i = 0; i < geometry.index.count; ++i) {
+                this.index.push(geometry.index.getX(i));
+            }
+        }
+        else {
+            for (let i = 0; i < positionsAtt.count; ++i) {
+                this.index.push(i);
+            }
+        }
+        this.positions = new Float32Array(this.index.length * 3);
+        this.normals = new Float32Array(this.index.length * 3);
+        this.copyAtt3(positionsAtt, this.positions, matrix);
+        const m3 = new THREE.Matrix3();
+        m3.getNormalMatrix(matrix);
+        matrix.setFromMatrix3(m3);
+        this.copyAtt3(geometry.getAttribute('normal'), this.normals, matrix);
+    }
+    v = new THREE.Vector3();
+    copyAtt3(att, target, matrix) {
+        for (let i = 0; i < att.count; ++i) {
+            this.v.fromBufferAttribute(att, i);
+            this.v.applyMatrix4(matrix);
+            target[i * 3 + 0] = this.v.x;
+            target[i * 3 + 1] = this.v.y;
+            target[i * 3 + 2] = this.v.z;
+        }
+    }
+}
 class MergedGeometryContainer extends THREE.Object3D {
     geometry = new THREE.BufferGeometry();
     keyIndex = new Map();
@@ -1693,6 +1923,10 @@ class MergedGeometryContainer extends THREE.Object3D {
             }
         }
         const oldValues = this.oldValues(attributeName);
+        class Mergable {
+            positions = [];
+            normals = [];
+        }
         const values = new Float32Array(oldValues.length + attValues.length);
         for (let i = 0; i < oldValues.length; ++i) {
             values[i] = oldValues[i];
@@ -2181,6 +2415,88 @@ class PlanetPlatform extends THREE.Group {
 }
 exports.PlanetPlatform = PlanetPlatform;
 //# sourceMappingURL=planetPlatform.js.map
+
+/***/ }),
+
+/***/ 507:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Station = exports.Player = exports.Inventory = void 0;
+const exchange_1 = __webpack_require__(253);
+const THREE = __importStar(__webpack_require__(578));
+const assets_1 = __webpack_require__(398);
+const debug_1 = __webpack_require__(756);
+// this class has one instance per item type.
+// Probably don't want to keep it in player.ts, 
+//    or maybe this file contains more that just player classes.
+class Inventory {
+    items;
+    addItem(input) {
+        debug_1.Debug.log("adding " + JSON.stringify(input));
+        if (typeof (input) == typeof (THREE.Object3D)) {
+        }
+        else if (typeof (input) == typeof (assets_1.Item)) {
+            const index = this.items.findIndex(e => e.item == input);
+            if (index >= 0) {
+                this.items[index].qty++;
+            }
+            else {
+                this.items.push(input);
+            }
+        }
+    }
+    removeItem(input) {
+        debug_1.Debug.log("removing " + JSON.stringify(input));
+        if (typeof (input) == typeof (THREE.Object3D)) {
+        }
+        else if (typeof (input) == typeof (assets_1.Item)) {
+        }
+    }
+}
+exports.Inventory = Inventory;
+class Player {
+    name;
+    bankacount;
+    inventory;
+    location;
+    constructor(name) {
+        this.name = name;
+        this.bankacount = new exchange_1.BankAccount(1000);
+        this.location = new THREE.Vector3();
+        this.inventory = new Inventory();
+    }
+}
+exports.Player = Player;
+class Station {
+    name;
+    owner;
+    inventory;
+    exchange;
+    location;
+}
+exports.Station = Station;
+//# sourceMappingURL=player.js.map
 
 /***/ }),
 
