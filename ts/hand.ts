@@ -8,6 +8,7 @@ import { Vector3 } from "three";
 import { FileIO } from "./fileIO";
 import { Construction } from "./construction";
 import { InWorldItem } from "./inWorldItem";
+import { Inventory } from "./player";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
@@ -19,7 +20,8 @@ export class Hand extends THREE.Object3D {
   constructor(private grip: THREE.Object3D, private item: Item,
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
-    private keysDown: Set<string>, private construction: Construction) {
+    private keysDown: Set<string>, private construction: Construction,
+    private inventory: Inventory) {
     super();
     this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
     // this.debug = new THREE.Mesh(
@@ -139,6 +141,7 @@ export class Hand extends THREE.Object3D {
     }
   }
 
+  // sets the cube that is in the hand
   public setCube(item: Item) {
     if (this.cube) {
       this.place.playerGroup.remove(this.cube);
@@ -148,17 +151,20 @@ export class Hand extends THREE.Object3D {
     this.item = item;
   }
 
+  // delete a cube from the world 
   private deleteCube() {
     this.p.copy(this.cube.position);
     this.place.playerToUniverse(this.p);
     this.place.quantizePosition(this.p);
-    this.construction.removeCube(this.p);
+    const removedCube = this.construction.removeCube(this.p);
+    return removedCube;
   }
 
   private p = new THREE.Vector3();
   private async initialize() {
     this.grip.addEventListener('squeeze', () => {
-      this.deleteCube();
+      const removedCube = this.deleteCube();
+      this.inventory.addItem(removedCube);
     });
 
     this.grip.addEventListener('selectstart', () => {
@@ -174,6 +180,7 @@ export class Hand extends THREE.Object3D {
       const inWorldItem = new InWorldItem(this.item,
         p, rotation);
       this.construction.addCube(inWorldItem);
+      this.inventory.removeItem(this.item);
     });
 
     // this.grip.addEventListener('selectend', () => {
