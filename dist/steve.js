@@ -405,7 +405,7 @@ class BlockBuild {
             this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
         }
         let ab = new astroGen_1.AstroGen(this.construction);
-        ab.buildPlatform(20, 10, 30, 0, 0, 0);
+        ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -507,7 +507,7 @@ class BlockBuild {
         this.universeGroup.add(debugPanel);
         assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
         this.universeGroup.add(assets_1.Assets.flight_computer);
-        debug_1.Debug.log("working on inventory.");
+        debug_1.Debug.log("mext item from inventory");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -711,15 +711,17 @@ class ObjectConstruction {
     // TODO: Return the InWorldItem.
     removeCube(p) {
         const key = this.posToKey(p);
+        let item = null;
         let o = new THREE.Object3D();
         if (this.objects.has(key)) {
             o = this.objects.get(key);
             debug_1.Debug.assert(o.parent === this.container, 'Invalid parent!');
             this.container.remove(o);
+            item = this.items.get(key).item;
             this.items.delete(key);
             this.objects.delete(key);
         }
-        return o;
+        return item;
     }
 }
 exports.ObjectConstruction = ObjectConstruction;
@@ -752,6 +754,7 @@ class MergedConstruction {
     removeCube(p) {
         const key = this.posToKey(p);
         this.mergedContainer.removeKey(key);
+        return null;
     }
 }
 exports.MergedConstruction = MergedConstruction;
@@ -804,6 +807,7 @@ class Debug extends THREE.Object3D {
         this.add(panel);
     }
     static log(message) {
+        message = `${(window.performance.now() / 1000).toFixed(2)} ` + message;
         const textHeight = 64;
         console.log(message);
         const ctx = Debug.canvas.getContext('2d');
@@ -1301,7 +1305,7 @@ class Hand extends THREE.Object3D {
                 this.construction.save();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-                this.setCube(assets_1.Assets.nextItem());
+                this.setCube(this.inventory.nextItem());
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
                 assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
@@ -1330,10 +1334,14 @@ class Hand extends THREE.Object3D {
     p = new THREE.Vector3();
     async initialize() {
         this.grip.addEventListener('squeeze', () => {
+            debug_1.Debug.log('squeeze');
             const removedCube = this.deleteCube();
+            debug_1.Debug.log('About to add');
             this.inventory.addItem(removedCube);
+            debug_1.Debug.log('Add done.');
         });
         this.grip.addEventListener('selectstart', () => {
+            debug_1.Debug.log('selectstart');
             this.deleteCube();
             const p = new THREE.Vector3();
             p.copy(this.cube.position);
@@ -1345,7 +1353,9 @@ class Hand extends THREE.Object3D {
             this.place.quantizeQuaternion(rotation);
             const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
             this.construction.addCube(inWorldItem);
+            debug_1.Debug.log('About to remove.');
             this.inventory.removeItem(this.item);
+            debug_1.Debug.log('Remove done.');
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -1858,6 +1868,41 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MergedGeometryContainer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const debug_1 = __webpack_require__(756);
+class Mergable {
+    positions;
+    normals;
+    index;
+    constructor(geometry, matrix) {
+        const positionsAtt = geometry.getAttribute('position');
+        if (geometry.index) {
+            for (let i = 0; i < geometry.index.count; ++i) {
+                this.index.push(geometry.index.getX(i));
+            }
+        }
+        else {
+            for (let i = 0; i < positionsAtt.count; ++i) {
+                this.index.push(i);
+            }
+        }
+        this.positions = new Float32Array(this.index.length * 3);
+        this.normals = new Float32Array(this.index.length * 3);
+        this.copyAtt3(positionsAtt, this.positions, matrix);
+        const m3 = new THREE.Matrix3();
+        m3.getNormalMatrix(matrix);
+        matrix.setFromMatrix3(m3);
+        this.copyAtt3(geometry.getAttribute('normal'), this.normals, matrix);
+    }
+    v = new THREE.Vector3();
+    copyAtt3(att, target, matrix) {
+        for (let i = 0; i < att.count; ++i) {
+            this.v.fromBufferAttribute(att, i);
+            this.v.applyMatrix4(matrix);
+            target[i * 3 + 0] = this.v.x;
+            target[i * 3 + 1] = this.v.y;
+            target[i * 3 + 2] = this.v.z;
+        }
+    }
+}
 class MergedGeometryContainer extends THREE.Object3D {
     geometry = new THREE.BufferGeometry();
     keyIndex = new Map();
@@ -1921,6 +1966,10 @@ class MergedGeometryContainer extends THREE.Object3D {
             }
         }
         const oldValues = this.oldValues(attributeName);
+        class Mergable {
+            positions = [];
+            normals = [];
+        }
         const values = new Float32Array(oldValues.length + attValues.length);
         for (let i = 0; i < oldValues.length; ++i) {
             values[i] = oldValues[i];
@@ -2459,33 +2508,36 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Station = exports.Player = exports.Inventory = void 0;
 const exchange_1 = __webpack_require__(253);
 const THREE = __importStar(__webpack_require__(232));
-const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
 // this class has one instance per item type.
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
 class Inventory {
-    items;
+    itemQty = new Map();
+    index = 0;
     addItem(input) {
         debug_1.Debug.log("adding " + JSON.stringify(input));
-        if (typeof (input) == typeof (THREE.Object3D)) {
+        if (this.itemQty.has(input)) {
+            this.itemQty.set(input, this.itemQty.get(input) + 1);
         }
-        else if (typeof (input) == typeof (assets_1.Item)) {
-            const index = this.items.findIndex(e => e.item == input);
-            if (index >= 0) {
-                this.items[index].qty++;
-            }
-            else {
-                this.items.push(input);
-            }
+        else {
+            this.itemQty.set(input, 1);
         }
     }
     removeItem(input) {
         debug_1.Debug.log("removing " + JSON.stringify(input));
-        if (typeof (input) == typeof (THREE.Object3D)) {
+        if (this.itemQty.has(input)) {
+            this.itemQty.set(input, this.itemQty.get(input) - 1);
         }
-        else if (typeof (input) == typeof (assets_1.Item)) {
+        else {
+            //this.itemQty.set(input, -1);
+            this.itemQty.delete(input);
         }
+    }
+    nextItem() {
+        const num_elements = this.itemQty.size;
+        this.index = (this.index + 1) % num_elements;
+        return Array.from(this.itemQty)[this.index][0];
     }
 }
 exports.Inventory = Inventory;
@@ -2875,6 +2927,7 @@ class S {
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
         S.setDefault('m', 0, 'Use merged geometry in Block Build.');
+        S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {

@@ -171,7 +171,7 @@ export class BlockBuild {
     Assets.flight_computer.rotateX(Math.PI / 4);
     this.universeGroup.add(Assets.flight_computer);
 
-    Debug.log("working on inventory.");
+    Debug.log("mext item from inventory");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
