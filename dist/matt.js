@@ -26,7 +26,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Assets = exports.Item = void 0;
+exports.Assets = exports.Item = exports.ModelLoader = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const debug_1 = __webpack_require__(756);
 const palette_1 = __webpack_require__(812);
@@ -52,6 +52,7 @@ class ModelLoader {
         }
     }
 }
+exports.ModelLoader = ModelLoader;
 // Items are unique - there is only one of each name.
 // This allows us to use them as keys in maps and use == for comparison.
 // For now, items are also immutable.  We may allow things to be mutable
@@ -84,7 +85,6 @@ class Assets extends THREE.Object3D {
     static models = new Map();
     static items = [];
     static itemsByName = new Map();
-    static flight_computer = new THREE.Object3D();
     static async init() {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
@@ -169,7 +169,7 @@ class Assets extends THREE.Object3D {
         const modelNames = [
             'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
             'thruster', 'tank', 'light-blue', 'port',
-            'cube-tweek', 'cube-glob'
+            'cube-tweek', 'cube-glob', 'guide'
         ];
         for (const modelName of modelNames) {
             // console.log(`Loading ${modelName}`);
@@ -187,7 +187,6 @@ class Assets extends THREE.Object3D {
             Assets.models.set(modelName, m);
             // console.log(`Added ${modelName}`);
         }
-        this.flight_computer = await ModelLoader.loadModel(`Model/flight computer.glb`);
         // TODO: load all glb files int the Model directory into this.models
         // const testFolder = 'Model/*.glb';
         // const fs = require('fs');
@@ -282,12 +281,20 @@ class AstroGen {
         material.needsUpdate = true;
         mesh.material = material;
     }
+    itemFromLocation(x, y, z) {
+        if (Math.random() < 0.9) {
+            return assets_1.Assets.itemsByName.get('cube-tweek');
+        }
+        else {
+            return assets_1.Assets.itemsByName.get('cube-glob');
+        }
+    }
     addAt(x, y, z) {
         const rotation = new three_1.Matrix4();
         rotation.makeRotationFromEuler(new THREE.Euler(Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2));
         const quaterion = new THREE.Quaternion();
         quaterion.setFromRotationMatrix(rotation);
-        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube-tweek'), new THREE.Vector3(x, y, z), quaterion);
+        const inWorldItem = new inWorldItem_1.InWorldItem(this.itemFromLocation(x, y, z), new THREE.Vector3(x, y, z), quaterion);
         this.construction.addCube(inWorldItem);
     }
     buildPlatform(xDim, yDim, zDim, xOffset, yOffset, zOffset) {
@@ -360,10 +367,13 @@ const codec_1 = __webpack_require__(385);
 const astroGen_1 = __webpack_require__(419);
 const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
+const gripLike_1 = __webpack_require__(875);
+const computer_1 = __webpack_require__(723);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
     renderer;
+    canvas;
     playerGroup = new THREE.Group();
     universeGroup = new THREE.Group();
     place;
@@ -479,6 +489,7 @@ class BlockBuild {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(512, 512);
         document.body.appendChild(this.renderer.domElement);
+        this.canvas = this.renderer.domElement;
         this.renderer.xr.enabled = true;
         const light = new THREE.AmbientLight(0x101020); // dark blue light
         this.scene.add(light);
@@ -493,9 +504,10 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
-        this.universeGroup.add(assets_1.Assets.flight_computer);
-        debug_1.Debug.log("working on inventory.");
+        const computer = await computer_1.Computer.make();
+        computer.model.rotateX(Math.PI / 4);
+        this.universeGroup.add(computer.model);
+        debug_1.Debug.log("flight computer canvas test");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -524,15 +536,19 @@ class BlockBuild {
         //debug.position.set(0, 0.5, -2);
         //this.scene.add(debug);
         for (const i of [0, 1]) {
-            const grip = this.renderer.xr.getControllerGrip(i);
-            this.playerGroup.add(grip);
-            if (grip.userData['inputSource']) {
-                //debugMaterial.color = new THREE.Color('#0ff');
+            let grip = null;
+            if (settings_1.S.float('mouse') == i) {
+                console.assert(!!this.canvas);
+                grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
             }
+            else {
+                grip = new gripLike_1.GripGrip(i, this.renderer.xr);
+            }
+            this.playerGroup.add(grip);
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.items[i], i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
+            new hand_1.Hand(grip, assets_1.Assets.itemsByName.get('guide'), i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
         }
     }
 }
@@ -623,6 +639,65 @@ class Codec {
 }
 exports.Codec = Codec;
 //# sourceMappingURL=codec.js.map
+
+/***/ }),
+
+/***/ 723:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Computer = void 0;
+const THREE = __importStar(__webpack_require__(578));
+const assets_1 = __webpack_require__(398);
+class Computer {
+    model;
+    canvas = document.createElement('canvas');
+    texture = new THREE.CanvasTexture(this.canvas);
+    material = new THREE.MeshBasicMaterial();
+    constructor(model) {
+        this.model = model;
+        this.canvas.width = 1056;
+        this.canvas.height = 544;
+        this.material.map = this.texture;
+        this.createGreenBars();
+        assets_1.Assets.replaceMaterial(this.model, this.material);
+    }
+    static async make() {
+        const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
+        return new Computer(model);
+    }
+    createGreenBars() {
+        const ctx = this.canvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.fillStyle = 'green';
+        for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8) {
+            ctx.fillRect(0, y, this.canvas.width, y + this.canvas.height / 16);
+        }
+    }
+}
+exports.Computer = Computer;
+//# sourceMappingURL=computer.js.map
 
 /***/ }),
 
@@ -1121,6 +1196,117 @@ exports.Game = Game;
 
 /***/ }),
 
+/***/ 875:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MouseGrip = exports.GripGrip = void 0;
+const THREE = __importStar(__webpack_require__(578));
+class GripGrip extends THREE.Object3D {
+    xr;
+    grip;
+    constructor(index, xr) {
+        super();
+        this.xr = xr;
+        this.grip = xr.getControllerGrip(index);
+    }
+    tick(t) {
+        this.position.copy(this.grip.position);
+        this.rotation.copy(this.grip.rotation);
+        this.quaternion.copy(this.grip.quaternion);
+        this.matrix.copy(this.grip.matrix);
+    }
+    setSelectStartCallback(callback) {
+        this.grip.addEventListener('selectstart', callback);
+    }
+    setSqueezeCallback(callback) {
+        this.grip.addEventListener('squeeze', callback);
+    }
+    getButtons() {
+        throw new Error("Not implemented.");
+    }
+    getStick() {
+        throw new Error("Not implemented.");
+    }
+}
+exports.GripGrip = GripGrip;
+class MouseGrip extends THREE.Object3D {
+    canvas;
+    camera;
+    keysDown;
+    group = new THREE.Group();
+    callbacks = new Map();
+    pointer = new THREE.Vector2();
+    raycaster = new THREE.Raycaster();
+    constructor(canvas, camera, keysDown) {
+        super();
+        this.canvas = canvas;
+        this.camera = camera;
+        this.keysDown = keysDown;
+        this.callbacks.set('selectstart', () => { });
+        this.callbacks.set('squeeze', () => { });
+        this.canvas.addEventListener('mouseover', (ev) => {
+            this.onPointerMove(ev);
+        });
+        this.canvas.addEventListener('mousedown', (ev) => {
+            switch (ev.button) {
+                case 0: // Left button
+                    this.callbacks.get('selectstart')();
+                    break;
+                case 2: // Right button
+                    this.callbacks.get('squeeze')();
+                    break;
+            }
+        });
+    }
+    onPointerMove(event) {
+        this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        // update the picking ray with the camera and pointer position
+        this.raycaster.setFromCamera(this.pointer, this.camera);
+        this.group.position.copy(this.raycaster.ray.direction);
+        // Distance from camera to hand = 0.6 meters
+        this.group.position.setLength(0.6);
+        this.group.position.add(this.raycaster.ray.origin);
+    }
+    setSelectStartCallback(callback) {
+        throw new Error("Not implemented.");
+    }
+    setSqueezeCallback(callback) {
+        throw new Error("Not implemented.");
+    }
+    getButtons() {
+        throw new Error("Not implemented.");
+    }
+    getStick() {
+        throw new Error("Not implemented.");
+    }
+}
+exports.MouseGrip = MouseGrip;
+//# sourceMappingURL=gripLike.js.map
+
+/***/ }),
+
 /***/ 673:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1273,7 +1459,13 @@ class Hand extends THREE.Object3D {
                 this.construction.save();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-                this.setCube(assets_1.Assets.nextItem());
+                const i = this.inventory.nextItem();
+                if (i) {
+                    this.setCube(i);
+                }
+                else {
+                    // TODO: change the hand to something that can't place.
+                }
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
                 assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
@@ -1301,14 +1493,14 @@ class Hand extends THREE.Object3D {
     }
     p = new THREE.Vector3();
     async initialize() {
-        this.grip.addEventListener('squeeze', () => {
+        this.grip.setSqueezeCallback(() => {
             debug_1.Debug.log('squeeze');
             const removedCube = this.deleteCube();
             debug_1.Debug.log('About to add');
             this.inventory.addItem(removedCube);
             debug_1.Debug.log('Add done.');
         });
-        this.grip.addEventListener('selectstart', () => {
+        this.grip.setSelectStartCallback(() => {
             debug_1.Debug.log('selectstart');
             this.deleteCube();
             const p = new THREE.Vector3();
@@ -2453,8 +2645,8 @@ const debug_1 = __webpack_require__(756);
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
 class Inventory {
-    // items: [{ item: Item, color: THREE.Color, qty: number }];
     itemQty = new Map();
+    index = 0;
     addItem(input) {
         debug_1.Debug.log("adding " + JSON.stringify(input));
         if (this.itemQty.has(input)) {
@@ -2470,8 +2662,17 @@ class Inventory {
             this.itemQty.set(input, this.itemQty.get(input) - 1);
         }
         else {
-            this.itemQty.set(input, -1);
+            //this.itemQty.set(input, -1);
+            this.itemQty.delete(input);
         }
+    }
+    nextItem() {
+        const num_elements = this.itemQty.size;
+        if (num_elements < 1) {
+            return null;
+        }
+        this.index = (this.index + 1) % num_elements;
+        return Array.from(this.itemQty)[this.index][0];
     }
 }
 exports.Inventory = Inventory;
@@ -2844,6 +3045,7 @@ class S {
         container.appendChild(helpText);
     }
     static {
+        S.setDefault('mouse', -1, 'Which grip the mouse controls.');
         S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e9, 'Starfield radius');
