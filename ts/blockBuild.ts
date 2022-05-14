@@ -152,7 +152,8 @@ export class BlockBuild {
     this.place = new Place(this.universeGroup, this.playerGroup, this.camera);
 
     this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setSize(512, 512);
+    //this.renderer.setSize(512, 512);
+    this.renderer.setSize(1024, 1024);
     document.body.appendChild(this.renderer.domElement);
     this.canvas = this.renderer.domElement;
     this.renderer.xr.enabled = true;
@@ -173,7 +174,9 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
     const computer = await Computer.make();
+    computer.model.translateY(0.5);
     computer.model.rotateX(Math.PI / 4);
+    computer.model.scale.set(10, 10, 10);
     this.universeGroup.add(computer.model);
 
     Debug.log("flight computer canvas test");
