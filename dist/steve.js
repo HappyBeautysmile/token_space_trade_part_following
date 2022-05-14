@@ -30,7 +30,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Assets = exports.Item = void 0;
+exports.Assets = exports.Item = exports.ModelLoader = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const debug_1 = __webpack_require__(756);
 const palette_1 = __webpack_require__(812);
@@ -56,6 +56,7 @@ class ModelLoader {
         }
     }
 }
+exports.ModelLoader = ModelLoader;
 // Items are unique - there is only one of each name.
 // This allows us to use them as keys in maps and use == for comparison.
 // For now, items are also immutable.  We may allow things to be mutable
@@ -88,7 +89,6 @@ class Assets extends THREE.Object3D {
     static models = new Map();
     static items = [];
     static itemsByName = new Map();
-    static flight_computer = new THREE.Object3D();
     static async init() {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
@@ -191,7 +191,6 @@ class Assets extends THREE.Object3D {
             Assets.models.set(modelName, m);
             // console.log(`Added ${modelName}`);
         }
-        this.flight_computer = await ModelLoader.loadModel(`Model/flight computer.glb`);
         // TODO: load all glb files int the Model directory into this.models
         // const testFolder = 'Model/*.glb';
         // const fs = require('fs');
@@ -380,6 +379,7 @@ const codec_1 = __webpack_require__(385);
 const astroGen_1 = __webpack_require__(419);
 const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
+const computer_1 = __webpack_require__(723);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -513,9 +513,10 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
-        this.universeGroup.add(assets_1.Assets.flight_computer);
-        debug_1.Debug.log("add guide to hand");
+        const computer = await computer_1.Computer.make();
+        computer.model.rotateX(Math.PI / 4);
+        this.universeGroup.add(computer.model);
+        debug_1.Debug.log("flight computer canvas test");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -647,6 +648,69 @@ class Codec {
 }
 exports.Codec = Codec;
 //# sourceMappingURL=codec.js.map
+
+/***/ }),
+
+/***/ 723:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Computer = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const assets_1 = __webpack_require__(398);
+class Computer {
+    model;
+    canvas = document.createElement('canvas');
+    texture = new THREE.CanvasTexture(this.canvas);
+    material = new THREE.MeshBasicMaterial();
+    constructor(model) {
+        this.model = model;
+        this.canvas.width = 1056;
+        this.canvas.height = 544;
+        this.material.map = this.texture;
+        this.createGreenBars();
+        assets_1.Assets.replaceMaterial(this.model, this.material);
+    }
+    static async make() {
+        const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
+        return new Computer(model);
+    }
+    createGreenBars() {
+        const ctx = this.canvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.fillStyle = 'green';
+        for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8) {
+            ctx.fillRect(0, y, this.canvas.width, y + this.canvas.height / 16);
+        }
+    }
+}
+exports.Computer = Computer;
+//# sourceMappingURL=computer.js.map
 
 /***/ }),
 
