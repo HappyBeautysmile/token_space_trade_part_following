@@ -518,10 +518,10 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         const computer = await computer_1.Computer.make(this.player);
-        computer.model.translateY(0.5);
-        computer.model.rotateX(Math.PI / 4);
-        //computer.model.scale.set(10, 10, 10);
-        this.universeGroup.add(computer.model);
+        computer.translateY(0.5);
+        computer.rotateX(Math.PI / 4);
+        computer.scale.set(10, 10, 10);
+        this.universeGroup.add(computer);
         debug_1.Debug.log("display inventory not working");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
@@ -692,8 +692,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Computer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
-class Computer {
-    model;
+class Computer extends THREE.Object3D {
     player;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
@@ -703,21 +702,26 @@ class Computer {
     topButtonLabels = [];
     bottomButtonLabels = [];
     constructor(model, player) {
-        this.model = model;
+        super();
         this.player = player;
+        this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
         this.labels();
         this.updateDisplay();
-        this.model.children.forEach(o => {
+        model.children.forEach(o => {
             const m = o;
             if (m.name == "display") {
                 m.material = this.material;
             }
         });
         this.showInventory();
-        setInterval(this.showInventory, 5000);
+        setInterval(() => { }, 5000);
+    }
+    tick(t) {
+        // TODO every 10 frames
+        this.showInventory();
     }
     static async make(player) {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
@@ -761,17 +765,19 @@ class Computer {
             this.ctx.fillText(this.topButtonLabels[i], columnSpacing * i + middleOfColumn, middleOfRow);
             this.ctx.fillText(this.bottomButtonLabels[i], columnSpacing * i + middleOfColumn, this.canvas.height - middleOfRow);
         }
+        this.texture.needsUpdate = true;
     }
     showInventory() {
         const inv = this.player.inventory.getItemQty();
         this.rowText = [];
         let i = 0;
-        inv.forEach((value, key, map) => {
-            if (i < 15) {
-                this.rowText[i] = String(key.name) + ' ' + String(Number);
-            }
+        for (const [item, qty] of inv.entries()) {
+            this.rowText[i] = item.name + ' ' + qty.toFixed(0);
             i++;
-        });
+            if (i > 15) {
+                break;
+            }
+        }
         this.updateDisplay();
     }
     createGreenBars() {

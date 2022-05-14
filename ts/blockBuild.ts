@@ -174,10 +174,10 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
     const computer = await Computer.make(this.player);
-    computer.model.translateY(0.5);
-    computer.model.rotateX(Math.PI / 4);
-    //computer.model.scale.set(10, 10, 10);
-    this.universeGroup.add(computer.model);
+    computer.translateY(0.5);
+    computer.rotateX(Math.PI / 4);
+    computer.scale.set(10, 10, 10);
+    this.universeGroup.add(computer);
 
     Debug.log("display inventory not working");
 
