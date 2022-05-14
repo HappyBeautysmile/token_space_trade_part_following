@@ -8,8 +8,8 @@ import { Debug } from "./debug";
 //    or maybe this file contains more that just player classes.
 
 export class Inventory {
-  // items: [{ item: Item, color: THREE.Color, qty: number }];
   private itemQty = new Map<Item, number>();
+  private index = 0;
 
   addItem(input: Item) {
     Debug.log("adding " + JSON.stringify(input));
@@ -25,8 +25,18 @@ export class Inventory {
     if (this.itemQty.has(input)) {
       this.itemQty.set(input, this.itemQty.get(input) - 1);
     } else {
-      this.itemQty.set(input, -1);
+      //this.itemQty.set(input, -1);
+      this.itemQty.delete(input);
     }
+  }
+
+  nextItem() {
+    const num_elements = this.itemQty.size;
+    if (num_elements < 1) {
+      return null;
+    }
+    this.index = (this.index + 1) % num_elements;
+    return Array.from(this.itemQty)[this.index][0];
   }
 }
 

@@ -132,7 +132,13 @@ export class Hand extends THREE.Object3D {
         this.construction.save();
       }
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-        this.setCube(Assets.nextItem());
+        const i = this.inventory.nextItem();
+        if (i) {
+          this.setCube(i);
+        }
+        else {
+          // TODO: change the hand to something that can't place.
+        }
       }
       if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
         Assets.replaceMaterial(this.cube, Assets.nextMaterial());

@@ -13,6 +13,7 @@ import { AstroGen } from "./astroGen";
 import { S } from "./settings";
 import { Inventory, Player } from "./player";
 import { GripGrip, GripLike, MouseGrip } from "./gripLike";
+import { Computer } from "./computer";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -171,10 +172,11 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    Assets.flight_computer.rotateX(Math.PI / 4);
-    this.universeGroup.add(Assets.flight_computer);
+    const computer = await Computer.make();
+    computer.model.rotateX(Math.PI / 4);
+    this.universeGroup.add(computer.model);
 
-    Debug.log("working on inventory.");
+    Debug.log("flight computer canvas test");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -220,7 +222,7 @@ export class BlockBuild {
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       // Assets.blocks[i].position.set(0, 0, 0);
-      new Hand(grip, Assets.items[i], i, this.renderer.xr,
+      new Hand(grip, Assets.itemsByName.get('guide'), i, this.renderer.xr,
         this.place, this.keysDown, this.construction, this.player.inventory);
     }
   }

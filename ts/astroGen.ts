@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { Matrix3, Matrix4 } from "three";
-import { Assets } from "./assets";
+import { Assets, Item } from "./assets";
 import { Construction } from "./construction";
 import { Debug } from "./debug";
 import { InWorldItem } from "./inWorldItem";
@@ -39,6 +39,15 @@ export class AstroGen {
     mesh.material = material;
   }
 
+  private itemFromLocation(x: number, y: number, z: number) {
+    if (Math.random() < 0.9) {
+      return Assets.itemsByName.get('cube-tweek');
+    }
+    else {
+      return Assets.itemsByName.get('cube-glob');
+    }
+  }
+
   private addAt(x: number, y: number, z: number) {
     const rotation = new Matrix4();
     rotation.makeRotationFromEuler(new THREE.Euler(
@@ -49,7 +58,7 @@ export class AstroGen {
     const quaterion = new THREE.Quaternion();
     quaterion.setFromRotationMatrix(rotation);
     const inWorldItem = new InWorldItem(
-      Assets.itemsByName.get('cube-tweek'),
+      this.itemFromLocation(x, y, z),
       new THREE.Vector3(x, y, z),
       quaterion);
     this.construction.addCube(inWorldItem);

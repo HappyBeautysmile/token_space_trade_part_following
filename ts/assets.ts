@@ -5,7 +5,7 @@ import { Palette } from "./palette";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FileIO } from "./fileIO";
 
-class ModelLoader {
+export class ModelLoader {
   static async loadModel(filename: string): Promise<THREE.Object3D> {
     const loader = new GLTFLoader();
     return new Promise<THREE.Object3D>((resolve, reject) => {
@@ -55,7 +55,6 @@ export class Assets extends THREE.Object3D {
   static models = new Map<string, THREE.Mesh>();
   static items: Item[] = [];
   static itemsByName = new Map<string, Item>();
-  static flight_computer = new THREE.Object3D();
 
   static async init() {
     Palette.init();
@@ -147,7 +146,7 @@ export class Assets extends THREE.Object3D {
     const modelNames = [
       'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
       'thruster', 'tank', 'light-blue', 'port',
-      'cube-tweek', 'cube-glob']
+      'cube-tweek', 'cube-glob', 'guide']
     for (const modelName of modelNames) {
       // console.log(`Loading ${modelName}`);
       const model = await ModelLoader.loadModel(`Model/${modelName}.glb`);
@@ -165,7 +164,7 @@ export class Assets extends THREE.Object3D {
       // console.log(`Added ${modelName}`);
     }
 
-    this.flight_computer = await ModelLoader.loadModel(`Model/flight computer.glb`);
+
     // TODO: load all glb files int the Model directory into this.models
 
     // const testFolder = 'Model/*.glb';
