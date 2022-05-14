@@ -507,7 +507,7 @@ class BlockBuild {
         this.universeGroup.add(debugPanel);
         assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
         this.universeGroup.add(assets_1.Assets.flight_computer);
-        debug_1.Debug.log("mext item from inventory");
+        debug_1.Debug.log("fix crash when inventory is empty?");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1305,7 +1305,13 @@ class Hand extends THREE.Object3D {
                 this.construction.save();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-                this.setCube(this.inventory.nextItem());
+                const i = this.inventory.nextItem();
+                if (i) {
+                    this.setCube(i);
+                }
+                else {
+                    // TODO: change the hand to something that can't place.
+                }
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
                 assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
@@ -2536,6 +2542,9 @@ class Inventory {
     }
     nextItem() {
         const num_elements = this.itemQty.size;
+        if (num_elements < 1) {
+            return null;
+        }
         this.index = (this.index + 1) % num_elements;
         return Array.from(this.itemQty)[this.index][0];
     }

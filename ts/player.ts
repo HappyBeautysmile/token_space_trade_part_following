@@ -32,6 +32,9 @@ export class Inventory {
 
   nextItem() {
     const num_elements = this.itemQty.size;
+    if (num_elements < 1) {
+      return null;
+    }
     this.index = (this.index + 1) % num_elements;
     return Array.from(this.itemQty)[this.index][0];
   }
