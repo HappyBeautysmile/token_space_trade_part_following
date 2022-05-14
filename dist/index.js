@@ -173,7 +173,7 @@ class Assets extends THREE.Object3D {
         const modelNames = [
             'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
             'thruster', 'tank', 'light-blue', 'port',
-            'cube-tweek', 'cube-glob'
+            'cube-tweek', 'cube-glob', 'guide'
         ];
         for (const modelName of modelNames) {
             // console.log(`Loading ${modelName}`);
@@ -290,12 +290,20 @@ class AstroGen {
         material.needsUpdate = true;
         mesh.material = material;
     }
+    itemFromLocation(x, y, z) {
+        if (Math.random() < 0.9) {
+            return assets_1.Assets.itemsByName.get('cube-tweek');
+        }
+        else {
+            return assets_1.Assets.itemsByName.get('cube-glob');
+        }
+    }
     addAt(x, y, z) {
         const rotation = new three_1.Matrix4();
         rotation.makeRotationFromEuler(new THREE.Euler(Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2));
         const quaterion = new THREE.Quaternion();
         quaterion.setFromRotationMatrix(rotation);
-        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube-tweek'), new THREE.Vector3(x, y, z), quaterion);
+        const inWorldItem = new inWorldItem_1.InWorldItem(this.itemFromLocation(x, y, z), new THREE.Vector3(x, y, z), quaterion);
         this.construction.addCube(inWorldItem);
     }
     buildPlatform(xDim, yDim, zDim, xOffset, yOffset, zOffset) {
@@ -507,7 +515,7 @@ class BlockBuild {
         this.universeGroup.add(debugPanel);
         assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
         this.universeGroup.add(assets_1.Assets.flight_computer);
-        debug_1.Debug.log("fix crash when inventory is empty?");
+        debug_1.Debug.log("add guide to hand");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -544,7 +552,7 @@ class BlockBuild {
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.items[i], i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
+            new hand_1.Hand(grip, assets_1.Assets.itemsByName.get('guide'), i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
         }
     }
 }

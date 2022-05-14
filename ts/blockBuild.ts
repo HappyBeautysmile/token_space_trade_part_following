@@ -171,7 +171,7 @@ export class BlockBuild {
     Assets.flight_computer.rotateX(Math.PI / 4);
     this.universeGroup.add(Assets.flight_computer);
 
-    Debug.log("fix crash when inventory is empty?");
+    Debug.log("add guide to hand");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -214,7 +214,7 @@ export class BlockBuild {
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       // Assets.blocks[i].position.set(0, 0, 0);
-      new Hand(grip, Assets.items[i], i, this.renderer.xr,
+      new Hand(grip, Assets.itemsByName.get('guide'), i, this.renderer.xr,
         this.place, this.keysDown, this.construction, this.player.inventory);
     }
   }
