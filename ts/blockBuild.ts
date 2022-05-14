@@ -176,10 +176,10 @@ export class BlockBuild {
     const computer = await Computer.make();
     computer.model.translateY(0.5);
     computer.model.rotateX(Math.PI / 4);
-    computer.model.scale.set(10, 10, 10);
+    //computer.model.scale.set(10, 10, 10);
     this.universeGroup.add(computer.model);
 
-    Debug.log("flight computer canvas test");
+    Debug.log("flight computer right size");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

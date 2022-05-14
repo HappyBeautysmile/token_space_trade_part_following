@@ -30,7 +30,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Assets = exports.Item = void 0;
+exports.Assets = exports.Item = exports.ModelLoader = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const debug_1 = __webpack_require__(756);
 const palette_1 = __webpack_require__(812);
@@ -56,6 +56,7 @@ class ModelLoader {
         }
     }
 }
+exports.ModelLoader = ModelLoader;
 // Items are unique - there is only one of each name.
 // This allows us to use them as keys in maps and use == for comparison.
 // For now, items are also immutable.  We may allow things to be mutable
@@ -88,7 +89,6 @@ class Assets extends THREE.Object3D {
     static models = new Map();
     static items = [];
     static itemsByName = new Map();
-    static flight_computer = new THREE.Object3D();
     static async init() {
         palette_1.Palette.init();
         Assets.materialIndex = 0;
@@ -173,7 +173,7 @@ class Assets extends THREE.Object3D {
         const modelNames = [
             'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
             'thruster', 'tank', 'light-blue', 'port',
-            'cube-tweek', 'cube-glob'
+            'cube-tweek', 'cube-glob', 'guide'
         ];
         for (const modelName of modelNames) {
             // console.log(`Loading ${modelName}`);
@@ -191,7 +191,6 @@ class Assets extends THREE.Object3D {
             Assets.models.set(modelName, m);
             // console.log(`Added ${modelName}`);
         }
-        this.flight_computer = await ModelLoader.loadModel(`Model/flight computer.glb`);
         // TODO: load all glb files int the Model directory into this.models
         // const testFolder = 'Model/*.glb';
         // const fs = require('fs');
@@ -290,12 +289,20 @@ class AstroGen {
         material.needsUpdate = true;
         mesh.material = material;
     }
+    itemFromLocation(x, y, z) {
+        if (Math.random() < 0.9) {
+            return assets_1.Assets.itemsByName.get('cube-tweek');
+        }
+        else {
+            return assets_1.Assets.itemsByName.get('cube-glob');
+        }
+    }
     addAt(x, y, z) {
         const rotation = new three_1.Matrix4();
         rotation.makeRotationFromEuler(new THREE.Euler(Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2));
         const quaterion = new THREE.Quaternion();
         quaterion.setFromRotationMatrix(rotation);
-        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube-tweek'), new THREE.Vector3(x, y, z), quaterion);
+        const inWorldItem = new inWorldItem_1.InWorldItem(this.itemFromLocation(x, y, z), new THREE.Vector3(x, y, z), quaterion);
         this.construction.addCube(inWorldItem);
     }
     buildPlatform(xDim, yDim, zDim, xOffset, yOffset, zOffset) {
@@ -372,10 +379,13 @@ const codec_1 = __webpack_require__(385);
 const astroGen_1 = __webpack_require__(419);
 const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
+const gripLike_1 = __webpack_require__(875);
+const computer_1 = __webpack_require__(723);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
     renderer;
+    canvas;
     playerGroup = new THREE.Group();
     universeGroup = new THREE.Group();
     place;
@@ -405,7 +415,7 @@ class BlockBuild {
             this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
         }
         let ab = new astroGen_1.AstroGen(this.construction);
-        ab.buildPlatform(20, 10, 30, 0, 0, 0);
+        ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -489,8 +499,10 @@ class BlockBuild {
         this.playerGroup.add(this.camera);
         this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera);
         this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize(512, 512);
+        //this.renderer.setSize(512, 512);
+        this.renderer.setSize(1024, 1024);
         document.body.appendChild(this.renderer.domElement);
+        this.canvas = this.renderer.domElement;
         this.renderer.xr.enabled = true;
         const light = new THREE.AmbientLight(0x101020); // dark blue light
         this.scene.add(light);
@@ -505,9 +517,12 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        assets_1.Assets.flight_computer.rotateX(Math.PI / 4);
-        this.universeGroup.add(assets_1.Assets.flight_computer);
-        debug_1.Debug.log("working on inventory.");
+        const computer = await computer_1.Computer.make();
+        computer.model.translateY(0.5);
+        computer.model.rotateX(Math.PI / 4);
+        //computer.model.scale.set(10, 10, 10);
+        this.universeGroup.add(computer.model);
+        debug_1.Debug.log("flight computer right size");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -536,15 +551,19 @@ class BlockBuild {
         //debug.position.set(0, 0.5, -2);
         //this.scene.add(debug);
         for (const i of [0, 1]) {
-            const grip = this.renderer.xr.getControllerGrip(i);
-            this.playerGroup.add(grip);
-            if (grip.userData['inputSource']) {
-                //debugMaterial.color = new THREE.Color('#0ff');
+            let grip = null;
+            if (settings_1.S.float('mouse') == i) {
+                console.assert(!!this.canvas);
+                grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
             }
+            else {
+                grip = new gripLike_1.GripGrip(i, this.renderer.xr);
+            }
+            this.playerGroup.add(grip);
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.items[i], i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
+            new hand_1.Hand(grip, assets_1.Assets.itemsByName.get('guide'), i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
         }
     }
 }
@@ -642,6 +661,115 @@ exports.Codec = Codec;
 
 /***/ }),
 
+/***/ 723:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Computer = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const assets_1 = __webpack_require__(398);
+class Computer {
+    model;
+    canvas = document.createElement('canvas');
+    ctx = this.canvas.getContext('2d');
+    texture = new THREE.CanvasTexture(this.canvas);
+    material = new THREE.MeshBasicMaterial();
+    rowText = [];
+    topButtonLabels = [];
+    bottomButtonLabels = [];
+    constructor(model) {
+        this.model = model;
+        this.canvas.width = 1056;
+        this.canvas.height = 544;
+        this.material.map = this.texture;
+        this.createGreenBars();
+        this.labels();
+        this.updateDisplay();
+        this.model.children.forEach(o => {
+            const m = o;
+            if (m.name == "display") {
+                m.material = this.material;
+            }
+        });
+    }
+    static async make() {
+        const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
+        return new Computer(model);
+    }
+    labels() {
+        this.rowText = [];
+        for (let i = 0; i < 15; i++) {
+            this.rowText.push("row " + String(i));
+        }
+        this.rowText[0] = "         1         2         3         4         5         6         7         8";
+        this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+        this.topButtonLabels = [];
+        this.bottomButtonLabels = [];
+        for (let i = 0; i < 8; i++) {
+            this.topButtonLabels.push("T" + String(i));
+            this.bottomButtonLabels.push("B" + String(i));
+        }
+    }
+    updateDisplay() {
+        // update rows
+        const middleOfRow = this.canvas.height / 17 / 2;
+        for (let i = 0; i < this.rowText.length; i++) {
+            this.ctx.fillStyle = 'green';
+            this.ctx.font = '24px monospace';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(this.rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
+        }
+        //update buttons
+        const gridUnit = (this.canvas.width / 33);
+        const middleOfColumn = gridUnit * 2.5;
+        const columnSpacing = gridUnit * 4;
+        for (let i = 0; i < 8; i++) {
+            this.ctx.fillStyle = 'green';
+            this.ctx.font = '24px monospace';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(this.topButtonLabels[i], columnSpacing * i + middleOfColumn, middleOfRow);
+            this.ctx.fillText(this.bottomButtonLabels[i], columnSpacing * i + middleOfColumn, this.canvas.height - middleOfRow);
+        }
+    }
+    createGreenBars() {
+        this.ctx.fillStyle = '#003300';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = 'black';
+        for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8.5) {
+            this.ctx.fillRect(0, y, this.canvas.width, this.canvas.height / 17);
+        }
+    }
+}
+exports.Computer = Computer;
+//# sourceMappingURL=computer.js.map
+
+/***/ }),
+
 /***/ 844:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -711,15 +839,17 @@ class ObjectConstruction {
     // TODO: Return the InWorldItem.
     removeCube(p) {
         const key = this.posToKey(p);
+        let item = null;
         let o = new THREE.Object3D();
         if (this.objects.has(key)) {
             o = this.objects.get(key);
             debug_1.Debug.assert(o.parent === this.container, 'Invalid parent!');
             this.container.remove(o);
+            item = this.items.get(key).item;
             this.items.delete(key);
             this.objects.delete(key);
         }
-        return o;
+        return item;
     }
 }
 exports.ObjectConstruction = ObjectConstruction;
@@ -752,6 +882,7 @@ class MergedConstruction {
     removeCube(p) {
         const key = this.posToKey(p);
         this.mergedContainer.removeKey(key);
+        return null;
     }
 }
 exports.MergedConstruction = MergedConstruction;
@@ -804,6 +935,7 @@ class Debug extends THREE.Object3D {
         this.add(panel);
     }
     static log(message) {
+        message = `${(window.performance.now() / 1000).toFixed(2)} ` + message;
         const textHeight = 64;
         console.log(message);
         const ctx = Debug.canvas.getContext('2d');
@@ -1145,6 +1277,121 @@ exports.Game = Game;
 
 /***/ }),
 
+/***/ 875:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MouseGrip = exports.GripGrip = void 0;
+const THREE = __importStar(__webpack_require__(232));
+class GripGrip extends THREE.Object3D {
+    xr;
+    grip;
+    constructor(index, xr) {
+        super();
+        this.xr = xr;
+        this.grip = xr.getControllerGrip(index);
+    }
+    tick(t) {
+        this.position.copy(this.grip.position);
+        this.rotation.copy(this.grip.rotation);
+        this.quaternion.copy(this.grip.quaternion);
+        this.matrix.copy(this.grip.matrix);
+    }
+    setSelectStartCallback(callback) {
+        this.grip.addEventListener('selectstart', callback);
+    }
+    setSqueezeCallback(callback) {
+        this.grip.addEventListener('squeeze', callback);
+    }
+    getButtons() {
+        throw new Error("Not implemented.");
+    }
+    getStick() {
+        throw new Error("Not implemented.");
+    }
+}
+exports.GripGrip = GripGrip;
+class MouseGrip extends THREE.Object3D {
+    canvas;
+    camera;
+    keysDown;
+    group = new THREE.Group();
+    callbacks = new Map();
+    pointer = new THREE.Vector2();
+    raycaster = new THREE.Raycaster();
+    constructor(canvas, camera, keysDown) {
+        super();
+        this.canvas = canvas;
+        this.camera = camera;
+        this.keysDown = keysDown;
+        this.callbacks.set('selectstart', () => { });
+        this.callbacks.set('squeeze', () => { });
+        this.canvas.addEventListener('mouseover', (ev) => {
+            this.onPointerMove(ev);
+        });
+        this.canvas.addEventListener('mousedown', (ev) => {
+            switch (ev.button) {
+                case 0: // Left button
+                    this.callbacks.get('selectstart')();
+                    break;
+                case 2: // Right button
+                    this.callbacks.get('squeeze')();
+                    break;
+            }
+        });
+    }
+    onPointerMove(event) {
+        this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        // update the picking ray with the camera and pointer position
+        this.raycaster.setFromCamera(this.pointer, this.camera);
+        this.group.position.copy(this.raycaster.ray.direction);
+        // Distance from camera to hand = 0.6 meters
+        this.group.position.setLength(0.6);
+        this.group.position.add(this.raycaster.ray.origin);
+    }
+    setSelectStartCallback(callback) {
+        throw new Error("Not implemented.");
+    }
+    setSqueezeCallback(callback) {
+        throw new Error("Not implemented.");
+    }
+    getButtons() {
+        throw new Error("Not implemented.");
+    }
+    getStick() {
+        throw new Error("Not implemented.");
+    }
+}
+exports.MouseGrip = MouseGrip;
+//# sourceMappingURL=gripLike.js.map
+
+/***/ }),
+
 /***/ 673:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1301,7 +1548,13 @@ class Hand extends THREE.Object3D {
                 this.construction.save();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-                this.setCube(assets_1.Assets.nextItem());
+                const i = this.inventory.nextItem();
+                if (i) {
+                    this.setCube(i);
+                }
+                else {
+                    // TODO: change the hand to something that can't place.
+                }
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
                 assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
@@ -1329,11 +1582,15 @@ class Hand extends THREE.Object3D {
     }
     p = new THREE.Vector3();
     async initialize() {
-        this.grip.addEventListener('squeeze', () => {
+        this.grip.setSqueezeCallback(() => {
+            debug_1.Debug.log('squeeze');
             const removedCube = this.deleteCube();
+            debug_1.Debug.log('About to add');
             this.inventory.addItem(removedCube);
+            debug_1.Debug.log('Add done.');
         });
-        this.grip.addEventListener('selectstart', () => {
+        this.grip.setSelectStartCallback(() => {
+            debug_1.Debug.log('selectstart');
             this.deleteCube();
             const p = new THREE.Vector3();
             p.copy(this.cube.position);
@@ -1345,7 +1602,9 @@ class Hand extends THREE.Object3D {
             this.place.quantizeQuaternion(rotation);
             const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
             this.construction.addCube(inWorldItem);
+            debug_1.Debug.log('About to remove.');
             this.inventory.removeItem(this.item);
+            debug_1.Debug.log('Remove done.');
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -1858,6 +2117,41 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MergedGeometryContainer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const debug_1 = __webpack_require__(756);
+class Mergable {
+    positions;
+    normals;
+    index;
+    constructor(geometry, matrix) {
+        const positionsAtt = geometry.getAttribute('position');
+        if (geometry.index) {
+            for (let i = 0; i < geometry.index.count; ++i) {
+                this.index.push(geometry.index.getX(i));
+            }
+        }
+        else {
+            for (let i = 0; i < positionsAtt.count; ++i) {
+                this.index.push(i);
+            }
+        }
+        this.positions = new Float32Array(this.index.length * 3);
+        this.normals = new Float32Array(this.index.length * 3);
+        this.copyAtt3(positionsAtt, this.positions, matrix);
+        const m3 = new THREE.Matrix3();
+        m3.getNormalMatrix(matrix);
+        matrix.setFromMatrix3(m3);
+        this.copyAtt3(geometry.getAttribute('normal'), this.normals, matrix);
+    }
+    v = new THREE.Vector3();
+    copyAtt3(att, target, matrix) {
+        for (let i = 0; i < att.count; ++i) {
+            this.v.fromBufferAttribute(att, i);
+            this.v.applyMatrix4(matrix);
+            target[i * 3 + 0] = this.v.x;
+            target[i * 3 + 1] = this.v.y;
+            target[i * 3 + 2] = this.v.z;
+        }
+    }
+}
 class MergedGeometryContainer extends THREE.Object3D {
     geometry = new THREE.BufferGeometry();
     keyIndex = new Map();
@@ -1921,6 +2215,10 @@ class MergedGeometryContainer extends THREE.Object3D {
             }
         }
         const oldValues = this.oldValues(attributeName);
+        class Mergable {
+            positions = [];
+            normals = [];
+        }
         const values = new Float32Array(oldValues.length + attValues.length);
         for (let i = 0; i < oldValues.length; ++i) {
             values[i] = oldValues[i];
@@ -2459,33 +2757,39 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Station = exports.Player = exports.Inventory = void 0;
 const exchange_1 = __webpack_require__(253);
 const THREE = __importStar(__webpack_require__(232));
-const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
 // this class has one instance per item type.
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
 class Inventory {
-    items;
+    itemQty = new Map();
+    index = 0;
     addItem(input) {
         debug_1.Debug.log("adding " + JSON.stringify(input));
-        if (typeof (input) == typeof (THREE.Object3D)) {
+        if (this.itemQty.has(input)) {
+            this.itemQty.set(input, this.itemQty.get(input) + 1);
         }
-        else if (typeof (input) == typeof (assets_1.Item)) {
-            const index = this.items.findIndex(e => e.item == input);
-            if (index >= 0) {
-                this.items[index].qty++;
-            }
-            else {
-                this.items.push(input);
-            }
+        else {
+            this.itemQty.set(input, 1);
         }
     }
     removeItem(input) {
         debug_1.Debug.log("removing " + JSON.stringify(input));
-        if (typeof (input) == typeof (THREE.Object3D)) {
+        if (this.itemQty.has(input)) {
+            this.itemQty.set(input, this.itemQty.get(input) - 1);
         }
-        else if (typeof (input) == typeof (assets_1.Item)) {
+        else {
+            //this.itemQty.set(input, -1);
+            this.itemQty.delete(input);
         }
+    }
+    nextItem() {
+        const num_elements = this.itemQty.size;
+        if (num_elements < 1) {
+            return null;
+        }
+        this.index = (this.index + 1) % num_elements;
+        return Array.from(this.itemQty)[this.index][0];
     }
 }
 exports.Inventory = Inventory;
@@ -2866,6 +3170,7 @@ class S {
         container.appendChild(helpText);
     }
     static {
+        S.setDefault('mouse', -1, 'Which grip the mouse controls.');
         S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e9, 'Starfield radius');
@@ -2875,6 +3180,7 @@ class S {
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
         S.setDefault('m', 0, 'Use merged geometry in Block Build.');
+        S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {
