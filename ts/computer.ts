@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { Assets, ModelLoader } from "./assets";
+import { Assets, ModelLoader, Item } from "./assets";
+import { Player } from "./player";
 
 export class Computer {
     private canvas = document.createElement('canvas');
@@ -11,11 +12,10 @@ export class Computer {
     bottomButtonLabels = [];
 
 
-    private constructor(public model: THREE.Object3D) {
+    private constructor(public model: THREE.Object3D, private player: Player) {
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
-        this.createGreenBars();
         this.labels();
         this.updateDisplay();
         this.model.children.forEach(o => {
@@ -24,10 +24,12 @@ export class Computer {
                 m.material = this.material;
             }
         })
+        this.showInventory();
+        setInterval(this.showInventory, 5000);
     }
-    public static async make() {
+    public static async make(player: Player) {
         const model = await ModelLoader.loadModel(`Model/flight computer.glb`);
-        return new Computer(model);
+        return new Computer(model, player);
     }
 
     labels() {
@@ -47,12 +49,15 @@ export class Computer {
     }
 
     public updateDisplay() {
+        // clear display and add green bars
+        this.createGreenBars();
         // update rows
         const middleOfRow = this.canvas.height / 17 / 2;
         for (let i = 0; i < this.rowText.length; i++) {
             this.ctx.fillStyle = 'green';
             this.ctx.font = '24px monospace';
             this.ctx.textBaseline = 'middle'
+            this.ctx.textAlign = 'left'
             this.ctx.fillText(this.rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
         }
         //update buttons
@@ -67,6 +72,19 @@ export class Computer {
             this.ctx.fillText(this.topButtonLabels[i], columnSpacing * i + middleOfColumn, middleOfRow);
             this.ctx.fillText(this.bottomButtonLabels[i], columnSpacing * i + middleOfColumn, this.canvas.height - middleOfRow);
         }
+    }
+
+    showInventory() {
+        const inv = this.player.inventory.getItemQty();
+        this.rowText = [];
+        let i = 0;
+        inv.forEach((value: number, key: Item, map) => {
+            if (i < 15) {
+                this.rowText[i] = String(key.name) + ' ' + String(Number);
+            }
+            i++;
+        });
+        this.updateDisplay();
     }
 
     createGreenBars() {

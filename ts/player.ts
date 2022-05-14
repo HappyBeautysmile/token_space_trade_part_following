@@ -38,6 +38,10 @@ export class Inventory {
     this.index = (this.index + 1) % num_elements;
     return Array.from(this.itemQty)[this.index][0];
   }
+
+  getItemQty() {
+    return this.itemQty;
+  }
 }
 
 

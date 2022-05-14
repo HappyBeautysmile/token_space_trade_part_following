@@ -498,9 +498,9 @@ class BlockBuild {
         this.camera.lookAt(0, 1.7, -1.5);
         this.playerGroup.add(this.camera);
         this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera);
-        this.renderer = new THREE.WebGLRenderer();
-        //this.renderer.setSize(512, 512);
-        this.renderer.setSize(1024, 1024);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(512, 512);
+        //this.renderer.setSize(1024, 1024);
         document.body.appendChild(this.renderer.domElement);
         this.canvas = this.renderer.domElement;
         this.renderer.xr.enabled = true;
@@ -517,12 +517,12 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        const computer = await computer_1.Computer.make();
+        const computer = await computer_1.Computer.make(this.player);
         computer.model.translateY(0.5);
         computer.model.rotateX(Math.PI / 4);
         //computer.model.scale.set(10, 10, 10);
         this.universeGroup.add(computer.model);
-        debug_1.Debug.log("flight computer right size");
+        debug_1.Debug.log("display inventory not working");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -694,6 +694,7 @@ const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
 class Computer {
     model;
+    player;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
     texture = new THREE.CanvasTexture(this.canvas);
@@ -701,12 +702,12 @@ class Computer {
     rowText = [];
     topButtonLabels = [];
     bottomButtonLabels = [];
-    constructor(model) {
+    constructor(model, player) {
         this.model = model;
+        this.player = player;
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
-        this.createGreenBars();
         this.labels();
         this.updateDisplay();
         this.model.children.forEach(o => {
@@ -715,10 +716,12 @@ class Computer {
                 m.material = this.material;
             }
         });
+        this.showInventory();
+        setInterval(this.showInventory, 5000);
     }
-    static async make() {
+    static async make(player) {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
-        return new Computer(model);
+        return new Computer(model, player);
     }
     labels() {
         this.rowText = [];
@@ -735,12 +738,15 @@ class Computer {
         }
     }
     updateDisplay() {
+        // clear display and add green bars
+        this.createGreenBars();
         // update rows
         const middleOfRow = this.canvas.height / 17 / 2;
         for (let i = 0; i < this.rowText.length; i++) {
             this.ctx.fillStyle = 'green';
             this.ctx.font = '24px monospace';
             this.ctx.textBaseline = 'middle';
+            this.ctx.textAlign = 'left';
             this.ctx.fillText(this.rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
         }
         //update buttons
@@ -755,6 +761,18 @@ class Computer {
             this.ctx.fillText(this.topButtonLabels[i], columnSpacing * i + middleOfColumn, middleOfRow);
             this.ctx.fillText(this.bottomButtonLabels[i], columnSpacing * i + middleOfColumn, this.canvas.height - middleOfRow);
         }
+    }
+    showInventory() {
+        const inv = this.player.inventory.getItemQty();
+        this.rowText = [];
+        let i = 0;
+        inv.forEach((value, key, map) => {
+            if (i < 15) {
+                this.rowText[i] = String(key.name) + ' ' + String(Number);
+            }
+            i++;
+        });
+        this.updateDisplay();
     }
     createGreenBars() {
         this.ctx.fillStyle = '#003300';
@@ -2790,6 +2808,9 @@ class Inventory {
         }
         this.index = (this.index + 1) % num_elements;
         return Array.from(this.itemQty)[this.index][0];
+    }
+    getItemQty() {
+        return this.itemQty;
     }
 }
 exports.Inventory = Inventory;
