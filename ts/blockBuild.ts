@@ -12,11 +12,13 @@ import { Decode } from "./codec";
 import { AstroGen } from "./astroGen";
 import { S } from "./settings";
 import { Inventory, Player } from "./player";
+import { GripGrip, GripLike, MouseGrip } from "./gripLike";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
+  private canvas: HTMLCanvasElement;
 
   private playerGroup = new THREE.Group();
   private universeGroup = new THREE.Group();
@@ -151,6 +153,7 @@ export class BlockBuild {
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(512, 512);
     document.body.appendChild(this.renderer.domElement);
+    this.canvas = this.renderer.domElement;
     this.renderer.xr.enabled = true;
 
     const light = new THREE.AmbientLight(0x101020); // dark blue light
@@ -206,11 +209,14 @@ export class BlockBuild {
     //this.scene.add(debug);
 
     for (const i of [0, 1]) {
-      const grip = this.renderer.xr.getControllerGrip(i);
-      this.playerGroup.add(grip);
-      if (grip.userData['inputSource']) {
-        //debugMaterial.color = new THREE.Color('#0ff');
+      let grip: GripLike = null;
+      if (S.float('mouse') == i) {
+        console.assert(!!this.canvas);
+        grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
+      } else {
+        grip = new GripGrip(i, this.renderer.xr);
       }
+      this.playerGroup.add(grip);
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       // Assets.blocks[i].position.set(0, 0, 0);

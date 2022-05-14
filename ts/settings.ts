@@ -21,6 +21,7 @@ export class S {
   }
 
   static {
+    S.setDefault('mouse', -1, 'Which grip the mouse controls.');
     S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
     S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
     S.setDefault('sr', 1e9, 'Starfield radius');

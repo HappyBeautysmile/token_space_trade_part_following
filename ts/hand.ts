@@ -9,6 +9,7 @@ import { FileIO } from "./fileIO";
 import { Construction } from "./construction";
 import { InWorldItem } from "./inWorldItem";
 import { Inventory } from "./player";
+import { GripLike } from "./gripLike";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
@@ -17,7 +18,7 @@ export class Hand extends THREE.Object3D {
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
 
-  constructor(private grip: THREE.Object3D, private item: Item,
+  constructor(private grip: GripLike, private item: Item,
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private keysDown: Set<string>, private construction: Construction,
@@ -162,7 +163,7 @@ export class Hand extends THREE.Object3D {
 
   private p = new THREE.Vector3();
   private async initialize() {
-    this.grip.addEventListener('squeeze', () => {
+    this.grip.setSqueezeCallback(() => {
       Debug.log('squeeze');
       const removedCube = this.deleteCube();
       Debug.log('About to add');
@@ -170,7 +171,7 @@ export class Hand extends THREE.Object3D {
       Debug.log('Add done.');
     });
 
-    this.grip.addEventListener('selectstart', () => {
+    this.grip.setSelectStartCallback(() => {
       Debug.log('selectstart');
       this.deleteCube();
       const p = new THREE.Vector3();
