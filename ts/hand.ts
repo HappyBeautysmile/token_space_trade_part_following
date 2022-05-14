@@ -170,11 +170,13 @@ export class Hand extends THREE.Object3D {
   private p = new THREE.Vector3();
   private async initialize() {
     this.grip.setSqueezeCallback(() => {
-      Debug.log('squeeze');
+      //Debug.log('squeeze');
       const removedCube = this.deleteCube();
-      Debug.log('About to add');
-      this.inventory.addItem(removedCube);
-      Debug.log('Add done.');
+      //Debug.log('About to add');
+      if (removedCube) {
+        this.inventory.addItem(removedCube);
+      }
+      //Debug.log('Add done.');
     });
 
     this.grip.setSelectStartCallback(() => {

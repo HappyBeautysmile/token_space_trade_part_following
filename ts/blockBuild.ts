@@ -179,7 +179,7 @@ export class BlockBuild {
     computer.scale.set(10, 10, 10);
     this.universeGroup.add(computer);
 
-    Debug.log("display inventory not working");
+    Debug.log("display inventory working?");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

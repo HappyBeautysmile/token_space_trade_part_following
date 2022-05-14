@@ -522,7 +522,7 @@ class BlockBuild {
         computer.rotateX(Math.PI / 4);
         computer.scale.set(10, 10, 10);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("display inventory not working");
+        debug_1.Debug.log("display inventory working?");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -860,7 +860,7 @@ class ObjectConstruction {
         this.objects.set(key, object);
         this.container.add(object);
     }
-    // TODO: Return the InWorldItem.
+    // Return Item if there is an item at the location.  Otherwise, return null.
     removeCube(p) {
         const key = this.posToKey(p);
         let item = null;
@@ -1607,11 +1607,13 @@ class Hand extends THREE.Object3D {
     p = new THREE.Vector3();
     async initialize() {
         this.grip.setSqueezeCallback(() => {
-            debug_1.Debug.log('squeeze');
+            //Debug.log('squeeze');
             const removedCube = this.deleteCube();
-            debug_1.Debug.log('About to add');
-            this.inventory.addItem(removedCube);
-            debug_1.Debug.log('Add done.');
+            //Debug.log('About to add');
+            if (removedCube) {
+                this.inventory.addItem(removedCube);
+            }
+            //Debug.log('Add done.');
         });
         this.grip.setSelectStartCallback(() => {
             debug_1.Debug.log('selectstart');

@@ -46,7 +46,7 @@ export class ObjectConstruction implements Construction {
     this.container.add(object);
   }
 
-  // TODO: Return the InWorldItem.
+  // Return Item if there is an item at the location.  Otherwise, return null.
   public removeCube(p: THREE.Vector3): Item {
     const key = this.posToKey(p);
     let item: Item = null;
