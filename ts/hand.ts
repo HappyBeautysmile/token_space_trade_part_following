@@ -50,25 +50,17 @@ export class Hand extends THREE.Object3D {
   private directionPlayer = new THREE.Vector3();
   private setCubePosition() {
     // The center of the chest is 50cm below the camera.
-    this.chestPlayer.copy(this.place.camera.position);
+    this.place.camera.getWorldPosition(this.chestPlayer);
     this.chestPlayer.y += S.float('hr');
-    this.chestPlayer = new Vector3(0, this.chestPlayer.y, 0);
-
-    this.directionPlayer.copy(this.grip.position);
+    this.grip.getWorldPosition(this.directionPlayer);
     this.directionPlayer.sub(this.chestPlayer);
 
     this.cube.position.copy(this.directionPlayer);
     this.cube.position.multiplyScalar(15);
-
-    // Debug.log("this.cube.quaterion=" + JSON.stringify(this.cube.quaternion));
-    // Debug.log("this.place.playerGroup.quaternion=" + JSON.stringify(this.place.playerGroup.quaternion));
-    // Debug.log("this.grip.quaternion=" + JSON.stringify(this.grip.quaternion));
-
-    this.cube.position.sub(this.place.playerGroup.position);
+    this.place.worldToPlayer(this.cube.position);
     this.cube.rotation.copy(this.grip.rotation);
   }
 
-  private sourceLogged = false;
   private lastButtons;
   private v = new THREE.Vector3();
   public tick(t: Tick) {
@@ -82,17 +74,6 @@ export class Hand extends THREE.Object3D {
     }
 
     if (source) {
-      if (!this.sourceLogged) {
-        if (source.handedness == "left") {
-          this.leftHand = true;
-        }
-        else {
-          this.leftHand = false;
-        }
-
-        Debug.log(`Has a source. left:${this.leftHand} ${source.handedness}`);
-        this.sourceLogged = true;
-      }
       //this.debugMaterial.color = new THREE.Color('blue');
       const rateUpDown = 5;
       const rateMove = 10;
@@ -174,7 +155,6 @@ export class Hand extends THREE.Object3D {
   private async initialize() {
     this.grip.setSqueezeCallback(() => {
       this.deleteCube();
-
     });
 
     this.grip.setSelectStartCallback(() => {

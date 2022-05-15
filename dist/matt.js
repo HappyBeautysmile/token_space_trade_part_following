@@ -1423,7 +1423,6 @@ exports.Hand = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
-const three_1 = __webpack_require__(578);
 const inWorldItem_1 = __webpack_require__(116);
 const settings_1 = __webpack_require__(451);
 class Hand extends THREE.Object3D {
@@ -1471,20 +1470,15 @@ class Hand extends THREE.Object3D {
     directionPlayer = new THREE.Vector3();
     setCubePosition() {
         // The center of the chest is 50cm below the camera.
-        this.chestPlayer.copy(this.place.camera.position);
+        this.place.camera.getWorldPosition(this.chestPlayer);
         this.chestPlayer.y += settings_1.S.float('hr');
-        this.chestPlayer = new three_1.Vector3(0, this.chestPlayer.y, 0);
-        this.directionPlayer.copy(this.grip.position);
+        this.grip.getWorldPosition(this.directionPlayer);
         this.directionPlayer.sub(this.chestPlayer);
         this.cube.position.copy(this.directionPlayer);
         this.cube.position.multiplyScalar(15);
-        // Debug.log("this.cube.quaterion=" + JSON.stringify(this.cube.quaternion));
-        // Debug.log("this.place.playerGroup.quaternion=" + JSON.stringify(this.place.playerGroup.quaternion));
-        // Debug.log("this.grip.quaternion=" + JSON.stringify(this.grip.quaternion));
-        this.cube.position.sub(this.place.playerGroup.position);
+        this.place.worldToPlayer(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
-    sourceLogged = false;
     lastButtons;
     v = new THREE.Vector3();
     tick(t) {
@@ -1497,16 +1491,6 @@ class Hand extends THREE.Object3D {
             }
         }
         if (source) {
-            if (!this.sourceLogged) {
-                if (source.handedness == "left") {
-                    this.leftHand = true;
-                }
-                else {
-                    this.leftHand = false;
-                }
-                debug_1.Debug.log(`Has a source. left:${this.leftHand} ${source.handedness}`);
-                this.sourceLogged = true;
-            }
             //this.debugMaterial.color = new THREE.Color('blue');
             const rateUpDown = 5;
             const rateMove = 10;
@@ -2625,6 +2609,9 @@ class Place {
     }
     worldToUniverse(v) {
         this.universeGroup.worldToLocal(v);
+    }
+    worldToPlayer(v) {
+        this.playerGroup.worldToLocal(v);
     }
     // Quantizes the Euler angles to be cube-aligned
     quantizeRotation(v) {

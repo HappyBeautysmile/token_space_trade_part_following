@@ -42,6 +42,9 @@ export class Place {
   public worldToUniverse(v: THREE.Vector3) {
     this.universeGroup.worldToLocal(v);
   }
+  public worldToPlayer(v: THREE.Vector3) {
+    this.playerGroup.worldToLocal(v);
+  }
 
   // Quantizes the Euler angles to be cube-aligned
   public quantizeRotation(v: THREE.Euler) {
