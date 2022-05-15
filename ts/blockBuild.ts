@@ -177,7 +177,8 @@ export class BlockBuild {
     const computer = await Computer.make(this.player);
     computer.translateY(0.5);
     computer.rotateX(Math.PI / 4);
-    computer.scale.set(10, 10, 10);
+    const computerScale = S.float('cs');
+    computer.scale.set(computerScale, computerScale, computerScale);
     this.universeGroup.add(computer);
 
     Debug.log("added creative mode");

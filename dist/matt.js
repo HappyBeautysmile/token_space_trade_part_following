@@ -509,7 +509,8 @@ class BlockBuild {
         const computer = await computer_1.Computer.make(this.player);
         computer.translateY(0.5);
         computer.rotateX(Math.PI / 4);
-        computer.scale.set(10, 10, 10);
+        const computerScale = settings_1.S.float('cs');
+        computer.scale.set(computerScale, computerScale, computerScale);
         this.universeGroup.add(computer);
         debug_1.Debug.log("added creative mode");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -3162,6 +3163,7 @@ class S {
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
         S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
+        S.setDefault('cs', 1.0, 'Scale of the computer model.');
     }
     static float(name) {
         if (S.cache.has(name)) {

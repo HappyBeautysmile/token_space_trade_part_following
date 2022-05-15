@@ -33,10 +33,9 @@ export class S {
     S.setDefault('m', 0, 'Use merged geometry in Block Build.');
     S.setDefault('ps', 30, 'Platform size.');
     S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
-
     S.setDefault('pbf', 1e7, 'Point brightness factor');
-
     S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
+    S.setDefault('cs', 1.0, 'Scale of the computer model.');
   }
 
   public static float(name: string): number {
