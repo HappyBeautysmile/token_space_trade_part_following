@@ -165,38 +165,41 @@ export class Hand extends THREE.Object3D {
     this.place.playerToUniverse(this.p);
     this.place.quantizePosition(this.p);
     const removedCube = this.construction.removeCube(this.p);
-    return removedCube;
+    if (removedCube) {
+      this.inventory.addItem(removedCube);
+    }
   }
 
   private p = new THREE.Vector3();
   private async initialize() {
     this.grip.setSqueezeCallback(() => {
-      //Debug.log('squeeze');
-      const removedCube = this.deleteCube();
-      //Debug.log('About to add');
-      if (removedCube) {
-        this.inventory.addItem(removedCube);
-      }
-      //Debug.log('Add done.');
+      this.deleteCube();
+
     });
 
     this.grip.setSelectStartCallback(() => {
       Debug.log('selectstart');
-      this.deleteCube();
-      const p = new THREE.Vector3();
-      p.copy(this.cube.position);
-      this.place.playerToUniverse(p);
-      this.place.quantizePosition(p);
-      const rotation = new THREE.Quaternion();
-      rotation.copy(this.cube.quaternion);
-      rotation.multiply(this.place.playerGroup.quaternion);
-      this.place.quantizeQuaternion(rotation);
-      const inWorldItem = new InWorldItem(this.item,
-        p, rotation);
-      this.construction.addCube(inWorldItem);
-      Debug.log('About to remove.');
-      this.inventory.removeItem(this.item);
-      Debug.log('Remove done.');
+      const itemQty = this.inventory.getItemQty();
+      if (itemQty.has(this.item)) {
+        if (itemQty.get(this.item) > 0) {
+          this.deleteCube();
+          const p = new THREE.Vector3();
+          p.copy(this.cube.position);
+          this.place.playerToUniverse(p);
+          this.place.quantizePosition(p);
+          const rotation = new THREE.Quaternion();
+          rotation.copy(this.cube.quaternion);
+          rotation.multiply(this.place.playerGroup.quaternion);
+          this.place.quantizeQuaternion(rotation);
+          const inWorldItem = new InWorldItem(this.item,
+            p, rotation);
+          this.construction.addCube(inWorldItem);
+          Debug.log('About to remove.');
+          this.inventory.removeItem(this.item);
+          Debug.log('Remove done.');
+        }
+      }
+
     });
 
     // this.grip.addEventListener('selectend', () => {

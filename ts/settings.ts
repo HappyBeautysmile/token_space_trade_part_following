@@ -35,6 +35,8 @@ export class S {
     S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
 
     S.setDefault('pbf', 1e7, 'Point brightness factor');
+
+    S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
   }
 
   public static float(name: string): number {

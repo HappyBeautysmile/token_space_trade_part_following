@@ -2,6 +2,7 @@ import { BankAccount, Exchange } from "./exchange";
 import * as THREE from "three";
 import { Assets, Item } from "./assets";
 import { Debug } from "./debug";
+import { S } from "./settings";
 
 // this class has one instance per item type.
 // Probably don't want to keep it in player.ts, 
@@ -10,6 +11,12 @@ import { Debug } from "./debug";
 export class Inventory {
   private itemQty = new Map<Item, number>();
   private index = 0;
+
+  constructor() {
+    for (const item of Assets.items) {
+      this.itemQty.set(item, S.float('cr'));
+    }
+  }
 
   addItem(input: Item) {
     Debug.log("adding " + JSON.stringify(input));

@@ -26,7 +26,7 @@ export class BlockBuild {
   private place: Place;
   private keysDown = new Set<string>();
   private construction: Construction;
-  private player = new Player("FunUserName");
+  private player: Player;
 
   constructor() {
     this.playerGroup.name = 'Player Group';
@@ -128,6 +128,7 @@ export class BlockBuild {
   }
   private async setScene() {
     await Assets.init();
+    this.player = new Player("FunUserName");  // player needs the assets so that it can build an inventory.
     document.body.innerHTML = "";
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
@@ -179,7 +180,7 @@ export class BlockBuild {
     computer.scale.set(10, 10, 10);
     this.universeGroup.add(computer);
 
-    Debug.log("display inventory working?");
+    Debug.log("added creative mode");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

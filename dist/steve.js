@@ -391,7 +391,7 @@ class BlockBuild {
     place;
     keysDown = new Set();
     construction;
-    player = new player_1.Player("FunUserName");
+    player;
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -480,6 +480,7 @@ class BlockBuild {
     }
     async setScene() {
         await assets_1.Assets.init();
+        this.player = new player_1.Player("FunUserName"); // player needs the assets so that it can build an inventory.
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
@@ -522,7 +523,7 @@ class BlockBuild {
         computer.rotateX(Math.PI / 4);
         computer.scale.set(10, 10, 10);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("display inventory working?");
+        debug_1.Debug.log("added creative mode");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1338,13 +1339,14 @@ class GripGrip extends THREE.Object3D {
         super();
         this.xr = xr;
         this.grip = xr.getControllerGrip(index);
+        this.add(this.grip);
     }
-    tick(t) {
-        this.position.copy(this.grip.position);
-        this.rotation.copy(this.grip.rotation);
-        this.quaternion.copy(this.grip.quaternion);
-        this.matrix.copy(this.grip.matrix);
-    }
+    // tick(t: Tick) {
+    //   this.position.copy(this.grip.position);
+    //   this.rotation.copy(this.grip.rotation);
+    //   this.quaternion.copy(this.grip.quaternion);
+    //   this.matrix.copy(this.grip.matrix);
+    // }
     setSelectStartCallback(callback) {
         this.grip.addEventListener('selectstart', callback);
     }
@@ -1363,7 +1365,6 @@ class MouseGrip extends THREE.Object3D {
     canvas;
     camera;
     keysDown;
-    group = new THREE.Group();
     callbacks = new Map();
     pointer = new THREE.Vector2();
     raycaster = new THREE.Raycaster();
@@ -1372,12 +1373,15 @@ class MouseGrip extends THREE.Object3D {
         this.canvas = canvas;
         this.camera = camera;
         this.keysDown = keysDown;
+        canvas.oncontextmenu = () => false;
         this.callbacks.set('selectstart', () => { });
         this.callbacks.set('squeeze', () => { });
-        this.canvas.addEventListener('mouseover', (ev) => {
+        this.canvas.addEventListener('mousemove', (ev) => {
             this.onPointerMove(ev);
         });
         this.canvas.addEventListener('mousedown', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
             switch (ev.button) {
                 case 0: // Left button
                     this.callbacks.get('selectstart')();
@@ -1387,22 +1391,28 @@ class MouseGrip extends THREE.Object3D {
                     break;
             }
         });
+        // If you want to see where the "grip" is, uncomment this code.
+        // const ball = new THREE.Mesh(
+        //   new THREE.IcosahedronBufferGeometry(0.02, 3),
+        //   new THREE.MeshPhongMaterial({ color: 'pink' })
+        // );
+        // this.add(ball);
     }
     onPointerMove(event) {
-        this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-        this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        this.pointer.x = (event.clientX / this.canvas.width) * 2 - 1;
+        this.pointer.y = -(event.clientY / this.canvas.height) * 2 + 1;
         // update the picking ray with the camera and pointer position
         this.raycaster.setFromCamera(this.pointer, this.camera);
-        this.group.position.copy(this.raycaster.ray.direction);
+        this.position.copy(this.raycaster.ray.direction);
         // Distance from camera to hand = 0.6 meters
-        this.group.position.setLength(0.6);
-        this.group.position.add(this.raycaster.ray.origin);
+        this.position.setLength(0.6);
+        this.position.add(this.raycaster.ray.origin);
     }
     setSelectStartCallback(callback) {
-        throw new Error("Not implemented.");
+        this.callbacks.set('selectstart', callback);
     }
     setSqueezeCallback(callback) {
-        throw new Error("Not implemented.");
+        this.callbacks.set('squeeze', callback);
     }
     getButtons() {
         throw new Error("Not implemented.");
@@ -1450,6 +1460,7 @@ const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const three_1 = __webpack_require__(232);
 const inWorldItem_1 = __webpack_require__(116);
+const settings_1 = __webpack_require__(451);
 class Hand extends THREE.Object3D {
     grip;
     item;
@@ -1496,7 +1507,7 @@ class Hand extends THREE.Object3D {
     setCubePosition() {
         // The center of the chest is 50cm below the camera.
         this.chestPlayer.copy(this.place.camera.position);
-        this.chestPlayer.y -= 0.5;
+        this.chestPlayer.y += settings_1.S.float('hr');
         this.chestPlayer = new three_1.Vector3(0, this.chestPlayer.y, 0);
         this.directionPlayer.copy(this.grip.position);
         this.directionPlayer.sub(this.chestPlayer);
@@ -1602,35 +1613,36 @@ class Hand extends THREE.Object3D {
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);
         const removedCube = this.construction.removeCube(this.p);
-        return removedCube;
+        if (removedCube) {
+            this.inventory.addItem(removedCube);
+        }
     }
     p = new THREE.Vector3();
     async initialize() {
         this.grip.setSqueezeCallback(() => {
-            //Debug.log('squeeze');
-            const removedCube = this.deleteCube();
-            //Debug.log('About to add');
-            if (removedCube) {
-                this.inventory.addItem(removedCube);
-            }
-            //Debug.log('Add done.');
+            this.deleteCube();
         });
         this.grip.setSelectStartCallback(() => {
             debug_1.Debug.log('selectstart');
-            this.deleteCube();
-            const p = new THREE.Vector3();
-            p.copy(this.cube.position);
-            this.place.playerToUniverse(p);
-            this.place.quantizePosition(p);
-            const rotation = new THREE.Quaternion();
-            rotation.copy(this.cube.quaternion);
-            rotation.multiply(this.place.playerGroup.quaternion);
-            this.place.quantizeQuaternion(rotation);
-            const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
-            this.construction.addCube(inWorldItem);
-            debug_1.Debug.log('About to remove.');
-            this.inventory.removeItem(this.item);
-            debug_1.Debug.log('Remove done.');
+            const itemQty = this.inventory.getItemQty();
+            if (itemQty.has(this.item)) {
+                if (itemQty.get(this.item) > 0) {
+                    this.deleteCube();
+                    const p = new THREE.Vector3();
+                    p.copy(this.cube.position);
+                    this.place.playerToUniverse(p);
+                    this.place.quantizePosition(p);
+                    const rotation = new THREE.Quaternion();
+                    rotation.copy(this.cube.quaternion);
+                    rotation.multiply(this.place.playerGroup.quaternion);
+                    this.place.quantizeQuaternion(rotation);
+                    const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
+                    this.construction.addCube(inWorldItem);
+                    debug_1.Debug.log('About to remove.');
+                    this.inventory.removeItem(this.item);
+                    debug_1.Debug.log('Remove done.');
+                }
+            }
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -2783,13 +2795,20 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Station = exports.Player = exports.Inventory = void 0;
 const exchange_1 = __webpack_require__(253);
 const THREE = __importStar(__webpack_require__(232));
+const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
+const settings_1 = __webpack_require__(451);
 // this class has one instance per item type.
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
 class Inventory {
     itemQty = new Map();
     index = 0;
+    constructor() {
+        for (const item of assets_1.Assets.items) {
+            this.itemQty.set(item, settings_1.S.float('cr'));
+        }
+    }
     addItem(input) {
         debug_1.Debug.log("adding " + JSON.stringify(input));
         if (this.itemQty.has(input)) {
@@ -3210,7 +3229,9 @@ class S {
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
         S.setDefault('m', 0, 'Use merged geometry in Block Build.');
         S.setDefault('ps', 30, 'Platform size.');
+        S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
+        S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
     }
     static float(name) {
         if (S.cache.has(name)) {
