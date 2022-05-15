@@ -486,8 +486,9 @@ class BlockBuild {
         this.camera.lookAt(0, 1.7, -1.5);
         this.playerGroup.add(this.camera);
         this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera);
-        this.renderer = new THREE.WebGLRenderer();
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(512, 512);
+        //this.renderer.setSize(1024, 1024);
         document.body.appendChild(this.renderer.domElement);
         this.canvas = this.renderer.domElement;
         this.renderer.xr.enabled = true;
@@ -504,10 +505,12 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        const computer = await computer_1.Computer.make();
-        computer.model.rotateX(Math.PI / 4);
-        this.universeGroup.add(computer.model);
-        debug_1.Debug.log("flight computer canvas test");
+        const computer = await computer_1.Computer.make(this.player);
+        computer.translateY(0.5);
+        computer.rotateX(Math.PI / 4);
+        computer.scale.set(10, 10, 10);
+        this.universeGroup.add(computer);
+        debug_1.Debug.log("display inventory working?");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -669,30 +672,100 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Computer = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const assets_1 = __webpack_require__(398);
-class Computer {
-    model;
+class Computer extends THREE.Object3D {
+    player;
     canvas = document.createElement('canvas');
+    ctx = this.canvas.getContext('2d');
     texture = new THREE.CanvasTexture(this.canvas);
     material = new THREE.MeshBasicMaterial();
-    constructor(model) {
-        this.model = model;
+    rowText = [];
+    topButtonLabels = [];
+    bottomButtonLabels = [];
+    constructor(model, player) {
+        super();
+        this.player = player;
+        this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
-        this.createGreenBars();
-        assets_1.Assets.replaceMaterial(this.model, this.material);
+        this.labels();
+        this.updateDisplay();
+        model.children.forEach(o => {
+            const m = o;
+            if (m.name == "display") {
+                m.material = this.material;
+            }
+        });
+        this.showInventory();
+        setInterval(() => { }, 5000);
     }
-    static async make() {
+    tick(t) {
+        // TODO every 10 frames
+        this.showInventory();
+    }
+    static async make(player) {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
-        return new Computer(model);
+        return new Computer(model, player);
+    }
+    labels() {
+        this.rowText = [];
+        for (let i = 0; i < 15; i++) {
+            this.rowText.push("row " + String(i));
+        }
+        this.rowText[0] = "         1         2         3         4         5         6         7         8";
+        this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
+        this.topButtonLabels = [];
+        this.bottomButtonLabels = [];
+        for (let i = 0; i < 8; i++) {
+            this.topButtonLabels.push("T" + String(i));
+            this.bottomButtonLabels.push("B" + String(i));
+        }
+    }
+    updateDisplay() {
+        // clear display and add green bars
+        this.createGreenBars();
+        // update rows
+        const middleOfRow = this.canvas.height / 17 / 2;
+        for (let i = 0; i < this.rowText.length; i++) {
+            this.ctx.fillStyle = 'green';
+            this.ctx.font = '24px monospace';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.textAlign = 'left';
+            this.ctx.fillText(this.rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
+        }
+        //update buttons
+        const gridUnit = (this.canvas.width / 33);
+        const middleOfColumn = gridUnit * 2.5;
+        const columnSpacing = gridUnit * 4;
+        for (let i = 0; i < 8; i++) {
+            this.ctx.fillStyle = 'green';
+            this.ctx.font = '24px monospace';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(this.topButtonLabels[i], columnSpacing * i + middleOfColumn, middleOfRow);
+            this.ctx.fillText(this.bottomButtonLabels[i], columnSpacing * i + middleOfColumn, this.canvas.height - middleOfRow);
+        }
+        this.texture.needsUpdate = true;
+    }
+    showInventory() {
+        const inv = this.player.inventory.getItemQty();
+        this.rowText = [];
+        let i = 0;
+        for (const [item, qty] of inv.entries()) {
+            this.rowText[i] = item.name + ' ' + qty.toFixed(0);
+            i++;
+            if (i > 15) {
+                break;
+            }
+        }
+        this.updateDisplay();
     }
     createGreenBars() {
-        const ctx = this.canvas.getContext('2d');
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        ctx.fillStyle = 'green';
-        for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8) {
-            ctx.fillRect(0, y, this.canvas.width, y + this.canvas.height / 16);
+        this.ctx.fillStyle = '#003300';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = 'black';
+        for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8.5) {
+            this.ctx.fillRect(0, y, this.canvas.width, this.canvas.height / 17);
         }
     }
 }
@@ -763,7 +836,7 @@ class ObjectConstruction {
         this.objects.set(key, object);
         this.container.add(object);
     }
-    // TODO: Return the InWorldItem.
+    // Return Item if there is an item at the location.  Otherwise, return null.
     removeCube(p) {
         const key = this.posToKey(p);
         let item = null;
@@ -1229,13 +1302,14 @@ class GripGrip extends THREE.Object3D {
         super();
         this.xr = xr;
         this.grip = xr.getControllerGrip(index);
+        this.add(this.grip);
     }
-    tick(t) {
-        this.position.copy(this.grip.position);
-        this.rotation.copy(this.grip.rotation);
-        this.quaternion.copy(this.grip.quaternion);
-        this.matrix.copy(this.grip.matrix);
-    }
+    // tick(t: Tick) {
+    //   this.position.copy(this.grip.position);
+    //   this.rotation.copy(this.grip.rotation);
+    //   this.quaternion.copy(this.grip.quaternion);
+    //   this.matrix.copy(this.grip.matrix);
+    // }
     setSelectStartCallback(callback) {
         this.grip.addEventListener('selectstart', callback);
     }
@@ -1254,7 +1328,6 @@ class MouseGrip extends THREE.Object3D {
     canvas;
     camera;
     keysDown;
-    group = new THREE.Group();
     callbacks = new Map();
     pointer = new THREE.Vector2();
     raycaster = new THREE.Raycaster();
@@ -1263,12 +1336,15 @@ class MouseGrip extends THREE.Object3D {
         this.canvas = canvas;
         this.camera = camera;
         this.keysDown = keysDown;
+        canvas.oncontextmenu = () => false;
         this.callbacks.set('selectstart', () => { });
         this.callbacks.set('squeeze', () => { });
-        this.canvas.addEventListener('mouseover', (ev) => {
+        this.canvas.addEventListener('mousemove', (ev) => {
             this.onPointerMove(ev);
         });
         this.canvas.addEventListener('mousedown', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
             switch (ev.button) {
                 case 0: // Left button
                     this.callbacks.get('selectstart')();
@@ -1278,22 +1354,28 @@ class MouseGrip extends THREE.Object3D {
                     break;
             }
         });
+        // If you want to see where the "grip" is, uncomment this code.
+        // const ball = new THREE.Mesh(
+        //   new THREE.IcosahedronBufferGeometry(0.02, 3),
+        //   new THREE.MeshPhongMaterial({ color: 'pink' })
+        // );
+        // this.add(ball);
     }
     onPointerMove(event) {
-        this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-        this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        this.pointer.x = (event.clientX / this.canvas.width) * 2 - 1;
+        this.pointer.y = -(event.clientY / this.canvas.height) * 2 + 1;
         // update the picking ray with the camera and pointer position
         this.raycaster.setFromCamera(this.pointer, this.camera);
-        this.group.position.copy(this.raycaster.ray.direction);
+        this.position.copy(this.raycaster.ray.direction);
         // Distance from camera to hand = 0.6 meters
-        this.group.position.setLength(0.6);
-        this.group.position.add(this.raycaster.ray.origin);
+        this.position.setLength(0.6);
+        this.position.add(this.raycaster.ray.origin);
     }
     setSelectStartCallback(callback) {
-        throw new Error("Not implemented.");
+        this.callbacks.set('selectstart', callback);
     }
     setSqueezeCallback(callback) {
-        throw new Error("Not implemented.");
+        this.callbacks.set('squeeze', callback);
     }
     getButtons() {
         throw new Error("Not implemented.");
@@ -1337,6 +1419,7 @@ const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const three_1 = __webpack_require__(578);
 const inWorldItem_1 = __webpack_require__(116);
+const settings_1 = __webpack_require__(451);
 class Hand extends THREE.Object3D {
     grip;
     item;
@@ -1383,7 +1466,7 @@ class Hand extends THREE.Object3D {
     setCubePosition() {
         // The center of the chest is 50cm below the camera.
         this.chestPlayer.copy(this.place.camera.position);
-        this.chestPlayer.y -= 0.5;
+        this.chestPlayer.y += settings_1.S.float('hr');
         this.chestPlayer = new three_1.Vector3(0, this.chestPlayer.y, 0);
         this.directionPlayer.copy(this.grip.position);
         this.directionPlayer.sub(this.chestPlayer);
@@ -1494,11 +1577,13 @@ class Hand extends THREE.Object3D {
     p = new THREE.Vector3();
     async initialize() {
         this.grip.setSqueezeCallback(() => {
-            debug_1.Debug.log('squeeze');
+            //Debug.log('squeeze');
             const removedCube = this.deleteCube();
-            debug_1.Debug.log('About to add');
-            this.inventory.addItem(removedCube);
-            debug_1.Debug.log('Add done.');
+            //Debug.log('About to add');
+            if (removedCube) {
+                this.inventory.addItem(removedCube);
+            }
+            //Debug.log('Add done.');
         });
         this.grip.setSelectStartCallback(() => {
             debug_1.Debug.log('selectstart');
@@ -2674,6 +2759,9 @@ class Inventory {
         this.index = (this.index + 1) % num_elements;
         return Array.from(this.itemQty)[this.index][0];
     }
+    getItemQty() {
+        return this.itemQty;
+    }
 }
 exports.Inventory = Inventory;
 class Player {
@@ -3056,6 +3144,7 @@ class S {
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
         S.setDefault('m', 0, 'Use merged geometry in Block Build.');
         S.setDefault('ps', 30, 'Platform size.');
+        S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
     }
     static float(name) {
