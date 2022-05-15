@@ -379,7 +379,7 @@ class BlockBuild {
     place;
     keysDown = new Set();
     construction;
-    player = new player_1.Player("FunUserName");
+    player;
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -468,6 +468,7 @@ class BlockBuild {
     }
     async setScene() {
         await assets_1.Assets.init();
+        this.player = new player_1.Player("FunUserName"); // player needs the assets so that it can build an inventory.
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
@@ -510,16 +511,18 @@ class BlockBuild {
         computer.rotateX(Math.PI / 4);
         computer.scale.set(10, 10, 10);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("display inventory working?");
+        debug_1.Debug.log("added creative mode");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
         const clock = new THREE.Clock();
         let elapsedS = 0.0;
+        let frameCount = 0;
         this.renderer.setAnimationLoop(() => {
             const deltaS = Math.min(clock.getDelta(), 0.1);
             elapsedS += deltaS;
-            const tick = new tick_1.Tick(elapsedS, deltaS);
+            ++frameCount;
+            const tick = new tick_1.Tick(elapsedS, deltaS, frameCount);
             this.tick(tick);
             this.tickEverything(this.scene, tick);
             this.renderer.render(this.scene, this.camera);
@@ -1221,10 +1224,12 @@ class Game {
         // composer.addPass(bloomPass);
         const clock = new THREE.Clock();
         let elapsedS = 0.0;
+        let frameCount = 0;
         this.renderer.setAnimationLoop(() => {
             const deltaS = Math.min(clock.getDelta(), 0.1);
             elapsedS += deltaS;
-            const tick = new tick_1.Tick(elapsedS, deltaS);
+            ++frameCount;
+            const tick = new tick_1.Tick(elapsedS, deltaS, frameCount);
             this.tickEverything(this.scene, tick);
             this.renderer.render(this.scene, this.camera);
             // composer.render();
@@ -1572,35 +1577,36 @@ class Hand extends THREE.Object3D {
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);
         const removedCube = this.construction.removeCube(this.p);
-        return removedCube;
+        if (removedCube) {
+            this.inventory.addItem(removedCube);
+        }
     }
     p = new THREE.Vector3();
     async initialize() {
         this.grip.setSqueezeCallback(() => {
-            //Debug.log('squeeze');
-            const removedCube = this.deleteCube();
-            //Debug.log('About to add');
-            if (removedCube) {
-                this.inventory.addItem(removedCube);
-            }
-            //Debug.log('Add done.');
+            this.deleteCube();
         });
         this.grip.setSelectStartCallback(() => {
             debug_1.Debug.log('selectstart');
-            this.deleteCube();
-            const p = new THREE.Vector3();
-            p.copy(this.cube.position);
-            this.place.playerToUniverse(p);
-            this.place.quantizePosition(p);
-            const rotation = new THREE.Quaternion();
-            rotation.copy(this.cube.quaternion);
-            rotation.multiply(this.place.playerGroup.quaternion);
-            this.place.quantizeQuaternion(rotation);
-            const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
-            this.construction.addCube(inWorldItem);
-            debug_1.Debug.log('About to remove.');
-            this.inventory.removeItem(this.item);
-            debug_1.Debug.log('Remove done.');
+            const itemQty = this.inventory.getItemQty();
+            if (itemQty.has(this.item)) {
+                if (itemQty.get(this.item) > 0) {
+                    this.deleteCube();
+                    const p = new THREE.Vector3();
+                    p.copy(this.cube.position);
+                    this.place.playerToUniverse(p);
+                    this.place.quantizePosition(p);
+                    const rotation = new THREE.Quaternion();
+                    rotation.copy(this.cube.quaternion);
+                    rotation.multiply(this.place.playerGroup.quaternion);
+                    this.place.quantizeQuaternion(rotation);
+                    const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
+                    this.construction.addCube(inWorldItem);
+                    debug_1.Debug.log('About to remove.');
+                    this.inventory.removeItem(this.item);
+                    debug_1.Debug.log('Remove done.');
+                }
+            }
         });
         // this.grip.addEventListener('selectend', () => {
         // });
@@ -2725,13 +2731,22 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Station = exports.Player = exports.Inventory = void 0;
 const exchange_1 = __webpack_require__(253);
 const THREE = __importStar(__webpack_require__(578));
+const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
+const settings_1 = __webpack_require__(451);
 // this class has one instance per item type.
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
 class Inventory {
     itemQty = new Map();
     index = 0;
+    constructor() {
+        if (settings_1.S.float('cr') > 0) {
+            for (const item of assets_1.Assets.items) {
+                this.itemQty.set(item, settings_1.S.float('cr'));
+            }
+        }
+    }
     addItem(input) {
         debug_1.Debug.log("adding " + JSON.stringify(input));
         if (this.itemQty.has(input)) {
@@ -3146,6 +3161,7 @@ class S {
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
+        S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -3330,9 +3346,11 @@ exports.Tick = void 0;
 class Tick {
     elapsedS;
     deltaS;
-    constructor(elapsedS, deltaS) {
+    frameCount;
+    constructor(elapsedS, deltaS, frameCount) {
         this.elapsedS = elapsedS;
         this.deltaS = deltaS;
+        this.frameCount = frameCount;
     }
 }
 exports.Tick = Tick;

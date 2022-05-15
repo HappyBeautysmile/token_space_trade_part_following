@@ -51,10 +51,12 @@ export class Game {
 
     const clock = new THREE.Clock();
     let elapsedS = 0.0;
+    let frameCount = 0;
     this.renderer.setAnimationLoop(() => {
       const deltaS = Math.min(clock.getDelta(), 0.1);
       elapsedS += deltaS;
-      const tick = new Tick(elapsedS, deltaS);
+      ++frameCount;
+      const tick = new Tick(elapsedS, deltaS, frameCount);
       this.tickEverything(this.scene, tick);
       this.renderer.render(this.scene, this.camera);
       // composer.render();
