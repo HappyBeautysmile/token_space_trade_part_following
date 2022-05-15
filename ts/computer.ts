@@ -1,7 +1,9 @@
 import * as THREE from "three";
-import { Assets, ModelLoader } from "./assets";
+import { Assets, ModelLoader, Item } from "./assets";
+import { Player } from "./player";
+import { Ticker, Tick } from "./tick";
 
-export class Computer {
+export class Computer extends THREE.Object3D implements Ticker {
     private canvas = document.createElement('canvas');
     private ctx = this.canvas.getContext('2d');
     texture = new THREE.CanvasTexture(this.canvas);
@@ -11,23 +13,32 @@ export class Computer {
     bottomButtonLabels = [];
 
 
-    private constructor(public model: THREE.Object3D) {
+    private constructor(model: THREE.Object3D, private player: Player) {
+        super();
+        this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
-        this.createGreenBars();
         this.labels();
         this.updateDisplay();
-        this.model.children.forEach(o => {
+        model.children.forEach(o => {
             const m = o as THREE.Mesh;
             if (m.name == "display") {
                 m.material = this.material;
             }
         })
+        this.showInventory();
+        setInterval(() => { }, 5000);
     }
-    public static async make() {
+
+    public tick(t: Tick) {
+        // TODO every 10 frames
+        this.showInventory();
+    }
+
+    public static async make(player: Player) {
         const model = await ModelLoader.loadModel(`Model/flight computer.glb`);
-        return new Computer(model);
+        return new Computer(model, player);
     }
 
     labels() {
@@ -47,12 +58,15 @@ export class Computer {
     }
 
     public updateDisplay() {
+        // clear display and add green bars
+        this.createGreenBars();
         // update rows
         const middleOfRow = this.canvas.height / 17 / 2;
         for (let i = 0; i < this.rowText.length; i++) {
             this.ctx.fillStyle = 'green';
             this.ctx.font = '24px monospace';
             this.ctx.textBaseline = 'middle'
+            this.ctx.textAlign = 'left'
             this.ctx.fillText(this.rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
         }
         //update buttons
@@ -67,6 +81,21 @@ export class Computer {
             this.ctx.fillText(this.topButtonLabels[i], columnSpacing * i + middleOfColumn, middleOfRow);
             this.ctx.fillText(this.bottomButtonLabels[i], columnSpacing * i + middleOfColumn, this.canvas.height - middleOfRow);
         }
+        this.texture.needsUpdate = true;
+    }
+
+    showInventory() {
+        const inv = this.player.inventory.getItemQty();
+        this.rowText = [];
+        let i = 0;
+        for (const [item, qty] of inv.entries()) {
+            this.rowText[i] = item.name + ' ' + qty.toFixed(0);
+            i++;
+            if (i > 15) {
+                break;
+            }
+        }
+        this.updateDisplay();
     }
 
     createGreenBars() {

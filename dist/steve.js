@@ -498,9 +498,9 @@ class BlockBuild {
         this.camera.lookAt(0, 1.7, -1.5);
         this.playerGroup.add(this.camera);
         this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera);
-        this.renderer = new THREE.WebGLRenderer();
-        //this.renderer.setSize(512, 512);
-        this.renderer.setSize(1024, 1024);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(512, 512);
+        //this.renderer.setSize(1024, 1024);
         document.body.appendChild(this.renderer.domElement);
         this.canvas = this.renderer.domElement;
         this.renderer.xr.enabled = true;
@@ -517,12 +517,12 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        const computer = await computer_1.Computer.make();
-        computer.model.translateY(0.5);
-        computer.model.rotateX(Math.PI / 4);
-        //computer.model.scale.set(10, 10, 10);
-        this.universeGroup.add(computer.model);
-        debug_1.Debug.log("flight computer right size");
+        const computer = await computer_1.Computer.make(this.player);
+        computer.translateY(0.5);
+        computer.rotateX(Math.PI / 4);
+        computer.scale.set(10, 10, 10);
+        this.universeGroup.add(computer);
+        debug_1.Debug.log("display inventory working?");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -692,8 +692,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Computer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
-class Computer {
-    model;
+class Computer extends THREE.Object3D {
+    player;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
     texture = new THREE.CanvasTexture(this.canvas);
@@ -701,24 +701,31 @@ class Computer {
     rowText = [];
     topButtonLabels = [];
     bottomButtonLabels = [];
-    constructor(model) {
-        this.model = model;
+    constructor(model, player) {
+        super();
+        this.player = player;
+        this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
-        this.createGreenBars();
         this.labels();
         this.updateDisplay();
-        this.model.children.forEach(o => {
+        model.children.forEach(o => {
             const m = o;
             if (m.name == "display") {
                 m.material = this.material;
             }
         });
+        this.showInventory();
+        setInterval(() => { }, 5000);
     }
-    static async make() {
+    tick(t) {
+        // TODO every 10 frames
+        this.showInventory();
+    }
+    static async make(player) {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
-        return new Computer(model);
+        return new Computer(model, player);
     }
     labels() {
         this.rowText = [];
@@ -735,12 +742,15 @@ class Computer {
         }
     }
     updateDisplay() {
+        // clear display and add green bars
+        this.createGreenBars();
         // update rows
         const middleOfRow = this.canvas.height / 17 / 2;
         for (let i = 0; i < this.rowText.length; i++) {
             this.ctx.fillStyle = 'green';
             this.ctx.font = '24px monospace';
             this.ctx.textBaseline = 'middle';
+            this.ctx.textAlign = 'left';
             this.ctx.fillText(this.rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
         }
         //update buttons
@@ -755,6 +765,20 @@ class Computer {
             this.ctx.fillText(this.topButtonLabels[i], columnSpacing * i + middleOfColumn, middleOfRow);
             this.ctx.fillText(this.bottomButtonLabels[i], columnSpacing * i + middleOfColumn, this.canvas.height - middleOfRow);
         }
+        this.texture.needsUpdate = true;
+    }
+    showInventory() {
+        const inv = this.player.inventory.getItemQty();
+        this.rowText = [];
+        let i = 0;
+        for (const [item, qty] of inv.entries()) {
+            this.rowText[i] = item.name + ' ' + qty.toFixed(0);
+            i++;
+            if (i > 15) {
+                break;
+            }
+        }
+        this.updateDisplay();
     }
     createGreenBars() {
         this.ctx.fillStyle = '#003300';
@@ -836,7 +860,7 @@ class ObjectConstruction {
         this.objects.set(key, object);
         this.container.add(object);
     }
-    // TODO: Return the InWorldItem.
+    // Return Item if there is an item at the location.  Otherwise, return null.
     removeCube(p) {
         const key = this.posToKey(p);
         let item = null;
@@ -1583,11 +1607,13 @@ class Hand extends THREE.Object3D {
     p = new THREE.Vector3();
     async initialize() {
         this.grip.setSqueezeCallback(() => {
-            debug_1.Debug.log('squeeze');
+            //Debug.log('squeeze');
             const removedCube = this.deleteCube();
-            debug_1.Debug.log('About to add');
-            this.inventory.addItem(removedCube);
-            debug_1.Debug.log('Add done.');
+            //Debug.log('About to add');
+            if (removedCube) {
+                this.inventory.addItem(removedCube);
+            }
+            //Debug.log('Add done.');
         });
         this.grip.setSelectStartCallback(() => {
             debug_1.Debug.log('selectstart');
@@ -2790,6 +2816,9 @@ class Inventory {
         }
         this.index = (this.index + 1) % num_elements;
         return Array.from(this.itemQty)[this.index][0];
+    }
+    getItemQty() {
+        return this.itemQty;
     }
 }
 exports.Inventory = Inventory;
