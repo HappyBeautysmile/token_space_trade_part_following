@@ -12,7 +12,7 @@ export interface GripLike extends THREE.Object3D {
 
 export class GripGrip extends THREE.Object3D implements GripLike {
   private grip: THREE.Object3D;
-  constructor(index: number, private xr: THREE.WebXRManager) {
+  constructor(readonly index: number, private xr: THREE.WebXRManager) {
     super();
     this.grip = xr.getControllerGrip(index);
     this.add(this.grip);

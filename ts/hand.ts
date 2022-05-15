@@ -25,6 +25,7 @@ export class Hand extends THREE.Object3D {
     private keysDown: Set<string>, private construction: Construction,
     private inventory: Inventory) {
     super();
+    this.leftHand = index === 0;
     this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
     // this.debug = new THREE.Mesh(
     //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);

@@ -1302,10 +1302,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MouseGrip = exports.GripGrip = void 0;
 const THREE = __importStar(__webpack_require__(578));
 class GripGrip extends THREE.Object3D {
+    index;
     xr;
     grip;
     constructor(index, xr) {
         super();
+        this.index = index;
         this.xr = xr;
         this.grip = xr.getControllerGrip(index);
         this.add(this.grip);
@@ -1451,6 +1453,7 @@ class Hand extends THREE.Object3D {
         this.keysDown = keysDown;
         this.construction = construction;
         this.inventory = inventory;
+        this.leftHand = index === 0;
         this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         // this.debug = new THREE.Mesh(
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
