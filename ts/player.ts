@@ -13,8 +13,10 @@ export class Inventory {
   private index = 0;
 
   constructor() {
-    for (const item of Assets.items) {
-      this.itemQty.set(item, S.float('cr'));
+    if (S.float('cr') > 0) {
+      for (const item of Assets.items) {
+        this.itemQty.set(item, S.float('cr'));
+      }
     }
   }
 

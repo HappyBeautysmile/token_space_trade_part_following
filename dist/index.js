@@ -2805,8 +2805,10 @@ class Inventory {
     itemQty = new Map();
     index = 0;
     constructor() {
-        for (const item of assets_1.Assets.items) {
-            this.itemQty.set(item, settings_1.S.float('cr'));
+        if (settings_1.S.float('cr') > 0) {
+            for (const item of assets_1.Assets.items) {
+                this.itemQty.set(item, settings_1.S.float('cr'));
+            }
         }
     }
     addItem(input) {
