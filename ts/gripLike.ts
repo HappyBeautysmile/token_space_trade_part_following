@@ -16,14 +16,22 @@ export class GripGrip extends THREE.Object3D implements GripLike {
     super();
     this.grip = xr.getControllerGrip(index);
     this.add(this.grip);
+
+    // If you want to see where the "grip" is, uncomment this code.
+    const ball = new THREE.Mesh(
+      new THREE.IcosahedronBufferGeometry(0.02, 3),
+      new THREE.MeshPhongMaterial({ color: 'pink' })
+    );
+    this.add(ball);
   }
 
-  // tick(t: Tick) {
-  //   this.position.copy(this.grip.position);
-  //   this.rotation.copy(this.grip.rotation);
-  //   this.quaternion.copy(this.grip.quaternion);
-  //   this.matrix.copy(this.grip.matrix);
-  // }
+  tick(t: Tick) {
+    this.position.copy(this.grip.position);
+    this.rotation.copy(this.grip.rotation);
+    this.quaternion.copy(this.grip.quaternion);
+    this.matrix.copy(this.grip.matrix);
+  }
+
   setSelectStartCallback(callback: () => void) {
     this.grip.addEventListener('selectstart', callback);
   }
