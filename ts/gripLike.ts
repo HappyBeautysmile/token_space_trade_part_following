@@ -10,19 +10,20 @@ export interface GripLike extends THREE.Object3D {
   getStick(): number;
 }
 
-export class GripGrip extends THREE.Object3D implements GripLike, Ticker {
+export class GripGrip extends THREE.Object3D implements GripLike {
   private grip: THREE.Object3D;
   constructor(index: number, private xr: THREE.WebXRManager) {
     super();
     this.grip = xr.getControllerGrip(index);
+    this.add(this.grip);
   }
 
-  tick(t: Tick) {
-    this.position.copy(this.grip.position);
-    this.rotation.copy(this.grip.rotation);
-    this.quaternion.copy(this.grip.quaternion);
-    this.matrix.copy(this.grip.matrix);
-  }
+  // tick(t: Tick) {
+  //   this.position.copy(this.grip.position);
+  //   this.rotation.copy(this.grip.rotation);
+  //   this.quaternion.copy(this.grip.quaternion);
+  //   this.matrix.copy(this.grip.matrix);
+  // }
   setSelectStartCallback(callback: () => void) {
     this.grip.addEventListener('selectstart', callback);
   }
@@ -38,7 +39,6 @@ export class GripGrip extends THREE.Object3D implements GripLike, Ticker {
 }
 
 export class MouseGrip extends THREE.Object3D implements GripLike {
-  private group = new THREE.Group();
   private callbacks = new Map<GripEventType, () => void>();
   private pointer = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
@@ -46,12 +46,15 @@ export class MouseGrip extends THREE.Object3D implements GripLike {
     private camera: THREE.Camera,
     private keysDown: Set<string>) {
     super();
+    canvas.oncontextmenu = () => false;
     this.callbacks.set('selectstart', () => { });
     this.callbacks.set('squeeze', () => { });
-    this.canvas.addEventListener('mouseover', (ev: MouseEvent) => {
+    this.canvas.addEventListener('mousemove', (ev: MouseEvent) => {
       this.onPointerMove(ev);
     });
     this.canvas.addEventListener('mousedown', (ev: MouseEvent) => {
+      ev.preventDefault();
+      ev.stopPropagation();
       switch (ev.button) {
         case 0: // Left button
           this.callbacks.get('selectstart')();
@@ -61,24 +64,30 @@ export class MouseGrip extends THREE.Object3D implements GripLike {
           break;
       }
     });
+    // If you want to see where the "grip" is, uncomment this code.
+    // const ball = new THREE.Mesh(
+    //   new THREE.IcosahedronBufferGeometry(0.02, 3),
+    //   new THREE.MeshPhongMaterial({ color: 'pink' })
+    // );
+    // this.add(ball);
   }
 
   onPointerMove(event: MouseEvent) {
-    this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-    this.pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    this.pointer.x = (event.clientX / this.canvas.width) * 2 - 1;
+    this.pointer.y = - (event.clientY / this.canvas.height) * 2 + 1;
     // update the picking ray with the camera and pointer position
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    this.group.position.copy(this.raycaster.ray.direction);
+    this.position.copy(this.raycaster.ray.direction);
     // Distance from camera to hand = 0.6 meters
-    this.group.position.setLength(0.6);
-    this.group.position.add(this.raycaster.ray.origin);
+    this.position.setLength(0.6);
+    this.position.add(this.raycaster.ray.origin);
   }
 
   setSelectStartCallback(callback: () => void) {
-    throw new Error("Not implemented.");
+    this.callbacks.set('selectstart', callback);
   }
   setSqueezeCallback(callback: () => void) {
-    throw new Error("Not implemented.");
+    this.callbacks.set('squeeze', callback);
   }
   getButtons(): number[] {
     throw new Error("Not implemented.");

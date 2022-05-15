@@ -27,6 +27,11 @@ http://localhost:8888/dist
 
 Ctrl-Shift-J to see the console log
 
+To enable mouse-as-grip use these parameters:
+
+http://localhost:8888/dist/?mouse=0&hr=0
+
+
 Happy coding!
 
 ## Overview

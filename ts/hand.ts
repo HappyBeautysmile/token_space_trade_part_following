@@ -10,6 +10,7 @@ import { Construction } from "./construction";
 import { InWorldItem } from "./inWorldItem";
 import { Inventory } from "./player";
 import { GripLike } from "./gripLike";
+import { S } from "./settings";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
@@ -50,7 +51,7 @@ export class Hand extends THREE.Object3D {
   private setCubePosition() {
     // The center of the chest is 50cm below the camera.
     this.chestPlayer.copy(this.place.camera.position);
-    this.chestPlayer.y -= 0.5;
+    this.chestPlayer.y += S.float('hr');
     this.chestPlayer = new Vector3(0, this.chestPlayer.y, 0);
 
     this.directionPlayer.copy(this.grip.position);

@@ -32,6 +32,7 @@ export class S {
     S.setDefault('sp', 3e6, 'Star System "Pop" radius');
     S.setDefault('m', 0, 'Use merged geometry in Block Build.');
     S.setDefault('ps', 30, 'Platform size.');
+    S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
 
     S.setDefault('pbf', 1e7, 'Point brightness factor');
   }
