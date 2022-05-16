@@ -438,7 +438,7 @@ class BlockBuild {
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
-        ab.buildSpacePort(20, 0, 20, 15 * 3);
+        ab.buildSpacePort(20, 0, 20, 9);
         this.getGrips();
         this.dumpScene(this.scene, '');
     }

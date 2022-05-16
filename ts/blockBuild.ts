@@ -60,7 +60,7 @@ export class BlockBuild {
       Math.round(S.float('ps')),
       0, 0, 0);
 
-    ab.buildSpacePort(20, 0, 20, 15 * 3);
+    ab.buildSpacePort(20, 0, 20, 9);
 
     this.getGrips();
     this.dumpScene(this.scene, '');
