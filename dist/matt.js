@@ -2622,9 +2622,11 @@ class Place {
             return;
         }
         debug_1.Debug.log(`Unmodified = ${JSON.stringify(motion)}`);
-        this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
+        // this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
         this.p.copy(motion);
-        this.p.applyMatrix3(this.cameraNormalMatrix);
+        this.p.applyQuaternion(this.camera.quaternion);
+        this.p.applyQuaternion(this.playerGroup.quaternion);
+        // this.p.applyMatrix3(this.cameraNormalMatrix);
         this.velocity.add(this.p);
         debug_1.Debug.log(`Rotated = ${JSON.stringify(this.p)}`);
         // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
