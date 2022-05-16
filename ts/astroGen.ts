@@ -73,7 +73,7 @@ export class AstroGen {
       return Assets.itemsByName.get('cube-tweek');
     }
     else {
-      return Assets.itemsByName.get('cube-glob');
+      return Assets.itemsByName.get('cube-rock');
     }
   }
 

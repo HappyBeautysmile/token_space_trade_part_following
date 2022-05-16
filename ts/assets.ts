@@ -146,7 +146,7 @@ export class Assets extends THREE.Object3D {
     const modelNames = [
       'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
       'thruster', 'tank', 'light-blue', 'port',
-      'cube-tweek', 'cube-glob', 'guide']
+      'cube-tweek', 'cube-glob', 'guide', 'cube-rock', 'corner']
     for (const modelName of modelNames) {
       // console.log(`Loading ${modelName}`);
       const model = await ModelLoader.loadModel(`Model/${modelName}.glb`);

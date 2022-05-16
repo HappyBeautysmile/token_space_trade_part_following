@@ -173,7 +173,7 @@ class Assets extends THREE.Object3D {
         const modelNames = [
             'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
             'thruster', 'tank', 'light-blue', 'port',
-            'cube-tweek', 'cube-glob', 'guide'
+            'cube-tweek', 'cube-glob', 'guide', 'cube-rock'
         ];
         for (const modelName of modelNames) {
             // console.log(`Loading ${modelName}`);
@@ -316,7 +316,7 @@ class AstroGen {
             return assets_1.Assets.itemsByName.get('cube-tweek');
         }
         else {
-            return assets_1.Assets.itemsByName.get('cube-glob');
+            return assets_1.Assets.itemsByName.get('cube-rock');
         }
     }
     addAt(x, y, z) {
