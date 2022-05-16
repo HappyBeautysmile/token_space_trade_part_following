@@ -473,10 +473,10 @@ class BlockBuild {
             this.v.z -= t.deltaS * 5;
         }
         if (this.keysDown.has('ArrowLeft')) {
-            this.camera.rotation.y += t.deltaS * 2;
+            this.place.playerGroup.rotateY(t.deltaS * 2);
         }
         if (this.keysDown.has('ArrowRight')) {
-            this.camera.rotation.y -= t.deltaS * 2;
+            this.place.playerGroup.rotateY(-t.deltaS * 2);
         }
         if (this.v.length() > 0) {
             this.place.movePlayerRelativeToCamera(this.v);
@@ -2598,7 +2598,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Place = void 0;
 const THREE = __importStar(__webpack_require__(578));
-const debug_1 = __webpack_require__(756);
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
 // For now we're implementing it so the player moves through the universe.
@@ -2623,18 +2622,7 @@ class Place {
         if (motion.length() === 0) {
             return;
         }
-        this.e.setFromQuaternion(this.camera.quaternion);
-        debug_1.Debug.log(`Camera Rotation = ${(this.e.y / Math.PI * 180).toFixed(0)}`);
-        // this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
-        this.q.copy(this.camera.quaternion);
-        this.q.multiply(this.playerGroup.quaternion);
-        this.e.setFromQuaternion(this.q);
-        this.e.x = 0;
-        this.e.z = 0;
-        this.q.setFromEuler(this.e);
         this.q.copy(this.playerGroup.quaternion);
-        this.e.setFromQuaternion(this.q);
-        debug_1.Debug.log(`Player Rotation = ${(this.e.y / Math.PI * 180).toFixed(0)}`);
         this.p.copy(motion);
         this.p.applyQuaternion(this.q);
         // this.p.applyMatrix3(this.cameraNormalMatrix);

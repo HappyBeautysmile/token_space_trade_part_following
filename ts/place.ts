@@ -14,15 +14,20 @@ export class Place {
   private p = new THREE.Vector3();
   private cameraNormalMatrix = new THREE.Matrix3();
   private velocity = new THREE.Vector3();
+  private q = new THREE.Quaternion();
+  private e = new THREE.Euler();
 
   // Moves the player relative to the camera's orientation.
   public movePlayerRelativeToCamera(motion: THREE.Vector3) {
-    this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
-
+    if (motion.length() === 0) {
+      return;
+    }
+    this.q.copy(this.playerGroup.quaternion);
     this.p.copy(motion);
-    this.p.applyMatrix3(this.cameraNormalMatrix);
+    this.p.applyQuaternion(this.q);
+
+    // this.p.applyMatrix3(this.cameraNormalMatrix);
     this.velocity.add(this.p);
-    // Debug.log(`p=${JSON.stringify(this.p)}`);
     // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
     // Debug.log(`motion=${JSON.stringify(motion)}`);
     //this.playerGroup.position.add(this.p);

@@ -112,10 +112,10 @@ export class BlockBuild {
       this.v.z -= t.deltaS * 5;
     }
     if (this.keysDown.has('ArrowLeft')) {
-      this.camera.rotation.y += t.deltaS * 2;
+      this.place.playerGroup.rotateY(t.deltaS * 2);
     }
     if (this.keysDown.has('ArrowRight')) {
-      this.camera.rotation.y -= t.deltaS * 2;
+      this.place.playerGroup.rotateY(-t.deltaS * 2);
     }
     if (this.v.length() > 0) {
       this.place.movePlayerRelativeToCamera(this.v);
@@ -183,7 +183,7 @@ export class BlockBuild {
     computer.scale.set(computerScale, computerScale, computerScale);
     this.universeGroup.add(computer);
 
-    Debug.log("added spaceport");
+    Debug.log("Move forward debug.");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
