@@ -169,7 +169,7 @@ class Assets extends THREE.Object3D {
         const modelNames = [
             'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
             'thruster', 'tank', 'light-blue', 'port',
-            'cube-tweek', 'cube-glob', 'guide'
+            'cube-tweek', 'cube-glob', 'guide', 'cube-rock', 'corner'
         ];
         for (const modelName of modelNames) {
             // console.log(`Loading ${modelName}`);
@@ -267,6 +267,28 @@ class AstroGen {
             }
         }
     }
+    buildDisk(r, xOffset, yOffset, zOffset) {
+        for (let x = -r; x < r; x++) {
+            for (let z = -r; z < r; z++) {
+                if (Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)) < r) {
+                    const baseItem = assets_1.Assets.items[0];
+                    const position = new THREE.Vector3(x + xOffset, yOffset, -z + zOffset * 2 - 10);
+                    const quaterion = new THREE.Quaternion();
+                    const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube'), new THREE.Vector3(x + xOffset, yOffset, z + zOffset), quaterion);
+                    this.construction.addCube(inWorldItem);
+                }
+            }
+        }
+    }
+    buildSpacePort(xOffset, yOffset, zOffset, height) {
+        let r = 1;
+        for (let y = 0; y < height; y++) {
+            if (y % 3 == 0) {
+                r = Math.pow(Math.random(), 2) * 10 + 1;
+            }
+            this.buildDisk(r, xOffset, y + yOffset, zOffset);
+        }
+    }
     changeColor(mesh) {
         debug_1.Debug.assert(mesh.type === "Mesh");
         const material = new THREE.MeshStandardMaterial();
@@ -286,7 +308,7 @@ class AstroGen {
             return assets_1.Assets.itemsByName.get('cube-tweek');
         }
         else {
-            return assets_1.Assets.itemsByName.get('cube-glob');
+            return assets_1.Assets.itemsByName.get('cube-rock');
         }
     }
     addAt(x, y, z) {
@@ -404,6 +426,7 @@ class BlockBuild {
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
+        ab.buildSpacePort(20, 0, 20, 9);
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -512,7 +535,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("added creative mode");
+        debug_1.Debug.log("added spaceport");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2575,6 +2598,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Place = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const debug_1 = __webpack_require__(756);
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
 // For now we're implementing it so the player moves through the universe.
@@ -2594,11 +2618,15 @@ class Place {
     velocity = new THREE.Vector3();
     // Moves the player relative to the camera's orientation.
     movePlayerRelativeToCamera(motion) {
+        if (motion.length() === 0) {
+            return;
+        }
+        debug_1.Debug.log(`Unmodified = ${JSON.stringify(motion)}`);
         this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
         this.p.copy(motion);
         this.p.applyMatrix3(this.cameraNormalMatrix);
         this.velocity.add(this.p);
-        // Debug.log(`p=${JSON.stringify(this.p)}`);
+        debug_1.Debug.log(`Rotated = ${JSON.stringify(this.p)}`);
         // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
         // Debug.log(`motion=${JSON.stringify(motion)}`);
         //this.playerGroup.position.add(this.p);
