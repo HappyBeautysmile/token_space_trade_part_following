@@ -2616,6 +2616,7 @@ class Place {
     p = new THREE.Vector3();
     cameraNormalMatrix = new THREE.Matrix3();
     velocity = new THREE.Vector3();
+    q = new THREE.Quaternion();
     // Moves the player relative to the camera's orientation.
     movePlayerRelativeToCamera(motion) {
         if (motion.length() === 0) {
@@ -2625,7 +2626,9 @@ class Place {
         // this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
         this.p.copy(motion);
         this.p.applyQuaternion(this.camera.quaternion);
-        this.p.applyQuaternion(this.playerGroup.quaternion);
+        this.q.copy(this.playerGroup.quaternion);
+        this.q.invert();
+        this.p.applyQuaternion(this.q);
         // this.p.applyMatrix3(this.cameraNormalMatrix);
         this.velocity.add(this.p);
         debug_1.Debug.log(`Rotated = ${JSON.stringify(this.p)}`);
