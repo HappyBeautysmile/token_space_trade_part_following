@@ -5,14 +5,14 @@
             "y": 2,
             "z": -5
         },
-        "quarternion": {
+        "quaternion": {
             "_x": 0,
             "_y": 0,
             "_z": 0,
             "_w": 1
         },
         "modelName": "wedge",
-        "textureName": "glossSecondary"
+        "materialName": "glossSecondary"
     },
     {
         "position": {
@@ -20,14 +20,14 @@
             "y": 1,
             "z": -5
         },
-        "quarternion": {
+        "quaternion": {
             "_x": 6.123233995736766e-17,
             "_y": -1,
             "_z": 6.123233995736766e-17,
             "_w": 3.749399456654644e-33
         },
         "modelName": "cube",
-        "textureName": "flatPrimary"
+        "materialName": "flatPrimary"
     },
     {
         "position": {
@@ -35,14 +35,14 @@
             "y": 1,
             "z": -5
         },
-        "quarternion": {
+        "quaternion": {
             "_x": 6.123233995736766e-17,
             "_y": -1,
             "_z": 6.123233995736766e-17,
             "_w": 3.749399456654644e-33
         },
         "modelName": "cube",
-        "textureName": "flatPrimary"
+        "materialName": "flatPrimary"
     },
     {
         "position": {
@@ -50,14 +50,14 @@
             "y": 2,
             "z": -5
         },
-        "quarternion": {
+        "quaternion": {
             "_x": 6.123233995736766e-17,
             "_y": 1,
             "_z": -6.123233995736766e-17,
             "_w": 3.749399456654644e-33
         },
         "modelName": "cube",
-        "textureName": "flatPrimary"
+        "materialName": "flatPrimary"
     },
     {
         "position": {
@@ -65,14 +65,14 @@
             "y": 1,
             "z": -5
         },
-        "quarternion": {
+        "quaternion": {
             "_x": 0.7071067811865476,
             "_y": 0.7071067811865475,
             "_z": -4.329780281177466e-17,
             "_w": 4.329780281177467e-17
         },
         "modelName": "wedge",
-        "textureName": "flatPrimary"
+        "materialName": "flatPrimary"
     },
     {
         "position": {
@@ -80,7 +80,7 @@
             "y": 1,
             "z": -5
         },
-        "quarternion": {
+        "quaternion": {
             "_x": 5.551115123125783e-17,
             "_y": -0.7071067811865475,
             "_z": 5.551115123125783e-17,

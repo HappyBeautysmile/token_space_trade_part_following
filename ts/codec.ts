@@ -8,7 +8,7 @@ export class Encode {
   static inWorldItem(o: InWorldItem): Object {
     const result = {};
     result['position'] = o.position;
-    result['quarternion'] = o.quaternion;
+    result['quaternion'] = o.quaternion;
     result['modelName'] = o.item.modelName;
     return result;
   }
@@ -22,25 +22,37 @@ export class Encode {
 }
 
 export class Decode {
-  static object3D(o: Object): THREE.Object3D {
-    const model = Assets.models.get(o['modelName']).clone();
-    Debug.assert(!!model, `No model for ${o['modelName']}`);
-    // TODO: Material loading isn't working.
-    // const material = Codec.findMaterialByName(o['materialName']);
-    // Debug.assert(!!material, `No material for ${o['materialName']}`)
-    let mesh = model.clone();
-    mesh.position.set(
-      o['position'].x, o['position'].y, o['position'].z);
-    const quaternion = new THREE.Quaternion();
-    Object.assign(quaternion, o['quaternion'])
-    mesh.applyQuaternion(quaternion);
-    return mesh;
+  //static object3D(o: Object): THREE.Object3D {
+  static toInWorldItem(o: Object): InWorldItem {
+    //const model = Assets.models.get(o['modelName']).clone();
+    //Debug.assert(!!model, `No model for ${o['modelName']}`);
+    //const material = Codec.findMaterialByName(o['materialName']);
+    //let mesh = model.clone();
+    //mesh.position.set(
+    //   o['position'].x, o['position'].y, o['position'].z);
+    // const quaternion = new THREE.Quaternion();
+    // Object.assign(quaternion, o['quaternion'])
+    // mesh.applyQuaternion(quaternion);
+
+    const inWorldItem = new InWorldItem(
+      Assets.itemsByName.get(o['modelName']),
+      new THREE.Vector3(o['position'].x, o['position'].y, o['position'].z),
+      o['quaternion']);
+
+    return inWorldItem;
   }
 
-  static arrayOfObject3D(obs: Object[]): THREE.Object3D[] {
-    const result: THREE.Object3D[] = [];
+  // static arrayOfObject3D(obs: Object[]): THREE.Object3D[] {
+  //   const result: THREE.Object3D[] = [];
+  //   for (const o of obs) {
+  //     result.push(Decode.object3D(o));
+  //   }
+  //   return result;
+  // }
+  static arrayOfInWorldItem(obs: Object[]) {
+    const result: InWorldItem[] = [];
     for (const o of obs) {
-      result.push(Decode.object3D(o));
+      result.push(Decode.toInWorldItem(o));
     }
     return result;
   }
