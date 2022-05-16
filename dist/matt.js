@@ -535,7 +535,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("added spaceport");
+        debug_1.Debug.log("Move forward debug.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2617,21 +2617,28 @@ class Place {
     cameraNormalMatrix = new THREE.Matrix3();
     velocity = new THREE.Vector3();
     q = new THREE.Quaternion();
+    e = new THREE.Euler();
     // Moves the player relative to the camera's orientation.
     movePlayerRelativeToCamera(motion) {
         if (motion.length() === 0) {
             return;
         }
-        debug_1.Debug.log(`Unmodified = ${JSON.stringify(motion)}`);
+        this.e.setFromQuaternion(this.camera.quaternion);
+        debug_1.Debug.log(`Camera Rotation = ${(this.e.y / Math.PI * 180).toFixed(0)}`);
         // this.cameraNormalMatrix.getNormalMatrix(this.camera.matrixWorld);
-        this.p.copy(motion);
-        this.p.applyQuaternion(this.camera.quaternion);
+        this.q.copy(this.camera.quaternion);
+        this.q.multiply(this.playerGroup.quaternion);
+        this.e.setFromQuaternion(this.q);
+        this.e.x = 0;
+        this.e.z = 0;
+        this.q.setFromEuler(this.e);
         this.q.copy(this.playerGroup.quaternion);
-        this.q.invert();
+        this.e.setFromQuaternion(this.q);
+        debug_1.Debug.log(`Player Rotation = ${(this.e.y / Math.PI * 180).toFixed(0)}`);
+        this.p.copy(motion);
         this.p.applyQuaternion(this.q);
         // this.p.applyMatrix3(this.cameraNormalMatrix);
         this.velocity.add(this.p);
-        debug_1.Debug.log(`Rotated = ${JSON.stringify(this.p)}`);
         // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
         // Debug.log(`motion=${JSON.stringify(motion)}`);
         //this.playerGroup.position.add(this.p);
