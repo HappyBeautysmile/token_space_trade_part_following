@@ -4,6 +4,7 @@ import { Assets, Item } from "./assets";
 import { Construction } from "./construction";
 import { Debug } from "./debug";
 import { InWorldItem } from "./inWorldItem";
+import { Zoom } from "./zoom";
 
 export class AstroGen {
   constructor(private construction: Construction) { }
@@ -21,6 +22,34 @@ export class AstroGen {
           }
         }
       }
+    }
+  }
+
+  private buildDisk(r: number,
+    xOffset: number, yOffset: number, zOffset: number) {
+    for (let x = -r; x < r; x++) {
+      for (let z = -r; z < r; z++) {
+        if (Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)) < r) {
+          const baseItem = Assets.items[0];
+          const position = new THREE.Vector3(x + xOffset, yOffset, -z + zOffset * 2 - 10);
+          const quaterion = new THREE.Quaternion();
+          const inWorldItem = new InWorldItem(
+            Assets.itemsByName.get('cube'),
+            new THREE.Vector3(x + xOffset, yOffset, z + zOffset),
+            quaterion);
+          this.construction.addCube(inWorldItem);
+        }
+      }
+    }
+  }
+
+  buildSpacePort(xOffset: number, yOffset: number, zOffset: number, height: number) {
+    let r = 1;
+    for (let y = 0; y < height; y++) {
+      if (y % 3 == 0) {
+        r = Math.pow(Math.random(), 2) * 10 + 1;
+      }
+      this.buildDisk(r, xOffset, y + yOffset, zOffset);
     }
   }
 

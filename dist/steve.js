@@ -275,6 +275,28 @@ class AstroGen {
             }
         }
     }
+    buildDisk(r, xOffset, yOffset, zOffset) {
+        for (let x = -r; x < r; x++) {
+            for (let z = -r; z < r; z++) {
+                if (Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)) < r) {
+                    const baseItem = assets_1.Assets.items[0];
+                    const position = new THREE.Vector3(x + xOffset, yOffset, -z + zOffset * 2 - 10);
+                    const quaterion = new THREE.Quaternion();
+                    const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube'), new THREE.Vector3(x + xOffset, yOffset, z + zOffset), quaterion);
+                    this.construction.addCube(inWorldItem);
+                }
+            }
+        }
+    }
+    buildSpacePort(xOffset, yOffset, zOffset, height) {
+        let r = 1;
+        for (let y = 0; y < height; y++) {
+            if (y % 3 == 0) {
+                r = Math.pow(Math.random(), 2) * 10 + 1;
+            }
+            this.buildDisk(r, xOffset, y + yOffset, zOffset);
+        }
+    }
     changeColor(mesh) {
         debug_1.Debug.assert(mesh.type === "Mesh");
         const material = new THREE.MeshStandardMaterial();
@@ -416,6 +438,7 @@ class BlockBuild {
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
+        ab.buildSpacePort(20, 0, 20, 15 * 3);
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -521,18 +544,21 @@ class BlockBuild {
         const computer = await computer_1.Computer.make(this.player);
         computer.translateY(0.5);
         computer.rotateX(Math.PI / 4);
-        computer.scale.set(10, 10, 10);
+        const computerScale = settings_1.S.float('cs');
+        computer.scale.set(computerScale, computerScale, computerScale);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("added creative mode");
+        debug_1.Debug.log("added spaceport");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
         const clock = new THREE.Clock();
         let elapsedS = 0.0;
+        let frameCount = 0;
         this.renderer.setAnimationLoop(() => {
             const deltaS = Math.min(clock.getDelta(), 0.1);
             elapsedS += deltaS;
-            const tick = new tick_1.Tick(elapsedS, deltaS);
+            ++frameCount;
+            const tick = new tick_1.Tick(elapsedS, deltaS, frameCount);
             this.tick(tick);
             this.tickEverything(this.scene, tick);
             this.renderer.render(this.scene, this.camera);
@@ -1254,10 +1280,12 @@ class Game {
         // composer.addPass(bloomPass);
         const clock = new THREE.Clock();
         let elapsedS = 0.0;
+        let frameCount = 0;
         this.renderer.setAnimationLoop(() => {
             const deltaS = Math.min(clock.getDelta(), 0.1);
             elapsedS += deltaS;
-            const tick = new tick_1.Tick(elapsedS, deltaS);
+            ++frameCount;
+            const tick = new tick_1.Tick(elapsedS, deltaS, frameCount);
             this.tickEverything(this.scene, tick);
             this.renderer.render(this.scene, this.camera);
             // composer.render();
@@ -1333,20 +1361,25 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MouseGrip = exports.GripGrip = void 0;
 const THREE = __importStar(__webpack_require__(232));
 class GripGrip extends THREE.Object3D {
+    index;
     xr;
     grip;
     constructor(index, xr) {
         super();
+        this.index = index;
         this.xr = xr;
         this.grip = xr.getControllerGrip(index);
         this.add(this.grip);
+        // If you want to see where the "grip" is, uncomment this code.
+        const ball = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
+        this.add(ball);
     }
-    // tick(t: Tick) {
-    //   this.position.copy(this.grip.position);
-    //   this.rotation.copy(this.grip.rotation);
-    //   this.quaternion.copy(this.grip.quaternion);
-    //   this.matrix.copy(this.grip.matrix);
-    // }
+    tick(t) {
+        this.position.copy(this.grip.position);
+        this.rotation.copy(this.grip.rotation);
+        this.quaternion.copy(this.grip.quaternion);
+        this.matrix.copy(this.grip.matrix);
+    }
     setSelectStartCallback(callback) {
         this.grip.addEventListener('selectstart', callback);
     }
@@ -1458,7 +1491,6 @@ exports.Hand = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
-const three_1 = __webpack_require__(232);
 const inWorldItem_1 = __webpack_require__(116);
 const settings_1 = __webpack_require__(451);
 class Hand extends THREE.Object3D {
@@ -1484,6 +1516,7 @@ class Hand extends THREE.Object3D {
         this.keysDown = keysDown;
         this.construction = construction;
         this.inventory = inventory;
+        this.leftHand = index === 0;
         this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         // this.debug = new THREE.Mesh(
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
@@ -1506,20 +1539,15 @@ class Hand extends THREE.Object3D {
     directionPlayer = new THREE.Vector3();
     setCubePosition() {
         // The center of the chest is 50cm below the camera.
-        this.chestPlayer.copy(this.place.camera.position);
+        this.place.camera.getWorldPosition(this.chestPlayer);
         this.chestPlayer.y += settings_1.S.float('hr');
-        this.chestPlayer = new three_1.Vector3(0, this.chestPlayer.y, 0);
-        this.directionPlayer.copy(this.grip.position);
+        this.grip.getWorldPosition(this.directionPlayer);
         this.directionPlayer.sub(this.chestPlayer);
         this.cube.position.copy(this.directionPlayer);
         this.cube.position.multiplyScalar(15);
-        // Debug.log("this.cube.quaterion=" + JSON.stringify(this.cube.quaternion));
-        // Debug.log("this.place.playerGroup.quaternion=" + JSON.stringify(this.place.playerGroup.quaternion));
-        // Debug.log("this.grip.quaternion=" + JSON.stringify(this.grip.quaternion));
-        this.cube.position.sub(this.place.playerGroup.position);
+        this.place.worldToPlayer(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
-    sourceLogged = false;
     lastButtons;
     v = new THREE.Vector3();
     tick(t) {
@@ -1532,16 +1560,6 @@ class Hand extends THREE.Object3D {
             }
         }
         if (source) {
-            if (!this.sourceLogged) {
-                if (source.handedness == "left") {
-                    this.leftHand = true;
-                }
-                else {
-                    this.leftHand = false;
-                }
-                debug_1.Debug.log(`Has a source. left:${this.leftHand} ${source.handedness}`);
-                this.sourceLogged = true;
-            }
             //this.debugMaterial.color = new THREE.Color('blue');
             const rateUpDown = 5;
             const rateMove = 10;
@@ -2681,6 +2699,9 @@ class Place {
     worldToUniverse(v) {
         this.universeGroup.worldToLocal(v);
     }
+    worldToPlayer(v) {
+        this.playerGroup.worldToLocal(v);
+    }
     // Quantizes the Euler angles to be cube-aligned
     quantizeRotation(v) {
         const q = Math.PI / 2;
@@ -3234,6 +3255,7 @@ class S {
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
         S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
+        S.setDefault('cs', 1.0, 'Scale of the computer model.');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -3422,9 +3444,11 @@ exports.Tick = void 0;
 class Tick {
     elapsedS;
     deltaS;
-    constructor(elapsedS, deltaS) {
+    frameCount;
+    constructor(elapsedS, deltaS, frameCount) {
         this.elapsedS = elapsedS;
         this.deltaS = deltaS;
+        this.frameCount = frameCount;
     }
 }
 exports.Tick = Tick;
