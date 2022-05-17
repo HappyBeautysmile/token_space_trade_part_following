@@ -555,7 +555,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("Debugging rotation.");
+        debug_1.Debug.log("Fixed block rotation.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1645,10 +1645,10 @@ class Hand extends THREE.Object3D {
                     const rotation = new THREE.Quaternion();
                     rotation.copy(this.grip.quaternion);
                     rotation.multiply(this.place.playerGroup.quaternion);
-                    const before = this.eulerString(rotation);
+                    // const before = this.eulerString(rotation);
                     this.place.quantizeQuaternion(rotation);
-                    const after = this.eulerString(rotation);
-                    debug_1.Debug.log(`${before} -> ${after}`);
+                    // const after = this.eulerString(rotation);
+                    // Debug.log(`${before} -> ${after}`);
                     const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
                     this.construction.addCube(inWorldItem);
                     debug_1.Debug.log('About to remove.');
