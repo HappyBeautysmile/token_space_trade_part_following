@@ -53,15 +53,17 @@ export class BlockBuild {
     }
     let ab = new AstroGen(this.construction);
 
-    // ab.buildPlatform(
-    //   Math.round(S.float('ps') * 2 / 3),
-    //   10,
-    //   Math.round(S.float('ps')),
-    //   0, 0, 0);
+    ab.buildPlatform(
+      Math.round(S.float('ps') * 2 / 3),
+      10,
+      Math.round(S.float('ps')),
+      0, 0, 0);
 
     //ab.buildSpacePort(20, 0, 20, 9);
 
-    await ab.loadJason("test", 0, 0, 0);
+    //await ab.loadJason("test", 0, 0, 0);
+
+    ab.buildOriginMarker(S.float('om'));
 
     this.getGrips();
     this.dumpScene(this.scene, '');

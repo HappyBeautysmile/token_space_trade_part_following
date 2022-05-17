@@ -95,6 +95,20 @@ export class AstroGen {
     this.construction.addCube(inWorldItem);
   }
 
+  buildOriginMarker(size: number) {
+    for (let x = 0; x < size; x++) {
+      for (let z = 0; z < size; z++) {
+        const quaternion = new THREE.Quaternion();
+        const inWorldItem = new InWorldItem(
+          Assets.itemsByName.get('cube'),
+          new THREE.Vector3(x, 0, z),
+          quaternion);
+        this.construction.addCube(inWorldItem);
+      }
+    }
+
+  }
+
   buildPlatform(xDim: number, yDim: number, zDim: number,
     xOffset: number, yOffset: number, zOffset: number) {
     for (let x = -xDim; x < xDim; x++) {
