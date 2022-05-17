@@ -152,6 +152,12 @@ export class Hand extends THREE.Object3D {
     }
   }
 
+  private eulerString(q: THREE.Quaternion) {
+    const v = new THREE.Euler();
+    v.setFromQuaternion(q);
+    return `[${(v.x * 180 / Math.PI).toFixed(0)},${(v.y * 180 / Math.PI).toFixed(0)},${(v.z * 180 / Math.PI).toFixed(0)}]`;
+  }
+
   private p = new THREE.Vector3();
   private async initialize() {
     this.grip.setSqueezeCallback(() => {
@@ -169,9 +175,12 @@ export class Hand extends THREE.Object3D {
           this.place.playerToUniverse(p);
           this.place.quantizePosition(p);
           const rotation = new THREE.Quaternion();
-          rotation.copy(this.cube.quaternion);
+          rotation.copy(this.grip.quaternion);
           rotation.multiply(this.place.playerGroup.quaternion);
+          const before = this.eulerString(rotation);
           this.place.quantizeQuaternion(rotation);
+          const after = this.eulerString(rotation);
+          Debug.log(`${before} -> ${after}`);
           const inWorldItem = new InWorldItem(this.item,
             p, rotation);
           this.construction.addCube(inWorldItem);
