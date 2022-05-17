@@ -248,6 +248,8 @@ const three_1 = __webpack_require__(578);
 const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
 const inWorldItem_1 = __webpack_require__(116);
+const fileIO_1 = __webpack_require__(3);
+const codec_1 = __webpack_require__(385);
 class AstroGen {
     construction;
     constructor(construction) {
@@ -260,8 +262,8 @@ class AstroGen {
                     if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
                         const baseItem = assets_1.Assets.items[0];
                         const position = new THREE.Vector3(x, y, -z * 2 - 10);
-                        const quaterion = new THREE.Quaternion();
-                        this.construction.addCube(new inWorldItem_1.InWorldItem(baseItem, position, quaterion));
+                        const quaternion = new THREE.Quaternion();
+                        this.construction.addCube(new inWorldItem_1.InWorldItem(baseItem, position, quaternion));
                     }
                 }
             }
@@ -273,8 +275,8 @@ class AstroGen {
                 if (Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)) < r) {
                     const baseItem = assets_1.Assets.items[0];
                     const position = new THREE.Vector3(x + xOffset, yOffset, -z + zOffset * 2 - 10);
-                    const quaterion = new THREE.Quaternion();
-                    const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube'), new THREE.Vector3(x + xOffset, yOffset, z + zOffset), quaterion);
+                    const quaternion = new THREE.Quaternion();
+                    const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube'), new THREE.Vector3(x + xOffset, yOffset, z + zOffset), quaternion);
                     this.construction.addCube(inWorldItem);
                 }
             }
@@ -314,10 +316,19 @@ class AstroGen {
     addAt(x, y, z) {
         const rotation = new three_1.Matrix4();
         rotation.makeRotationFromEuler(new THREE.Euler(Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2));
-        const quaterion = new THREE.Quaternion();
-        quaterion.setFromRotationMatrix(rotation);
-        const inWorldItem = new inWorldItem_1.InWorldItem(this.itemFromLocation(x, y, z), new THREE.Vector3(x, y, z), quaterion);
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromRotationMatrix(rotation);
+        const inWorldItem = new inWorldItem_1.InWorldItem(this.itemFromLocation(x, y, z), new THREE.Vector3(x, y, z), quaternion);
         this.construction.addCube(inWorldItem);
+    }
+    buildOriginMarker(size) {
+        for (let x = 0; x < size; x++) {
+            for (let z = 0; z < size; z++) {
+                const quaternion = new THREE.Quaternion();
+                const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get('cube'), new THREE.Vector3(x, 0, z), quaternion);
+                this.construction.addCube(inWorldItem);
+            }
+        }
     }
     buildPlatform(xDim, yDim, zDim, xOffset, yOffset, zOffset) {
         for (let x = -xDim; x < xDim; x++) {
@@ -342,6 +353,15 @@ class AstroGen {
                     }
                 }
             }
+        }
+    }
+    async loadJason(filename, xOffset, yOffset, zOffset) {
+        debug_1.Debug.log('loading test.json...');
+        const loadedObject = await fileIO_1.FileIO.httpGetAsync("./" + filename + ".json");
+        const loaded = codec_1.Decode.arrayOfInWorldItem(loadedObject);
+        for (const inWorldItem of loaded) {
+            inWorldItem.position.add(new THREE.Vector3(xOffset, yOffset, zOffset));
+            this.construction.addCube(inWorldItem);
         }
     }
 }
@@ -383,9 +403,7 @@ const hand_1 = __webpack_require__(673);
 const place_1 = __webpack_require__(151);
 const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
-const fileIO_1 = __webpack_require__(3);
 const construction_1 = __webpack_require__(844);
-const codec_1 = __webpack_require__(385);
 const astroGen_1 = __webpack_require__(419);
 const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
@@ -426,7 +444,9 @@ class BlockBuild {
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
-        ab.buildSpacePort(20, 0, 20, 9);
+        //ab.buildSpacePort(20, 0, 20, 9);
+        //await ab.loadJason("test", 0, 0, 0);
+        ab.buildOriginMarker(settings_1.S.float('om'));
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -552,11 +572,6 @@ class BlockBuild {
             this.renderer.render(this.scene, this.camera);
         });
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
-        debug_1.Debug.log('loading test.json...');
-        const loadedObject = await fileIO_1.FileIO.httpGetAsync("./test.json");
-        // console.log(JSON.stringify(loadedObject, null, 2));
-        debug_1.Debug.log('test.json loaded.');
-        const loaded = codec_1.Decode.arrayOfObject3D(loadedObject);
         return; // We need an explicit 'return' because this is async (?)
     }
     getGrips() {
@@ -615,11 +630,12 @@ exports.Codec = exports.Decode = exports.Encode = void 0;
 const THREE = __importStar(__webpack_require__(578));
 const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
+const inWorldItem_1 = __webpack_require__(116);
 class Encode {
     static inWorldItem(o) {
         const result = {};
         result['position'] = o.position;
-        result['quarternion'] = o.quaternion;
+        result['quaternion'] = o.quaternion;
         result['modelName'] = o.item.modelName;
         return result;
     }
@@ -633,23 +649,31 @@ class Encode {
 }
 exports.Encode = Encode;
 class Decode {
-    static object3D(o) {
-        const model = assets_1.Assets.models.get(o['modelName']).clone();
-        debug_1.Debug.assert(!!model, `No model for ${o['modelName']}`);
-        // TODO: Material loading isn't working.
-        // const material = Codec.findMaterialByName(o['materialName']);
-        // Debug.assert(!!material, `No material for ${o['materialName']}`)
-        let mesh = model.clone();
-        mesh.position.set(o['position'].x, o['position'].y, o['position'].z);
-        const quaternion = new THREE.Quaternion();
-        Object.assign(quaternion, o['quaternion']);
-        mesh.applyQuaternion(quaternion);
-        return mesh;
+    //static object3D(o: Object): THREE.Object3D {
+    static toInWorldItem(o) {
+        //const model = Assets.models.get(o['modelName']).clone();
+        //Debug.assert(!!model, `No model for ${o['modelName']}`);
+        //const material = Codec.findMaterialByName(o['materialName']);
+        //let mesh = model.clone();
+        //mesh.position.set(
+        //   o['position'].x, o['position'].y, o['position'].z);
+        // const quaternion = new THREE.Quaternion();
+        // Object.assign(quaternion, o['quaternion'])
+        // mesh.applyQuaternion(quaternion);
+        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get(o['modelName']), new THREE.Vector3(o['position'].x, o['position'].y, o['position'].z), o['quaternion']);
+        return inWorldItem;
     }
-    static arrayOfObject3D(obs) {
+    // static arrayOfObject3D(obs: Object[]): THREE.Object3D[] {
+    //   const result: THREE.Object3D[] = [];
+    //   for (const o of obs) {
+    //     result.push(Decode.object3D(o));
+    //   }
+    //   return result;
+    // }
+    static arrayOfInWorldItem(obs) {
         const result = [];
         for (const o of obs) {
-            result.push(Decode.object3D(o));
+            result.push(Decode.toInWorldItem(o));
         }
         return result;
     }
@@ -1476,7 +1500,7 @@ class Hand extends THREE.Object3D {
         this.keysDown = keysDown;
         this.construction = construction;
         this.inventory = inventory;
-        this.leftHand = index === 0;
+        this.leftHand = null;
         this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
         // this.debug = new THREE.Mesh(
         //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
@@ -1520,6 +1544,9 @@ class Hand extends THREE.Object3D {
             }
         }
         if (source) {
+            if (!this.leftHand) {
+                this.leftHand = source.handedness == "left";
+            }
             //this.debugMaterial.color = new THREE.Color('blue');
             const rateUpDown = 5;
             const rateMove = 10;
@@ -3193,6 +3220,7 @@ class S {
         S.setDefault('pbf', 1e7, 'Point brightness factor');
         S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
         S.setDefault('cs', 1.0, 'Scale of the computer model.');
+        S.setDefault('om', 0, 'Size of origin marker');
     }
     static float(name) {
         if (S.cache.has(name)) {
