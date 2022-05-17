@@ -180,7 +180,7 @@ export class Hand extends THREE.Object3D {
           const rotation = new THREE.Quaternion();
           rotation.copy(this.grip.quaternion);
           Debug.log(`copy of grip${JSON.stringify(rotation)}`);
-          Debug.log(`group applies${JSON.stringify(this.place.playerGroup.applyQuaternion(rotation))}`);
+          Debug.log(`play group ${JSON.stringify(this.place.playerGroup.quaternion)}`);
           rotation.multiply(this.place.playerGroup.quaternion);
           Debug.log(`multiplied${JSON.stringify(rotation)}`);
           const before = this.eulerString(rotation);
