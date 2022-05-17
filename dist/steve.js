@@ -1689,10 +1689,10 @@ class Hand extends THREE.Object3D {
                     rotation.multiply(this.place.playerGroup.quaternion);
                     debug_1.Debug.log(`multiplied${JSON.stringify(rotation)}`);
                     const before = this.eulerString(rotation);
-                    this.place.quantizeQuaternion(rotation);
-                    const after = this.eulerString(rotation);
-                    debug_1.Debug.log(`${before} -> ${after}`);
-                    debug_1.Debug.log(`quantized ${JSON.stringify(rotation)}`);
+                    // this.place.quantizeQuaternion(rotation);
+                    // const after = this.eulerString(rotation);
+                    // Debug.log(`${before} -> ${after}`);
+                    // Debug.log(`quantized ${JSON.stringify(rotation)}`);
                     const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
                     this.construction.addCube(inWorldItem);
                     debug_1.Debug.log('About to remove.');
