@@ -5,6 +5,8 @@ import { Construction } from "./construction";
 import { Debug } from "./debug";
 import { InWorldItem } from "./inWorldItem";
 import { Zoom } from "./zoom";
+import { FileIO } from "./fileIO";
+import { Decode } from "./codec";
 
 export class AstroGen {
   constructor(private construction: Construction) { }
@@ -16,9 +18,9 @@ export class AstroGen {
           if (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) < z / 2) {
             const baseItem = Assets.items[0];
             const position = new THREE.Vector3(x, y, -z * 2 - 10);
-            const quaterion = new THREE.Quaternion();
+            const quaternion = new THREE.Quaternion();
             this.construction.addCube(
-              new InWorldItem(baseItem, position, quaterion));
+              new InWorldItem(baseItem, position, quaternion));
           }
         }
       }
@@ -32,11 +34,11 @@ export class AstroGen {
         if (Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)) < r) {
           const baseItem = Assets.items[0];
           const position = new THREE.Vector3(x + xOffset, yOffset, -z + zOffset * 2 - 10);
-          const quaterion = new THREE.Quaternion();
+          const quaternion = new THREE.Quaternion();
           const inWorldItem = new InWorldItem(
             Assets.itemsByName.get('cube'),
             new THREE.Vector3(x + xOffset, yOffset, z + zOffset),
-            quaterion);
+            quaternion);
           this.construction.addCube(inWorldItem);
         }
       }
@@ -84,13 +86,27 @@ export class AstroGen {
       Math.round(Math.random() * 4) * Math.PI / 2,
       Math.round(Math.random() * 4) * Math.PI / 2
     ));
-    const quaterion = new THREE.Quaternion();
-    quaterion.setFromRotationMatrix(rotation);
+    const quaternion = new THREE.Quaternion();
+    quaternion.setFromRotationMatrix(rotation);
     const inWorldItem = new InWorldItem(
       this.itemFromLocation(x, y, z),
       new THREE.Vector3(x, y, z),
-      quaterion);
+      quaternion);
     this.construction.addCube(inWorldItem);
+  }
+
+  buildOriginMarker(size: number) {
+    for (let x = 0; x < size; x++) {
+      for (let z = 0; z < size; z++) {
+        const quaternion = new THREE.Quaternion();
+        const inWorldItem = new InWorldItem(
+          Assets.itemsByName.get('cube'),
+          new THREE.Vector3(x, 0, z),
+          quaternion);
+        this.construction.addCube(inWorldItem);
+      }
+    }
+
   }
 
   buildPlatform(xDim: number, yDim: number, zDim: number,
@@ -120,6 +136,16 @@ export class AstroGen {
           }
         }
       }
+    }
+  }
+
+  async loadJason(filename: string, xOffset: number, yOffset: number, zOffset: number) {
+    Debug.log('loading test.json...')
+    const loadedObject = await FileIO.httpGetAsync("./" + filename + ".json");
+    const loaded = Decode.arrayOfInWorldItem(loadedObject);
+    for (const inWorldItem of loaded) {
+      inWorldItem.position.add(new THREE.Vector3(xOffset, yOffset, zOffset))
+      this.construction.addCube(inWorldItem);
     }
   }
 }

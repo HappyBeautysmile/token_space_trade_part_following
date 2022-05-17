@@ -6,9 +6,8 @@ import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
-import { FileIO } from "./fileIO";
 import { Construction, MergedConstruction, ObjectConstruction } from "./construction";
-import { Decode } from "./codec";
+
 import { AstroGen } from "./astroGen";
 import { S } from "./settings";
 import { Inventory, Player } from "./player";
@@ -60,7 +59,11 @@ export class BlockBuild {
       Math.round(S.float('ps')),
       0, 0, 0);
 
-    ab.buildSpacePort(20, 0, 20, 9);
+    //ab.buildSpacePort(20, 0, 20, 9);
+
+    //await ab.loadJason("test", 0, 0, 0);
+
+    ab.buildOriginMarker(S.float('om'));
 
     this.getGrips();
     this.dumpScene(this.scene, '');
@@ -203,12 +206,6 @@ export class BlockBuild {
       this.renderer.render(this.scene, this.camera);
     });
     document.body.appendChild(VRButton.createButton(this.renderer));
-
-    Debug.log('loading test.json...')
-    const loadedObject = await FileIO.httpGetAsync("./test.json");
-    // console.log(JSON.stringify(loadedObject, null, 2));
-    Debug.log('test.json loaded.')
-    const loaded = Decode.arrayOfObject3D(loadedObject);
     return;  // We need an explicit 'return' because this is async (?)
   }
 
