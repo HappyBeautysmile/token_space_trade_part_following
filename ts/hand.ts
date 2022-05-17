@@ -179,13 +179,15 @@ export class Hand extends THREE.Object3D {
           this.place.quantizePosition(p);
           const rotation = new THREE.Quaternion();
           rotation.copy(this.grip.quaternion);
+          Debug.log(`copy of grip${JSON.stringify(rotation)}`);
           rotation.multiply(this.place.playerGroup.quaternion);
+          Debug.log(`multiplied${JSON.stringify(rotation)}`);
           const before = this.eulerString(rotation);
           const beforeQ = rotation;
           this.place.quantizeQuaternion(rotation);
           const after = this.eulerString(rotation);
           Debug.log(`${before} -> ${after}`);
-          Debug.log(`${beforeQ} -> ${rotation}`);
+          Debug.log(`quantized {JSON.stringify(rotation)}`);
           const inWorldItem = new InWorldItem(this.item,
             p, rotation);
           this.construction.addCube(inWorldItem);
