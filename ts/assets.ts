@@ -112,6 +112,7 @@ export class Assets extends THREE.Object3D {
     if (typeof (source) == typeof (THREE.Mesh)) {
       let mesh = source as THREE.Mesh;
       mesh.material = mat;
+      Debug.log(`material of ${source.name} changed to ${mat.userData['materialName']}`);
     }
     if (source.children) {
       for (const c of source.children) {
@@ -160,28 +161,11 @@ export class Assets extends THREE.Object3D {
         continue;
       }
       const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
-      //this.assets.replaceMaterial(m, newMat);
       m.userData = { "modelName": modelName };
-      //this.scene.add(m);
-      //this.universeGroup.add(m);
       m.position.set((this.models.size - modelNames.length / 2) * 1.4, 0, -15);
       Assets.models.set(modelName, m);
       // console.log(`Added ${modelName}`);
     }
-
-
-    // TODO: load all glb files int the Model directory into this.models
-
-    // const testFolder = 'Model/*.glb';
-    // const fs = require('fs');
-
-    // fs.readdir(testFolder, (err, files) => {
-    //     files.forEach(file => {
-    //         let filename = file as string;
-    //         const m = ModelLoader.loadModel(filename);
-    //         this.models[filename.split('.')[0]] = m;
-    //     });
-    // });
   }
 
   static initItems() {
@@ -191,11 +175,5 @@ export class Assets extends THREE.Object3D {
       Assets.items.push(i);
       this.itemsByName.set(key, i)
     };
-
-    // TODO load items from JSON
-    // const loadedObject = await FileIO.httpGetAsync("./test.json");
-    // for (const o of loadedObject) {
-    //   Assets.items.push(o as Item);
-    // }
   }
 }
