@@ -138,11 +138,14 @@ class Assets extends THREE.Object3D {
     }
     static replaceMaterial(source, mat) {
         debug_1.Debug.log(`${source.name} (${source.type})`);
-        for (let i = 0; i < source.children.length; i++) {
-            let t = typeof (source);
-            debug_1.Debug.log('source tpye: ' + t);
-            let mesh = source.children[i];
+        if (typeof (source) == typeof (THREE.Mesh)) {
+            let mesh = source;
             mesh.material = mat;
+        }
+        if (source.children) {
+            for (const c of source.children) {
+                this.replaceMaterial(c, mat);
+            }
         }
     }
     static nextItem() {
