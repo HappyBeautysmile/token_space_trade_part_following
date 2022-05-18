@@ -66,6 +66,7 @@ class Item {
     description;
     baseValue;
     modelName;
+    paintable = false;
     constructor(name, description, baseValue, modelName) {
         this.name = name;
         this.description = description;
@@ -203,9 +204,20 @@ class Assets extends THREE.Object3D {
         }
     }
     static initItems() {
+        const paintableItems = [
+            'cube', 'wedge', 'arm', 'cluster-jet', 'scaffold',
+            'thruster', 'tank', 'light-blue',
+            'corner'
+        ];
         Assets.items = [];
         for (const [key, value] of Assets.models.entries()) {
             const i = Item.make(key, "A wonderful item.", 0, key);
+            if (key in paintableItems) {
+                i.paintable = true;
+            }
+            else {
+                i.paintable = false;
+            }
             Assets.items.push(i);
             this.itemsByName.set(key, i);
         }
@@ -358,6 +370,29 @@ class AstroGen {
             }
         }
     }
+    getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+    buildRandomItems(n, r) {
+        const item = assets_1.Assets.items[this.getRandomInt(0, assets_1.Assets.items.length)];
+        debug_1.Debug.log(`Congrationations!  You have been awarded ${n.toFixed(0)} ${item.name}(s) for loging in today.`);
+        debug_1.Debug.log(`Hunt for them  ${r.toFixed(0)} meters from your current location.  Enjoy!`);
+        const maxTries = n * 10;
+        for (let i = 0; i < maxTries; i++) {
+            if (n < 1) {
+                break;
+            }
+            const x = this.getRandomInt(-r, r);
+            const y = this.getRandomInt(-r, r);
+            const z = this.getRandomInt(-r, r);
+            const pos = new THREE.Vector3(x, y, z);
+            const inWorldItem = new inWorldItem_1.InWorldItem(item, pos, new THREE.Quaternion());
+            if (!this.construction.cubeAt(pos)) {
+                this.construction.addCube(inWorldItem);
+                n--;
+            }
+        }
+    }
     async loadJason(filename, xOffset, yOffset, zOffset) {
         debug_1.Debug.log('loading test.json...');
         const loadedObject = await fileIO_1.FileIO.httpGetAsync("./" + filename + ".json");
@@ -454,6 +489,7 @@ class BlockBuild {
         //ab.buildSpacePort(20, 0, 20, 9);
         //await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
+        ab.buildRandomItems(10, 100);
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -922,6 +958,10 @@ class ObjectConstruction {
         }
         return item;
     }
+    cubeAt(p) {
+        const key = this.posToKey(p);
+        return this.objects.has(key);
+    }
 }
 exports.ObjectConstruction = ObjectConstruction;
 class MergedConstruction {
@@ -954,6 +994,10 @@ class MergedConstruction {
         const key = this.posToKey(p);
         this.mergedContainer.removeKey(key);
         return null;
+    }
+    cubeAt(p) {
+        //TODO: impement this function
+        return false;
     }
 }
 exports.MergedConstruction = MergedConstruction;
@@ -1634,8 +1678,9 @@ class Hand extends THREE.Object3D {
                 }
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
-                assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
-                //Assets.nextMaterial();
+                if (this.item.paintable) {
+                    assets_1.Assets.replaceMaterial(this.cube, assets_1.Assets.nextMaterial());
+                }
             }
             this.lastButtons = buttons;
         }
@@ -1692,8 +1737,6 @@ class Hand extends THREE.Object3D {
                 }
             }
         });
-        // this.grip.addEventListener('selectend', () => {
-        // });
     }
 }
 exports.Hand = Hand;

@@ -32,6 +32,7 @@ export class ModelLoader {
 // For now, items are also immutable.  We may allow things to be mutable
 // and that would change the property for all references to that item.
 export class Item {
+  public paintable = false;
   private constructor(
     readonly name: string, readonly description: string,
     readonly baseValue: number, readonly modelName: string) { }
@@ -177,9 +178,19 @@ export class Assets extends THREE.Object3D {
   }
 
   static initItems() {
+    const paintableItems = [
+      'cube', 'wedge', 'arm', 'cluster-jet', 'scaffold',
+      'thruster', 'tank', 'light-blue',
+      'corner']
     Assets.items = [];
     for (const [key, value] of Assets.models.entries()) {
       const i = Item.make(key, "A wonderful item.", 0, key);
+      if (key in paintableItems) {
+        i.paintable = true;
+      }
+      else {
+        i.paintable = false;
+      }
       Assets.items.push(i);
       this.itemsByName.set(key, i)
     };

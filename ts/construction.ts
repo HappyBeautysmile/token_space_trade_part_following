@@ -10,6 +10,7 @@ export interface Construction {
   // Adds an object to this collection.
   addCube(o: InWorldItem): void;
   removeCube(p: THREE.Vector3): Item;
+  cubeAt(p: THREE.Vector3): boolean
   save(): void;
 }
 
@@ -61,6 +62,11 @@ export class ObjectConstruction implements Construction {
     }
     return item;
   }
+
+  public cubeAt(p: THREE.Vector3): boolean {
+    const key = this.posToKey(p);
+    return this.objects.has(key)
+  }
 }
 
 export class MergedConstruction implements Construction {
@@ -97,5 +103,10 @@ export class MergedConstruction implements Construction {
     const key = this.posToKey(p);
     this.mergedContainer.removeKey(key);
     return null;
+  }
+
+  public cubeAt(p: THREE.Vector3): boolean {
+    //TODO: impement this function
+    return false;
   }
 }

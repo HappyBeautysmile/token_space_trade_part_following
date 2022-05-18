@@ -128,8 +128,9 @@ export class Hand extends THREE.Object3D {
         }
       }
       if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
-        Assets.replaceMaterial(this.cube, Assets.nextMaterial());
-        //Assets.nextMaterial();
+        if (this.item.paintable) {
+          Assets.replaceMaterial(this.cube, Assets.nextMaterial());
+        }
       }
       this.lastButtons = buttons;
     }
@@ -192,9 +193,5 @@ export class Hand extends THREE.Object3D {
         }
       }
     });
-
-    // this.grip.addEventListener('selectend', () => {
-
-    // });
   }
 }
