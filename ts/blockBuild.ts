@@ -180,11 +180,12 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
     const computer = await Computer.make(this.player);
-    computer.translateY(0.5);
+    computer.translateY(1.0);
+    computer.translateZ(-1.0);
     computer.rotateX(Math.PI / 4);
     const computerScale = S.float('cs');
     computer.scale.set(computerScale, computerScale, computerScale);
-    this.universeGroup.add(computer);
+    this.playerGroup.add(computer);
 
     Debug.log("work more on material switch");
 

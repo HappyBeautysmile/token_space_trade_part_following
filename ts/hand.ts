@@ -50,9 +50,10 @@ export class Hand extends THREE.Object3D {
   private chestPlayer = new THREE.Vector3();
   private directionPlayer = new THREE.Vector3();
   private setCubePosition() {
-    // The center of the chest is 50cm below the camera.
     this.place.camera.getWorldPosition(this.chestPlayer);
     this.chestPlayer.y += S.float('hr');
+    this.chestPlayer.x = 0;
+    this.chestPlayer.z = 0;
     this.grip.getWorldPosition(this.directionPlayer);
     this.directionPlayer.sub(this.chestPlayer);
 

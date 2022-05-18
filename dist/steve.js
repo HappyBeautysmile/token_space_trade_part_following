@@ -550,11 +550,12 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         const computer = await computer_1.Computer.make(this.player);
-        computer.translateY(0.5);
+        computer.translateY(1.0);
+        computer.translateZ(-1.0);
         computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
-        this.universeGroup.add(computer);
+        this.playerGroup.add(computer);
         debug_1.Debug.log("work more on material switch");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
@@ -1550,9 +1551,10 @@ class Hand extends THREE.Object3D {
     chestPlayer = new THREE.Vector3();
     directionPlayer = new THREE.Vector3();
     setCubePosition() {
-        // The center of the chest is 50cm below the camera.
         this.place.camera.getWorldPosition(this.chestPlayer);
         this.chestPlayer.y += settings_1.S.float('hr');
+        this.chestPlayer.x = 0;
+        this.chestPlayer.z = 0;
         this.grip.getWorldPosition(this.directionPlayer);
         this.directionPlayer.sub(this.chestPlayer);
         this.cube.position.copy(this.directionPlayer);
