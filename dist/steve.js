@@ -569,7 +569,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("Fixed block rotation.");
+        debug_1.Debug.log("change to 'guide' when out of an item.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1635,7 +1635,7 @@ class Hand extends THREE.Object3D {
                     this.setCube(i);
                 }
                 else {
-                    // TODO: change the hand to something that can't place.
+                    this.setCube(assets_1.Assets.itemsByName.get('guide'));
                 }
             }
             if (buttons[5] === 1 && this.lastButtons[5] != 1) { // B or Y
@@ -1686,21 +1686,13 @@ class Hand extends THREE.Object3D {
                     this.place.quantizePosition(p);
                     const rotation = new THREE.Quaternion();
                     this.grip.getWorldQuaternion(rotation);
-                    // rotation.copy(this.grip.quaternion);
-                    // Debug.log(`copy of grip${JSON.stringify(rotation)}`);
-                    // Debug.log(`play group ${JSON.stringify(this.place.playerGroup.quaternion)}`);
-                    // rotation.multiply(this.place.playerGroup.quaternion);
-                    // Debug.log(`multiplied${JSON.stringify(rotation)}`);
-                    // const before = this.eulerString(rotation);
                     this.place.quantizeQuaternion(rotation);
-                    // const after = this.eulerString(rotation);
-                    // Debug.log(`${before} -> ${after}`);
-                    // Debug.log(`quantized ${JSON.stringify(rotation)}`);
                     const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
                     this.construction.addCube(inWorldItem);
-                    //Debug.log('About to remove.');
                     this.inventory.removeItem(this.item);
-                    //Debug.log('Remove done.');
+                    if (!itemQty.has(this.item)) {
+                        this.setCube(assets_1.Assets.itemsByName.get('guide'));
+                    }
                 }
             }
         });

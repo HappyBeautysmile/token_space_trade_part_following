@@ -186,7 +186,7 @@ export class BlockBuild {
     computer.scale.set(computerScale, computerScale, computerScale);
     this.universeGroup.add(computer);
 
-    Debug.log("Fixed block rotation.");
+    Debug.log("change to 'guide' when out of an item.");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
