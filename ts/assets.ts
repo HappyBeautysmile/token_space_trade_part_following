@@ -108,8 +108,10 @@ export class Assets extends THREE.Object3D {
   }
 
   static replaceMaterial(source: THREE.Object3D, mat: THREE.Material) {
-    // console.log(`${source.name} (${source.type})`);
+    Debug.log(`${source.name} (${source.type})`);
     for (let i = 0; i < source.children.length; i++) {
+      let t = typeof (source);
+      Debug.log('source tpye: ' + t);
       let mesh = source.children[i] as THREE.Mesh;
       mesh.material = mat;
     }
