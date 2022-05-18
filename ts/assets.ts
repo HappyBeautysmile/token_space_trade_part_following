@@ -108,7 +108,7 @@ export class Assets extends THREE.Object3D {
   }
 
   static replaceMaterial(source: THREE.Object3D, mat: THREE.Material) {
-    Debug.log(`${source.name} (${source.type})`);
+    Debug.log(`${source.name} (${source.type}) ${typeof (source)} ${typeof (THREE.Mesh)}`);
     if (typeof (source) == typeof (THREE.Mesh)) {
       let mesh = source as THREE.Mesh;
       mesh.material = mat;

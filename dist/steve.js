@@ -137,7 +137,7 @@ class Assets extends THREE.Object3D {
         this.replaceMaterial(source, newMat);
     }
     static replaceMaterial(source, mat) {
-        debug_1.Debug.log(`${source.name} (${source.type})`);
+        debug_1.Debug.log(`${source.name} (${source.type}) ${typeof (source)} ${typeof (THREE.Mesh)}`);
         if (typeof (source) == typeof (THREE.Mesh)) {
             let mesh = source;
             mesh.material = mat;
@@ -555,7 +555,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.universeGroup.add(computer);
-        debug_1.Debug.log("work on material switch");
+        debug_1.Debug.log("work more on material switch");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
