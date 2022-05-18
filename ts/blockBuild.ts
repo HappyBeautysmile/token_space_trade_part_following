@@ -181,7 +181,7 @@ export class BlockBuild {
     this.universeGroup.add(debugPanel);
     const computer = await Computer.make(this.player);
     computer.translateY(1.0);
-    computer.translateZ(-1.0);
+    computer.translateZ(-0.5);
     computer.rotateX(Math.PI / 4);
     const computerScale = S.float('cs');
     computer.scale.set(computerScale, computerScale, computerScale);

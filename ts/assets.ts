@@ -109,17 +109,26 @@ export class Assets extends THREE.Object3D {
 
   static replaceMaterial(source: THREE.Object3D, mat: THREE.Material) {
     Debug.log(`${source.name} (${source.type}) ${typeof (source)} ${typeof (THREE.Mesh)}`);
-    if (typeof (source) == typeof (THREE.Mesh)) {
-      let mesh = source as THREE.Mesh;
-      mesh.material = mat;
+    if (source instanceof THREE.Mesh) {
+      source.material = mat;
       Debug.log(`material of ${source.name} changed to ${mat.userData['materialName']}`);
     }
-    if (source.children) {
-      for (const c of source.children) {
-        this.replaceMaterial(c, mat);
-      }
+    for (const child of source.children) {
+      this.replaceMaterial(child, mat);
     }
   }
+
+  // static setSingleSide(o: THREE.Object3D) {
+  //   if (o instanceof THREE.Mesh) {
+  //     if (o.material instanceof THREE.MeshStandardMaterial) {
+  //       o.material.side = THREE.FrontSide;
+  //     }
+  //   }
+  //   for (const child of o.children) {
+  //     ModelLoader.setSingleSide(child);
+  //   }
+  // }
+  //}
 
   static nextItem(): Item {
     Assets.itemIndex = (Assets.itemIndex + 1) % Assets.items.length;
