@@ -119,6 +119,16 @@ export class Assets extends THREE.Object3D {
     }
   }
 
+  static getFirstMaterial(source: THREE.Object3D): THREE.Material {
+    if (source.type == "Mesh") {
+      let mesh = source as THREE.Mesh;
+      return mesh.material as THREE.Material;
+    }
+    for (const child of source.children) {
+      this.getFirstMaterial(child);
+    }
+  }
+
   static nextItem(): Item {
     Assets.itemIndex = (Assets.itemIndex + 1) % Assets.items.length;
     return Assets.items[Assets.itemIndex];

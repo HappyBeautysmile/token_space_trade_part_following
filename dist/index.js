@@ -147,6 +147,15 @@ class Assets extends THREE.Object3D {
             this.replaceMaterial(child, mat);
         }
     }
+    static getFirstMaterial(source) {
+        if (source.type == "Mesh") {
+            let mesh = source;
+            return mesh.material;
+        }
+        for (const child of source.children) {
+            this.getFirstMaterial(child);
+        }
+    }
     static nextItem() {
         Assets.itemIndex = (Assets.itemIndex + 1) % Assets.items.length;
         return Assets.items[Assets.itemIndex];
@@ -549,7 +558,7 @@ class BlockBuild {
         this.universeGroup.add(debugPanel);
         const computer = await computer_1.Computer.make(this.player);
         computer.translateY(1.0);
-        computer.translateZ(-0.5);
+        computer.translateZ(-0.3);
         computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
@@ -1674,6 +1683,7 @@ class Hand extends THREE.Object3D {
                     this.grip.getWorldQuaternion(rotation);
                     this.place.quantizeQuaternion(rotation);
                     const inWorldItem = new inWorldItem_1.InWorldItem(this.item, p, rotation);
+                    inWorldItem.replaceMaterial(assets_1.Assets.getFirstMaterial(this.cube));
                     this.construction.addCube(inWorldItem);
                     this.inventory.removeItem(this.item);
                     if (!itemQty.has(this.item)) {
@@ -1719,6 +1729,9 @@ class InWorldItem {
     // graph.
     getObject() {
         return this.modelPrototype.clone();
+    }
+    replaceMaterial(mat) {
+        assets_1.Assets.replaceMaterial(this.modelPrototype, mat);
     }
 }
 exports.InWorldItem = InWorldItem;

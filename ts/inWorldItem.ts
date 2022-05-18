@@ -23,4 +23,8 @@ export class InWorldItem {
   public getObject(): THREE.Object3D {
     return this.modelPrototype.clone();
   }
+
+  public replaceMaterial(mat: THREE.Material) {
+    Assets.replaceMaterial(this.modelPrototype, mat);
+  }
 }

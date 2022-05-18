@@ -183,6 +183,7 @@ export class Hand extends THREE.Object3D {
           this.place.quantizeQuaternion(rotation);
           const inWorldItem = new InWorldItem(this.item,
             p, rotation);
+          inWorldItem.replaceMaterial(Assets.getFirstMaterial(this.cube));
           this.construction.addCube(inWorldItem);
           this.inventory.removeItem(this.item);
           if (!itemQty.has(this.item)) {
