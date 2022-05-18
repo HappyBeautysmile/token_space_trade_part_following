@@ -33,10 +33,11 @@ export class Inventory {
     Debug.log("removing " + JSON.stringify(input));
     if (this.itemQty.has(input)) {
       this.itemQty.set(input, this.itemQty.get(input) - 1);
-    } else {
-      //this.itemQty.set(input, -1);
-      this.itemQty.delete(input);
+      if (this.itemQty.get(input) < 1) {
+        this.itemQty.delete(input);
+      }
     }
+
   }
 
   nextItem() {

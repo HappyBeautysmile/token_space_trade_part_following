@@ -138,25 +138,15 @@ class Assets extends THREE.Object3D {
     }
     static replaceMaterial(source, mat) {
         debug_1.Debug.log(`${source.name} (${source.type}) ${typeof (source)} ${typeof (THREE.Mesh)}`);
-        if (source instanceof THREE.Mesh) {
-            source.material = mat;
+        if (source.type == "Mesh") {
+            let mesh = source;
+            mesh.material = mat;
             debug_1.Debug.log(`material of ${source.name} changed to ${mat.userData['materialName']}`);
         }
         for (const child of source.children) {
             this.replaceMaterial(child, mat);
         }
     }
-    // static setSingleSide(o: THREE.Object3D) {
-    //   if (o instanceof THREE.Mesh) {
-    //     if (o.material instanceof THREE.MeshStandardMaterial) {
-    //       o.material.side = THREE.FrontSide;
-    //     }
-    //   }
-    //   for (const child of o.children) {
-    //     ModelLoader.setSingleSide(child);
-    //   }
-    // }
-    //}
     static nextItem() {
         Assets.itemIndex = (Assets.itemIndex + 1) % Assets.items.length;
         return Assets.items[Assets.itemIndex];
@@ -2880,10 +2870,9 @@ class Inventory {
         debug_1.Debug.log("removing " + JSON.stringify(input));
         if (this.itemQty.has(input)) {
             this.itemQty.set(input, this.itemQty.get(input) - 1);
-        }
-        else {
-            //this.itemQty.set(input, -1);
-            this.itemQty.delete(input);
+            if (this.itemQty.get(input) < 1) {
+                this.itemQty.delete(input);
+            }
         }
     }
     nextItem() {
