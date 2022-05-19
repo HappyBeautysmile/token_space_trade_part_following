@@ -212,7 +212,7 @@ class Assets extends THREE.Object3D {
         Assets.items = [];
         for (const [key, value] of Assets.models.entries()) {
             const i = Item.make(key, "A wonderful item.", 0, key);
-            if (key in paintableItems) {
+            if (paintableItems.includes(key)) {
                 i.paintable = true;
             }
             else {
@@ -371,12 +371,12 @@ class AstroGen {
         }
     }
     getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min)) + min;
+        return Math.floor(Math.pow(Math.random(), 2) * (max - min)) + min;
     }
     buildRandomItems(n, r) {
         const item = assets_1.Assets.items[this.getRandomInt(0, assets_1.Assets.items.length)];
         debug_1.Debug.log(`Congrationations!  You have been awarded ${n.toFixed(0)} ${item.name}(s) for loging in today.`);
-        debug_1.Debug.log(`Hunt for them  ${r.toFixed(0)} meters from your current location.  Enjoy!`);
+        debug_1.Debug.log(`Hunt for them ${r.toFixed(0)} meters from your current location.  Enjoy!`);
         const maxTries = n * 10;
         for (let i = 0; i < maxTries; i++) {
             if (n < 1) {
@@ -394,7 +394,7 @@ class AstroGen {
         }
     }
     async loadJason(filename, xOffset, yOffset, zOffset) {
-        debug_1.Debug.log('loading test.json...');
+        debug_1.Debug.log(`loading ${filename}.json...`);
         const loadedObject = await fileIO_1.FileIO.httpGetAsync("./" + filename + ".json");
         const loaded = codec_1.Decode.arrayOfInWorldItem(loadedObject);
         for (const inWorldItem of loaded) {
@@ -487,7 +487,7 @@ class BlockBuild {
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
         //ab.buildSpacePort(20, 0, 20, 9);
-        //await ab.loadJason("test", 0, 0, 0);
+        await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
         ab.buildRandomItems(10, 100);
         this.getGrips();
@@ -593,7 +593,7 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         const computer = await computer_1.Computer.make(this.player);
-        computer.translateY(1.0);
+        computer.translateY(settings_1.S.float('ch'));
         computer.translateZ(-0.3);
         computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
@@ -708,7 +708,11 @@ class Decode {
         // const quaternion = new THREE.Quaternion();
         // Object.assign(quaternion, o['quaternion'])
         // mesh.applyQuaternion(quaternion);
-        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get(o['modelName']), new THREE.Vector3(o['position'].x, o['position'].y, o['position'].z), o['quaternion']);
+        const quaternion = new THREE.Quaternion();
+        Object.assign(quaternion, o['quaternion']);
+        const position = new THREE.Vector3();
+        Object.assign(position, o['position']);
+        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get(o['modelName']), position, quaternion);
         return inWorldItem;
     }
     // static arrayOfObject3D(obs: Object[]): THREE.Object3D[] {
@@ -995,6 +999,7 @@ class MergedConstruction {
         this.mergedContainer.removeKey(key);
         return null;
     }
+    // return true if a block is already at the given location.  Otherwise return false.
     cubeAt(p) {
         //TODO: impement this function
         return false;
@@ -3336,6 +3341,7 @@ class S {
         S.setDefault('pbf', 1e7, 'Point brightness factor');
         S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
         S.setDefault('cs', 1.0, 'Scale of the computer model.');
+        S.setDefault('ch', 0.5, 'Height of computer from the floor');
         S.setDefault('om', 0, 'Size of origin marker');
     }
     static float(name) {

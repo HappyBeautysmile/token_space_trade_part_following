@@ -61,7 +61,7 @@ export class BlockBuild {
 
     //ab.buildSpacePort(20, 0, 20, 9);
 
-    //await ab.loadJason("test", 0, 0, 0);
+    await ab.loadJason("test", 0, 0, 0);
 
     ab.buildOriginMarker(S.float('om'));
 
@@ -182,7 +182,7 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
     const computer = await Computer.make(this.player);
-    computer.translateY(1.0);
+    computer.translateY(S.float('ch'));
     computer.translateZ(-0.3);
     computer.rotateX(Math.PI / 4);
     const computerScale = S.float('cs');

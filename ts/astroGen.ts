@@ -140,13 +140,13 @@ export class AstroGen {
   }
 
   getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min)) + min;
+    return Math.floor(Math.pow(Math.random(), 2) * (max - min)) + min;
   }
 
   buildRandomItems(n: number, r: number) {
     const item = Assets.items[this.getRandomInt(0, Assets.items.length)];
     Debug.log(`Congrationations!  You have been awarded ${n.toFixed(0)} ${item.name}(s) for loging in today.`);
-    Debug.log(`Hunt for them  ${r.toFixed(0)} meters from your current location.  Enjoy!`);
+    Debug.log(`Hunt for them ${r.toFixed(0)} meters from your current location.  Enjoy!`);
     const maxTries = n * 10;
     for (let i = 0; i < maxTries; i++) {
       if (n < 1) {
@@ -168,7 +168,7 @@ export class AstroGen {
   }
 
   async loadJason(filename: string, xOffset: number, yOffset: number, zOffset: number) {
-    Debug.log('loading test.json...')
+    Debug.log(`loading ${filename}.json...`);
     const loadedObject = await FileIO.httpGetAsync("./" + filename + ".json");
     const loaded = Decode.arrayOfInWorldItem(loadedObject);
     for (const inWorldItem of loaded) {

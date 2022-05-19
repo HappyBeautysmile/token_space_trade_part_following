@@ -36,6 +36,7 @@ export class S {
     S.setDefault('pbf', 1e7, 'Point brightness factor');
     S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
     S.setDefault('cs', 1.0, 'Scale of the computer model.');
+    S.setDefault('ch', 0.5, 'Height of computer from the floor');
     S.setDefault('om', 0, 'Size of origin marker');
   }
 

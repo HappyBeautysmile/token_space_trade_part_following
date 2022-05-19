@@ -105,6 +105,7 @@ export class MergedConstruction implements Construction {
     return null;
   }
 
+  // return true if a block is already at the given location.  Otherwise return false.
   public cubeAt(p: THREE.Vector3): boolean {
     //TODO: impement this function
     return false;
