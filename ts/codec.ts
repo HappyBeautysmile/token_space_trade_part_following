@@ -34,10 +34,12 @@ export class Decode {
     // Object.assign(quaternion, o['quaternion'])
     // mesh.applyQuaternion(quaternion);
 
+    const quaternion = new THREE.Quaternion();
+    Object.assign(quaternion, o['quaternion'])
+    const position = new THREE.Vector3();
+    Object.assign(position, o['position']);
     const inWorldItem = new InWorldItem(
-      Assets.itemsByName.get(o['modelName']),
-      new THREE.Vector3(o['position'].x, o['position'].y, o['position'].z),
-      o['quaternion']);
+      Assets.itemsByName.get(o['modelName']), position, quaternion);
 
     return inWorldItem;
   }
