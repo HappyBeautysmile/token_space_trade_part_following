@@ -41,8 +41,7 @@ export class ObjectConstruction implements Construction {
     this.items.set(key, o);
     const object = o.getObject();
     object.position.copy(o.position);
-    // MWD the line below works with most use cases, but not when loading from JSON.
-    //object.quaternion.copy(o.quaternion);
+    object.quaternion.copy(o.quaternion);
     Debug.assert(!!object);
     this.objects.set(key, object);
     this.container.add(object);

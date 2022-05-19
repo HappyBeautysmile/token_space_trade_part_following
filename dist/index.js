@@ -398,9 +398,8 @@ class AstroGen {
         const loadedObject = await fileIO_1.FileIO.httpGetAsync("./" + filename + ".json");
         const loaded = codec_1.Decode.arrayOfInWorldItem(loadedObject);
         for (const inWorldItem of loaded) {
-            const newiwi = new inWorldItem_1.InWorldItem(inWorldItem.item, inWorldItem.position, inWorldItem.quaternion);
-            newiwi.position.add(new THREE.Vector3(xOffset, yOffset, zOffset));
-            this.construction.addCube(newiwi);
+            inWorldItem.position.add(new THREE.Vector3(xOffset, yOffset, zOffset));
+            this.construction.addCube(inWorldItem);
         }
     }
 }
@@ -709,7 +708,11 @@ class Decode {
         // const quaternion = new THREE.Quaternion();
         // Object.assign(quaternion, o['quaternion'])
         // mesh.applyQuaternion(quaternion);
-        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get(o['modelName']), new THREE.Vector3(o['position'].x, o['position'].y, o['position'].z), o['quaternion']);
+        const quaternion = new THREE.Quaternion();
+        Object.assign(quaternion, o['quaternion']);
+        const position = new THREE.Vector3();
+        Object.assign(position, o['position']);
+        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get(o['modelName']), position, quaternion);
         return inWorldItem;
     }
     // static arrayOfObject3D(obs: Object[]): THREE.Object3D[] {
@@ -939,7 +942,7 @@ class ObjectConstruction {
         this.items.set(key, o);
         const object = o.getObject();
         object.position.copy(o.position);
-        //object.quaternion.copy(o.quaternion);
+        object.quaternion.copy(o.quaternion);
         debug_1.Debug.assert(!!object);
         this.objects.set(key, object);
         this.container.add(object);
