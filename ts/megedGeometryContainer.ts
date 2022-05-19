@@ -1,28 +1,146 @@
 import * as THREE from "three";
+import { BufferAttribute, MeshNormalMaterial } from "three";
 import { Debug } from "./debug";
+import { Tick, Ticker } from "./tick";
 
-class Mergable {
-  private positions: Float32Array;
-  private normals: Float32Array;
-  private index: number[];
+interface Mergable {
+  getIndexCount(): number;
+  getPositionCount(): number;
+  positions(): Iterable<number>;
+  normals(): Iterable<number>;
+  index(): Iterable<number>;
+  getCentroid(centroid: THREE.Vector3): void;
+}
+
+class MergableSet implements Mergable {
+  private children: Mergable[] = [];
+  private size = 0;
+  private positionCount = 0;
+  private centroid = new THREE.Vector3();
+  constructor() { }
+
+  public add(m: Mergable) {
+    this.children.push(m);
+    this.centroid.multiplyScalar(this.size);
+    const mCentroid = new THREE.Vector3();
+    m.getCentroid(mCentroid);
+    mCentroid.multiplyScalar(m.getIndexCount());
+    this.centroid.add(mCentroid);
+    this.centroid.multiplyScalar(1 / (this.size + m.getIndexCount()));
+    this.size += m.getIndexCount();
+    this.positionCount += m.getPositionCount();
+  }
+
+  *positions() {
+    for (const child of this.children) {
+      yield* child.positions();
+    }
+  }
+
+  *normals() {
+    for (const child of this.children) {
+      yield* child.normals();
+    }
+  }
+
+  *index() {
+    let indexOffset = 0;
+    for (const child of this.children) {
+      for (const i of child.index()) {
+        yield i + indexOffset;
+      }
+      indexOffset += child.getIndexCount();
+    }
+  }
+
+  getCentroid(c: THREE.Vector3) {
+    c.copy(this.centroid);
+  }
+
+  getIndexCount(): number {
+    return this.size;
+  }
+
+  getPositionCount(): number {
+    return this.positionCount;
+  }
+
+  public sort() {
+    const v1 = new THREE.Vector3();
+    const v2 = new THREE.Vector3();
+    this.children.sort((a: Mergable, b: Mergable) => {
+      // Sort elements furthest from centroid first.  When rendered
+      // we make use of the z-buffer to prevent excessive calls to the
+      // fragment shader.
+      a.getCentroid(v1);
+      v1.sub(this.centroid);
+      b.getCentroid(v2);
+      v2.sub(this.centroid);
+      return v2.manhattanLength() - v1.manhattanLength();
+    });
+  }
+
+}
+
+class MergableGeometry implements Mergable {
+  private positionsArray: Float32Array;
+  private normalsArray: Float32Array;
+  private indexArray: number[] = [];
+  private centroid: THREE.Vector3;
+
+  *positions() {
+    yield* this.positionsArray;
+  }
+
+  *normals() {
+    yield* this.normalsArray;
+  }
+
+  *index() {
+    yield* this.indexArray;
+  }
+
+  getCentroid(centroid: THREE.Vector3) {
+    centroid.copy(this.centroid);
+  }
+
+  getIndexCount() {
+    return this.indexArray.length;
+  }
+
+  getPositionCount() {
+    return this.positions.length / 3;
+  }
+
   constructor(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4) {
     const positionsAtt = geometry.getAttribute('position');
     if (geometry.index) {
       for (let i = 0; i < geometry.index.count; ++i) {
-        this.index.push(geometry.index.getX(i));
+        this.indexArray.push(geometry.index.getX(i));
       }
     } else {
       for (let i = 0; i < positionsAtt.count; ++i) {
-        this.index.push(i);
+        this.indexArray.push(i);
       }
     }
-    this.positions = new Float32Array(this.index.length * 3);
-    this.normals = new Float32Array(this.index.length * 3);
-    this.copyAtt3(positionsAtt, this.positions, matrix);
+    this.positionsArray = new Float32Array(this.indexArray.length * 3);
+    this.normalsArray = new Float32Array(this.indexArray.length * 3);
+    this.copyAtt3(positionsAtt, this.positionsArray, matrix);
     const m3 = new THREE.Matrix3();
     m3.getNormalMatrix(matrix);
     matrix.setFromMatrix3(m3);
-    this.copyAtt3(geometry.getAttribute('normal'), this.normals, matrix);
+    this.copyAtt3(geometry.getAttribute('normal'), this.normalsArray, matrix);
+    this.setCentroid();
+  }
+
+  private setCentroid() {
+    this.centroid = new THREE.Vector3(0, 0, 0);
+    for (let i = 0; i < this.positionsArray.length; i += 3) {
+      this.centroid.x += this.positionsArray[i + 0];
+      this.centroid.y += this.positionsArray[i + 1];
+      this.centroid.z += this.positionsArray[i + 2];
+    }
+    this.centroid.multiplyScalar(3 / this.positionsArray.length);
   }
 
   private v = new THREE.Vector3();
@@ -39,36 +157,19 @@ class Mergable {
   }
 }
 
-export class MergedGeometryContainer extends THREE.Object3D {
+export class MergedGeometryContainer extends THREE.Object3D implements Ticker {
+  private mergableSet = new MergableSet();
+  private dirty = false;
   private geometry = new THREE.BufferGeometry();
-  private keyIndex = new Map<string, number>();
-  // The first attribute index of the coresponding object. This is always
-  // one longer than the number of keys. The difference between adjacent
-  // entries is the number of verticies for that entry.
-  private attributeIndex: number[] = [0];
+  private pieces = new Map<string, Mergable>();
 
   static supportedAttributes = ['position', 'normal'];
 
   constructor() {
     super();
     const mesh = new THREE.Mesh(
-      this.geometry, new THREE.MeshBasicMaterial({ color: '#0f0' }));
+      this.geometry, new THREE.MeshPhongMaterial({ color: '#0f0' }));
     this.add(mesh);
-  }
-
-  // Removes `count` values from `att` starting at `start`
-  private spliceAttribute(attributeName: string, start: number, count: number) {
-    const oldAtt = this.geometry.getAttribute(attributeName);
-    const values = new Float32Array((oldAtt.count - count) * oldAtt.itemSize);
-    for (let i = 0; i < start * oldAtt.itemSize; ++i) {
-      values[i] = oldAtt.array[i];
-    }
-    for (let i = start * oldAtt.itemSize;
-      i < start * (oldAtt.count - count); ++i) {
-      values[i] = oldAtt.array[i + count * oldAtt.itemSize];
-    }
-    this.geometry.setAttribute(
-      attributeName, new THREE.BufferAttribute(values, oldAtt.itemSize));
   }
 
   private values(att: THREE.BufferAttribute, index: THREE.BufferAttribute)
@@ -112,11 +213,6 @@ export class MergedGeometryContainer extends THREE.Object3D {
     }
     const oldValues = this.oldValues(attributeName);
 
-    class Mergable {
-      readonly positions: number[] = [];
-      readonly normals: number[] = [];
-    }
-
     const values = new Float32Array(oldValues.length + attValues.length);
     for (let i = 0; i < oldValues.length; ++i) {
       values[i] = oldValues[i];
@@ -140,61 +236,65 @@ export class MergedGeometryContainer extends THREE.Object3D {
   }
 
   private tmpM = new THREE.Matrix4();
-  private getTransform(o: THREE.Object3D, p: THREE.Object3D): THREE.Matrix4 {
-    const m = new THREE.Matrix4();
-    m.identity();
+  private getTransform(o: THREE.Object3D, p: THREE.Object3D, out: THREE.Matrix4) {
+    out.identity();
     while (o != p && o) {
       this.tmpM.compose(o.position, o.quaternion, o.scale);
-      m.premultiply(this.tmpM);
+      out.premultiply(this.tmpM);
       o = o.parent;
     }
-    return m;
   }
 
   // Adds the geometry of `o` to this, and associates it with `key`.  This
   // `key` can be used later to remove this chunk of geometry.
   mergeIn(key: string, o: THREE.Object3D) {
-    let totalVertexCount = 0;
-    if (this.keyIndex.has(key)) {
+    if (this.pieces.has(key)) {
       throw new Error(`Key already in use: ${key}`);
     }
     // TODO: transform positions and normals by parent matricies.
-    let vertexCount = -1;
+    const meshContainer = new MergableSet();
     for (const mesh of this.allMeshes(o)) {
       const transform = new THREE.Matrix4();
-      for (const attributeName of MergedGeometryContainer.supportedAttributes) {
-        switch (attributeName) {
-          case 'position':
-            transform.copy(this.getTransform(mesh, o.parent));
-            break;
-          case 'normal':
-            transform.copy(this.getTransform(mesh, o.parent));
-            const m3 = new THREE.Matrix3();
-            m3.getNormalMatrix(transform);
-            transform.setFromMatrix3(m3);
-            break;
-          default:
-            transform.identity();
-        }
-        const att = mesh.geometry.getAttribute(attributeName) as
-          THREE.BufferAttribute;
-        Debug.assert(!!att);
-        Debug.assert(vertexCount < 0 || vertexCount === att.count);
-        vertexCount = att.count;
-        this.append(attributeName, att, mesh.geometry.index, transform);
-      }
-      Debug.assert(vertexCount > 0);
-      totalVertexCount += vertexCount;
+      this.getTransform(mesh, o.parent, transform);
+      const mergablMesh = new MergableGeometry(mesh.geometry, transform);
+      meshContainer.add(mergablMesh);
     }
-    const objectIndex = this.keyIndex.size;
-    this.keyIndex.set(key, objectIndex);
-    this.attributeIndex.push(
-      this.attributeIndex[objectIndex] + totalVertexCount);
+    this.mergableSet.add(meshContainer);
+    this.dirty = true;
   }
+  // const objectIndex = this.keyIndex.size;
+  //   this.keyIndex.set(key, objectIndex);
+
 
   // Removes the geometry associated with `key` from this.
   removeKey(key: string) {
     throw new Error("Not implemented.");
   }
 
+  private clean() {
+    console.time('clean');
+    this.mergableSet.sort();
+    const indexArray = new Uint32Array(this.mergableSet.index());
+    this.geometry.index = new THREE.Uint32BufferAttribute(indexArray, 1, false);
+    this.geometry.index.needsUpdate = true;
+
+    const positionAtt = new BufferAttribute(
+      new Float32Array(this.mergableSet.positions()), 3);
+    positionAtt.needsUpdate = true;
+    this.geometry.setAttribute('position', positionAtt);
+
+    const normalAtt = new BufferAttribute(
+      new Float32Array(this.mergableSet.normals()), 3);
+    normalAtt.needsUpdate = true;
+    this.geometry.setAttribute('normal', normalAtt);
+
+    this.dirty = false;
+    console.timeEnd('clean');
+  }
+
+  tick(t: Tick) {
+    if (this.dirty) {
+      this.clean();
+    }
+  }
 }
