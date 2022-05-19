@@ -212,7 +212,7 @@ class Assets extends THREE.Object3D {
         Assets.items = [];
         for (const [key, value] of Assets.models.entries()) {
             const i = Item.make(key, "A wonderful item.", 0, key);
-            if (key in paintableItems) {
+            if (paintableItems.includes(key)) {
                 i.paintable = true;
             }
             else {
