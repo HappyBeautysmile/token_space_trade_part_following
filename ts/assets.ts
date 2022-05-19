@@ -53,7 +53,7 @@ export class Assets extends THREE.Object3D {
   static itemIndex = 0;
   static materials: THREE.Material[] = [];
   static materialIndex = 0;
-  static models = new Map<string, THREE.Mesh>();
+  static meshes = new Map<string, THREE.Mesh>();
   static items: Item[] = [];
   static itemsByName = new Map<string, Item>();
 
@@ -171,8 +171,8 @@ export class Assets extends THREE.Object3D {
       }
       const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
       m.userData = { "modelName": modelName };
-      m.position.set((this.models.size - modelNames.length / 2) * 1.4, 0, -15);
-      Assets.models.set(modelName, m);
+      m.position.set((this.meshes.size - modelNames.length / 2) * 1.4, 0, -15);
+      Assets.meshes.set(modelName, m);
       // console.log(`Added ${modelName}`);
     }
   }
@@ -183,9 +183,9 @@ export class Assets extends THREE.Object3D {
       'thruster', 'tank', 'light-blue',
       'corner']
     Assets.items = [];
-    for (const [key, value] of Assets.models.entries()) {
+    for (const [key, value] of Assets.meshes.entries()) {
       const i = Item.make(key, "A wonderful item.", 0, key);
-      if (paintableItems.includes(key)) {
+      if (paintableItems.includes) {
         i.paintable = true;
       }
       else {

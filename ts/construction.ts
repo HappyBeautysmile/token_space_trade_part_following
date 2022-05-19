@@ -39,7 +39,7 @@ export class ObjectConstruction implements Construction {
   public addCube(o: InWorldItem) {
     const key = this.posToKey(o.position);
     this.items.set(key, o);
-    const object = o.getObject();
+    const object = o.getMesh();
     object.position.copy(o.position);
     object.quaternion.copy(o.quaternion);
     Debug.assert(!!object);
@@ -91,7 +91,7 @@ export class MergedConstruction implements Construction {
   public addCube(o: InWorldItem) {
     const key = this.posToKey(o.position);
     this.items.set(key, o);
-    const object = o.getObject();
+    const object = o.getMesh();
     Debug.assert(!!object);
     object.position.copy(o.position);
     object.quaternion.copy(o.quaternion);

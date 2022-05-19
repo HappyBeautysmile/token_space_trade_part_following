@@ -10,6 +10,8 @@ export class Encode {
     result['position'] = o.position;
     result['quaternion'] = o.quaternion;
     result['modelName'] = o.item.modelName;
+    let mat = o.getMesh().material as THREE.Material;
+    result['materialName'] = mat.userData['materialName'];
     return result;
   }
   static arrayOfInWorldItems(cubes: Iterable<InWorldItem>): Object[] {
@@ -26,7 +28,7 @@ export class Decode {
   static toInWorldItem(o: Object): InWorldItem {
     //const model = Assets.models.get(o['modelName']).clone();
     //Debug.assert(!!model, `No model for ${o['modelName']}`);
-    //const material = Codec.findMaterialByName(o['materialName']);
+
     //let mesh = model.clone();
     //mesh.position.set(
     //   o['position'].x, o['position'].y, o['position'].z);
@@ -34,12 +36,15 @@ export class Decode {
     // Object.assign(quaternion, o['quaternion'])
     // mesh.applyQuaternion(quaternion);
 
+    const material = Codec.findMaterialByName(o['materialName']);
     const quaternion = new THREE.Quaternion();
     Object.assign(quaternion, o['quaternion'])
     const position = new THREE.Vector3();
     Object.assign(position, o['position']);
     const inWorldItem = new InWorldItem(
       Assets.itemsByName.get(o['modelName']), position, quaternion);
+    let obj = inWorldItem.getMesh();
+    obj.children[0]
 
     return inWorldItem;
   }

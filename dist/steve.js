@@ -87,7 +87,7 @@ class Assets extends THREE.Object3D {
     static itemIndex = 0;
     static materials = [];
     static materialIndex = 0;
-    static models = new Map();
+    static meshes = new Map();
     static items = [];
     static itemsByName = new Map();
     static async init() {
@@ -198,8 +198,8 @@ class Assets extends THREE.Object3D {
             }
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             m.userData = { "modelName": modelName };
-            m.position.set((this.models.size - modelNames.length / 2) * 1.4, 0, -15);
-            Assets.models.set(modelName, m);
+            m.position.set((this.meshes.size - modelNames.length / 2) * 1.4, 0, -15);
+            Assets.meshes.set(modelName, m);
             // console.log(`Added ${modelName}`);
         }
     }
@@ -210,9 +210,9 @@ class Assets extends THREE.Object3D {
             'corner'
         ];
         Assets.items = [];
-        for (const [key, value] of Assets.models.entries()) {
+        for (const [key, value] of Assets.meshes.entries()) {
             const i = Item.make(key, "A wonderful item.", 0, key);
-            if (paintableItems.includes(key)) {
+            if (paintableItems.includes) {
                 i.paintable = true;
             }
             else {
@@ -685,6 +685,8 @@ class Encode {
         result['position'] = o.position;
         result['quaternion'] = o.quaternion;
         result['modelName'] = o.item.modelName;
+        let mat = o.getMesh().material;
+        result['materialName'] = mat.userData['materialName'];
         return result;
     }
     static arrayOfInWorldItems(cubes) {
@@ -701,18 +703,20 @@ class Decode {
     static toInWorldItem(o) {
         //const model = Assets.models.get(o['modelName']).clone();
         //Debug.assert(!!model, `No model for ${o['modelName']}`);
-        //const material = Codec.findMaterialByName(o['materialName']);
         //let mesh = model.clone();
         //mesh.position.set(
         //   o['position'].x, o['position'].y, o['position'].z);
         // const quaternion = new THREE.Quaternion();
         // Object.assign(quaternion, o['quaternion'])
         // mesh.applyQuaternion(quaternion);
+        const material = Codec.findMaterialByName(o['materialName']);
         const quaternion = new THREE.Quaternion();
         Object.assign(quaternion, o['quaternion']);
         const position = new THREE.Vector3();
         Object.assign(position, o['position']);
         const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get(o['modelName']), position, quaternion);
+        let obj = inWorldItem.getMesh();
+        obj.children[0];
         return inWorldItem;
     }
     // static arrayOfObject3D(obs: Object[]): THREE.Object3D[] {
@@ -807,8 +811,9 @@ class Computer extends THREE.Object3D {
         setInterval(() => { }, 5000);
     }
     tick(t) {
-        // TODO every 10 frames
-        this.showInventory();
+        if (t.frameCount % 10 === 0) {
+            this.showInventory();
+        }
     }
     static async make(player) {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
@@ -940,7 +945,7 @@ class ObjectConstruction {
     addCube(o) {
         const key = this.posToKey(o.position);
         this.items.set(key, o);
-        const object = o.getObject();
+        const object = o.getMesh();
         object.position.copy(o.position);
         object.quaternion.copy(o.quaternion);
         debug_1.Debug.assert(!!object);
@@ -987,7 +992,7 @@ class MergedConstruction {
     addCube(o) {
         const key = this.posToKey(o.position);
         this.items.set(key, o);
-        const object = o.getObject();
+        const object = o.getMesh();
         debug_1.Debug.assert(!!object);
         object.position.copy(o.position);
         object.quaternion.copy(o.quaternion);
@@ -1695,7 +1700,7 @@ class Hand extends THREE.Object3D {
         if (this.cube) {
             this.place.playerGroup.remove(this.cube);
         }
-        this.cube = assets_1.Assets.models.get(item.modelName).clone();
+        this.cube = assets_1.Assets.meshes.get(item.modelName).clone();
         this.place.playerGroup.add(this.cube);
         this.item = item;
     }
@@ -1762,24 +1767,24 @@ class InWorldItem {
     item;
     position;
     quaternion;
-    modelPrototype;
+    meshPrototype;
     // TODO: instead of passing position and quaternion, perhaps we
     // need an ItemProperties class. E.g. the base color of the model.
     constructor(item, position, quaternion) {
         this.item = item;
         this.position = position;
         this.quaternion = quaternion;
-        debug_1.Debug.assert(assets_1.Assets.models.has(item.name), 'Unknown item.  Call Assets.init first.');
-        this.modelPrototype = assets_1.Assets.models.get(item.name);
+        debug_1.Debug.assert(assets_1.Assets.meshes.has(item.name), 'Unknown item.  Call Assets.init first.');
+        this.meshPrototype = assets_1.Assets.meshes.get(item.name);
     }
     // Returns a clone of the model prototype.
     // Caller needs to set the position of this object and add it to the scene
     // graph.
-    getObject() {
-        return this.modelPrototype.clone();
+    getMesh() {
+        return this.meshPrototype.clone();
     }
     replaceMaterial(mat) {
-        assets_1.Assets.replaceMaterial(this.modelPrototype, mat);
+        assets_1.Assets.replaceMaterial(this.meshPrototype, mat);
     }
 }
 exports.InWorldItem = InWorldItem;
@@ -2253,30 +2258,119 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MergedGeometryContainer = void 0;
 const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
-class Mergable {
-    positions;
-    normals;
-    index;
+const three_1 = __webpack_require__(232);
+class MergableSet {
+    children = [];
+    size = 0;
+    positionCount = 0;
+    centroid = new THREE.Vector3();
+    constructor() { }
+    add(m) {
+        this.children.push(m);
+        this.centroid.multiplyScalar(this.size);
+        const mCentroid = new THREE.Vector3();
+        m.getCentroid(mCentroid);
+        mCentroid.multiplyScalar(m.getIndexCount());
+        this.centroid.add(mCentroid);
+        this.centroid.multiplyScalar(1 / (this.size + m.getIndexCount()));
+        this.size += m.getIndexCount();
+        this.positionCount += m.getPositionCount();
+    }
+    *positions() {
+        for (const child of this.children) {
+            yield* child.positions();
+        }
+    }
+    *normals() {
+        for (const child of this.children) {
+            yield* child.normals();
+        }
+    }
+    *index() {
+        let indexOffset = 0;
+        for (const child of this.children) {
+            for (const i of child.index()) {
+                yield i + indexOffset;
+            }
+            indexOffset += child.getIndexCount();
+        }
+    }
+    getCentroid(c) {
+        c.copy(this.centroid);
+    }
+    getIndexCount() {
+        return this.size;
+    }
+    getPositionCount() {
+        return this.positionCount;
+    }
+    sort() {
+        const v1 = new THREE.Vector3();
+        const v2 = new THREE.Vector3();
+        this.children.sort((a, b) => {
+            // Sort elements furthest from centroid first.  When rendered
+            // we make use of the z-buffer to prevent excessive calls to the
+            // fragment shader.
+            a.getCentroid(v1);
+            v1.sub(this.centroid);
+            b.getCentroid(v2);
+            v2.sub(this.centroid);
+            return v2.manhattanLength() - v1.manhattanLength();
+        });
+    }
+}
+class MergableGeometry {
+    positionsArray;
+    normalsArray;
+    indexArray = [];
+    centroid;
+    *positions() {
+        yield* this.positionsArray;
+    }
+    *normals() {
+        yield* this.normalsArray;
+    }
+    *index() {
+        yield* this.indexArray;
+    }
+    getCentroid(centroid) {
+        centroid.copy(this.centroid);
+    }
+    getIndexCount() {
+        return this.indexArray.length;
+    }
+    getPositionCount() {
+        return this.positions.length / 3;
+    }
     constructor(geometry, matrix) {
         const positionsAtt = geometry.getAttribute('position');
         if (geometry.index) {
             for (let i = 0; i < geometry.index.count; ++i) {
-                this.index.push(geometry.index.getX(i));
+                this.indexArray.push(geometry.index.getX(i));
             }
         }
         else {
             for (let i = 0; i < positionsAtt.count; ++i) {
-                this.index.push(i);
+                this.indexArray.push(i);
             }
         }
-        this.positions = new Float32Array(this.index.length * 3);
-        this.normals = new Float32Array(this.index.length * 3);
-        this.copyAtt3(positionsAtt, this.positions, matrix);
+        this.positionsArray = new Float32Array(this.indexArray.length * 3);
+        this.normalsArray = new Float32Array(this.indexArray.length * 3);
+        this.copyAtt3(positionsAtt, this.positionsArray, matrix);
         const m3 = new THREE.Matrix3();
         m3.getNormalMatrix(matrix);
         matrix.setFromMatrix3(m3);
-        this.copyAtt3(geometry.getAttribute('normal'), this.normals, matrix);
+        this.copyAtt3(geometry.getAttribute('normal'), this.normalsArray, matrix);
+        this.setCentroid();
+    }
+    setCentroid() {
+        this.centroid = new THREE.Vector3(0, 0, 0);
+        for (let i = 0; i < this.positionsArray.length; i += 3) {
+            this.centroid.x += this.positionsArray[i + 0];
+            this.centroid.y += this.positionsArray[i + 1];
+            this.centroid.z += this.positionsArray[i + 2];
+        }
+        this.centroid.multiplyScalar(3 / this.positionsArray.length);
     }
     v = new THREE.Vector3();
     copyAtt3(att, target, matrix) {
@@ -2290,29 +2384,15 @@ class Mergable {
     }
 }
 class MergedGeometryContainer extends THREE.Object3D {
+    mergableSet = new MergableSet();
+    dirty = false;
     geometry = new THREE.BufferGeometry();
-    keyIndex = new Map();
-    // The first attribute index of the coresponding object. This is always
-    // one longer than the number of keys. The difference between adjacent
-    // entries is the number of verticies for that entry.
-    attributeIndex = [0];
+    pieces = new Map();
     static supportedAttributes = ['position', 'normal'];
     constructor() {
         super();
-        const mesh = new THREE.Mesh(this.geometry, new THREE.MeshBasicMaterial({ color: '#0f0' }));
+        const mesh = new THREE.Mesh(this.geometry, new THREE.MeshPhongMaterial({ color: '#0f0' }));
         this.add(mesh);
-    }
-    // Removes `count` values from `att` starting at `start`
-    spliceAttribute(attributeName, start, count) {
-        const oldAtt = this.geometry.getAttribute(attributeName);
-        const values = new Float32Array((oldAtt.count - count) * oldAtt.itemSize);
-        for (let i = 0; i < start * oldAtt.itemSize; ++i) {
-            values[i] = oldAtt.array[i];
-        }
-        for (let i = start * oldAtt.itemSize; i < start * (oldAtt.count - count); ++i) {
-            values[i] = oldAtt.array[i + count * oldAtt.itemSize];
-        }
-        this.geometry.setAttribute(attributeName, new THREE.BufferAttribute(values, oldAtt.itemSize));
     }
     values(att, index) {
         if (!index) {
@@ -2352,10 +2432,6 @@ class MergedGeometryContainer extends THREE.Object3D {
             }
         }
         const oldValues = this.oldValues(attributeName);
-        class Mergable {
-            positions = [];
-            normals = [];
-        }
         const values = new Float32Array(oldValues.length + attValues.length);
         for (let i = 0; i < oldValues.length; ++i) {
             values[i] = oldValues[i];
@@ -2377,57 +2453,56 @@ class MergedGeometryContainer extends THREE.Object3D {
         }
     }
     tmpM = new THREE.Matrix4();
-    getTransform(o, p) {
-        const m = new THREE.Matrix4();
-        m.identity();
+    getTransform(o, p, out) {
+        out.identity();
         while (o != p && o) {
             this.tmpM.compose(o.position, o.quaternion, o.scale);
-            m.premultiply(this.tmpM);
+            out.premultiply(this.tmpM);
             o = o.parent;
         }
-        return m;
     }
     // Adds the geometry of `o` to this, and associates it with `key`.  This
     // `key` can be used later to remove this chunk of geometry.
     mergeIn(key, o) {
-        let totalVertexCount = 0;
-        if (this.keyIndex.has(key)) {
+        if (this.pieces.has(key)) {
             throw new Error(`Key already in use: ${key}`);
         }
         // TODO: transform positions and normals by parent matricies.
-        let vertexCount = -1;
+        const meshContainer = new MergableSet();
         for (const mesh of this.allMeshes(o)) {
             const transform = new THREE.Matrix4();
-            for (const attributeName of MergedGeometryContainer.supportedAttributes) {
-                switch (attributeName) {
-                    case 'position':
-                        transform.copy(this.getTransform(mesh, o.parent));
-                        break;
-                    case 'normal':
-                        transform.copy(this.getTransform(mesh, o.parent));
-                        const m3 = new THREE.Matrix3();
-                        m3.getNormalMatrix(transform);
-                        transform.setFromMatrix3(m3);
-                        break;
-                    default:
-                        transform.identity();
-                }
-                const att = mesh.geometry.getAttribute(attributeName);
-                debug_1.Debug.assert(!!att);
-                debug_1.Debug.assert(vertexCount < 0 || vertexCount === att.count);
-                vertexCount = att.count;
-                this.append(attributeName, att, mesh.geometry.index, transform);
-            }
-            debug_1.Debug.assert(vertexCount > 0);
-            totalVertexCount += vertexCount;
+            this.getTransform(mesh, o.parent, transform);
+            const mergablMesh = new MergableGeometry(mesh.geometry, transform);
+            meshContainer.add(mergablMesh);
         }
-        const objectIndex = this.keyIndex.size;
-        this.keyIndex.set(key, objectIndex);
-        this.attributeIndex.push(this.attributeIndex[objectIndex] + totalVertexCount);
+        this.mergableSet.add(meshContainer);
+        this.dirty = true;
     }
+    // const objectIndex = this.keyIndex.size;
+    //   this.keyIndex.set(key, objectIndex);
     // Removes the geometry associated with `key` from this.
     removeKey(key) {
         throw new Error("Not implemented.");
+    }
+    clean() {
+        console.time('clean');
+        this.mergableSet.sort();
+        const indexArray = new Uint32Array(this.mergableSet.index());
+        this.geometry.index = new THREE.Uint32BufferAttribute(indexArray, 1, false);
+        this.geometry.index.needsUpdate = true;
+        const positionAtt = new three_1.BufferAttribute(new Float32Array(this.mergableSet.positions()), 3);
+        positionAtt.needsUpdate = true;
+        this.geometry.setAttribute('position', positionAtt);
+        const normalAtt = new three_1.BufferAttribute(new Float32Array(this.mergableSet.normals()), 3);
+        normalAtt.needsUpdate = true;
+        this.geometry.setAttribute('normal', normalAtt);
+        this.dirty = false;
+        console.timeEnd('clean');
+    }
+    tick(t) {
+        if (this.dirty) {
+            this.clean();
+        }
     }
 }
 exports.MergedGeometryContainer = MergedGeometryContainer;
@@ -3341,7 +3416,7 @@ class S {
         S.setDefault('pbf', 1e7, 'Point brightness factor');
         S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
         S.setDefault('cs', 1.0, 'Scale of the computer model.');
-        S.setDefault('ch', 0.5, 'Height of computer from the floor');
+        S.setDefault('ch', 0.7, 'Height of computer from the floor');
         S.setDefault('om', 0, 'Size of origin marker');
     }
     static float(name) {

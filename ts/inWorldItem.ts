@@ -5,26 +5,26 @@ import { Debug } from "./debug";
 
 // Represents an item which exists in the universe.
 export class InWorldItem {
-  private modelPrototype: THREE.Object3D;
+  private meshPrototype: THREE.Mesh;
 
   // TODO: instead of passing position and quaternion, perhaps we
   // need an ItemProperties class. E.g. the base color of the model.
   constructor(readonly item: Item,
     readonly position: THREE.Vector3,
     readonly quaternion: THREE.Quaternion) {
-    Debug.assert(Assets.models.has(item.name),
+    Debug.assert(Assets.meshes.has(item.name),
       'Unknown item.  Call Assets.init first.');
-    this.modelPrototype = Assets.models.get(item.name);
+    this.meshPrototype = Assets.meshes.get(item.name);
   }
 
   // Returns a clone of the model prototype.
   // Caller needs to set the position of this object and add it to the scene
   // graph.
-  public getObject(): THREE.Object3D {
-    return this.modelPrototype.clone();
+  public getMesh(): THREE.Mesh {
+    return this.meshPrototype.clone();
   }
 
   public replaceMaterial(mat: THREE.Material) {
-    Assets.replaceMaterial(this.modelPrototype, mat);
+    Assets.replaceMaterial(this.meshPrototype, mat);
   }
 }

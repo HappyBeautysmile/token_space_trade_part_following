@@ -141,7 +141,7 @@ export class Hand extends THREE.Object3D {
     if (this.cube) {
       this.place.playerGroup.remove(this.cube);
     }
-    this.cube = Assets.models.get(item.modelName).clone();
+    this.cube = Assets.meshes.get(item.modelName).clone();
     this.place.playerGroup.add(this.cube);
     this.item = item;
   }
