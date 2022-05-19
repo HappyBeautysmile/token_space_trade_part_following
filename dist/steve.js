@@ -593,7 +593,7 @@ class BlockBuild {
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
         const computer = await computer_1.Computer.make(this.player);
-        computer.translateY(1.0);
+        computer.translateY(settings_1.S.float('ch'));
         computer.translateZ(-0.3);
         computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
@@ -3341,6 +3341,7 @@ class S {
         S.setDefault('pbf', 1e7, 'Point brightness factor');
         S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
         S.setDefault('cs', 1.0, 'Scale of the computer model.');
+        S.setDefault('ch', 0.5, 'Height of computer from the floor');
         S.setDefault('om', 0, 'Size of origin marker');
     }
     static float(name) {
