@@ -371,12 +371,12 @@ class AstroGen {
         }
     }
     getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min)) + min;
+        return Math.floor(Math.pow(Math.random(), 2) * (max - min)) + min;
     }
     buildRandomItems(n, r) {
         const item = assets_1.Assets.items[this.getRandomInt(0, assets_1.Assets.items.length)];
         debug_1.Debug.log(`Congrationations!  You have been awarded ${n.toFixed(0)} ${item.name}(s) for loging in today.`);
-        debug_1.Debug.log(`Hunt for them  ${r.toFixed(0)} meters from your current location.  Enjoy!`);
+        debug_1.Debug.log(`Hunt for them ${r.toFixed(0)} meters from your current location.  Enjoy!`);
         const maxTries = n * 10;
         for (let i = 0; i < maxTries; i++) {
             if (n < 1) {
@@ -394,12 +394,13 @@ class AstroGen {
         }
     }
     async loadJason(filename, xOffset, yOffset, zOffset) {
-        debug_1.Debug.log('loading test.json...');
+        debug_1.Debug.log(`loading ${filename}.json...`);
         const loadedObject = await fileIO_1.FileIO.httpGetAsync("./" + filename + ".json");
         const loaded = codec_1.Decode.arrayOfInWorldItem(loadedObject);
         for (const inWorldItem of loaded) {
-            inWorldItem.position.add(new THREE.Vector3(xOffset, yOffset, zOffset));
-            this.construction.addCube(inWorldItem);
+            const newiwi = new inWorldItem_1.InWorldItem(inWorldItem.item, inWorldItem.position, inWorldItem.quaternion);
+            newiwi.position.add(new THREE.Vector3(xOffset, yOffset, zOffset));
+            this.construction.addCube(newiwi);
         }
     }
 }
@@ -487,7 +488,7 @@ class BlockBuild {
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
         //ab.buildSpacePort(20, 0, 20, 9);
-        //await ab.loadJason("test", 0, 0, 0);
+        await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
         ab.buildRandomItems(10, 100);
         this.getGrips();
@@ -938,7 +939,7 @@ class ObjectConstruction {
         this.items.set(key, o);
         const object = o.getObject();
         object.position.copy(o.position);
-        object.quaternion.copy(o.quaternion);
+        //object.quaternion.copy(o.quaternion);
         debug_1.Debug.assert(!!object);
         this.objects.set(key, object);
         this.container.add(object);
@@ -995,6 +996,7 @@ class MergedConstruction {
         this.mergedContainer.removeKey(key);
         return null;
     }
+    // return true if a block is already at the given location.  Otherwise return false.
     cubeAt(p) {
         //TODO: impement this function
         return false;

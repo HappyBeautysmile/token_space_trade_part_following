@@ -41,7 +41,8 @@ export class ObjectConstruction implements Construction {
     this.items.set(key, o);
     const object = o.getObject();
     object.position.copy(o.position);
-    object.quaternion.copy(o.quaternion);
+    // MWD the line below works with most use cases, but not when loading from JSON.
+    //object.quaternion.copy(o.quaternion);
     Debug.assert(!!object);
     this.objects.set(key, object);
     this.container.add(object);
@@ -105,6 +106,7 @@ export class MergedConstruction implements Construction {
     return null;
   }
 
+  // return true if a block is already at the given location.  Otherwise return false.
   public cubeAt(p: THREE.Vector3): boolean {
     //TODO: impement this function
     return false;
