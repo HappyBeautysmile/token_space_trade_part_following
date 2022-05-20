@@ -14,7 +14,7 @@ import { S } from "./settings";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
-  private leftHand: boolean;
+  private leftHand: boolean = undefined;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
@@ -25,12 +25,13 @@ export class Hand extends THREE.Object3D {
     private keysDown: Set<string>, private construction: Construction,
     private inventory: Inventory) {
     super();
-    this.leftHand = null;
-    this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
-    // this.debug = new THREE.Mesh(
-    //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
-    // this.debug.position.set(0, 0, -1);
-    // this.add(this.debug);
+
+    // If you want to see where the "grip" is, uncomment this code.
+    this.debug = new THREE.Mesh(
+      new THREE.IcosahedronBufferGeometry(0.02, 3),
+      new THREE.MeshPhongMaterial({ color: 'pink' })
+    );
+    this.add(this.debug);
 
     if (grip && this) {
       grip.add(this);
@@ -65,32 +66,32 @@ export class Hand extends THREE.Object3D {
 
   private lastButtons;
   private v = new THREE.Vector3();
+  private source: THREE.XRInputSource = null;
   public tick(t: Tick) {
     this.setCubePosition();
-    let source: THREE.XRInputSource = null;
     const session = this.xr.getSession();
     if (session) {
       if (session.inputSources && session.inputSources.length > this.index) {
-        source = session.inputSources[this.index];
+        this.source = session.inputSources[this.index];
       }
     }
 
-    if (source) {
-      if (!this.leftHand) {
-        this.leftHand = source.handedness == "left";
+    if (this.source) {
+      if (this.leftHand === undefined) {
+        this.leftHand = this.source.handedness == "left";
       }
       //this.debugMaterial.color = new THREE.Color('blue');
       const rateUpDown = 5;
       const rateMove = 10;
       const rotRate = 2;
-      const axes = source.gamepad.axes.slice(0);
+      const axes = this.source.gamepad.axes.slice(0);
       if (axes.length >= 4) {
         //this.debugMaterial.color = new THREE.Color('green');
-        if (!axes[2] || !axes[3]) {
+        if (!axes[2] && !axes[3]) {
           // Sticks are not being touched.
         } else {
           //this.debugMaterial.color = new THREE.Color('orange');
-          this
+          this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
           if (this.leftHand) {
             this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
             this.v.multiplyScalar(rateMove * t.deltaS);
@@ -104,7 +105,7 @@ export class Hand extends THREE.Object3D {
           }
         }
       }
-      const buttons = source.gamepad.buttons.map((b) => b.value);
+      const buttons = this.source.gamepad.buttons.map((b) => b.value);
       if (buttons[0] === 1 && this.lastButtons[0] != 1) { // trigger
         //this.debugMaterial.color = new THREE.Color('red');
       }
@@ -112,7 +113,7 @@ export class Hand extends THREE.Object3D {
         //this.debugMaterial.color = new THREE.Color('yellow');
       }
       if (buttons[2] === 1 && this.lastButtons[2] != 1) { // 
-        Debug.log(`Button 2 pressed on ${source.handedness} hand.`)
+        Debug.log(`Button 2 pressed on ${this.source.handedness} hand.`)
       }
       if (buttons[3] === 1 && this.lastButtons[3] != 1) {
         //this.debugMaterial.color = new THREE.Color('blue');
