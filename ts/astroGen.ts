@@ -33,10 +33,10 @@ class rarity {
 export class AstroGen {
   rarities: rarity[] = [];
   constructor(private construction: Construction) {
-    this.rarities.push(new rarity("cube-tweek", 100, 0, 100));
+    this.rarities.push(new rarity("cube-tweek", 100, -Math.PI / 2, 100));
     this.rarities.push(new rarity("cube-glob", 100, Math.PI / 2, 100));
     this.rarities.push(new rarity("accordion", 50, 0, 1));
-    this.rarities.push(new rarity("arm", 20, -Math.PI / 2, 10));
+    this.rarities.push(new rarity("arm", 20, -Math.PI, 10));
   }
 
   private buildCone() {
