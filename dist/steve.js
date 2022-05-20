@@ -265,10 +265,40 @@ const debug_1 = __webpack_require__(756);
 const inWorldItem_1 = __webpack_require__(116);
 const fileIO_1 = __webpack_require__(3);
 const codec_1 = __webpack_require__(385);
+class rarity {
+    modelName;
+    period;
+    phase;
+    magnitude;
+    // pattern repeats every n meters
+    // phase from 0 to 2 Pi
+    // 1-100 where 1 is scarce and 100 is common.
+    constructor(modelName, period, phase, magnitude) {
+        this.modelName = modelName;
+        this.period = period;
+        this.phase = phase;
+        this.magnitude = magnitude;
+    }
+    trans(n) {
+        let retvalue = this.magnitude * (Math.sin(2 * Math.PI * (1 / this.period) * n + this.phase) + 1);
+        return retvalue;
+    }
+    concentration(x, y, z) {
+        return Math.cbrt(this.trans(x) * this.trans(y) * this.trans(z));
+    }
+}
+// 'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
+//       'thruster', 'tank', 'light-blue', 'port',
+//       'cube-tweek', 'cube-glob', 'guide', 'cube-rock', 'corner'
 class AstroGen {
     construction;
+    rarities = [];
     constructor(construction) {
         this.construction = construction;
+        this.rarities.push(new rarity("cube-tweek", 100, 0, 100));
+        this.rarities.push(new rarity("cube-glob", 100, Math.PI / 2, 100));
+        this.rarities.push(new rarity("accordion", 50, 0, 1));
+        this.rarities.push(new rarity("arm", 20, -Math.PI / 2, 10));
     }
     buildCone() {
         for (let x = -20; x < 20; x++) {
@@ -321,12 +351,15 @@ class AstroGen {
         mesh.material = material;
     }
     itemFromLocation(x, y, z) {
-        if (Math.random() < 0.9) {
-            return assets_1.Assets.itemsByName.get('cube-tweek');
+        let hat = []; // the hat we will draw a random name from
+        for (let r of this.rarities) {
+            const chance = r.concentration(x, y, z);
+            for (let i = 0; i < chance; i++) {
+                hat.push(r.modelName);
+            }
         }
-        else {
-            return assets_1.Assets.itemsByName.get('cube-rock');
-        }
+        let index = Math.floor(Math.random() * hat.length);
+        return assets_1.Assets.itemsByName.get(hat[index]);
     }
     addAt(x, y, z) {
         const rotation = new three_1.Matrix4();
@@ -486,6 +519,9 @@ class BlockBuild {
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
+        for (let i = 0; i < 10; i++) {
+            ab.buildPlatform(Math.round(settings_1.S.float('ps') / 3), 5, Math.round(settings_1.S.float('ps') / 2), Math.floor(Math.random() * 500) - 250, Math.floor(Math.random() * 500) - 250, Math.floor(Math.random() * 500) - 250);
+        }
         //ab.buildSpacePort(20, 0, 20, 9);
         await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));

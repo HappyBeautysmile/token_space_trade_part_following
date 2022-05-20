@@ -8,8 +8,36 @@ import { Zoom } from "./zoom";
 import { FileIO } from "./fileIO";
 import { Decode } from "./codec";
 
+class rarity {
+  // pattern repeats every n meters
+  // phase from 0 to 2 Pi
+  // 1-100 where 1 is scarce and 100 is common.
+  public constructor(public modelName, public period, public phase, public magnitude) {
+
+  }
+
+  private trans(n: number) {
+    let retvalue = this.magnitude * (Math.sin(2 * Math.PI * (1 / this.period) * n + this.phase) + 1);
+    return retvalue;
+  }
+
+  concentration(x: number, y: number, z: number) {
+    return Math.cbrt(this.trans(x) * this.trans(y) * this.trans(z));
+  }
+}
+
+// 'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
+//       'thruster', 'tank', 'light-blue', 'port',
+//       'cube-tweek', 'cube-glob', 'guide', 'cube-rock', 'corner'
+
 export class AstroGen {
-  constructor(private construction: Construction) { }
+  rarities: rarity[] = [];
+  constructor(private construction: Construction) {
+    this.rarities.push(new rarity("cube-tweek", 100, 0, 100));
+    this.rarities.push(new rarity("cube-glob", 100, Math.PI / 2, 100));
+    this.rarities.push(new rarity("accordion", 50, 0, 1));
+    this.rarities.push(new rarity("arm", 20, -Math.PI / 2, 10));
+  }
 
   private buildCone() {
     for (let x = -20; x < 20; x++) {
@@ -71,12 +99,15 @@ export class AstroGen {
   }
 
   private itemFromLocation(x: number, y: number, z: number) {
-    if (Math.random() < 0.9) {
-      return Assets.itemsByName.get('cube-tweek');
+    let hat = [];  // the hat we will draw a random name from
+    for (let r of this.rarities) {
+      const chance = r.concentration(x, y, z);
+      for (let i = 0; i < chance; i++) {
+        hat.push(r.modelName);
+      }
     }
-    else {
-      return Assets.itemsByName.get('cube-rock');
-    }
+    let index = Math.floor(Math.random() * hat.length);
+    return Assets.itemsByName.get(hat[index]);
   }
 
   private addAt(x: number, y: number, z: number) {
@@ -106,7 +137,6 @@ export class AstroGen {
         this.construction.addCube(inWorldItem);
       }
     }
-
   }
 
   buildPlatform(xDim: number, yDim: number, zDim: number,
