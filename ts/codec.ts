@@ -11,7 +11,9 @@ export class Encode {
     result['quaternion'] = o.quaternion;
     result['modelName'] = o.item.modelName;
     let mat = o.getMesh().material as THREE.Material;
-    result['materialName'] = mat.userData['materialName'];
+    if (mat.userData['materialName']) {
+      result['materialName'] = mat.userData['materialName'];
+    }
     return result;
   }
   static arrayOfInWorldItems(cubes: Iterable<InWorldItem>): Object[] {
@@ -36,14 +38,17 @@ export class Decode {
     // Object.assign(quaternion, o['quaternion'])
     // mesh.applyQuaternion(quaternion);
 
-    const material = Codec.findMaterialByName(o['materialName']);
+
     const quaternion = new THREE.Quaternion();
     Object.assign(quaternion, o['quaternion'])
     const position = new THREE.Vector3();
     Object.assign(position, o['position']);
     const inWorldItem = new InWorldItem(
       Assets.itemsByName.get(o['modelName']), position, quaternion);
-    inWorldItem.replaceMaterial(material);
+    const material = Codec.findMaterialByName(o['materialName']);
+    if (material) {
+      inWorldItem.replaceMaterial(material);
+    }
     return inWorldItem;
   }
 
