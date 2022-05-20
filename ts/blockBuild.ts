@@ -189,7 +189,7 @@ export class BlockBuild {
     computer.scale.set(computerScale, computerScale, computerScale);
     this.playerGroup.add(computer);
 
-    Debug.log("work more on material switch");
+    Debug.log("load and save with materials");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

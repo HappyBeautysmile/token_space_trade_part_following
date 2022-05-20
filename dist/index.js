@@ -599,7 +599,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.playerGroup.add(computer);
-        debug_1.Debug.log("work more on material switch");
+        debug_1.Debug.log("load and save with materials");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -715,8 +715,7 @@ class Decode {
         const position = new THREE.Vector3();
         Object.assign(position, o['position']);
         const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get(o['modelName']), position, quaternion);
-        let obj = inWorldItem.getMesh();
-        obj.children[0];
+        inWorldItem.replaceMaterial(material);
         return inWorldItem;
     }
     // static arrayOfObject3D(obs: Object[]): THREE.Object3D[] {

@@ -43,9 +43,7 @@ export class Decode {
     Object.assign(position, o['position']);
     const inWorldItem = new InWorldItem(
       Assets.itemsByName.get(o['modelName']), position, quaternion);
-    let obj = inWorldItem.getMesh();
-    obj.children[0]
-
+    inWorldItem.replaceMaterial(material);
     return inWorldItem;
   }
 
