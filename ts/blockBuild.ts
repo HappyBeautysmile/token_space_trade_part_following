@@ -59,19 +59,19 @@ export class BlockBuild {
       Math.round(S.float('ps')),
       0, 0, 0);
 
-    for (let i = 0; i < 10; i++) {
-      ab.buildPlatform(
-        Math.round(S.float('ps') / 3),
-        5,
-        Math.round(S.float('ps') / 2),
-        Math.floor(Math.random() * 500) - 250,
-        Math.floor(Math.random() * 500) - 250,
-        Math.floor(Math.random() * 500) - 250);
-    }
+    // for (let i = 0; i < 10; i++) {
+    //   ab.buildPlatform(
+    //     Math.round(S.float('ps') / 3),
+    //     5,
+    //     Math.round(S.float('ps') / 2),
+    //     Math.floor(Math.random() * 500) - 250,
+    //     Math.floor(Math.random() * 500) - 250,
+    //     Math.floor(Math.random() * 500) - 250);
+    // }
 
     //ab.buildSpacePort(20, 0, 20, 9);
 
-    await ab.loadJason("test", 0, 0, 0);
+    //await ab.loadJason("test", 0, 0, 0);
 
     ab.buildOriginMarker(S.float('om'));
 

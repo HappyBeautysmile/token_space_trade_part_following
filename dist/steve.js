@@ -519,11 +519,17 @@ class BlockBuild {
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
-        for (let i = 0; i < 10; i++) {
-            ab.buildPlatform(Math.round(settings_1.S.float('ps') / 3), 5, Math.round(settings_1.S.float('ps') / 2), Math.floor(Math.random() * 500) - 250, Math.floor(Math.random() * 500) - 250, Math.floor(Math.random() * 500) - 250);
-        }
+        // for (let i = 0; i < 10; i++) {
+        //   ab.buildPlatform(
+        //     Math.round(S.float('ps') / 3),
+        //     5,
+        //     Math.round(S.float('ps') / 2),
+        //     Math.floor(Math.random() * 500) - 250,
+        //     Math.floor(Math.random() * 500) - 250,
+        //     Math.floor(Math.random() * 500) - 250);
+        // }
         //ab.buildSpacePort(20, 0, 20, 9);
-        await ab.loadJason("test", 0, 0, 0);
+        //await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
         ab.buildRandomItems(10, 100);
         this.getGrips();
