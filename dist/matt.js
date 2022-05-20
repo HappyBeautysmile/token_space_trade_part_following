@@ -629,7 +629,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.playerGroup.add(computer);
-        debug_1.Debug.log("Cache the source.");
+        debug_1.Debug.log("Debug sticks.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1449,9 +1449,6 @@ class GripGrip extends THREE.Object3D {
         this.xr = xr;
         this.grip = xr.getControllerGrip(index);
         this.add(this.grip);
-        // If you want to see where the "grip" is, uncomment this code.
-        const ball = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
-        this.add(ball);
     }
     tick(t) {
         this.position.copy(this.grip.position);
@@ -1591,11 +1588,9 @@ class Hand extends THREE.Object3D {
         this.keysDown = keysDown;
         this.construction = construction;
         this.inventory = inventory;
-        this.debugMaterial = new THREE.MeshStandardMaterial({ color: '#f0f' });
-        // this.debug = new THREE.Mesh(
-        //   new THREE.CylinderBufferGeometry(0.02, 0.02, 0.5), this.debugMaterial);
-        // this.debug.position.set(0, 0, -1);
-        // this.add(this.debug);
+        // If you want to see where the "grip" is, uncomment this code.
+        this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
+        this.add(this.debug);
         if (grip && this) {
             grip.add(this);
         }
@@ -1645,12 +1640,12 @@ class Hand extends THREE.Object3D {
             const axes = this.source.gamepad.axes.slice(0);
             if (axes.length >= 4) {
                 //this.debugMaterial.color = new THREE.Color('green');
-                if (!axes[2] || !axes[3]) {
+                if (!axes[2] && !axes[3]) {
                     // Sticks are not being touched.
                 }
                 else {
                     //this.debugMaterial.color = new THREE.Color('orange');
-                    this;
+                    this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
                     if (this.leftHand) {
                         this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
                         this.v.multiplyScalar(rateMove * t.deltaS);
