@@ -159,9 +159,9 @@ export class Assets extends THREE.Object3D {
 
   static async LoadAllModels() {
     const modelNames = [
-      'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
-      'thruster', 'tank', 'light-blue', 'port',
-      'cube-tweek', 'cube-glob', 'guide', 'cube-rock', 'corner']
+      'accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube', 'guide', 'ice', 'light-blue',
+      'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
+      'silicon-crystalized', 'tank', 'thruster', 'wedge']
     for (const modelName of modelNames) {
       // console.log(`Loading ${modelName}`);
       const model = await ModelLoader.loadModel(`Model/${modelName}.glb`);

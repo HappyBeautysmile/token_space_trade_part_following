@@ -12,12 +12,13 @@ class rarity {
   // pattern repeats every n meters
   // phase from 0 to 2 Pi
   // 1-100 where 1 is scarce and 100 is common.
-  public constructor(public modelName, public period, public phase, public magnitude) {
+  // offset is added to the sine before magnitude is appled.  1 = 0 to 2x magnitude.  more means there is always a chance.  less means sometimes there is no chance of occurance.
+  public constructor(public modelName, public period, public phase, public magnitude, public offset) {
 
   }
 
   private trans(n: number) {
-    let retvalue = this.magnitude * (Math.sin(2 * Math.PI * (1 / this.period) * n + this.phase) + 1);
+    let retvalue = this.magnitude * (Math.sin(2 * Math.PI * (1 / this.period) * n + this.phase) + this.offset);
     return retvalue;
   }
 
@@ -26,17 +27,21 @@ class rarity {
   }
 }
 
-// 'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
-//       'thruster', 'tank', 'light-blue', 'port',
-//       'cube-tweek', 'cube-glob', 'guide', 'cube-rock', 'corner'
+// 'clay', 'ice', 
+// 'metal-common', 'metal-rare','salt-common', 'salt-rare', 'silicate-rock',
+// 'silicon-crystalized', ]
 
 export class AstroGen {
   rarities: rarity[] = [];
   constructor(private construction: Construction) {
-    this.rarities.push(new rarity("cube-tweek", 100, -Math.PI / 2, 100));
-    this.rarities.push(new rarity("cube-glob", 100, Math.PI / 2, 100));
-    this.rarities.push(new rarity("accordion", 50, 0, 1));
-    this.rarities.push(new rarity("arm", 20, -Math.PI, 10));
+    this.rarities.push(new rarity("clay", 100, Math.PI / 2, 100, 1.1));
+    this.rarities.push(new rarity("ice", 100, -Math.PI / 2, 100, 0.9));
+    // this.rarities.push(new rarity("metal-common", 500, 0, 10, 0.8));
+    // this.rarities.push(new rarity("metal-rare", 5000, Math.PI / 2, 10, 0));
+    // this.rarities.push(new rarity("salt-common", 50, 0, 50, 0.5));
+    // this.rarities.push(new rarity("salt-rare", 50, 0, 50, -0.5));
+    // this.rarities.push(new rarity("silicate-rock", 100, -Math.PI / 2, 100, 0.5));
+    // this.rarities.push(new rarity("silicon-crystalized", 1, -Math.PI, 1, -0.5));
   }
 
   private buildCone() {
