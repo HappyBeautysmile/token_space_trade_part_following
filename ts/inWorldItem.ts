@@ -14,7 +14,7 @@ export class InWorldItem {
     readonly quaternion: THREE.Quaternion) {
     Debug.assert(Assets.meshes.has(item.name),
       'Unknown item.  Call Assets.init first.');
-    this.meshPrototype = Assets.meshes.get(item.name);
+    this.meshPrototype = Assets.meshes.get(item.name).clone();
   }
 
   // Returns a clone of the model prototype.

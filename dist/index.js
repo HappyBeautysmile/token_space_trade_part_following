@@ -410,6 +410,28 @@ class AstroGen {
             }
         }
     }
+    buildDiamond(r, xOffset, yOffset, zOffset) {
+        for (let x = -r; x < r; x++) {
+            for (let y = -r; y < r; y++) {
+                for (let z = -r; z < r; z++) {
+                    if ((Math.abs(x) + Math.abs(y) + Math.abs(z)) < r + Math.random() - 0.5) {
+                        this.addAt(x + xOffset, y + yOffset, z + zOffset);
+                    }
+                }
+            }
+        }
+    }
+    buildCuboid(r, xOffset, yOffset, zOffset) {
+        for (let x = -r; x < r; x++) {
+            for (let y = -r; y < r; y++) {
+                for (let z = -r; z < r; z++) {
+                    if (Math.min(Math.abs(x), Math.abs(y), Math.abs(z)) < r + Math.random() - 0.5) {
+                        this.addAt(x + xOffset, y + yOffset, z + zOffset);
+                    }
+                }
+            }
+        }
+    }
     getRandomInt(min, max) {
         return Math.floor(Math.pow(Math.random(), 2) * (max - min)) + min;
     }
@@ -526,10 +548,15 @@ class BlockBuild {
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
-        for (let i = 0; i < 10; i++) {
-            ab.buildPlatform(Math.round(settings_1.S.float('ps') / 3), 5, Math.round(settings_1.S.float('ps') / 2), Math.floor(Math.random() * 500) - 250, Math.floor(Math.random() * 500) - 250, Math.floor(Math.random() * 500) - 250);
-        }
-        //ab.buildSpacePort(20, 0, 20, 9);
+        // for (let i = 0; i < 10; i++) {
+        //   ab.buildPlatform(
+        //     Math.round(S.float('ps') / 3),
+        //     5,
+        //     Math.round(S.float('ps') / 2),
+        //     Math.floor(Math.random() * 500) - 250,
+        //     Math.floor(Math.random() * 500) - 250,
+        //     Math.floor(Math.random() * 500) - 250);
+        // }
         await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
         ab.buildRandomItems(10, 100);
@@ -642,7 +669,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.playerGroup.add(computer);
-        debug_1.Debug.log("Debug sticks 2.");
+        debug_1.Debug.log("load materials working");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1815,7 +1842,7 @@ class InWorldItem {
         this.position = position;
         this.quaternion = quaternion;
         debug_1.Debug.assert(assets_1.Assets.meshes.has(item.name), 'Unknown item.  Call Assets.init first.');
-        this.meshPrototype = assets_1.Assets.meshes.get(item.name);
+        this.meshPrototype = assets_1.Assets.meshes.get(item.name).clone();
     }
     // Returns a clone of the model prototype.
     // Caller needs to set the position of this object and add it to the scene

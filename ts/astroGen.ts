@@ -174,6 +174,32 @@ export class AstroGen {
     }
   }
 
+  buildDiamond(r: number,
+    xOffset: number, yOffset: number, zOffset: number) {
+    for (let x = -r; x < r; x++) {
+      for (let y = -r; y < r; y++) {
+        for (let z = -r; z < r; z++) {
+          if ((Math.abs(x) + Math.abs(y) + Math.abs(z)) < r + Math.random() - 0.5) {
+            this.addAt(x + xOffset, y + yOffset, z + zOffset);
+          }
+        }
+      }
+    }
+  }
+
+  buildCuboid(r: number,
+    xOffset: number, yOffset: number, zOffset: number) {
+    for (let x = -r; x < r; x++) {
+      for (let y = -r; y < r; y++) {
+        for (let z = -r; z < r; z++) {
+          if (Math.min(Math.abs(x), Math.abs(y), Math.abs(z)) < r + Math.random() - 0.5) {
+            this.addAt(x + xOffset, y + yOffset, z + zOffset);
+          }
+        }
+      }
+    }
+  }
+
   getRandomInt(min, max) {
     return Math.floor(Math.pow(Math.random(), 2) * (max - min)) + min;
   }
