@@ -629,7 +629,7 @@ class BlockBuild {
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
         this.playerGroup.add(computer);
-        debug_1.Debug.log("Debug sticks.");
+        debug_1.Debug.log("Debug sticks 2.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1630,7 +1630,7 @@ class Hand extends THREE.Object3D {
             }
         }
         if (this.source) {
-            if (!this.leftHand === undefined) {
+            if (this.leftHand === undefined) {
                 this.leftHand = this.source.handedness == "left";
             }
             //this.debugMaterial.color = new THREE.Color('blue');
