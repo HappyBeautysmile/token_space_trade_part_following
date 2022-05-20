@@ -300,12 +300,12 @@ class AstroGen {
         this.construction = construction;
         this.rarities.push(new rarity("clay", 100, Math.PI / 2, 100, 1.1));
         this.rarities.push(new rarity("ice", 100, -Math.PI / 2, 100, 0.9));
-        // this.rarities.push(new rarity("metal-common", 500, 0, 10, 0.8));
-        // this.rarities.push(new rarity("metal-rare", 5000, Math.PI / 2, 10, 0));
-        // this.rarities.push(new rarity("salt-common", 50, 0, 50, 0.5));
-        // this.rarities.push(new rarity("salt-rare", 50, 0, 50, -0.5));
-        // this.rarities.push(new rarity("silicate-rock", 100, -Math.PI / 2, 100, 0.5));
-        // this.rarities.push(new rarity("silicon-crystalized", 1, -Math.PI, 1, -0.5));
+        this.rarities.push(new rarity("metal-common", 500, 0, 10, 0.8));
+        this.rarities.push(new rarity("metal-rare", 5000, Math.PI / 2, 1, 0));
+        this.rarities.push(new rarity("salt-common", 50, 0, 50, 0.5));
+        this.rarities.push(new rarity("salt-rare", 50, 0, 50, -0.5));
+        this.rarities.push(new rarity("silicate-rock", 100, -Math.PI / 2, 100, 0.5));
+        this.rarities.push(new rarity("silicon-crystalized", 1, -Math.PI, 1, -0.5));
     }
     buildCone() {
         for (let x = -20; x < 20; x++) {
@@ -530,7 +530,7 @@ class BlockBuild {
             ab.buildPlatform(Math.round(settings_1.S.float('ps') / 3), 5, Math.round(settings_1.S.float('ps') / 2), Math.floor(Math.random() * 500) - 250, Math.floor(Math.random() * 500) - 250, Math.floor(Math.random() * 500) - 250);
         }
         //ab.buildSpacePort(20, 0, 20, 9);
-        //await ab.loadJason("test", 0, 0, 0);
+        await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
         ab.buildRandomItems(10, 100);
         this.getGrips();
