@@ -228,11 +228,22 @@ export class AstroGen {
     }
   }
 
+  removeFar(dirty: InWorldItem[], r: number) {
+    let clean = [];
+    for (const item of dirty) {
+      if (Math.abs(item.position.x) < r) {
+        clean.push(item);
+      }
+    }
+    return clean;
+  }
+
   async loadJason(filename: string, xOffset: number, yOffset: number, zOffset: number) {
     Debug.log(`loading ${filename}.json...`);
     const loadedObject = await FileIO.httpGetAsync("./" + filename + ".json");
     const loaded = Decode.arrayOfInWorldItem(loadedObject);
-    for (const inWorldItem of loaded) {
+    let cleaned = this.removeFar(loaded, 20)
+    for (const inWorldItem of cleaned) {
       inWorldItem.position.add(new THREE.Vector3(xOffset, yOffset, zOffset))
       this.construction.addCube(inWorldItem);
     }

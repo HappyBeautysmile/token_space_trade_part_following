@@ -15,7 +15,7 @@ export interface Construction {
 }
 
 export class ObjectConstruction implements Construction {
-  public constructor(private container: THREE.Object3D) { }
+  public constructor(private container: THREE.Object3D, private renderer: THREE.Renderer) { }
   // TODO: Make this private and instead have some nicer methods for
   // inserting and deleting.  This is where code to make sure we have only
   // one block per location would go, also where Vector3 to key would go.
@@ -29,6 +29,10 @@ export class ObjectConstruction implements Construction {
     let c = new Codec();
     const o = Encode.arrayOfInWorldItems(this.items.values())
     FileIO.saveObject(o, "what_you_built.json");
+
+    var strMime = "image/jpeg";
+    let imgData = this.renderer.domElement.toDataURL(strMime);
+    FileIO.saveObject(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
   }
 
   private posToKey(p: THREE.Vector3): string {
@@ -71,7 +75,7 @@ export class ObjectConstruction implements Construction {
 
 export class MergedConstruction implements Construction {
   private mergedContainer = new MergedGeometryContainer();
-  public constructor(container: THREE.Object3D) {
+  public constructor(container: THREE.Object3D, private renderer: THREE.Renderer) {
     container.add(this.mergedContainer);
   }
   private items = new Map<string, InWorldItem>();
@@ -81,6 +85,10 @@ export class MergedConstruction implements Construction {
     let c = new Codec();
     const o = Encode.arrayOfInWorldItems(this.items.values())
     FileIO.saveObject(o, "what_you_built.json");
+
+    var strMime = "image/jpeg";
+    let imgData = this.renderer.domElement.toDataURL(strMime);
+    FileIO.saveObject(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
   }
 
   private posToKey(p: THREE.Vector3): string {

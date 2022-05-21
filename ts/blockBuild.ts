@@ -47,9 +47,9 @@ export class BlockBuild {
     // this.construction.save();
 
     if (S.float('m')) {
-      this.construction = new MergedConstruction(this.place.universeGroup);
+      this.construction = new MergedConstruction(this.place.universeGroup, this.renderer);
     } else {
-      this.construction = new ObjectConstruction(this.place.universeGroup);
+      this.construction = new ObjectConstruction(this.place.universeGroup, this.renderer);
     }
     let ab = new AstroGen(this.construction);
 
@@ -150,9 +150,19 @@ export class BlockBuild {
 
     //this.scene.background = new THREE.Color(0x552200);
 
-    var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+    // var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+    // var loader = new THREE.TextureLoader()
+    // var texture = loader.load("Model/sky.jpg");
+    // var material = new THREE.MeshPhongMaterial({
+    //   map: texture,
+    // });
+    // var sky = new THREE.Mesh(skyGeo, material);
+    // sky.material.side = THREE.BackSide;
+    // this.playerGroup.add(sky);
+
+    var skyGeo = new THREE.BoxGeometry(199, 199, 199);
     var loader = new THREE.TextureLoader()
-    var texture = loader.load("Model/sky.jpg");
+    var texture = loader.load("Model/sky1.jpg");
     var material = new THREE.MeshPhongMaterial({
       map: texture,
     });
@@ -167,7 +177,7 @@ export class BlockBuild {
     this.playerGroup.add(this.camera);
     this.place = new Place(this.universeGroup, this.playerGroup, this.camera);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     this.renderer.setSize(512, 512);
     //this.renderer.setSize(1024, 1024);
     document.body.appendChild(this.renderer.domElement);

@@ -6,7 +6,7 @@ import { Place } from "./place";
 export class PlanetPlatform extends THREE.Group {
   constructor(pos: THREE.Vector3, private camera: THREE.Camera) {
     super();
-    const construction: Construction = new ObjectConstruction(this);
+    const construction: Construction = new ObjectConstruction(this, null);  //TODO 2nd paramater is now the renderer to enable saving.
     const astroGen = new AstroGen(construction);
     astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
     // We scale the planet up because otherwise it's really slow.

@@ -455,11 +455,21 @@ class AstroGen {
             }
         }
     }
+    removeFar(dirty, r) {
+        let clean = [];
+        for (const item of dirty) {
+            if (Math.abs(item.position.x) < r) {
+                clean.push(item);
+            }
+        }
+        return clean;
+    }
     async loadJason(filename, xOffset, yOffset, zOffset) {
         debug_1.Debug.log(`loading ${filename}.json...`);
         const loadedObject = await fileIO_1.FileIO.httpGetAsync("./" + filename + ".json");
         const loaded = codec_1.Decode.arrayOfInWorldItem(loadedObject);
-        for (const inWorldItem of loaded) {
+        let cleaned = this.removeFar(loaded, 20);
+        for (const inWorldItem of cleaned) {
             inWorldItem.position.add(new THREE.Vector3(xOffset, yOffset, zOffset));
             this.construction.addCube(inWorldItem);
         }
@@ -541,10 +551,10 @@ class BlockBuild {
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
         if (settings_1.S.float('m')) {
-            this.construction = new construction_1.MergedConstruction(this.place.universeGroup);
+            this.construction = new construction_1.MergedConstruction(this.place.universeGroup, this.renderer);
         }
         else {
-            this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
+            this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
@@ -629,9 +639,18 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
         //this.scene.background = new THREE.Color(0x552200);
-        var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+        // var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+        // var loader = new THREE.TextureLoader()
+        // var texture = loader.load("Model/sky.jpg");
+        // var material = new THREE.MeshPhongMaterial({
+        //   map: texture,
+        // });
+        // var sky = new THREE.Mesh(skyGeo, material);
+        // sky.material.side = THREE.BackSide;
+        // this.playerGroup.add(sky);
+        var skyGeo = new THREE.BoxGeometry(199, 199, 199);
         var loader = new THREE.TextureLoader();
-        var texture = loader.load("Model/sky.jpg");
+        var texture = loader.load("Model/sky1.jpg");
         var material = new THREE.MeshPhongMaterial({
             map: texture,
         });
@@ -643,7 +662,7 @@ class BlockBuild {
         this.camera.lookAt(0, 1.7, -1.5);
         this.playerGroup.add(this.camera);
         this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         this.renderer.setSize(512, 512);
         //this.renderer.setSize(1024, 1024);
         document.body.appendChild(this.renderer.domElement);
@@ -995,8 +1014,10 @@ const fileIO_1 = __webpack_require__(3);
 const megedGeometryContainer_1 = __webpack_require__(192);
 class ObjectConstruction {
     container;
-    constructor(container) {
+    renderer;
+    constructor(container, renderer) {
         this.container = container;
+        this.renderer = renderer;
     }
     // TODO: Make this private and instead have some nicer methods for
     // inserting and deleting.  This is where code to make sure we have only
@@ -1010,6 +1031,9 @@ class ObjectConstruction {
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
         fileIO_1.FileIO.saveObject(o, "what_you_built.json");
+        var strMime = "image/jpeg";
+        let imgData = this.renderer.domElement.toDataURL(strMime);
+        fileIO_1.FileIO.saveObject(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
@@ -1047,8 +1071,10 @@ class ObjectConstruction {
 }
 exports.ObjectConstruction = ObjectConstruction;
 class MergedConstruction {
+    renderer;
     mergedContainer = new megedGeometryContainer_1.MergedGeometryContainer();
-    constructor(container) {
+    constructor(container, renderer) {
+        this.renderer = renderer;
         container.add(this.mergedContainer);
     }
     items = new Map();
@@ -1057,6 +1083,9 @@ class MergedConstruction {
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
         fileIO_1.FileIO.saveObject(o, "what_you_built.json");
+        var strMime = "image/jpeg";
+        let imgData = this.renderer.domElement.toDataURL(strMime);
+        fileIO_1.FileIO.saveObject(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
@@ -1741,7 +1770,7 @@ class Hand extends THREE.Object3D {
             if (buttons[2] === 1 && this.lastButtons[2] != 1) { // 
                 debug_1.Debug.log(`Button 2 pressed on ${this.source.handedness} hand.`);
             }
-            if (buttons[3] === 1 && this.lastButtons[3] != 1) {
+            if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick button
                 //this.debugMaterial.color = new THREE.Color('blue');
                 this.construction.save();
             }
@@ -1929,7 +1958,7 @@ class MaterialExplorer extends THREE.Object3D {
         this.cube = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f0f' }));
         this.cube.position.set(1, 2.5, -2);
         this.add(this.cube);
-        const construction = new construction_1.MergedConstruction(this);
+        const construction = new construction_1.MergedConstruction(this, null); // TODO 2nd parameter is the renderer to allow saving of the screen shot
         const gen = new astroGen_1.AstroGen(construction);
         gen.buildAsteroid(5, -3, 2, -10);
     }
@@ -2996,7 +3025,7 @@ class PlanetPlatform extends THREE.Group {
     constructor(pos, camera) {
         super();
         this.camera = camera;
-        const construction = new construction_1.ObjectConstruction(this);
+        const construction = new construction_1.ObjectConstruction(this, null); //TODO 2nd paramater is now the renderer to enable saving.
         const astroGen = new astroGen_1.AstroGen(construction);
         astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
         // We scale the planet up because otherwise it's really slow.

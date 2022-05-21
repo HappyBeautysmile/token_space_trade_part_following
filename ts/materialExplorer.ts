@@ -47,7 +47,7 @@ export class MaterialExplorer extends THREE.Object3D implements Ticker {
     this.cube.position.set(1, 2.5, -2);
     this.add(this.cube);
 
-    const construction = new MergedConstruction(this);
+    const construction = new MergedConstruction(this, null);  // TODO 2nd parameter is the renderer to allow saving of the screen shot
     const gen = new AstroGen(construction);
     gen.buildAsteroid(5, -3, 2, -10);
   }
