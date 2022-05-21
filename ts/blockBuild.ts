@@ -108,7 +108,7 @@ export class BlockBuild {
     ++this.frameCount;
     const fru = S.float('fru');
     if (fru && t.elapsedS >= this.lastFrameRateUpdate + fru) {
-      Debug.log(`FPS: ${(this.frameCount / fru).toFixed(1)}`);
+      Debug.log(`FPS: ${(this.frameCount / (t.elapsedS - this.lastFrameRateUpdate)).toFixed(1)}`);
       this.lastFrameRateUpdate = t.elapsedS;
       this.frameCount = 0;
     }
@@ -152,7 +152,7 @@ export class BlockBuild {
 
     //this.scene.background = new THREE.Color(0x552200);
 
-    var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+    var skyGeo = new THREE.SphereGeometry(1900, 25, 25);
     var loader = new THREE.TextureLoader()
     var texture = loader.load("Model/sky6.jpg");
     var color = new THREE.Color(Math.random(), Math.random(), Math.random())
