@@ -155,8 +155,10 @@ export class BlockBuild {
     var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
     var loader = new THREE.TextureLoader()
     var texture = loader.load("Model/sky6.jpg");
+    var color = new THREE.Color(Math.random(), Math.random(), Math.random())
     var material = new THREE.MeshBasicMaterial({
       map: texture,
+      color: color
     });
     var sky = new THREE.Mesh(skyGeo, material);
     sky.material.side = THREE.BackSide;
