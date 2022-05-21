@@ -570,7 +570,6 @@ class BlockBuild {
         await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
-        this.construction.save();
         this.getGrips();
         this.dumpScene(this.scene, '');
     }

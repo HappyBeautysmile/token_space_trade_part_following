@@ -75,8 +75,6 @@ export class BlockBuild {
 
     //ab.buildRandomItems(10, 100);
 
-    this.construction.save();
-
     this.getGrips();
     this.dumpScene(this.scene, '');
   }
