@@ -1084,7 +1084,7 @@ class MergedConstruction {
         fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
         var strMime = "image/jpeg";
         let imgData = this.renderer.domElement.toDataURL(strMime);
-        fileIO_1.FileIO.saveObjectAsJson(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+        fileIO_1.FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;

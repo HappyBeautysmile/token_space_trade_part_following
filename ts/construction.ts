@@ -85,7 +85,7 @@ export class MergedConstruction implements Construction {
 
     var strMime = "image/jpeg";
     let imgData = this.renderer.domElement.toDataURL(strMime);
-    FileIO.saveObjectAsJson(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+    FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
   }
 
   private posToKey(p: THREE.Vector3): string {
