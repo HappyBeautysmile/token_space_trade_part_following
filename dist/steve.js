@@ -570,7 +570,7 @@ class BlockBuild {
         await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
-        //this.construction.save();
+        this.construction.save();
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -640,24 +640,24 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
         //this.scene.background = new THREE.Color(0x552200);
-        // var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+        var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+        var loader = new THREE.TextureLoader();
+        var texture = loader.load("Model/sky6.jpg");
+        var material = new THREE.MeshBasicMaterial({
+            map: texture,
+        });
+        var sky = new THREE.Mesh(skyGeo, material);
+        sky.material.side = THREE.BackSide;
+        this.universeGroup.add(sky);
+        // var skyGeo = new THREE.BoxGeometry(6, 6, 6);
         // var loader = new THREE.TextureLoader()
-        // var texture = loader.load("Model/sky.jpg");
+        // var texture = loader.load("Model/sky1.jpg");
         // var material = new THREE.MeshPhongMaterial({
         //   map: texture,
         // });
         // var sky = new THREE.Mesh(skyGeo, material);
         // sky.material.side = THREE.BackSide;
-        // this.playerGroup.add(sky);
-        var skyGeo = new THREE.BoxGeometry(199, 199, 199);
-        var loader = new THREE.TextureLoader();
-        var texture = loader.load("Model/sky1.jpg");
-        var material = new THREE.MeshPhongMaterial({
-            map: texture,
-        });
-        var sky = new THREE.Mesh(skyGeo, material);
-        sky.material.side = THREE.BackSide;
-        this.playerGroup.add(sky);
+        // this.universeGroup.add(sky);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
