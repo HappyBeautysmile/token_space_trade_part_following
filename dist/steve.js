@@ -569,7 +569,8 @@ class BlockBuild {
         // }
         await ab.loadJason("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
-        ab.buildRandomItems(10, 100);
+        //ab.buildRandomItems(10, 100);
+        //this.construction.save();
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -1030,10 +1031,8 @@ class ObjectConstruction {
         //o['objects'] = FileIO.mapToObject(this.allObjects);
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
-        fileIO_1.FileIO.saveObject(o, "what_you_built.json");
-        var strMime = "image/jpeg";
-        let imgData = this.renderer.domElement.toDataURL(strMime);
-        fileIO_1.FileIO.saveObject(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+        fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
+        fileIO_1.FileIO.saveImage(this.renderer.domElement, "test.jpg");
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
@@ -1082,10 +1081,10 @@ class MergedConstruction {
         console.log('Saving...');
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
-        fileIO_1.FileIO.saveObject(o, "what_you_built.json");
+        fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
         var strMime = "image/jpeg";
         let imgData = this.renderer.domElement.toDataURL(strMime);
-        fileIO_1.FileIO.saveObject(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+        fileIO_1.FileIO.saveObjectAsJson(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
@@ -1359,11 +1358,20 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileIO = void 0;
 const debug_1 = __webpack_require__(756);
 class FileIO {
-    static saveObject(content, fileName) {
+    static saveObjectAsJson(content, fileName) {
         const a = document.createElement("a");
         const serialized = "data:text/json;charset=utf-8," +
             encodeURIComponent(JSON.stringify(content));
         a.href = serialized;
+        debug_1.Debug.log(`Saved ${a.href.length} encoded bytes.`);
+        a.download = fileName;
+        a.click();
+    }
+    static saveImage(domElement, fileName) {
+        const a = document.createElement("a");
+        let imgData = domElement.toDataURL("image/jpeg");
+        imgData.replace("image/jpeg", "image/octet-stream");
+        a.href = imgData;
         debug_1.Debug.log(`Saved ${a.href.length} encoded bytes.`);
         a.download = fileName;
         a.click();

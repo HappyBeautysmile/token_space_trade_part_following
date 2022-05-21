@@ -73,7 +73,9 @@ export class BlockBuild {
 
     ab.buildOriginMarker(S.float('om'));
 
-    ab.buildRandomItems(10, 100);
+    //ab.buildRandomItems(10, 100);
+
+    //this.construction.save();
 
     this.getGrips();
     this.dumpScene(this.scene, '');

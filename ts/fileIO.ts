@@ -1,11 +1,21 @@
 import { Debug } from "./debug";
 
 export class FileIO {
-  static saveObject(content: Object, fileName: string) {
+  static saveObjectAsJson(content: Object, fileName: string) {
     const a = document.createElement("a");
     const serialized = "data:text/json;charset=utf-8," +
       encodeURIComponent(JSON.stringify(content));
     a.href = serialized;
+    Debug.log(`Saved ${a.href.length} encoded bytes.`);
+    a.download = fileName;
+    a.click();
+  }
+
+  static saveImage(domElement, fileName: string) {
+    const a = document.createElement("a");
+    let imgData = domElement.toDataURL("image/jpeg");
+    imgData.replace("image/jpeg", "image/octet-stream");
+    a.href = imgData;
     Debug.log(`Saved ${a.href.length} encoded bytes.`);
     a.download = fileName;
     a.click();

@@ -28,11 +28,8 @@ export class ObjectConstruction implements Construction {
     //o['objects'] = FileIO.mapToObject(this.allObjects);
     let c = new Codec();
     const o = Encode.arrayOfInWorldItems(this.items.values())
-    FileIO.saveObject(o, "what_you_built.json");
-
-    var strMime = "image/jpeg";
-    let imgData = this.renderer.domElement.toDataURL(strMime);
-    FileIO.saveObject(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+    FileIO.saveObjectAsJson(o, "what_you_built.json");
+    FileIO.saveImage(this.renderer.domElement, "test.jpg");
   }
 
   private posToKey(p: THREE.Vector3): string {
@@ -84,11 +81,11 @@ export class MergedConstruction implements Construction {
     console.log('Saving...');
     let c = new Codec();
     const o = Encode.arrayOfInWorldItems(this.items.values())
-    FileIO.saveObject(o, "what_you_built.json");
+    FileIO.saveObjectAsJson(o, "what_you_built.json");
 
     var strMime = "image/jpeg";
     let imgData = this.renderer.domElement.toDataURL(strMime);
-    FileIO.saveObject(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+    FileIO.saveObjectAsJson(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
   }
 
   private posToKey(p: THREE.Vector3): string {
