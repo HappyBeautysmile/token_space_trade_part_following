@@ -649,10 +649,10 @@ class BlockBuild {
             this.place.playerGroup.rotateY(-t.deltaS * 2);
         }
         if (this.keysDown.has('ArrowDown')) {
-            this.place.playerGroup.rotateX(-t.deltaS * 2);
+            this.camera.rotateX(-t.deltaS * 2);
         }
         if (this.keysDown.has('ArrowUp')) {
-            this.place.playerGroup.rotateX(t.deltaS * 2);
+            this.camera.rotateX(t.deltaS * 2);
         }
         if (this.v.length() > 0) {
             this.place.movePlayerRelativeToCamera(this.v);
@@ -1858,6 +1858,7 @@ class Hand extends THREE.Object3D {
         this.r.direction.applyMatrix3(this.worldNormalMatrix);
         const distance = buttonDispatcher_1.ButtonDispatcher.closestApproach(this.r);
         if (distance !== undefined) {
+            this.linePoints[0].set(0, 0, 0);
             this.linePoints[1].set(0, -distance, 0);
             this.lineGeometry.setFromPoints(this.linePoints);
             this.line.visible = true;
