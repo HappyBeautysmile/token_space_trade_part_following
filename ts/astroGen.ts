@@ -260,7 +260,7 @@ export class AstroGen {
     }
     let mashY = minY;
     for (let y = minY; y <= maxY;) {
-      if (Math.random() < 0.2) {
+      if (Math.random() < 0.8) {
         y++;
       }
       if (Math.random() < 0.2) {
@@ -268,12 +268,10 @@ export class AstroGen {
       }
       let slice = this.layer(input, y);
       for (let block of slice) {
-        let b = new InWorldItem(block.item, block.position, block.quaternion);
+        let b = block.clone();
         b.position.y = mashY;
-        b.position.x = b.position.x + 10;
         mashed.push(b);
       }
-      Debug.log(`mashY = ${mashY.toFixed(0)}`);
       mashY++;
     }
     return mashed

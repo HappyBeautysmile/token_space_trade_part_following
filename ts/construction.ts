@@ -36,14 +36,13 @@ export class ObjectConstruction implements Construction {
     return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
   }
 
-  // TODO: Change the input type to InWorldItem.
   public addCube(o: InWorldItem) {
     const key = this.posToKey(o.position);
     this.items.set(key, o);
     const object = o.getMesh();
+    Debug.assert(!!object);
     object.position.copy(o.position);
     object.quaternion.copy(o.quaternion);
-    Debug.assert(!!object);
     this.objects.set(key, object);
     this.container.add(object);
   }
@@ -92,7 +91,6 @@ export class MergedConstruction implements Construction {
     return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
   }
 
-  // TODO: Change the input type to InWorldItem.
   public addCube(o: InWorldItem) {
     const key = this.posToKey(o.position);
     this.items.set(key, o);

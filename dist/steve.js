@@ -485,7 +485,7 @@ class AstroGen {
         }
         let mashY = minY;
         for (let y = minY; y <= maxY;) {
-            if (Math.random() < 0.2) {
+            if (Math.random() < 0.8) {
                 y++;
             }
             if (Math.random() < 0.2) {
@@ -493,12 +493,10 @@ class AstroGen {
             }
             let slice = this.layer(input, y);
             for (let block of slice) {
-                let b = new inWorldItem_1.InWorldItem(block.item, block.position, block.quaternion);
+                let b = block.clone();
                 b.position.y = mashY;
-                b.position.x = b.position.x + 10;
                 mashed.push(b);
             }
-            debug_1.Debug.log(`mashY = ${mashY.toFixed(0)}`);
             mashY++;
         }
         return mashed;
@@ -1088,14 +1086,13 @@ class ObjectConstruction {
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
-    // TODO: Change the input type to InWorldItem.
     addCube(o) {
         const key = this.posToKey(o.position);
         this.items.set(key, o);
         const object = o.getMesh();
+        debug_1.Debug.assert(!!object);
         object.position.copy(o.position);
         object.quaternion.copy(o.quaternion);
-        debug_1.Debug.assert(!!object);
         this.objects.set(key, object);
         this.container.add(object);
     }
@@ -1140,7 +1137,6 @@ class MergedConstruction {
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
-    // TODO: Change the input type to InWorldItem.
     addCube(o) {
         const key = this.posToKey(o.position);
         this.items.set(key, o);
@@ -1946,7 +1942,7 @@ class InWorldItem {
     item;
     position;
     quaternion;
-    meshPrototype;
+    mesh;
     // TODO: instead of passing position and quaternion, perhaps we
     // need an ItemProperties class. E.g. the base color of the model.
     constructor(item, position, quaternion) {
@@ -1954,21 +1950,26 @@ class InWorldItem {
         this.position = position;
         this.quaternion = quaternion;
         debug_1.Debug.assert(assets_1.Assets.meshes.has(item.name), 'Unknown item.  Call Assets.init first.');
-        this.meshPrototype = assets_1.Assets.meshes.get(item.name).clone();
+        this.mesh = assets_1.Assets.meshes.get(item.name).clone();
     }
     // Returns a clone of the model prototype.
     // Caller needs to set the position of this object and add it to the scene
     // graph.
     getMesh() {
-        const geo = this.meshPrototype.geometry.clone();
-        const mat = this.meshPrototype.material;
-        return new THREE.Mesh(geo, mat);
+        return this.mesh;
     }
     clone() {
-        return new InWorldItem(this.item, this.position, this.quaternion);
+        const p = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
+        const q = new THREE.Quaternion(this.quaternion.x, this.quaternion.y, this.quaternion.z, this.quaternion.w);
+        let iwi = new InWorldItem(this.item, p, q);
+        // let geo = this.mesh.geometry;
+        // let mat = this.mesh.material;
+        // iwi.mesh = new THREE.Mesh(geo, mat);
+        iwi.mesh = this.mesh.clone();
+        return iwi;
     }
     replaceMaterial(mat) {
-        assets_1.Assets.replaceMaterial(this.meshPrototype, mat);
+        assets_1.Assets.replaceMaterial(this.mesh, mat);
     }
 }
 exports.InWorldItem = InWorldItem;
