@@ -241,9 +241,10 @@ export class AstroGen {
   layer(input: InWorldItem[], layerNumber): InWorldItem[] {
     let output = [];
     for (let block of input) {
-      if (block.position.y == layerNumber) {
-        block.position.y = 0;
-        output.push(block);
+      let b = block.clone();
+      if (b.position.y == layerNumber) {
+        b.position.y = 0;
+        output.push(b);
       }
     }
     return output;
@@ -267,10 +268,12 @@ export class AstroGen {
       }
       let slice = this.layer(input, y);
       for (let block of slice) {
-        let b = block.clone();
+        let b = new InWorldItem(block.item, block.position, block.quaternion);
         b.position.y = mashY;
+        b.position.x = b.position.x + 10;
         mashed.push(b);
       }
+      Debug.log(`mashY = ${mashY.toFixed(0)}`);
       mashY++;
     }
     return mashed

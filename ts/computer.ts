@@ -94,7 +94,7 @@ export class Computer extends THREE.Object3D implements Ticker {
     this.rowText = [];
     let i = 0;
     for (let i = 0; i < 15; i++) {
-      if (this.startRow + i > items.length) {
+      if (this.startRow + i >= items.length) {
         break;
       }
       else {

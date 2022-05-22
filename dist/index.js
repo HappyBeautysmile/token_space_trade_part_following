@@ -467,9 +467,10 @@ class AstroGen {
     layer(input, layerNumber) {
         let output = [];
         for (let block of input) {
-            if (block.position.y == layerNumber) {
-                block.position.y = 0;
-                output.push(block);
+            let b = block.clone();
+            if (b.position.y == layerNumber) {
+                b.position.y = 0;
+                output.push(b);
             }
         }
         return output;
@@ -492,10 +493,12 @@ class AstroGen {
             }
             let slice = this.layer(input, y);
             for (let block of slice) {
-                let b = block.clone();
+                let b = new inWorldItem_1.InWorldItem(block.item, block.position, block.quaternion);
                 b.position.y = mashY;
+                b.position.x = b.position.x + 10;
                 mashed.push(b);
             }
+            debug_1.Debug.log(`mashY = ${mashY.toFixed(0)}`);
             mashY++;
         }
         return mashed;
@@ -998,7 +1001,7 @@ class Computer extends THREE.Object3D {
         this.rowText = [];
         let i = 0;
         for (let i = 0; i < 15; i++) {
-            if (this.startRow + i > items.length) {
+            if (this.startRow + i >= items.length) {
                 break;
             }
             else {
@@ -1907,11 +1910,35 @@ exports.Hand = Hand;
 /***/ }),
 
 /***/ 116:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InWorldItem = void 0;
+const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
 // Represents an item which exists in the universe.
@@ -1933,7 +1960,9 @@ class InWorldItem {
     // Caller needs to set the position of this object and add it to the scene
     // graph.
     getMesh() {
-        return this.meshPrototype.clone();
+        const geo = this.meshPrototype.geometry.clone();
+        const mat = this.meshPrototype.material;
+        return new THREE.Mesh(geo, mat);
     }
     clone() {
         return new InWorldItem(this.item, this.position, this.quaternion);

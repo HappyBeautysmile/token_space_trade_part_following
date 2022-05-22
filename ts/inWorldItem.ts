@@ -21,7 +21,9 @@ export class InWorldItem {
   // Caller needs to set the position of this object and add it to the scene
   // graph.
   public getMesh(): THREE.Mesh {
-    return this.meshPrototype.clone();
+    const geo = this.meshPrototype.geometry.clone();
+    const mat = this.meshPrototype.material;
+    return new THREE.Mesh(geo, mat);
   }
 
   public clone(): InWorldItem {
