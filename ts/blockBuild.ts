@@ -69,7 +69,7 @@ export class BlockBuild {
     //     Math.floor(Math.random() * 500) - 250);
     // }
 
-    await ab.loadJason("test", 0, 0, 0);
+    await ab.loadJson("test", 0, 0, 0);
 
     ab.buildOriginMarker(S.float('om'));
 

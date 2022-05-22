@@ -458,18 +458,55 @@ class AstroGen {
     removeFar(dirty, r) {
         let clean = [];
         for (const item of dirty) {
-            if (Math.abs(item.position.x) < r) {
+            if (Math.abs(item.position.x) + Math.abs(item.position.y) + Math.abs(item.position.z) < r) {
                 clean.push(item);
             }
         }
         return clean;
     }
-    async loadJason(filename, xOffset, yOffset, zOffset) {
+    layer(input, layerNumber) {
+        let output = [];
+        for (let block of input) {
+            if (block.position.y == layerNumber) {
+                block.position.y = 0;
+                output.push(block);
+            }
+        }
+        return output;
+    }
+    mashUp(input) {
+        let mashed = [];
+        let minY = input[0].position.y;
+        let maxY = input[0].position.y;
+        for (let block of input) {
+            minY = Math.min(minY, block.position.y);
+            maxY = Math.max(maxY, block.position.y);
+        }
+        let mashY = minY;
+        for (let y = minY; y <= maxY;) {
+            if (Math.random() < 0.2) {
+                y++;
+            }
+            if (Math.random() < 0.2) {
+                y++;
+            }
+            let slice = this.layer(input, y);
+            for (let block of slice) {
+                let b = block.clone();
+                b.position.y = mashY;
+                mashed.push(b);
+            }
+            mashY++;
+        }
+        return mashed;
+    }
+    async loadJson(filename, xOffset, yOffset, zOffset) {
         debug_1.Debug.log(`loading ${filename}.json...`);
         const loadedObject = await fileIO_1.FileIO.httpGetAsync("./" + filename + ".json");
         const loaded = codec_1.Decode.arrayOfInWorldItem(loadedObject);
         let cleaned = this.removeFar(loaded, 20);
-        for (const inWorldItem of cleaned) {
+        let mashed = this.mashUp(cleaned);
+        for (const inWorldItem of mashed) {
             inWorldItem.position.add(new THREE.Vector3(xOffset, yOffset, zOffset));
             this.construction.addCube(inWorldItem);
         }
@@ -567,7 +604,7 @@ class BlockBuild {
         //     Math.floor(Math.random() * 500) - 250,
         //     Math.floor(Math.random() * 500) - 250);
         // }
-        await ab.loadJason("test", 0, 0, 0);
+        await ab.loadJson("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
         this.getGrips();
@@ -953,16 +990,26 @@ class Computer extends THREE.Object3D {
         }
         this.texture.needsUpdate = true;
     }
+    startRow = 0;
     showInventory() {
         const inv = this.player.inventory.getItemQty();
+        const qtys = Array.from(inv.values());
+        const items = Array.from(inv.keys());
         this.rowText = [];
         let i = 0;
-        for (const [item, qty] of inv.entries()) {
-            this.rowText[i] = item.name + ' ' + qty.toFixed(0);
-            i++;
-            if (i > 15) {
+        for (let i = 0; i < 15; i++) {
+            if (this.startRow + i > items.length) {
                 break;
             }
+            else {
+                this.rowText[i] = `${items[i + this.startRow].name} ${qtys[i + this.startRow]}`;
+            }
+        }
+        if (this.startRow > 0) {
+            this.bottomButtonLabels[6] = "back";
+        }
+        if (this.startRow + 14 < items.length) {
+            this.bottomButtonLabels[7] = "next";
         }
         this.updateDisplay();
     }
@@ -1887,6 +1934,9 @@ class InWorldItem {
     // graph.
     getMesh() {
         return this.meshPrototype.clone();
+    }
+    clone() {
+        return new InWorldItem(this.item, this.position, this.quaternion);
     }
     replaceMaterial(mat) {
         assets_1.Assets.replaceMaterial(this.meshPrototype, mat);

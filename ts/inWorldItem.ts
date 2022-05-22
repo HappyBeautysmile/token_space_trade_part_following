@@ -24,6 +24,10 @@ export class InWorldItem {
     return this.meshPrototype.clone();
   }
 
+  public clone(): InWorldItem {
+    return new InWorldItem(this.item, this.position, this.quaternion)
+  }
+
   public replaceMaterial(mat: THREE.Material) {
     Assets.replaceMaterial(this.meshPrototype, mat);
   }

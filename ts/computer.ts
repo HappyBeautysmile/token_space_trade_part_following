@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { inverseLerp } from "three/src/math/MathUtils";
 import { Assets, ModelLoader, Item } from "./assets";
 import { Player } from "./player";
 import { Ticker, Tick } from "./tick";
@@ -85,16 +86,26 @@ export class Computer extends THREE.Object3D implements Ticker {
     this.texture.needsUpdate = true;
   }
 
+  private startRow = 0;
   showInventory() {
     const inv = this.player.inventory.getItemQty();
+    const qtys = Array.from(inv.values());
+    const items = Array.from(inv.keys())
     this.rowText = [];
     let i = 0;
-    for (const [item, qty] of inv.entries()) {
-      this.rowText[i] = item.name + ' ' + qty.toFixed(0);
-      i++;
-      if (i > 15) {
+    for (let i = 0; i < 15; i++) {
+      if (this.startRow + i > items.length) {
         break;
       }
+      else {
+        this.rowText[i] = `${items[i + this.startRow].name} ${qtys[i + this.startRow]}`;
+      }
+    }
+    if (this.startRow > 0) {
+      this.bottomButtonLabels[6] = "back";
+    }
+    if (this.startRow + 14 < items.length) {
+      this.bottomButtonLabels[7] = "next";
     }
     this.updateDisplay();
   }
