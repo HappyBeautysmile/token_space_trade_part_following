@@ -1851,11 +1851,15 @@ class Hand extends THREE.Object3D {
     }
     r = new THREE.Ray();
     worldNormalMatrix = new THREE.Matrix3;
-    castRay() {
+    setRay() {
         this.getWorldPosition(this.r.origin);
         this.r.direction.set(0, -1, 0);
         this.worldNormalMatrix.getNormalMatrix(this.matrixWorld);
         this.r.direction.applyMatrix3(this.worldNormalMatrix);
+    }
+    // Returns true if ray is over something.
+    castRay() {
+        this.setRay();
         const distance = buttonDispatcher_1.ButtonDispatcher.closestApproach(this.r);
         if (distance !== undefined) {
             this.linePoints[0].set(0, 0, 0);
@@ -1866,6 +1870,10 @@ class Hand extends THREE.Object3D {
         else {
             this.line.visible = false;
         }
+    }
+    sendRay() {
+        this.setRay();
+        buttonDispatcher_1.ButtonDispatcher.cast(this.r);
     }
     lastButtons;
     v = new THREE.Vector3();
@@ -1971,6 +1979,10 @@ class Hand extends THREE.Object3D {
         });
         this.grip.setSelectStartCallback(() => {
             debug_1.Debug.log('selectstart');
+            if (this.line.visible) {
+                this.sendRay();
+                return;
+            }
             const itemQty = this.inventory.getItemQty();
             if (itemQty.has(this.item)) {
                 if (itemQty.get(this.item) > 0) {

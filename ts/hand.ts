@@ -77,11 +77,17 @@ export class Hand extends THREE.Object3D {
   private r = new THREE.Ray();
   private worldNormalMatrix = new THREE.Matrix3;
 
-  private castRay() {
+
+  private setRay() {
     this.getWorldPosition(this.r.origin);
     this.r.direction.set(0, -1, 0);
     this.worldNormalMatrix.getNormalMatrix(this.matrixWorld);
     this.r.direction.applyMatrix3(this.worldNormalMatrix);
+  }
+
+  // Returns true if ray is over something.
+  private castRay() {
+    this.setRay();
     const distance = ButtonDispatcher.closestApproach(this.r);
     if (distance !== undefined) {
       this.linePoints[0].set(0, 0, 0);
@@ -91,6 +97,11 @@ export class Hand extends THREE.Object3D {
     } else {
       this.line.visible = false;
     }
+  }
+
+  private sendRay() {
+    this.setRay();
+    ButtonDispatcher.cast(this.r);
   }
 
   private lastButtons;
@@ -202,6 +213,10 @@ export class Hand extends THREE.Object3D {
 
     this.grip.setSelectStartCallback(() => {
       Debug.log('selectstart');
+      if (this.line.visible) {
+        this.sendRay();
+        return;
+      }
       const itemQty = this.inventory.getItemQty();
       if (itemQty.has(this.item)) {
         if (itemQty.get(this.item) > 0) {
