@@ -84,6 +84,7 @@ export class Hand extends THREE.Object3D {
     this.r.direction.applyMatrix3(this.worldNormalMatrix);
     const distance = ButtonDispatcher.closestApproach(this.r);
     if (distance !== undefined) {
+      this.linePoints[0].set(0, 0, 0);
       this.linePoints[1].set(0, -distance, 0);
       this.lineGeometry.setFromPoints(this.linePoints);
       this.line.visible = true;

@@ -132,10 +132,10 @@ export class BlockBuild {
       this.place.playerGroup.rotateY(-t.deltaS * 2);
     }
     if (this.keysDown.has('ArrowDown')) {
-      this.place.playerGroup.rotateX(-t.deltaS * 2);
+      this.camera.rotateX(-t.deltaS * 2);
     }
     if (this.keysDown.has('ArrowUp')) {
-      this.place.playerGroup.rotateX(t.deltaS * 2);
+      this.camera.rotateX(t.deltaS * 2);
     }
     if (this.v.length() > 0) {
       this.place.movePlayerRelativeToCamera(this.v);
