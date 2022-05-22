@@ -22,7 +22,7 @@ class Button {
     if (distance <= this.radius) {
       return distance;
     } else {
-      return null;
+      return undefined;
     }
   }
 }
@@ -37,13 +37,24 @@ export class ButtonDispatcher {
     o: THREE.Object3D, localPosition: THREE.Vector3, radius: number,
     callback: ButtonCallback) {
     const button = new Button(o, localPosition, radius);
-    this.callbacks.set(button, callback);
+    ButtonDispatcher.callbacks.set(button, callback);
+  }
+
+  static closestApproach(ray: THREE.Ray): number {
+    let closest: number = undefined;
+    for (const button of ButtonDispatcher.callbacks.keys()) {
+      let distance = button.closestApproach(ray);
+      if (distance < closest || closest === undefined) {
+        closest = distance;
+      }
+    }
+    return closest;
   }
 
   static cast(ray: THREE.Ray) {
     let closest = 1e12;
     let bestCallback: ButtonCallback = null;
-    for (const [button, callback] of this.callbacks.entries()) {
+    for (const [button, callback] of ButtonDispatcher.callbacks.entries()) {
       let distance = button.closestApproach(ray);
       if (distance < closest) {
         closest = distance;

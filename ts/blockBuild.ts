@@ -13,6 +13,7 @@ import { S } from "./settings";
 import { Inventory, Player } from "./player";
 import { GripGrip, GripLike, MouseGrip } from "./gripLike";
 import { Computer } from "./computer";
+import { ButtonDispatcher } from "./buttonDispatcher";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -130,6 +131,12 @@ export class BlockBuild {
     if (this.keysDown.has('ArrowRight')) {
       this.place.playerGroup.rotateY(-t.deltaS * 2);
     }
+    if (this.keysDown.has('ArrowDown')) {
+      this.place.playerGroup.rotateX(-t.deltaS * 2);
+    }
+    if (this.keysDown.has('ArrowUp')) {
+      this.place.playerGroup.rotateX(t.deltaS * 2);
+    }
     if (this.v.length() > 0) {
       this.place.movePlayerRelativeToCamera(this.v);
     }
@@ -207,6 +214,16 @@ export class BlockBuild {
     computer.rotateX(Math.PI / 4);
     const computerScale = S.float('cs');
     computer.scale.set(computerScale, computerScale, computerScale);
+
+    ButtonDispatcher.registerButton(computer, new THREE.Vector3(0, 0, 0),
+      0.1, () => {
+        if (computer.scale.x > 2) {
+          computer.scale.set(1, 1, 1);
+        } else {
+          computer.scale.set(10, 10, 10);
+        }
+      });
+
     this.playerGroup.add(computer);
 
     Debug.log("load materials working");

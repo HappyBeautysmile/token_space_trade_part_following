@@ -181,9 +181,9 @@ class Assets extends THREE.Object3D {
     }
     static async LoadAllModels() {
         const modelNames = [
-            'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
-            'thruster', 'tank', 'light-blue', 'port',
-            'cube-tweek', 'cube-glob', 'guide', 'cube-rock', 'corner'
+            'accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube', 'guide', 'ice', 'light-blue',
+            'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
+            'silicon-crystalized', 'tank', 'thruster', 'wedge'
         ];
         for (const modelName of modelNames) {
             // console.log(`Loading ${modelName}`);
@@ -262,35 +262,42 @@ class rarity {
     period;
     phase;
     magnitude;
+    offset;
     // pattern repeats every n meters
     // phase from 0 to 2 Pi
     // 1-100 where 1 is scarce and 100 is common.
-    constructor(modelName, period, phase, magnitude) {
+    // offset is added to the sine before magnitude is appled.  1 = 0 to 2x magnitude.  more means there is always a chance.  less means sometimes there is no chance of occurance.
+    constructor(modelName, period, phase, magnitude, offset) {
         this.modelName = modelName;
         this.period = period;
         this.phase = phase;
         this.magnitude = magnitude;
+        this.offset = offset;
     }
     trans(n) {
-        let retvalue = this.magnitude * (Math.sin(2 * Math.PI * (1 / this.period) * n + this.phase) + 1);
+        let retvalue = this.magnitude * (Math.sin(2 * Math.PI * (1 / this.period) * n + this.phase) + this.offset);
         return retvalue;
     }
     concentration(x, y, z) {
         return Math.cbrt(this.trans(x) * this.trans(y) * this.trans(z));
     }
 }
-// 'cube', 'wedge', 'accordion', 'arm', 'cluster-jet', 'scaffold',
-//       'thruster', 'tank', 'light-blue', 'port',
-//       'cube-tweek', 'cube-glob', 'guide', 'cube-rock', 'corner'
+// 'clay', 'ice', 
+// 'metal-common', 'metal-rare','salt-common', 'salt-rare', 'silicate-rock',
+// 'silicon-crystalized', ]
 class AstroGen {
     construction;
     rarities = [];
     constructor(construction) {
         this.construction = construction;
-        this.rarities.push(new rarity("cube-tweek", 100, 0, 100));
-        this.rarities.push(new rarity("cube-glob", 100, Math.PI / 2, 100));
-        this.rarities.push(new rarity("accordion", 50, 0, 1));
-        this.rarities.push(new rarity("arm", 20, -Math.PI / 2, 10));
+        this.rarities.push(new rarity("clay", 100, Math.PI / 2, 100, 1.1));
+        this.rarities.push(new rarity("ice", 100, -Math.PI / 2, 100, 0.9));
+        this.rarities.push(new rarity("metal-common", 500, 0, 10, 0.8));
+        this.rarities.push(new rarity("metal-rare", 5000, Math.PI / 2, 1, 0));
+        this.rarities.push(new rarity("salt-common", 50, 0, 50, 0.5));
+        this.rarities.push(new rarity("salt-rare", 50, 0, 50, -0.5));
+        this.rarities.push(new rarity("silicate-rock", 100, -Math.PI / 2, 100, 0.5));
+        this.rarities.push(new rarity("silicon-crystalized", 1, -Math.PI, 1, -0.5));
     }
     buildCone() {
         for (let x = -20; x < 20; x++) {
@@ -395,6 +402,28 @@ class AstroGen {
             }
         }
     }
+    buildDiamond(r, xOffset, yOffset, zOffset) {
+        for (let x = -r; x < r; x++) {
+            for (let y = -r; y < r; y++) {
+                for (let z = -r; z < r; z++) {
+                    if ((Math.abs(x) + Math.abs(y) + Math.abs(z)) < r + Math.random() - 0.5) {
+                        this.addAt(x + xOffset, y + yOffset, z + zOffset);
+                    }
+                }
+            }
+        }
+    }
+    buildCuboid(r, xOffset, yOffset, zOffset) {
+        for (let x = -r; x < r; x++) {
+            for (let y = -r; y < r; y++) {
+                for (let z = -r; z < r; z++) {
+                    if (Math.min(Math.abs(x), Math.abs(y), Math.abs(z)) < r + Math.random() - 0.5) {
+                        this.addAt(x + xOffset, y + yOffset, z + zOffset);
+                    }
+                }
+            }
+        }
+    }
     getRandomInt(min, max) {
         return Math.floor(Math.pow(Math.random(), 2) * (max - min)) + min;
     }
@@ -418,11 +447,59 @@ class AstroGen {
             }
         }
     }
-    async loadJason(filename, xOffset, yOffset, zOffset) {
+    removeFar(dirty, r) {
+        let clean = [];
+        for (const item of dirty) {
+            if (Math.abs(item.position.x) + Math.abs(item.position.y) + Math.abs(item.position.z) < r) {
+                clean.push(item);
+            }
+        }
+        return clean;
+    }
+    layer(input, layerNumber) {
+        let output = [];
+        for (let block of input) {
+            let b = block.clone();
+            if (b.position.y == layerNumber) {
+                b.position.y = 0;
+                output.push(b);
+            }
+        }
+        return output;
+    }
+    mashUp(input) {
+        let mashed = [];
+        let minY = input[0].position.y;
+        let maxY = input[0].position.y;
+        for (let block of input) {
+            minY = Math.min(minY, block.position.y);
+            maxY = Math.max(maxY, block.position.y);
+        }
+        let mashY = minY;
+        for (let y = minY; y <= maxY;) {
+            if (Math.random() < 0.8) {
+                y++;
+            }
+            if (Math.random() < 0.2) {
+                y++;
+            }
+            let slice = this.layer(input, y);
+            for (let block of slice) {
+                let b = block.clone();
+                b.position.y = mashY;
+                mashed.push(b);
+            }
+            mashY++;
+        }
+        return mashed;
+    }
+    async loadJson(filename, xOffset, yOffset, zOffset) {
         debug_1.Debug.log(`loading ${filename}.json...`);
         const loadedObject = await fileIO_1.FileIO.httpGetAsync("./" + filename + ".json");
         const loaded = codec_1.Decode.arrayOfInWorldItem(loadedObject);
-        for (const inWorldItem of loaded) {
+        let cleaned = this.removeFar(loaded, 20);
+        let mashed = this.mashUp(cleaned);
+        for (const inWorldItem of mashed) {
             inWorldItem.position.add(new THREE.Vector3(xOffset, yOffset, zOffset));
             this.construction.addCube(inWorldItem);
         }
@@ -472,6 +549,7 @@ const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(723);
+const buttonDispatcher_1 = __webpack_require__(770);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -500,10 +578,10 @@ class BlockBuild {
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
         if (settings_1.S.float('m')) {
-            this.construction = new construction_1.MergedConstruction(this.place.universeGroup);
+            this.construction = new construction_1.MergedConstruction(this.place.universeGroup, this.renderer);
         }
         else {
-            this.construction = new construction_1.ObjectConstruction(this.place.universeGroup);
+            this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         }
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
@@ -516,10 +594,9 @@ class BlockBuild {
         //     Math.floor(Math.random() * 500) - 250,
         //     Math.floor(Math.random() * 500) - 250);
         // }
-        //ab.buildSpacePort(20, 0, 20, 9);
-        //await ab.loadJason("test", 0, 0, 0);
+        await ab.loadJson("test", 0, 0, 0);
         ab.buildOriginMarker(settings_1.S.float('om'));
-        ab.buildRandomItems(10, 100);
+        //ab.buildRandomItems(10, 100);
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -548,7 +625,7 @@ class BlockBuild {
         ++this.frameCount;
         const fru = settings_1.S.float('fru');
         if (fru && t.elapsedS >= this.lastFrameRateUpdate + fru) {
-            debug_1.Debug.log(`FPS: ${(this.frameCount / fru).toFixed(1)}`);
+            debug_1.Debug.log(`FPS: ${(this.frameCount / (t.elapsedS - this.lastFrameRateUpdate)).toFixed(1)}`);
             this.lastFrameRateUpdate = t.elapsedS;
             this.frameCount = 0;
         }
@@ -571,6 +648,12 @@ class BlockBuild {
         if (this.keysDown.has('ArrowRight')) {
             this.place.playerGroup.rotateY(-t.deltaS * 2);
         }
+        if (this.keysDown.has('ArrowDown')) {
+            this.place.playerGroup.rotateX(-t.deltaS * 2);
+        }
+        if (this.keysDown.has('ArrowUp')) {
+            this.place.playerGroup.rotateX(t.deltaS * 2);
+        }
         if (this.v.length() > 0) {
             this.place.movePlayerRelativeToCamera(this.v);
         }
@@ -589,21 +672,32 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
         //this.scene.background = new THREE.Color(0x552200);
-        var skyGeo = new THREE.SphereGeometry(1999, 25, 25);
+        var skyGeo = new THREE.SphereGeometry(1900, 25, 25);
         var loader = new THREE.TextureLoader();
-        var texture = loader.load("Model/sky.jpg");
-        var material = new THREE.MeshPhongMaterial({
+        var texture = loader.load("Model/sky6.jpg");
+        var color = new THREE.Color(Math.random(), Math.random(), Math.random());
+        var material = new THREE.MeshBasicMaterial({
             map: texture,
+            color: color
         });
         var sky = new THREE.Mesh(skyGeo, material);
         sky.material.side = THREE.BackSide;
-        this.playerGroup.add(sky);
+        this.universeGroup.add(sky);
+        // var skyGeo = new THREE.BoxGeometry(6, 6, 6);
+        // var loader = new THREE.TextureLoader()
+        // var texture = loader.load("Model/sky1.jpg");
+        // var material = new THREE.MeshPhongMaterial({
+        //   map: texture,
+        // });
+        // var sky = new THREE.Mesh(skyGeo, material);
+        // sky.material.side = THREE.BackSide;
+        // this.universeGroup.add(sky);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
         this.playerGroup.add(this.camera);
         this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         this.renderer.setSize(512, 512);
         //this.renderer.setSize(1024, 1024);
         document.body.appendChild(this.renderer.domElement);
@@ -628,8 +722,16 @@ class BlockBuild {
         computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
         computer.scale.set(computerScale, computerScale, computerScale);
+        buttonDispatcher_1.ButtonDispatcher.registerButton(computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
+            if (computer.scale.x > 2) {
+                computer.scale.set(1, 1, 1);
+            }
+            else {
+                computer.scale.set(10, 10, 10);
+            }
+        });
         this.playerGroup.add(computer);
-        debug_1.Debug.log("Debug sticks 2.");
+        debug_1.Debug.log("load materials working");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -676,6 +778,98 @@ exports.BlockBuild = BlockBuild;
 
 /***/ }),
 
+/***/ 770:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ButtonDispatcher = void 0;
+const THREE = __importStar(__webpack_require__(578));
+class Button {
+    o;
+    localPosition;
+    radius;
+    constructor(o, localPosition, radius) {
+        this.o = o;
+        this.localPosition = localPosition;
+        this.radius = radius;
+    }
+    static globalPosition = new THREE.Vector3();
+    static p = new THREE.Vector3();
+    // Returns null if `ray` misses this.  Otherwise returns
+    // the distance of the closest approach.  `ray` is in world space.
+    closestApproach(ray) {
+        Button.globalPosition.copy(this.localPosition);
+        this.o.localToWorld(Button.globalPosition);
+        ray.closestPointToPoint(Button.globalPosition, Button.p);
+        Button.p.sub(Button.globalPosition);
+        const distance = Button.p.length();
+        if (distance <= this.radius) {
+            return distance;
+        }
+        else {
+            return undefined;
+        }
+    }
+}
+class ButtonDispatcher {
+    // This class is purely static. Do not instantiate it.
+    constructor() { }
+    ;
+    static callbacks = new Map();
+    static registerButton(o, localPosition, radius, callback) {
+        const button = new Button(o, localPosition, radius);
+        ButtonDispatcher.callbacks.set(button, callback);
+    }
+    static closestApproach(ray) {
+        let closest = undefined;
+        for (const button of ButtonDispatcher.callbacks.keys()) {
+            let distance = button.closestApproach(ray);
+            if (distance < closest || closest === undefined) {
+                closest = distance;
+            }
+        }
+        return closest;
+    }
+    static cast(ray) {
+        let closest = 1e12;
+        let bestCallback = null;
+        for (const [button, callback] of ButtonDispatcher.callbacks.entries()) {
+            let distance = button.closestApproach(ray);
+            if (distance < closest) {
+                closest = distance;
+                bestCallback = callback;
+            }
+        }
+        if (bestCallback) {
+            bestCallback();
+        }
+    }
+}
+exports.ButtonDispatcher = ButtonDispatcher;
+//# sourceMappingURL=buttonDispatcher.js.map
+
+/***/ }),
+
 /***/ 385:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -712,7 +906,9 @@ class Encode {
         result['quaternion'] = o.quaternion;
         result['modelName'] = o.item.modelName;
         let mat = o.getMesh().material;
-        result['materialName'] = mat.userData['materialName'];
+        if (mat.userData['materialName']) {
+            result['materialName'] = mat.userData['materialName'];
+        }
         return result;
     }
     static arrayOfInWorldItems(cubes) {
@@ -735,13 +931,15 @@ class Decode {
         // const quaternion = new THREE.Quaternion();
         // Object.assign(quaternion, o['quaternion'])
         // mesh.applyQuaternion(quaternion);
-        const material = Codec.findMaterialByName(o['materialName']);
         const quaternion = new THREE.Quaternion();
         Object.assign(quaternion, o['quaternion']);
         const position = new THREE.Vector3();
         Object.assign(position, o['position']);
         const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get(o['modelName']), position, quaternion);
-        inWorldItem.replaceMaterial(material);
+        const material = Codec.findMaterialByName(o['materialName']);
+        if (material) {
+            inWorldItem.replaceMaterial(material);
+        }
         return inWorldItem;
     }
     // static arrayOfObject3D(obs: Object[]): THREE.Object3D[] {
@@ -880,16 +1078,26 @@ class Computer extends THREE.Object3D {
         }
         this.texture.needsUpdate = true;
     }
+    startRow = 0;
     showInventory() {
         const inv = this.player.inventory.getItemQty();
+        const qtys = Array.from(inv.values());
+        const items = Array.from(inv.keys());
         this.rowText = [];
         let i = 0;
-        for (const [item, qty] of inv.entries()) {
-            this.rowText[i] = item.name + ' ' + qty.toFixed(0);
-            i++;
-            if (i > 15) {
+        for (let i = 0; i < 15; i++) {
+            if (this.startRow + i >= items.length) {
                 break;
             }
+            else {
+                this.rowText[i] = `${items[i + this.startRow].name} ${qtys[i + this.startRow]}`;
+            }
+        }
+        if (this.startRow > 0) {
+            this.bottomButtonLabels[6] = "back";
+        }
+        if (this.startRow + 14 < items.length) {
+            this.bottomButtonLabels[7] = "next";
         }
         this.updateDisplay();
     }
@@ -939,8 +1147,10 @@ const fileIO_1 = __webpack_require__(3);
 const megedGeometryContainer_1 = __webpack_require__(192);
 class ObjectConstruction {
     container;
-    constructor(container) {
+    renderer;
+    constructor(container, renderer) {
         this.container = container;
+        this.renderer = renderer;
     }
     // TODO: Make this private and instead have some nicer methods for
     // inserting and deleting.  This is where code to make sure we have only
@@ -953,19 +1163,19 @@ class ObjectConstruction {
         //o['objects'] = FileIO.mapToObject(this.allObjects);
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
-        fileIO_1.FileIO.saveObject(o, "what_you_built.json");
+        fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
+        fileIO_1.FileIO.saveImage(this.renderer.domElement, "test.jpg");
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
-    // TODO: Change the input type to InWorldItem.
     addCube(o) {
         const key = this.posToKey(o.position);
         this.items.set(key, o);
         const object = o.getMesh();
+        debug_1.Debug.assert(!!object);
         object.position.copy(o.position);
         object.quaternion.copy(o.quaternion);
-        debug_1.Debug.assert(!!object);
         this.objects.set(key, object);
         this.container.add(object);
     }
@@ -991,8 +1201,10 @@ class ObjectConstruction {
 }
 exports.ObjectConstruction = ObjectConstruction;
 class MergedConstruction {
+    renderer;
     mergedContainer = new megedGeometryContainer_1.MergedGeometryContainer();
-    constructor(container) {
+    constructor(container, renderer) {
+        this.renderer = renderer;
         container.add(this.mergedContainer);
     }
     items = new Map();
@@ -1000,12 +1212,14 @@ class MergedConstruction {
         console.log('Saving...');
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
-        fileIO_1.FileIO.saveObject(o, "what_you_built.json");
+        fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
+        var strMime = "image/jpeg";
+        let imgData = this.renderer.domElement.toDataURL(strMime);
+        fileIO_1.FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
     }
-    // TODO: Change the input type to InWorldItem.
     addCube(o) {
         const key = this.posToKey(o.position);
         this.items.set(key, o);
@@ -1270,11 +1484,20 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileIO = void 0;
 const debug_1 = __webpack_require__(756);
 class FileIO {
-    static saveObject(content, fileName) {
+    static saveObjectAsJson(content, fileName) {
         const a = document.createElement("a");
         const serialized = "data:text/json;charset=utf-8," +
             encodeURIComponent(JSON.stringify(content));
         a.href = serialized;
+        debug_1.Debug.log(`Saved ${a.href.length} encoded bytes.`);
+        a.download = fileName;
+        a.click();
+    }
+    static saveImage(domElement, fileName) {
+        const a = document.createElement("a");
+        let imgData = domElement.toDataURL("image/jpeg");
+        imgData.replace("image/jpeg", "image/octet-stream");
+        a.href = imgData;
         debug_1.Debug.log(`Saved ${a.href.length} encoded bytes.`);
         a.download = fileName;
         a.click();
@@ -1565,6 +1788,7 @@ const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const inWorldItem_1 = __webpack_require__(116);
 const settings_1 = __webpack_require__(451);
+const buttonDispatcher_1 = __webpack_require__(770);
 class Hand extends THREE.Object3D {
     grip;
     item;
@@ -1578,6 +1802,11 @@ class Hand extends THREE.Object3D {
     leftHand = undefined;
     debug;
     debugMaterial;
+    lineGeometry = new THREE.BufferGeometry();
+    linePoints = [
+        new THREE.Vector3(), new THREE.Vector3()
+    ];
+    line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: '#aa9' }));
     constructor(grip, item, index, xr, place, keysDown, construction, inventory) {
         super();
         this.grip = grip;
@@ -1597,6 +1826,8 @@ class Hand extends THREE.Object3D {
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
         }
+        this.line.visible = false;
+        this.add(this.line);
         this.setCube(item);
         this.initialize();
     }
@@ -1618,11 +1849,29 @@ class Hand extends THREE.Object3D {
         this.place.worldToPlayer(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
+    r = new THREE.Ray();
+    worldNormalMatrix = new THREE.Matrix3;
+    castRay() {
+        this.getWorldPosition(this.r.origin);
+        this.r.direction.set(0, -1, 0);
+        this.worldNormalMatrix.getNormalMatrix(this.matrixWorld);
+        this.r.direction.applyMatrix3(this.worldNormalMatrix);
+        const distance = buttonDispatcher_1.ButtonDispatcher.closestApproach(this.r);
+        if (distance !== undefined) {
+            this.linePoints[1].set(0, -distance, 0);
+            this.lineGeometry.setFromPoints(this.linePoints);
+            this.line.visible = true;
+        }
+        else {
+            this.line.visible = false;
+        }
+    }
     lastButtons;
     v = new THREE.Vector3();
     source = null;
     tick(t) {
         this.setCubePosition();
+        this.castRay();
         const session = this.xr.getSession();
         if (session) {
             if (session.inputSources && session.inputSources.length > this.index) {
@@ -1669,7 +1918,7 @@ class Hand extends THREE.Object3D {
             if (buttons[2] === 1 && this.lastButtons[2] != 1) { // 
                 debug_1.Debug.log(`Button 2 pressed on ${this.source.handedness} hand.`);
             }
-            if (buttons[3] === 1 && this.lastButtons[3] != 1) {
+            if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick button
                 //this.debugMaterial.color = new THREE.Color('blue');
                 this.construction.save();
             }
@@ -1750,11 +1999,31 @@ exports.Hand = Hand;
 /***/ }),
 
 /***/ 116:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InWorldItem = void 0;
+const THREE = __importStar(__webpack_require__(578));
 const assets_1 = __webpack_require__(398);
 const debug_1 = __webpack_require__(756);
 // Represents an item which exists in the universe.
@@ -1762,7 +2031,7 @@ class InWorldItem {
     item;
     position;
     quaternion;
-    meshPrototype;
+    mesh;
     // TODO: instead of passing position and quaternion, perhaps we
     // need an ItemProperties class. E.g. the base color of the model.
     constructor(item, position, quaternion) {
@@ -1770,16 +2039,26 @@ class InWorldItem {
         this.position = position;
         this.quaternion = quaternion;
         debug_1.Debug.assert(assets_1.Assets.meshes.has(item.name), 'Unknown item.  Call Assets.init first.');
-        this.meshPrototype = assets_1.Assets.meshes.get(item.name);
+        this.mesh = assets_1.Assets.meshes.get(item.name).clone();
     }
     // Returns a clone of the model prototype.
     // Caller needs to set the position of this object and add it to the scene
     // graph.
     getMesh() {
-        return this.meshPrototype.clone();
+        return this.mesh;
+    }
+    clone() {
+        const p = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
+        const q = new THREE.Quaternion(this.quaternion.x, this.quaternion.y, this.quaternion.z, this.quaternion.w);
+        let iwi = new InWorldItem(this.item, p, q);
+        // let geo = this.mesh.geometry;
+        // let mat = this.mesh.material;
+        // iwi.mesh = new THREE.Mesh(geo, mat);
+        iwi.mesh = this.mesh.clone();
+        return iwi;
     }
     replaceMaterial(mat) {
-        assets_1.Assets.replaceMaterial(this.meshPrototype, mat);
+        assets_1.Assets.replaceMaterial(this.mesh, mat);
     }
 }
 exports.InWorldItem = InWorldItem;
@@ -1853,7 +2132,7 @@ class MaterialExplorer extends THREE.Object3D {
         this.cube = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f0f' }));
         this.cube.position.set(1, 2.5, -2);
         this.add(this.cube);
-        const construction = new construction_1.MergedConstruction(this);
+        const construction = new construction_1.MergedConstruction(this, null); // TODO 2nd parameter is the renderer to allow saving of the screen shot
         const gen = new astroGen_1.AstroGen(construction);
         gen.buildAsteroid(5, -3, 2, -10);
     }
@@ -2900,7 +3179,7 @@ class PlanetPlatform extends THREE.Group {
     constructor(pos, camera) {
         super();
         this.camera = camera;
-        const construction = new construction_1.ObjectConstruction(this);
+        const construction = new construction_1.ObjectConstruction(this, null); //TODO 2nd paramater is now the renderer to enable saving.
         const astroGen = new astroGen_1.AstroGen(construction);
         astroGen.buildPlatform(10, 10, 3, 0, 0, 0);
         // We scale the planet up because otherwise it's really slow.

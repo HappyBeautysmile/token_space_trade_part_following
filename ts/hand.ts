@@ -11,6 +11,7 @@ import { InWorldItem } from "./inWorldItem";
 import { Inventory } from "./player";
 import { GripLike } from "./gripLike";
 import { S } from "./settings";
+import { ButtonDispatcher } from "./buttonDispatcher";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
@@ -18,6 +19,12 @@ export class Hand extends THREE.Object3D {
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
+  private lineGeometry = new THREE.BufferGeometry();
+  private linePoints: THREE.Vector3[] = [
+    new THREE.Vector3(), new THREE.Vector3()
+  ];
+  private line = new THREE.Line(this.lineGeometry,
+    new THREE.LineBasicMaterial({ color: '#aa9' }));
 
   constructor(private grip: GripLike, private item: Item,
     private index: number, private xr: THREE.WebXRManager,
@@ -39,6 +46,9 @@ export class Hand extends THREE.Object3D {
     else {
       Debug.log("ERROR: grip or this not defined.")
     }
+
+    this.line.visible = false;
+    this.add(this.line);
 
     this.setCube(item);
     this.initialize();
@@ -64,11 +74,30 @@ export class Hand extends THREE.Object3D {
     this.cube.rotation.copy(this.grip.rotation);
   }
 
+  private r = new THREE.Ray();
+  private worldNormalMatrix = new THREE.Matrix3;
+
+  private castRay() {
+    this.getWorldPosition(this.r.origin);
+    this.r.direction.set(0, -1, 0);
+    this.worldNormalMatrix.getNormalMatrix(this.matrixWorld);
+    this.r.direction.applyMatrix3(this.worldNormalMatrix);
+    const distance = ButtonDispatcher.closestApproach(this.r);
+    if (distance !== undefined) {
+      this.linePoints[1].set(0, -distance, 0);
+      this.lineGeometry.setFromPoints(this.linePoints);
+      this.line.visible = true;
+    } else {
+      this.line.visible = false;
+    }
+  }
+
   private lastButtons;
   private v = new THREE.Vector3();
   private source: THREE.XRInputSource = null;
   public tick(t: Tick) {
     this.setCubePosition();
+    this.castRay();
     const session = this.xr.getSession();
     if (session) {
       if (session.inputSources && session.inputSources.length > this.index) {
