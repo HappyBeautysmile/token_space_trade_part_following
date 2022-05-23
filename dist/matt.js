@@ -1701,6 +1701,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MouseGrip = exports.GripGrip = void 0;
 const THREE = __importStar(__webpack_require__(578));
+const debug_1 = __webpack_require__(756);
 class GripGrip extends THREE.Object3D {
     handedness;
     xr;
@@ -1710,41 +1711,72 @@ class GripGrip extends THREE.Object3D {
         super();
         this.handedness = handedness;
         this.xr = xr;
+        this.getGripAsync();
+    }
+    noXRLogged = false;
+    getGripAsync() {
         let correctIndex = null;
         for (const index of [0, 1]) {
             const session = this.xr.getSession();
             if (!session) {
-                throw new Error("No XR session!");
+                if (!this.noXRLogged) {
+                    debug_1.Debug.log("No XR session!");
+                    this.noXRLogged = true;
+                }
+                setTimeout(() => { this.getGripAsync(); }, 500);
+                return;
             }
             if (session.inputSources && session.inputSources.length > index) {
                 this.source = session.inputSources[index];
             }
             else {
-                throw new Error("Bad session");
+                debug_1.Debug.log("Bad session");
+                setTimeout(() => { this.getGripAsync(); }, 500);
+                return;
             }
-            if (this.source.handedness === handedness) {
+            if (this.source.handedness === this.handedness) {
                 correctIndex = index;
                 break;
             }
-            const grip = xr.getControllerGrip(correctIndex);
+            const grip = this.xr.getControllerGrip(correctIndex);
         }
         this.grip =
             this.add(this.grip);
+        if (!!this.selectStartCallback) {
+            this.setSelectStartCallback(this.selectStartCallback);
+        }
+        if (!!this.squeezeCallback) {
+            this.setSqueezeCallback(this.squeezeCallback);
+        }
     }
     getSource() {
         return this.source;
     }
     tick(t) {
-        this.position.copy(this.grip.position);
-        this.rotation.copy(this.grip.rotation);
-        this.quaternion.copy(this.grip.quaternion);
-        this.matrix.copy(this.grip.matrix);
+        if (!!this.grip) {
+            this.position.copy(this.grip.position);
+            this.rotation.copy(this.grip.rotation);
+            this.quaternion.copy(this.grip.quaternion);
+            this.matrix.copy(this.grip.matrix);
+        }
     }
+    selectStartCallback;
+    squeezeCallback;
     setSelectStartCallback(callback) {
-        this.grip.addEventListener('selectstart', callback);
+        if (this.grip) {
+            this.grip.addEventListener('selectstart', callback);
+        }
+        else {
+            this.selectStartCallback = callback;
+        }
     }
     setSqueezeCallback(callback) {
-        this.grip.addEventListener('squeeze', callback);
+        if (this.grip) {
+            this.grip.addEventListener('squeeze', callback);
+        }
+        else {
+            this.squeezeCallback = callback;
+        }
     }
     getButtons() {
         throw new Error("Not implemented.");
