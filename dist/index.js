@@ -745,7 +745,7 @@ class BlockBuild {
             }
         });
         this.playerGroup.add(computer);
-        debug_1.Debug.log("move computer to left arm. 3");
+        debug_1.Debug.log("back out computer to arm");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -779,6 +779,7 @@ class BlockBuild {
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
             }
+            this.playerGroup.add(grip);
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);

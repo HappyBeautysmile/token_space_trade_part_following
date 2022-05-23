@@ -151,7 +151,6 @@ export class BlockBuild {
       this.isSaving = false;
     }
   }
-
   private async setScene() {
     await Assets.init();
     this.player = new Player("FunUserName");  // player needs the assets so that it can build an inventory.
@@ -230,7 +229,7 @@ export class BlockBuild {
 
     this.playerGroup.add(computer);
 
-    Debug.log("move computer to left arm. 3");
+    Debug.log("back out computer to arm");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -268,7 +267,7 @@ export class BlockBuild {
       } else {
         grip = new GripGrip(i, this.renderer.xr);
       }
-
+      this.playerGroup.add(grip);
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       // Assets.blocks[i].position.set(0, 0, 0);
