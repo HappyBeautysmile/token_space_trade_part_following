@@ -561,6 +561,7 @@ class BlockBuild {
     keysDown = new Set();
     construction;
     player;
+    computer;
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -594,9 +595,11 @@ class BlockBuild {
         //     Math.floor(Math.random() * 500) - 250,
         //     Math.floor(Math.random() * 500) - 250);
         // }
-        await ab.loadJson("test", 0, 0, 0);
+        // await ab.loadJson("test", 10, 10, 10);
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
+        this.construction.loadFromLocal();
+        this.construction.saveToLocal();
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -716,22 +719,22 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        const computer = await computer_1.Computer.make(this.player);
-        computer.translateY(settings_1.S.float('ch'));
-        computer.translateZ(-0.3);
-        computer.rotateX(Math.PI / 4);
+        this.computer = await computer_1.Computer.make(this.player);
+        this.computer.translateY(settings_1.S.float('ch'));
+        this.computer.translateZ(-0.3);
+        this.computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
-        computer.scale.set(computerScale, computerScale, computerScale);
-        buttonDispatcher_1.ButtonDispatcher.registerButton(computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
-            if (computer.scale.x > 2) {
-                computer.scale.set(1, 1, 1);
+        this.computer.scale.set(computerScale, computerScale, computerScale);
+        buttonDispatcher_1.ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
+            if (this.computer.scale.x > 2) {
+                this.computer.scale.set(1, 1, 1);
             }
             else {
-                computer.scale.set(10, 10, 10);
+                this.computer.scale.set(10, 10, 10);
             }
         });
-        this.playerGroup.add(computer);
-        debug_1.Debug.log("load materials working");
+        this.playerGroup.add(this.computer);
+        debug_1.Debug.log("computer to global");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1165,12 +1168,26 @@ class ObjectConstruction {
     objects = new Map();
     save() {
         console.log('Saving...');
-        //const o = { 'size': this.allObjects.size };
-        //o['objects'] = FileIO.mapToObject(this.allObjects);
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
         fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
-        fileIO_1.FileIO.saveImage(this.renderer.domElement, "test.jpg");
+        //FileIO.saveImage(this.renderer.domElement, "test.jpg");
+    }
+    saveToLocal() {
+        let c = new codec_1.Codec();
+        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
+        window.localStorage.setItem("items", JSON.stringify(o));
+    }
+    loadFromLocal() {
+        const loaded = window.localStorage.getItem("items");
+        if (loaded) {
+            for (const inWorldItem of JSON.parse(loaded)) {
+                const iwi = codec_1.Decode.toInWorldItem(inWorldItem);
+                if (!this.cubeAt(iwi.position)) {
+                    this.addCube(iwi);
+                }
+            }
+        }
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
@@ -1219,9 +1236,25 @@ class MergedConstruction {
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
         fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
-        var strMime = "image/jpeg";
-        let imgData = this.renderer.domElement.toDataURL(strMime);
-        fileIO_1.FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+        //var strMime = "image/jpeg";
+        //let imgData = this.renderer.domElement.toDataURL(strMime);
+        //FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+    }
+    saveToLocal() {
+        let c = new codec_1.Codec();
+        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
+        window.localStorage.setItem("items", JSON.stringify(o));
+    }
+    loadFromLocal() {
+        const loaded = window.localStorage.getItem("items");
+        if (loaded) {
+            for (const inWorldItem of JSON.parse(loaded)) {
+                const iwi = codec_1.Decode.toInWorldItem(inWorldItem);
+                if (!this.cubeAt(iwi.position)) {
+                    this.addCube(iwi);
+                }
+            }
+        }
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
@@ -1947,6 +1980,7 @@ class Hand extends THREE.Object3D {
             if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick button
                 //this.debugMaterial.color = new THREE.Color('blue');
                 this.construction.save();
+                this.construction.saveToLocal();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
                 const i = this.inventory.nextItem();
