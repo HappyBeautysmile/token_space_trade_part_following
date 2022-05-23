@@ -70,11 +70,14 @@ export class BlockBuild {
     //     Math.floor(Math.random() * 500) - 250);
     // }
 
-    await ab.loadJson("test", 0, 0, 0);
+    // await ab.loadJson("test", 10, 10, 10);
 
     ab.buildOriginMarker(S.float('om'));
 
     //ab.buildRandomItems(10, 100);
+
+    this.construction.loadFromLocal();
+    this.construction.saveToLocal();
 
     this.getGrips();
     this.dumpScene(this.scene, '');

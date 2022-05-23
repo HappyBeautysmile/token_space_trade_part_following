@@ -159,6 +159,7 @@ export class Hand extends THREE.Object3D {
       if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick button
         //this.debugMaterial.color = new THREE.Color('blue');
         this.construction.save();
+        this.construction.saveToLocal();
       }
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
         const i = this.inventory.nextItem();
