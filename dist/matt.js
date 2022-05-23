@@ -756,20 +756,26 @@ class BlockBuild {
         //  debugMaterial);
         //debug.position.set(0, 0.5, -2);
         //this.scene.add(debug);
-        for (const i of [0, 1]) {
+        for (const handedness of ['left', 'right']) {
             let grip = null;
-            if (settings_1.S.float('mouse') == i) {
+            let source = undefined;
+            if (settings_1.S.float('mouse') == 0 && handedness === 'left') {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
             }
             else {
-                grip = new gripLike_1.GripGrip(i, this.renderer.xr);
+                grip = new gripLike_1.GripGrip(handedness, this.renderer.xr);
+                source = grip.getSource();
             }
             this.playerGroup.add(grip);
+            // TODO: set this.computer above.
+            // if (handedness === 'left') {
+            //   grip.add(this.computer);
+            // }
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.itemsByName.get('guide'), i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
+            new hand_1.Hand(grip, assets_1.Assets.itemsByName.get('guide'), handedness, source, this.place, this.keysDown, this.construction, this.player.inventory);
         }
     }
 }
@@ -1663,15 +1669,37 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MouseGrip = exports.GripGrip = void 0;
 const THREE = __importStar(__webpack_require__(578));
 class GripGrip extends THREE.Object3D {
-    index;
+    handedness;
     xr;
     grip;
-    constructor(index, xr) {
+    source = null;
+    constructor(handedness, xr) {
         super();
-        this.index = index;
+        this.handedness = handedness;
         this.xr = xr;
-        this.grip = xr.getControllerGrip(index);
-        this.add(this.grip);
+        let correctIndex = null;
+        for (const index of [0, 1]) {
+            const session = this.xr.getSession();
+            if (!session) {
+                throw new Error("No XR session!");
+            }
+            if (session.inputSources && session.inputSources.length > index) {
+                this.source = session.inputSources[index];
+            }
+            else {
+                throw new Error("Bad session");
+            }
+            if (this.source.handedness === handedness) {
+                correctIndex = index;
+                break;
+            }
+            const grip = xr.getControllerGrip(correctIndex);
+        }
+        this.grip =
+            this.add(this.grip);
+    }
+    getSource() {
+        return this.source;
     }
     tick(t) {
         this.position.copy(this.grip.position);
@@ -1792,14 +1820,13 @@ const buttonDispatcher_1 = __webpack_require__(770);
 class Hand extends THREE.Object3D {
     grip;
     item;
-    index;
-    xr;
+    handedness;
+    source;
     place;
     keysDown;
     construction;
     inventory;
     cube;
-    leftHand = undefined;
     debug;
     debugMaterial;
     lineGeometry = new THREE.BufferGeometry();
@@ -1807,12 +1834,12 @@ class Hand extends THREE.Object3D {
         new THREE.Vector3(), new THREE.Vector3()
     ];
     line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: '#aa9' }));
-    constructor(grip, item, index, xr, place, keysDown, construction, inventory) {
+    constructor(grip, item, handedness, source, place, keysDown, construction, inventory) {
         super();
         this.grip = grip;
         this.item = item;
-        this.index = index;
-        this.xr = xr;
+        this.handedness = handedness;
+        this.source = source;
         this.place = place;
         this.keysDown = keysDown;
         this.construction = construction;
@@ -1877,20 +1904,10 @@ class Hand extends THREE.Object3D {
     }
     lastButtons;
     v = new THREE.Vector3();
-    source = null;
     tick(t) {
         this.setCubePosition();
         this.castRay();
-        const session = this.xr.getSession();
-        if (session) {
-            if (session.inputSources && session.inputSources.length > this.index) {
-                this.source = session.inputSources[this.index];
-            }
-        }
         if (this.source) {
-            if (this.leftHand === undefined) {
-                this.leftHand = this.source.handedness == "left";
-            }
             //this.debugMaterial.color = new THREE.Color('blue');
             const rateUpDown = 5;
             const rateMove = 10;
@@ -1904,7 +1921,7 @@ class Hand extends THREE.Object3D {
                 else {
                     //this.debugMaterial.color = new THREE.Color('orange');
                     this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
-                    if (this.leftHand) {
+                    if (this.handedness === 'left') {
                         this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
                         this.v.multiplyScalar(rateMove * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
