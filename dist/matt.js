@@ -1732,7 +1732,8 @@ class GripGrip extends THREE.Object3D {
                 correctIndex = index;
                 break;
             }
-            const grip = this.xr.getControllerGrip(correctIndex);
+            this.grip = this.xr.getControllerGrip(correctIndex);
+            debug_1.Debug.log(`Found ${this.handedness} hand.`);
         }
         this.grip =
             this.add(this.grip);
