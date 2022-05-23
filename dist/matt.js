@@ -1711,19 +1711,14 @@ class GripGrip extends THREE.Object3D {
         super();
         this.handedness = handedness;
         this.xr = xr;
-        this.getGripAsync();
+        this.tryGetGrip();
     }
-    noXRLogged = false;
-    getGripAsync() {
+    tryGetGrip() {
         let correctIndex = null;
         for (const index of [0, 1]) {
             const session = this.xr.getSession();
             if (!session) {
-                if (!this.noXRLogged) {
-                    debug_1.Debug.log("No XR session!");
-                    this.noXRLogged = true;
-                }
-                setTimeout(() => { this.getGripAsync(); }, 500);
+                debug_1.Debug.log("No XR session!");
                 return;
             }
             if (session.inputSources && session.inputSources.length > index) {
@@ -1731,7 +1726,6 @@ class GripGrip extends THREE.Object3D {
             }
             else {
                 debug_1.Debug.log("Bad session");
-                setTimeout(() => { this.getGripAsync(); }, 500);
                 return;
             }
             if (this.source.handedness === this.handedness) {
@@ -1758,6 +1752,11 @@ class GripGrip extends THREE.Object3D {
             this.rotation.copy(this.grip.rotation);
             this.quaternion.copy(this.grip.quaternion);
             this.matrix.copy(this.grip.matrix);
+        }
+        else {
+            if (t.frameCount % 50 === 0) {
+                this.tryGetGrip();
+            }
         }
     }
     selectStartCallback;
