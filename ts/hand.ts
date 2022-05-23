@@ -9,12 +9,13 @@ import { FileIO } from "./fileIO";
 import { Construction } from "./construction";
 import { InWorldItem } from "./inWorldItem";
 import { Inventory } from "./player";
-import { GripLike, Handedness } from "./gripLike";
+import { GripLike } from "./gripLike";
 import { S } from "./settings";
 import { ButtonDispatcher } from "./buttonDispatcher";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
+  private leftHand: boolean = undefined;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
@@ -26,7 +27,7 @@ export class Hand extends THREE.Object3D {
     new THREE.LineBasicMaterial({ color: '#aa9' }));
 
   constructor(private grip: GripLike, private item: Item,
-    private handedness: Handedness, private source: THREE.XRInputSource,
+    private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private keysDown: Set<string>, private construction: Construction,
     private inventory: Inventory) {
@@ -105,11 +106,21 @@ export class Hand extends THREE.Object3D {
 
   private lastButtons;
   private v = new THREE.Vector3();
+  private source: THREE.XRInputSource = null;
   public tick(t: Tick) {
     this.setCubePosition();
     this.castRay();
+    const session = this.xr.getSession();
+    if (session) {
+      if (session.inputSources && session.inputSources.length > this.index) {
+        this.source = session.inputSources[this.index];
+      }
+    }
 
     if (this.source) {
+      if (this.leftHand === undefined) {
+        this.leftHand = this.source.handedness == "left";
+      }
       //this.debugMaterial.color = new THREE.Color('blue');
       const rateUpDown = 5;
       const rateMove = 10;
@@ -122,7 +133,7 @@ export class Hand extends THREE.Object3D {
         } else {
           //this.debugMaterial.color = new THREE.Color('orange');
           this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
-          if (this.handedness === 'left') {
+          if (this.leftHand) {
             this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
             this.v.multiplyScalar(rateMove * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);

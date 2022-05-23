@@ -4,7 +4,7 @@ import { Tick, Ticker } from "./tick";
 
 export type GripEventType = 'squeeze' | 'selectstart';
 
-export type Handedness = 'left' | 'right';
+// export type Handedness = 'left' | 'right';
 
 export interface GripLike extends THREE.Object3D {
   setSelectStartCallback(callback: () => void): void;
@@ -15,57 +15,60 @@ export interface GripLike extends THREE.Object3D {
 
 export class GripGrip extends THREE.Object3D implements GripLike {
   private grip: THREE.Object3D;
-  private source: THREE.XRInputSource = null;
-  constructor(readonly handedness: Handedness, private xr: THREE.WebXRManager) {
+  // private source: THREE.XRInputSource = null;
+  constructor(readonly index: number, private xr: THREE.WebXRManager) {
     super();
-    this.tryGetGrip();
+    this.grip = xr.getControllerGrip(index);
+    this.add(this.grip);
+    // this.tryGetGrip();
   }
 
-  private tryGetGrip() {
-    let correctIndex = null;
-    for (const index of [0, 1]) {
-      const session = this.xr.getSession();
-      if (!session) {
-        Debug.log("No XR session!");
-        return;
-      }
-      if (session.inputSources && session.inputSources.length > index) {
-        this.source = session.inputSources[index];
-      } else {
-        Debug.log("Bad session");
-        return;
-      }
-      if (this.source.handedness === this.handedness) {
-        correctIndex = index;
-        break;
-      }
-      const grip = this.xr.getControllerGrip(correctIndex);
-    }
-    this.grip =
-      this.add(this.grip);
-    if (!!this.selectStartCallback) {
-      this.setSelectStartCallback(this.selectStartCallback);
-    }
-    if (!!this.squeezeCallback) {
-      this.setSqueezeCallback(this.squeezeCallback);
-    }
-  }
+  // private tryGetGrip() {
+  //   let correctIndex = null;
+  //   for (const index of [0, 1]) {
+  //     const session = this.xr.getSession();
+  //     if (!session) {
+  //       Debug.log("No XR session!");
+  //       return;
+  //     }
+  //     if (session.inputSources && session.inputSources.length > index) {
+  //       this.source = session.inputSources[index];
+  //     } else {
+  //       Debug.log("Bad session");
+  //       return;
+  //     }
+  //     if (this.source.handedness === this.handedness) {
+  //       correctIndex = index;
+  //       break;
+  //     }
+  //     this.grip = this.xr.getControllerGrip(correctIndex);
+  //     Debug.log(`Found ${this.handedness} hand.`);
+  //   }
+  //   this.grip =
+  //     this.add(this.grip);
+  //   if (!!this.selectStartCallback) {
+  //     this.setSelectStartCallback(this.selectStartCallback);
+  //   }
+  //   if (!!this.squeezeCallback) {
+  //     this.setSqueezeCallback(this.squeezeCallback);
+  //   }
+  // }
 
-  getSource(): THREE.XRInputSource {
-    return this.source;
-  }
+  // getSource(): THREE.XRInputSource {
+  //   return this.source;
+  // }
 
   tick(t: Tick) {
-    if (!!this.grip) {
-      this.position.copy(this.grip.position);
-      this.rotation.copy(this.grip.rotation);
-      this.quaternion.copy(this.grip.quaternion);
-      this.matrix.copy(this.grip.matrix);
-    } else {
-      if (t.frameCount % 50 === 0) {
-        this.tryGetGrip();
-      }
-    }
+    // if (!!this.grip) {
+    this.position.copy(this.grip.position);
+    this.rotation.copy(this.grip.rotation);
+    this.quaternion.copy(this.grip.quaternion);
+    this.matrix.copy(this.grip.matrix);
+    // } else {
+    //   if (t.frameCount % 50 === 0) {
+    //     this.tryGetGrip();
+    //   }
+    // }
   }
 
   private selectStartCallback: () => void;
