@@ -561,6 +561,7 @@ const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(723);
+const buttonDispatcher_1 = __webpack_require__(770);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -572,6 +573,7 @@ class BlockBuild {
     keysDown = new Set();
     construction;
     player;
+    computer;
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -605,9 +607,11 @@ class BlockBuild {
         //     Math.floor(Math.random() * 500) - 250,
         //     Math.floor(Math.random() * 500) - 250);
         // }
-        await ab.loadJson("test", 0, 0, 0);
+        // await ab.loadJson("test", 10, 10, 10);
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
+        this.construction.loadFromLocal();
+        this.construction.saveToLocal();
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -658,6 +662,12 @@ class BlockBuild {
         }
         if (this.keysDown.has('ArrowRight')) {
             this.place.playerGroup.rotateY(-t.deltaS * 2);
+        }
+        if (this.keysDown.has('ArrowDown')) {
+            this.camera.rotateX(-t.deltaS * 2);
+        }
+        if (this.keysDown.has('ArrowUp')) {
+            this.camera.rotateX(t.deltaS * 2);
         }
         if (this.v.length() > 0) {
             this.place.movePlayerRelativeToCamera(this.v);
@@ -721,14 +731,22 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        const computer = await computer_1.Computer.make(this.player);
-        computer.translateY(settings_1.S.float('ch'));
-        computer.translateZ(-0.3);
-        computer.rotateX(Math.PI / 4);
+        this.computer = await computer_1.Computer.make(this.player);
+        this.computer.translateY(settings_1.S.float('ch'));
+        this.computer.translateZ(-0.3);
+        this.computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
-        computer.scale.set(computerScale, computerScale, computerScale);
-        this.playerGroup.add(computer);
-        debug_1.Debug.log("load materials working");
+        this.computer.scale.set(computerScale, computerScale, computerScale);
+        buttonDispatcher_1.ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
+            if (this.computer.scale.x > 2) {
+                this.computer.scale.set(1, 1, 1);
+            }
+            else {
+                this.computer.scale.set(10, 10, 10);
+            }
+        });
+        this.playerGroup.add(this.computer);
+        debug_1.Debug.log("computer to global");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -772,6 +790,102 @@ class BlockBuild {
 }
 exports.BlockBuild = BlockBuild;
 //# sourceMappingURL=blockBuild.js.map
+
+/***/ }),
+
+/***/ 770:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ButtonDispatcher = void 0;
+const THREE = __importStar(__webpack_require__(232));
+class Button {
+    o;
+    localPosition;
+    radius;
+    constructor(o, localPosition, radius) {
+        this.o = o;
+        this.localPosition = localPosition;
+        this.radius = radius;
+    }
+    static globalPosition = new THREE.Vector3();
+    static p = new THREE.Vector3();
+    // Returns null if `ray` misses this.  Otherwise returns
+    // the distance of the closest approach.  `ray` is in world space.
+    closestApproach(ray) {
+        Button.globalPosition.copy(this.localPosition);
+        this.o.localToWorld(Button.globalPosition);
+        ray.closestPointToPoint(Button.globalPosition, Button.p);
+        Button.p.sub(Button.globalPosition);
+        const distance = Button.p.length();
+        if (distance <= this.radius) {
+            return distance;
+        }
+        else {
+            return undefined;
+        }
+    }
+}
+class ButtonDispatcher {
+    // This class is purely static. Do not instantiate it.
+    constructor() { }
+    ;
+    static callbacks = new Map();
+    static registerButton(o, localPosition, radius, callback) {
+        const button = new Button(o, localPosition, radius);
+        ButtonDispatcher.callbacks.set(button, callback);
+    }
+    static closestApproach(ray) {
+        let closest = undefined;
+        for (const button of ButtonDispatcher.callbacks.keys()) {
+            let distance = button.closestApproach(ray);
+            if (distance < closest || closest === undefined) {
+                closest = distance;
+            }
+        }
+        return closest;
+    }
+    static cast(ray) {
+        let closest = 1e12;
+        let bestCallback = null;
+        for (const [button, callback] of ButtonDispatcher.callbacks.entries()) {
+            let distance = button.closestApproach(ray);
+            if (distance < closest) {
+                closest = distance;
+                bestCallback = callback;
+            }
+        }
+        if (bestCallback) {
+            bestCallback();
+        }
+    }
+}
+exports.ButtonDispatcher = ButtonDispatcher;
+//# sourceMappingURL=buttonDispatcher.js.map
 
 /***/ }),
 
@@ -1076,12 +1190,26 @@ class ObjectConstruction {
     objects = new Map();
     save() {
         console.log('Saving...');
-        //const o = { 'size': this.allObjects.size };
-        //o['objects'] = FileIO.mapToObject(this.allObjects);
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
         fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
-        fileIO_1.FileIO.saveImage(this.renderer.domElement, "test.jpg");
+        //FileIO.saveImage(this.renderer.domElement, "test.jpg");
+    }
+    saveToLocal() {
+        let c = new codec_1.Codec();
+        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
+        window.localStorage.setItem("items", JSON.stringify(o));
+    }
+    loadFromLocal() {
+        const loaded = window.localStorage.getItem("items");
+        if (loaded) {
+            for (const inWorldItem of JSON.parse(loaded)) {
+                const iwi = codec_1.Decode.toInWorldItem(inWorldItem);
+                if (!this.cubeAt(iwi.position)) {
+                    this.addCube(iwi);
+                }
+            }
+        }
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
@@ -1130,9 +1258,25 @@ class MergedConstruction {
         let c = new codec_1.Codec();
         const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
         fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
-        var strMime = "image/jpeg";
-        let imgData = this.renderer.domElement.toDataURL(strMime);
-        fileIO_1.FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+        //var strMime = "image/jpeg";
+        //let imgData = this.renderer.domElement.toDataURL(strMime);
+        //FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+    }
+    saveToLocal() {
+        let c = new codec_1.Codec();
+        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
+        window.localStorage.setItem("items", JSON.stringify(o));
+    }
+    loadFromLocal() {
+        const loaded = window.localStorage.getItem("items");
+        if (loaded) {
+            for (const inWorldItem of JSON.parse(loaded)) {
+                const iwi = codec_1.Decode.toInWorldItem(inWorldItem);
+                if (!this.cubeAt(iwi.position)) {
+                    this.addCube(iwi);
+                }
+            }
+        }
     }
     posToKey(p) {
         return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
@@ -1721,6 +1865,7 @@ const debug_1 = __webpack_require__(756);
 const assets_1 = __webpack_require__(398);
 const inWorldItem_1 = __webpack_require__(116);
 const settings_1 = __webpack_require__(451);
+const buttonDispatcher_1 = __webpack_require__(770);
 class Hand extends THREE.Object3D {
     grip;
     item;
@@ -1734,6 +1879,11 @@ class Hand extends THREE.Object3D {
     leftHand = undefined;
     debug;
     debugMaterial;
+    lineGeometry = new THREE.BufferGeometry();
+    linePoints = [
+        new THREE.Vector3(), new THREE.Vector3()
+    ];
+    line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: '#aa9' }));
     constructor(grip, item, index, xr, place, keysDown, construction, inventory) {
         super();
         this.grip = grip;
@@ -1753,6 +1903,8 @@ class Hand extends THREE.Object3D {
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
         }
+        this.line.visible = false;
+        this.add(this.line);
         this.setCube(item);
         this.initialize();
     }
@@ -1774,11 +1926,38 @@ class Hand extends THREE.Object3D {
         this.place.worldToPlayer(this.cube.position);
         this.cube.rotation.copy(this.grip.rotation);
     }
+    r = new THREE.Ray();
+    worldNormalMatrix = new THREE.Matrix3;
+    setRay() {
+        this.getWorldPosition(this.r.origin);
+        this.r.direction.set(0, -1, 0);
+        this.worldNormalMatrix.getNormalMatrix(this.matrixWorld);
+        this.r.direction.applyMatrix3(this.worldNormalMatrix);
+    }
+    // Returns true if ray is over something.
+    castRay() {
+        this.setRay();
+        const distance = buttonDispatcher_1.ButtonDispatcher.closestApproach(this.r);
+        if (distance !== undefined) {
+            this.linePoints[0].set(0, 0, 0);
+            this.linePoints[1].set(0, -distance, 0);
+            this.lineGeometry.setFromPoints(this.linePoints);
+            this.line.visible = true;
+        }
+        else {
+            this.line.visible = false;
+        }
+    }
+    sendRay() {
+        this.setRay();
+        buttonDispatcher_1.ButtonDispatcher.cast(this.r);
+    }
     lastButtons;
     v = new THREE.Vector3();
     source = null;
     tick(t) {
         this.setCubePosition();
+        this.castRay();
         const session = this.xr.getSession();
         if (session) {
             if (session.inputSources && session.inputSources.length > this.index) {
@@ -1828,6 +2007,7 @@ class Hand extends THREE.Object3D {
             if (buttons[3] === 1 && this.lastButtons[3] != 1) { // stick button
                 //this.debugMaterial.color = new THREE.Color('blue');
                 this.construction.save();
+                this.construction.saveToLocal();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
                 const i = this.inventory.nextItem();
@@ -1877,6 +2057,10 @@ class Hand extends THREE.Object3D {
         });
         this.grip.setSelectStartCallback(() => {
             debug_1.Debug.log('selectstart');
+            if (this.line.visible) {
+                this.sendRay();
+                return;
+            }
             const itemQty = this.inventory.getItemQty();
             if (itemQty.has(this.item)) {
                 if (itemQty.get(this.item) > 0) {

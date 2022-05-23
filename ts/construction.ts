@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { Item } from "./assets";
-import { Codec, Encode } from "./codec";
+import { Codec, Encode, Decode } from "./codec";
 import { Debug } from "./debug";
 import { FileIO } from "./fileIO";
 import { InWorldItem } from "./inWorldItem";
@@ -12,10 +12,14 @@ export interface Construction {
   removeCube(p: THREE.Vector3): Item;
   cubeAt(p: THREE.Vector3): boolean
   save(): void;
+  saveToLocal(): void;
+  loadFromLocal(): void;
 }
 
 export class ObjectConstruction implements Construction {
-  public constructor(private container: THREE.Object3D, private renderer: THREE.Renderer) { }
+  public constructor(private container: THREE.Object3D, private renderer: THREE.Renderer) {
+
+  }
   // TODO: Make this private and instead have some nicer methods for
   // inserting and deleting.  This is where code to make sure we have only
   // one block per location would go, also where Vector3 to key would go.
@@ -24,12 +28,28 @@ export class ObjectConstruction implements Construction {
 
   public save() {
     console.log('Saving...');
-    //const o = { 'size': this.allObjects.size };
-    //o['objects'] = FileIO.mapToObject(this.allObjects);
     let c = new Codec();
     const o = Encode.arrayOfInWorldItems(this.items.values())
     FileIO.saveObjectAsJson(o, "what_you_built.json");
-    FileIO.saveImage(this.renderer.domElement, "test.jpg");
+    //FileIO.saveImage(this.renderer.domElement, "test.jpg");
+  }
+
+  public saveToLocal() {
+    let c = new Codec();
+    const o = Encode.arrayOfInWorldItems(this.items.values())
+    window.localStorage.setItem("items", JSON.stringify(o));
+  }
+
+  public loadFromLocal() {
+    const loaded = window.localStorage.getItem("items");
+    if (loaded) {
+      for (const inWorldItem of JSON.parse(loaded)) {
+        const iwi = Decode.toInWorldItem(inWorldItem);
+        if (!this.cubeAt(iwi.position)) {
+          this.addCube(iwi);
+        }
+      }
+    }
   }
 
   private posToKey(p: THREE.Vector3): string {
@@ -82,9 +102,27 @@ export class MergedConstruction implements Construction {
     const o = Encode.arrayOfInWorldItems(this.items.values())
     FileIO.saveObjectAsJson(o, "what_you_built.json");
 
-    var strMime = "image/jpeg";
-    let imgData = this.renderer.domElement.toDataURL(strMime);
-    FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+    //var strMime = "image/jpeg";
+    //let imgData = this.renderer.domElement.toDataURL(strMime);
+    //FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
+  }
+
+  public saveToLocal() {
+    let c = new Codec();
+    const o = Encode.arrayOfInWorldItems(this.items.values())
+    window.localStorage.setItem("items", JSON.stringify(o));
+  }
+
+  public loadFromLocal() {
+    const loaded = window.localStorage.getItem("items");
+    if (loaded) {
+      for (const inWorldItem of JSON.parse(loaded)) {
+        const iwi = Decode.toInWorldItem(inWorldItem);
+        if (!this.cubeAt(iwi.position)) {
+          this.addCube(iwi);
+        }
+      }
+    }
   }
 
   private posToKey(p: THREE.Vector3): string {

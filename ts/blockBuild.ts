@@ -27,6 +27,7 @@ export class BlockBuild {
   private keysDown = new Set<string>();
   private construction: Construction;
   private player: Player;
+  private computer: Computer;
 
   constructor() {
     this.playerGroup.name = 'Player Group';
@@ -70,11 +71,14 @@ export class BlockBuild {
     //     Math.floor(Math.random() * 500) - 250);
     // }
 
-    await ab.loadJson("test", 0, 0, 0);
+    // await ab.loadJson("test", 10, 10, 10);
 
     ab.buildOriginMarker(S.float('om'));
 
     //ab.buildRandomItems(10, 100);
+
+    this.construction.loadFromLocal();
+    this.construction.saveToLocal();
 
     this.getGrips();
     this.dumpScene(this.scene, '');
@@ -208,25 +212,25 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    const computer = await Computer.make(this.player);
-    computer.translateY(S.float('ch'));
-    computer.translateZ(-0.3);
-    computer.rotateX(Math.PI / 4);
+    this.computer = await Computer.make(this.player);
+    this.computer.translateY(S.float('ch'));
+    this.computer.translateZ(-0.3);
+    this.computer.rotateX(Math.PI / 4);
     const computerScale = S.float('cs');
-    computer.scale.set(computerScale, computerScale, computerScale);
+    this.computer.scale.set(computerScale, computerScale, computerScale);
 
-    ButtonDispatcher.registerButton(computer, new THREE.Vector3(0, 0, 0),
+    ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
       0.1, () => {
-        if (computer.scale.x > 2) {
-          computer.scale.set(1, 1, 1);
+        if (this.computer.scale.x > 2) {
+          this.computer.scale.set(1, 1, 1);
         } else {
-          computer.scale.set(10, 10, 10);
+          this.computer.scale.set(10, 10, 10);
         }
       });
 
-    this.playerGroup.add(computer);
+    this.playerGroup.add(this.computer);
 
-    Debug.log("load materials working");
+    Debug.log("computer to global");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
