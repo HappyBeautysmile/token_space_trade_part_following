@@ -731,21 +731,21 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        const computer = await computer_1.Computer.make(this.player);
-        computer.translateY(settings_1.S.float('ch'));
-        computer.translateZ(-0.3);
-        computer.rotateX(Math.PI / 4);
+        this.computer = await computer_1.Computer.make(this.player);
+        this.computer.translateY(settings_1.S.float('ch'));
+        this.computer.translateZ(-0.3);
+        this.computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
-        computer.scale.set(computerScale, computerScale, computerScale);
-        buttonDispatcher_1.ButtonDispatcher.registerButton(computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
-            if (computer.scale.x > 2) {
-                computer.scale.set(1, 1, 1);
+        this.computer.scale.set(computerScale, computerScale, computerScale);
+        buttonDispatcher_1.ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
+            if (this.computer.scale.x > 2) {
+                this.computer.scale.set(1, 1, 1);
             }
             else {
-                computer.scale.set(10, 10, 10);
+                this.computer.scale.set(10, 10, 10);
             }
         });
-        //this.playerGroup.add(computer);
+        //this.playerGroup.add(this.computer);
         debug_1.Debug.log("load materials working");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
@@ -776,11 +776,11 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
-                this.playerGroup.add(this.computer);
+                //this.playerGroup.add(this.computer);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
-                grip.add(this.computer);
+                //grip.add(this.computer);
             }
             this.playerGroup.add(grip);
             // Note: adding the model to the Hand will remove it from the Scene
