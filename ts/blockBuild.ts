@@ -229,9 +229,9 @@ export class BlockBuild {
         }
       });
 
-    //this.playerGroup.add(this.computer);
+    this.playerGroup.add(this.computer);
 
-    Debug.log("move computer to left arm.");
+    Debug.log("move computer to left arm. 2");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -267,13 +267,13 @@ export class BlockBuild {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
         if (i == 0) {
-          this.playerGroup.add(grip);
+          //this.playerGroup.add(grip);
         }
         this.playerGroup.add(this.computer);
       } else {
         grip = new GripGrip(i, this.renderer.xr);
         if (i == 0) {
-          grip.add(this.computer);
+          //grip.add(this.computer);
         }
       }
 

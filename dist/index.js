@@ -745,8 +745,8 @@ class BlockBuild {
                 this.computer.scale.set(10, 10, 10);
             }
         });
-        //this.playerGroup.add(this.computer);
-        debug_1.Debug.log("move computer to left arm.");
+        this.playerGroup.add(this.computer);
+        debug_1.Debug.log("move computer to left arm. 2");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -777,14 +777,14 @@ class BlockBuild {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
                 if (i == 0) {
-                    this.playerGroup.add(grip);
+                    //this.playerGroup.add(grip);
                 }
                 this.playerGroup.add(this.computer);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
                 if (i == 0) {
-                    grip.add(this.computer);
+                    //grip.add(this.computer);
                 }
             }
             // Note: adding the model to the Hand will remove it from the Scene
