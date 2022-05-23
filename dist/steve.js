@@ -679,6 +679,7 @@ class BlockBuild {
             this.isSaving = false;
         }
     }
+    computer;
     async setScene() {
         await assets_1.Assets.init();
         this.player = new player_1.Player("FunUserName"); // player needs the assets so that it can build an inventory.
@@ -744,7 +745,7 @@ class BlockBuild {
                 computer.scale.set(10, 10, 10);
             }
         });
-        this.playerGroup.add(computer);
+        //this.playerGroup.add(computer);
         debug_1.Debug.log("load materials working");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
@@ -775,9 +776,11 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
+                this.playerGroup.add(this.computer);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
+                grip.add(this.computer);
             }
             this.playerGroup.add(grip);
             // Note: adding the model to the Hand will remove it from the Scene

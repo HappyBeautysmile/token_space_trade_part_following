@@ -151,6 +151,8 @@ export class BlockBuild {
       this.isSaving = false;
     }
   }
+
+  private computer: Computer;
   private async setScene() {
     await Assets.init();
     this.player = new Player("FunUserName");  // player needs the assets so that it can build an inventory.
@@ -227,7 +229,7 @@ export class BlockBuild {
         }
       });
 
-    this.playerGroup.add(computer);
+    //this.playerGroup.add(computer);
 
     Debug.log("load materials working");
 
@@ -264,8 +266,10 @@ export class BlockBuild {
       if (S.float('mouse') == i) {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
+        this.playerGroup.add(this.computer);
       } else {
         grip = new GripGrip(i, this.renderer.xr);
+        grip.add(this.computer);
       }
       this.playerGroup.add(grip);
       // Note: adding the model to the Hand will remove it from the Scene
