@@ -231,7 +231,7 @@ export class BlockBuild {
 
     //this.playerGroup.add(this.computer);
 
-    Debug.log("load materials working");
+    Debug.log("move computer to left arm.");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -266,12 +266,17 @@ export class BlockBuild {
       if (S.float('mouse') == i) {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
-        //this.playerGroup.add(this.computer);
+        if (i == 0) {
+          this.playerGroup.add(grip);
+        }
+        this.playerGroup.add(this.computer);
       } else {
         grip = new GripGrip(i, this.renderer.xr);
-        //grip.add(this.computer);
+        if (i == 0) {
+          grip.add(this.computer);
+        }
       }
-      this.playerGroup.add(grip);
+
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       // Assets.blocks[i].position.set(0, 0, 0);

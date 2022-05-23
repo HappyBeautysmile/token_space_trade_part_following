@@ -746,7 +746,7 @@ class BlockBuild {
             }
         });
         //this.playerGroup.add(this.computer);
-        debug_1.Debug.log("load materials working");
+        debug_1.Debug.log("move computer to left arm.");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -776,13 +776,17 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
-                //this.playerGroup.add(this.computer);
+                if (i == 0) {
+                    this.playerGroup.add(grip);
+                }
+                this.playerGroup.add(this.computer);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
-                //grip.add(this.computer);
+                if (i == 0) {
+                    grip.add(this.computer);
+                }
             }
-            this.playerGroup.add(grip);
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);
