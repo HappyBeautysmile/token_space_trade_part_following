@@ -152,7 +152,6 @@ export class BlockBuild {
     }
   }
 
-  private computer: Computer;
   private async setScene() {
     await Assets.init();
     this.player = new Player("FunUserName");  // player needs the assets so that it can build an inventory.
@@ -213,25 +212,25 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    this.computer = await Computer.make(this.player);
-    this.computer.translateY(S.float('ch'));
-    this.computer.translateZ(-0.3);
-    this.computer.rotateX(Math.PI / 4);
+    const computer = await Computer.make(this.player);
+    computer.translateY(S.float('ch'));
+    computer.translateZ(-0.3);
+    computer.rotateX(Math.PI / 4);
     const computerScale = S.float('cs');
-    this.computer.scale.set(computerScale, computerScale, computerScale);
+    computer.scale.set(computerScale, computerScale, computerScale);
 
-    ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
+    ButtonDispatcher.registerButton(computer, new THREE.Vector3(0, 0, 0),
       0.1, () => {
-        if (this.computer.scale.x > 2) {
-          this.computer.scale.set(1, 1, 1);
+        if (computer.scale.x > 2) {
+          computer.scale.set(1, 1, 1);
         } else {
-          this.computer.scale.set(10, 10, 10);
+          computer.scale.set(10, 10, 10);
         }
       });
 
-    this.playerGroup.add(this.computer);
+    this.playerGroup.add(computer);
 
-    Debug.log("move computer to left arm. 2");
+    Debug.log("move computer to left arm. 3");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
@@ -266,15 +265,8 @@ export class BlockBuild {
       if (S.float('mouse') == i) {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
-        if (i == 0) {
-          //this.playerGroup.add(grip);
-        }
-        this.playerGroup.add(this.computer);
       } else {
         grip = new GripGrip(i, this.renderer.xr);
-        if (i == 0) {
-          //grip.add(this.computer);
-        }
       }
 
       // Note: adding the model to the Hand will remove it from the Scene

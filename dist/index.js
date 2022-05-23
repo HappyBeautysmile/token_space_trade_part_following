@@ -679,7 +679,6 @@ class BlockBuild {
             this.isSaving = false;
         }
     }
-    computer;
     async setScene() {
         await assets_1.Assets.init();
         this.player = new player_1.Player("FunUserName"); // player needs the assets so that it can build an inventory.
@@ -731,22 +730,22 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        this.computer = await computer_1.Computer.make(this.player);
-        this.computer.translateY(settings_1.S.float('ch'));
-        this.computer.translateZ(-0.3);
-        this.computer.rotateX(Math.PI / 4);
+        const computer = await computer_1.Computer.make(this.player);
+        computer.translateY(settings_1.S.float('ch'));
+        computer.translateZ(-0.3);
+        computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
-        this.computer.scale.set(computerScale, computerScale, computerScale);
-        buttonDispatcher_1.ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
-            if (this.computer.scale.x > 2) {
-                this.computer.scale.set(1, 1, 1);
+        computer.scale.set(computerScale, computerScale, computerScale);
+        buttonDispatcher_1.ButtonDispatcher.registerButton(computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
+            if (computer.scale.x > 2) {
+                computer.scale.set(1, 1, 1);
             }
             else {
-                this.computer.scale.set(10, 10, 10);
+                computer.scale.set(10, 10, 10);
             }
         });
-        this.playerGroup.add(this.computer);
-        debug_1.Debug.log("move computer to left arm. 2");
+        this.playerGroup.add(computer);
+        debug_1.Debug.log("move computer to left arm. 3");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -776,16 +775,9 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
-                if (i == 0) {
-                    //this.playerGroup.add(grip);
-                }
-                this.playerGroup.add(this.computer);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
-                if (i == 0) {
-                    //grip.add(this.computer);
-                }
             }
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
