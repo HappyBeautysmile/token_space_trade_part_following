@@ -3,6 +3,8 @@ import { Tick, Ticker } from "./tick";
 
 export type GripEventType = 'squeeze' | 'selectstart';
 
+export type Handedness = 'left' | 'right';
+
 export interface GripLike extends THREE.Object3D {
   setSelectStartCallback(callback: () => void): void;
   setSqueezeCallback(callback: () => void): void;
@@ -12,10 +14,33 @@ export interface GripLike extends THREE.Object3D {
 
 export class GripGrip extends THREE.Object3D implements GripLike {
   private grip: THREE.Object3D;
-  constructor(readonly index: number, private xr: THREE.WebXRManager) {
+  private source: THREE.XRInputSource = null;
+  constructor(readonly handedness: Handedness, private xr: THREE.WebXRManager) {
     super();
-    this.grip = xr.getControllerGrip(index);
-    this.add(this.grip);
+
+    let correctIndex = null;
+    for (const index of [0, 1]) {
+      const session = this.xr.getSession();
+      if (!session) {
+        throw new Error("No XR session!");
+      }
+      if (session.inputSources && session.inputSources.length > index) {
+        this.source = session.inputSources[index];
+      } else {
+        throw new Error("Bad session");
+      }
+      if (this.source.handedness === handedness) {
+        correctIndex = index;
+        break;
+      }
+      const grip = xr.getControllerGrip(correctIndex);
+    }
+    this.grip =
+      this.add(this.grip);
+  }
+
+  getSource(): THREE.XRInputSource {
+    return this.source;
   }
 
   tick(t: Tick) {

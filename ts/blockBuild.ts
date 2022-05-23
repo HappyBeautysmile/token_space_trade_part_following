@@ -11,7 +11,7 @@ import { Construction, MergedConstruction, ObjectConstruction } from "./construc
 import { AstroGen } from "./astroGen";
 import { S } from "./settings";
 import { Inventory, Player } from "./player";
-import { GripGrip, GripLike, MouseGrip } from "./gripLike";
+import { GripGrip, GripLike, Handedness, MouseGrip } from "./gripLike";
 import { Computer } from "./computer";
 import { ButtonDispatcher } from "./buttonDispatcher";
 
@@ -256,19 +256,27 @@ export class BlockBuild {
     //debug.position.set(0, 0.5, -2);
     //this.scene.add(debug);
 
-    for (const i of [0, 1]) {
+    for (const handedness of ['left', 'right'] as Handedness[]) {
       let grip: GripLike = null;
-      if (S.float('mouse') == i) {
+      let source: THREE.XRInputSource = undefined;
+      if (S.float('mouse') == 0 && handedness === 'left') {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
       } else {
-        grip = new GripGrip(i, this.renderer.xr);
+        grip = new GripGrip(handedness, this.renderer.xr);
+        source = (grip as GripGrip).getSource();
       }
       this.playerGroup.add(grip);
+
+      // TODO: set this.computer above.
+      // if (handedness === 'left') {
+      //   grip.add(this.computer);
+      // }
+
       // Note: adding the model to the Hand will remove it from the Scene
       // It's still in memory.
       // Assets.blocks[i].position.set(0, 0, 0);
-      new Hand(grip, Assets.itemsByName.get('guide'), i, this.renderer.xr,
+      new Hand(grip, Assets.itemsByName.get('guide'), handedness, source,
         this.place, this.keysDown, this.construction, this.player.inventory);
     }
   }
