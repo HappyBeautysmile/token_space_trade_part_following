@@ -737,7 +737,7 @@ class BlockBuild {
             }
         });
         this.playerGroup.add(this.computer);
-        debug_1.Debug.log("debug handedness");
+        debug_1.Debug.log("more debug handedness");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2088,6 +2088,7 @@ class Hand extends THREE.Object3D {
     }
     // sets the cube that is in the hand
     setCube(item) {
+        debug_1.Debug.log(`leftHand=${this.leftHand} item.name=${item.name}`);
         if (this.cube) {
             this.place.playerGroup.remove(this.cube);
         }
@@ -2097,6 +2098,7 @@ class Hand extends THREE.Object3D {
     }
     // delete a cube from the world 
     deleteCube() {
+        debug_1.Debug.log(`leftHand=${this.leftHand}`);
         this.p.copy(this.cube.position);
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);

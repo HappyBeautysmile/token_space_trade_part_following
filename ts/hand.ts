@@ -189,6 +189,7 @@ export class Hand extends THREE.Object3D {
 
   // sets the cube that is in the hand
   public setCube(item: Item) {
+    Debug.log(`leftHand=${this.leftHand} item.name=${item.name}`);
     if (this.cube) {
       this.place.playerGroup.remove(this.cube);
     }
@@ -199,6 +200,7 @@ export class Hand extends THREE.Object3D {
 
   // delete a cube from the world 
   private deleteCube() {
+    Debug.log(`leftHand=${this.leftHand}`);
     this.p.copy(this.cube.position);
     this.place.playerToUniverse(this.p);
     this.place.quantizePosition(this.p);
