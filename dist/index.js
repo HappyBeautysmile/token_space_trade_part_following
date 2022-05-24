@@ -737,7 +737,7 @@ class BlockBuild {
             }
         });
         this.playerGroup.add(this.computer);
-        debug_1.Debug.log("computer on left hand");
+        debug_1.Debug.log("computer no rotation or translation");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2019,11 +2019,11 @@ class Hand extends THREE.Object3D {
         if (this.source) {
             if (this.leftHand === undefined) {
                 this.leftHand = this.source.handedness == "left";
-                if (this.leftHand == true) {
+                if (this.leftHand == false) {
                     //this.computer.translateY(0);
                     //this.computer.translateZ(0.5);
-                    this.computer.rotateX(Math.PI / 2);
-                    this.computer.rotateY(Math.PI / 2);
+                    //this.computer.rotateX(Math.PI);
+                    //this.computer.rotateY(Math.PI);
                     this.add(this.computer);
                 }
             }

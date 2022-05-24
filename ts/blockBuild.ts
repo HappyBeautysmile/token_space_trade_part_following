@@ -220,7 +220,7 @@ export class BlockBuild {
 
     this.playerGroup.add(this.computer);
 
-    Debug.log("computer on left hand");
+    Debug.log("computer no rotation or translation");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
