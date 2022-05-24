@@ -737,7 +737,7 @@ class BlockBuild {
             }
         });
         this.playerGroup.add(this.computer);
-        debug_1.Debug.log("computer y pi/2");
+        debug_1.Debug.log("one hand");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -762,7 +762,7 @@ class BlockBuild {
         //  debugMaterial);
         //debug.position.set(0, 0.5, -2);
         //this.scene.add(debug);
-        for (const i of [0, 1]) {
+        for (const i of [0]) {
             let grip = null;
             // let source: THREE.XRInputSource = undefined;
             if (settings_1.S.float('mouse') == i) {
