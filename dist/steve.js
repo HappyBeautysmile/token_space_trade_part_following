@@ -1946,17 +1946,20 @@ class Hand extends THREE.Object3D {
         this.construction = construction;
         this.inventory = inventory;
         this.computer = computer;
-        // If you want to see where the "grip" is, uncomment this code.
-        this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
-        this.add(this.debug);
+        // // If you want to see where the "grip" is, uncomment this code.
+        // this.debug = new THREE.Mesh(
+        //   new THREE.IcosahedronBufferGeometry(0.02, 3),
+        //   new THREE.MeshPhongMaterial({ color: 'pink' })
+        // );
+        // this.add(this.debug);
         if (grip && this) {
             grip.add(this);
         }
         else {
             debug_1.Debug.log("ERROR: grip or this not defined.");
         }
-        this.line.visible = false;
-        this.add(this.line);
+        // this.line.visible = false;
+        // this.add(this.line);
         this.setCube(item);
         this.initialize();
     }

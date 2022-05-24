@@ -34,12 +34,12 @@ export class Hand extends THREE.Object3D {
     private inventory: Inventory, private computer: Computer) {
     super();
 
-    // If you want to see where the "grip" is, uncomment this code.
-    this.debug = new THREE.Mesh(
-      new THREE.IcosahedronBufferGeometry(0.02, 3),
-      new THREE.MeshPhongMaterial({ color: 'pink' })
-    );
-    this.add(this.debug);
+    // // If you want to see where the "grip" is, uncomment this code.
+    // this.debug = new THREE.Mesh(
+    //   new THREE.IcosahedronBufferGeometry(0.02, 3),
+    //   new THREE.MeshPhongMaterial({ color: 'pink' })
+    // );
+    // this.add(this.debug);
 
     if (grip && this) {
       grip.add(this);
@@ -48,8 +48,8 @@ export class Hand extends THREE.Object3D {
       Debug.log("ERROR: grip or this not defined.")
     }
 
-    this.line.visible = false;
-    this.add(this.line);
+    // this.line.visible = false;
+    // this.add(this.line);
 
     this.setCube(item);
     this.initialize();
