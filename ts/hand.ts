@@ -125,7 +125,7 @@ export class Hand extends THREE.Object3D {
           //this.computer.translateY(0);
           //this.computer.translateZ(0.5);
           //this.computer.rotateX(Math.PI);
-          //this.computer.rotateY(Math.PI);
+          this.computer.rotateY(Math.PI / 2);
           this.add(this.computer);
         }
       }

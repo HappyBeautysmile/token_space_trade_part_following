@@ -737,7 +737,7 @@ class BlockBuild {
             }
         });
         this.playerGroup.add(this.computer);
-        debug_1.Debug.log("computer no rotation or translation");
+        debug_1.Debug.log("computer y pi/2");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2023,7 +2023,7 @@ class Hand extends THREE.Object3D {
                     //this.computer.translateY(0);
                     //this.computer.translateZ(0.5);
                     //this.computer.rotateX(Math.PI);
-                    //this.computer.rotateY(Math.PI);
+                    this.computer.rotateY(Math.PI / 2);
                     this.add(this.computer);
                 }
             }
