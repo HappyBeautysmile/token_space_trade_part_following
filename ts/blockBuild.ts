@@ -281,7 +281,7 @@ export class BlockBuild {
       // It's still in memory.
       // Assets.blocks[i].position.set(0, 0, 0);
       new Hand(grip, Assets.itemsByName.get('guide'), i, this.renderer.xr,
-        this.place, this.keysDown, this.construction, this.player.inventory);
+        this.place, this.keysDown, this.construction, this.player.inventory, this.computer);
     }
   }
 }

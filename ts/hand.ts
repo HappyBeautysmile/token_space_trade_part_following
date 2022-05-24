@@ -12,6 +12,7 @@ import { Inventory } from "./player";
 import { GripLike } from "./gripLike";
 import { S } from "./settings";
 import { ButtonDispatcher } from "./buttonDispatcher";
+import { Computer } from "./computer";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
@@ -30,7 +31,7 @@ export class Hand extends THREE.Object3D {
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private keysDown: Set<string>, private construction: Construction,
-    private inventory: Inventory) {
+    private inventory: Inventory, private computer: Computer) {
     super();
 
     // If you want to see where the "grip" is, uncomment this code.
@@ -120,6 +121,9 @@ export class Hand extends THREE.Object3D {
     if (this.source) {
       if (this.leftHand === undefined) {
         this.leftHand = this.source.handedness == "left";
+        if (this.leftHand == true) {
+          this.add(this.computer);
+        }
       }
       //this.debugMaterial.color = new THREE.Color('blue');
       const rateUpDown = 5;

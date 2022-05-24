@@ -773,18 +773,24 @@ class BlockBuild {
         //this.scene.add(debug);
         for (const i of [0, 1]) {
             let grip = null;
+            // let source: THREE.XRInputSource = undefined;
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
+                // source = (grip as GripGrip).getSource();
             }
             this.playerGroup.add(grip);
+            // TODO: set this.computer above.
+            // if (handedness === 'left') {
+            //   grip.add(this.computer);
+            // }
             // Note: adding the model to the Hand will remove it from the Scene
             // It's still in memory.
             // Assets.blocks[i].position.set(0, 0, 0);
-            new hand_1.Hand(grip, assets_1.Assets.itemsByName.get('guide'), i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory);
+            new hand_1.Hand(grip, assets_1.Assets.itemsByName.get('guide'), i, this.renderer.xr, this.place, this.keysDown, this.construction, this.player.inventory, this.computer);
         }
     }
 }
@@ -1739,24 +1745,77 @@ class GripGrip extends THREE.Object3D {
     index;
     xr;
     grip;
+    // private source: THREE.XRInputSource = null;
     constructor(index, xr) {
         super();
         this.index = index;
         this.xr = xr;
         this.grip = xr.getControllerGrip(index);
         this.add(this.grip);
+        // this.tryGetGrip();
     }
+    // private tryGetGrip() {
+    //   let correctIndex = null;
+    //   for (const index of [0, 1]) {
+    //     const session = this.xr.getSession();
+    //     if (!session) {
+    //       Debug.log("No XR session!");
+    //       return;
+    //     }
+    //     if (session.inputSources && session.inputSources.length > index) {
+    //       this.source = session.inputSources[index];
+    //     } else {
+    //       Debug.log("Bad session");
+    //       return;
+    //     }
+    //     if (this.source.handedness === this.handedness) {
+    //       correctIndex = index;
+    //       break;
+    //     }
+    //     this.grip = this.xr.getControllerGrip(correctIndex);
+    //     Debug.log(`Found ${this.handedness} hand.`);
+    //   }
+    //   this.grip =
+    //     this.add(this.grip);
+    //   if (!!this.selectStartCallback) {
+    //     this.setSelectStartCallback(this.selectStartCallback);
+    //   }
+    //   if (!!this.squeezeCallback) {
+    //     this.setSqueezeCallback(this.squeezeCallback);
+    //   }
+    // }
+    // getSource(): THREE.XRInputSource {
+    //   return this.source;
+    // }
     tick(t) {
+        // if (!!this.grip) {
         this.position.copy(this.grip.position);
         this.rotation.copy(this.grip.rotation);
         this.quaternion.copy(this.grip.quaternion);
         this.matrix.copy(this.grip.matrix);
+        // } else {
+        //   if (t.frameCount % 50 === 0) {
+        //     this.tryGetGrip();
+        //   }
+        // }
     }
+    selectStartCallback;
+    squeezeCallback;
     setSelectStartCallback(callback) {
-        this.grip.addEventListener('selectstart', callback);
+        if (this.grip) {
+            this.grip.addEventListener('selectstart', callback);
+        }
+        else {
+            this.selectStartCallback = callback;
+        }
     }
     setSqueezeCallback(callback) {
-        this.grip.addEventListener('squeeze', callback);
+        if (this.grip) {
+            this.grip.addEventListener('squeeze', callback);
+        }
+        else {
+            this.squeezeCallback = callback;
+        }
     }
     getButtons() {
         throw new Error("Not implemented.");
@@ -1875,6 +1934,7 @@ class Hand extends THREE.Object3D {
     keysDown;
     construction;
     inventory;
+    computer;
     cube;
     leftHand = undefined;
     debug;
@@ -1884,7 +1944,7 @@ class Hand extends THREE.Object3D {
         new THREE.Vector3(), new THREE.Vector3()
     ];
     line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: '#aa9' }));
-    constructor(grip, item, index, xr, place, keysDown, construction, inventory) {
+    constructor(grip, item, index, xr, place, keysDown, construction, inventory, computer) {
         super();
         this.grip = grip;
         this.item = item;
@@ -1894,6 +1954,7 @@ class Hand extends THREE.Object3D {
         this.keysDown = keysDown;
         this.construction = construction;
         this.inventory = inventory;
+        this.computer = computer;
         // If you want to see where the "grip" is, uncomment this code.
         this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
         this.add(this.debug);
@@ -1967,6 +2028,9 @@ class Hand extends THREE.Object3D {
         if (this.source) {
             if (this.leftHand === undefined) {
                 this.leftHand = this.source.handedness == "left";
+                if (this.leftHand == true) {
+                    this.add(this.computer);
+                }
             }
             //this.debugMaterial.color = new THREE.Color('blue');
             const rateUpDown = 5;
