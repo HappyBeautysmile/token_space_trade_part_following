@@ -2021,8 +2021,9 @@ class Hand extends THREE.Object3D {
                 this.leftHand = this.source.handedness == "left";
                 if (this.leftHand == true) {
                     this.computer.translateY(0);
-                    this.computer.translateZ(0);
-                    this.computer.rotateX(Math.PI / 4);
+                    this.computer.translateZ(0.5);
+                    this.computer.rotateX(Math.PI / 2);
+                    this.computer.rotateY(Math.PI / 2);
                     this.add(this.computer);
                 }
             }
