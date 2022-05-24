@@ -737,7 +737,7 @@ class BlockBuild {
             }
         });
         this.playerGroup.add(this.computer);
-        debug_1.Debug.log("one hand");
+        debug_1.Debug.log("remove debug");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2042,7 +2042,7 @@ class Hand extends THREE.Object3D {
                 }
                 else {
                     //this.debugMaterial.color = new THREE.Color('orange');
-                    this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
+                    // this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
                     if (this.leftHand) {
                         this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
                         this.v.multiplyScalar(rateMove * t.deltaS);
