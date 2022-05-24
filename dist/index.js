@@ -1950,6 +1950,8 @@ class Hand extends THREE.Object3D {
         this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
         this.add(this.debug);
         if (grip && this) {
+            debug_1.Debug.log(`this.source.handedness=${this.source.handedness}`);
+            this.leftHand = this.source.handedness == 'left';
             grip.add(this);
         }
         else {

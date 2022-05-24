@@ -42,6 +42,8 @@ export class Hand extends THREE.Object3D {
     this.add(this.debug);
 
     if (grip && this) {
+      Debug.log(`this.source.handedness=${this.source.handedness}`);
+      this.leftHand = this.source.handedness == 'left';
       grip.add(this);
     }
     else {
