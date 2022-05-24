@@ -173,16 +173,6 @@ export class BlockBuild {
     sky.material.side = THREE.BackSide;
     this.universeGroup.add(sky);
 
-    // var skyGeo = new THREE.BoxGeometry(6, 6, 6);
-    // var loader = new THREE.TextureLoader()
-    // var texture = loader.load("Model/sky1.jpg");
-    // var material = new THREE.MeshPhongMaterial({
-    //   map: texture,
-    // });
-    // var sky = new THREE.Mesh(skyGeo, material);
-    // sky.material.side = THREE.BackSide;
-    // this.universeGroup.add(sky);
-
     this.camera = new THREE.PerspectiveCamera(75,
       1.0, 0.1, 2000);
     this.camera.position.set(0, 1.7, 0);
@@ -213,9 +203,9 @@ export class BlockBuild {
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
     this.computer = await Computer.make(this.player);
-    this.computer.translateY(S.float('ch'));
-    this.computer.translateZ(-0.3);
-    this.computer.rotateX(Math.PI / 4);
+    //this.computer.translateY(S.float('ch'));
+    //this.computer.translateZ(-0.3);
+    //this.computer.rotateX(Math.PI / 4);
     const computerScale = S.float('cs');
     this.computer.scale.set(computerScale, computerScale, computerScale);
 
@@ -230,7 +220,7 @@ export class BlockBuild {
 
     this.playerGroup.add(this.computer);
 
-    Debug.log("computer to global");
+    Debug.log("computer on left hand");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
