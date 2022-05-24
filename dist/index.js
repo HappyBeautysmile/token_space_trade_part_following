@@ -1949,14 +1949,14 @@ class Hand extends THREE.Object3D {
         // If you want to see where the "grip" is, uncomment this code.
         this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
         this.add(this.debug);
-        if (grip && this) {
-            debug_1.Debug.log(`this.source.handedness=${this.source.handedness}`);
-            this.leftHand = this.source.handedness == 'left';
-            grip.add(this);
-        }
-        else {
-            debug_1.Debug.log("ERROR: grip or this not defined.");
-        }
+        // if (grip && this) {
+        //   Debug.log(`this.source.handedness=${this.source.handedness}`);
+        //   this.leftHand = this.source.handedness == 'left';
+        //   //grip.add(this);
+        // }
+        // else {
+        //   Debug.log("ERROR: grip or this not defined.")
+        // }
         this.line.visible = false;
         this.add(this.line);
         this.setCube(item);
@@ -2020,6 +2020,7 @@ class Hand extends THREE.Object3D {
         }
         if (this.source) {
             if (this.leftHand === undefined) {
+                this.grip.add(this);
                 this.leftHand = this.source.handedness == "left";
                 if (this.leftHand == false) {
                     //this.computer.translateY(0);
