@@ -220,7 +220,7 @@ export class BlockBuild {
 
     this.playerGroup.add(this.computer);
 
-    Debug.log("both hands");
+    Debug.log("return clone");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

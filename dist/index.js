@@ -737,7 +737,7 @@ class BlockBuild {
             }
         });
         this.playerGroup.add(this.computer);
-        debug_1.Debug.log("both hands");
+        debug_1.Debug.log("return clone");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2202,7 +2202,7 @@ class InWorldItem {
     // Caller needs to set the position of this object and add it to the scene
     // graph.
     getMesh() {
-        return this.mesh;
+        return this.mesh.clone();
     }
     clone() {
         const p = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
