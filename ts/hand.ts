@@ -42,8 +42,6 @@ export class Hand extends THREE.Object3D {
     this.add(this.debug);
 
     if (grip && this) {
-      Debug.log(`this.source.handedness=${this.source.handedness}`);
-      this.leftHand = this.source.handedness == 'left';
       grip.add(this);
     }
     else {
@@ -122,13 +120,8 @@ export class Hand extends THREE.Object3D {
 
     if (this.source) {
       if (this.leftHand === undefined) {
-        this.grip.add(this);
         this.leftHand = this.source.handedness == "left";
-        if (this.leftHand == false) {
-          //this.computer.translateY(0);
-          //this.computer.translateZ(0.5);
-          //this.computer.rotateX(Math.PI);
-          this.computer.rotateY(Math.PI / 2);
+        if (this.leftHand == true) {
           this.add(this.computer);
         }
       }
@@ -143,7 +136,7 @@ export class Hand extends THREE.Object3D {
           // Sticks are not being touched.
         } else {
           //this.debugMaterial.color = new THREE.Color('orange');
-          // this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
+          this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
           if (this.leftHand) {
             this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
             this.v.multiplyScalar(rateMove * t.deltaS);
@@ -172,7 +165,6 @@ export class Hand extends THREE.Object3D {
         this.construction.saveToLocal();
       }
       if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-        Debug.log(`A or X pressed on ${this.source.handedness} leftHand=${this.leftHand}`)
         const i = this.inventory.nextItem();
         if (i) {
           this.setCube(i);
@@ -192,10 +184,9 @@ export class Hand extends THREE.Object3D {
 
   // sets the cube that is in the hand
   public setCube(item: Item) {
-    // Debug.log(`leftHand=${this.leftHand} item.name=${item.name}`);
-    // if (this.cube) {
-    //   this.place.playerGroup.remove(this.cube);
-    // }
+    if (this.cube) {
+      this.place.playerGroup.remove(this.cube);
+    }
     this.cube = Assets.meshes.get(item.modelName).clone();
     this.place.playerGroup.add(this.cube);
     this.item = item;
@@ -203,7 +194,6 @@ export class Hand extends THREE.Object3D {
 
   // delete a cube from the world 
   private deleteCube() {
-    Debug.log(`leftHand=${this.leftHand}`);
     this.p.copy(this.cube.position);
     this.place.playerToUniverse(this.p);
     this.place.quantizePosition(this.p);

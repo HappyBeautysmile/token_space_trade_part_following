@@ -737,7 +737,7 @@ class BlockBuild {
             }
         });
         this.playerGroup.add(this.computer);
-        debug_1.Debug.log("restore handedness");
+        debug_1.Debug.log("restore handedness 2");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1950,8 +1950,6 @@ class Hand extends THREE.Object3D {
         this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
         this.add(this.debug);
         if (grip && this) {
-            debug_1.Debug.log(`this.source.handedness=${this.source.handedness}`);
-            this.leftHand = this.source.handedness == 'left';
             grip.add(this);
         }
         else {
@@ -2020,13 +2018,8 @@ class Hand extends THREE.Object3D {
         }
         if (this.source) {
             if (this.leftHand === undefined) {
-                this.grip.add(this);
                 this.leftHand = this.source.handedness == "left";
-                if (this.leftHand == false) {
-                    //this.computer.translateY(0);
-                    //this.computer.translateZ(0.5);
-                    //this.computer.rotateX(Math.PI);
-                    this.computer.rotateY(Math.PI / 2);
+                if (this.leftHand == true) {
                     this.add(this.computer);
                 }
             }
@@ -2042,7 +2035,7 @@ class Hand extends THREE.Object3D {
                 }
                 else {
                     //this.debugMaterial.color = new THREE.Color('orange');
-                    // this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
+                    this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
                     if (this.leftHand) {
                         this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
                         this.v.multiplyScalar(rateMove * t.deltaS);
@@ -2072,7 +2065,6 @@ class Hand extends THREE.Object3D {
                 this.construction.saveToLocal();
             }
             if (buttons[4] === 1 && this.lastButtons[4] != 1) { // A or X
-                debug_1.Debug.log(`A or X pressed on ${this.source.handedness} leftHand=${this.leftHand}`);
                 const i = this.inventory.nextItem();
                 if (i) {
                     this.setCube(i);
@@ -2091,17 +2083,15 @@ class Hand extends THREE.Object3D {
     }
     // sets the cube that is in the hand
     setCube(item) {
-        // Debug.log(`leftHand=${this.leftHand} item.name=${item.name}`);
-        // if (this.cube) {
-        //   this.place.playerGroup.remove(this.cube);
-        // }
+        if (this.cube) {
+            this.place.playerGroup.remove(this.cube);
+        }
         this.cube = assets_1.Assets.meshes.get(item.modelName).clone();
         this.place.playerGroup.add(this.cube);
         this.item = item;
     }
     // delete a cube from the world 
     deleteCube() {
-        debug_1.Debug.log(`leftHand=${this.leftHand}`);
         this.p.copy(this.cube.position);
         this.place.playerToUniverse(this.p);
         this.place.quantizePosition(this.p);
