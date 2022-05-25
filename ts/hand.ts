@@ -192,10 +192,10 @@ export class Hand extends THREE.Object3D {
 
   // sets the cube that is in the hand
   public setCube(item: Item) {
-    Debug.log(`leftHand=${this.leftHand} item.name=${item.name}`);
-    if (this.cube) {
-      this.place.playerGroup.remove(this.cube);
-    }
+    // Debug.log(`leftHand=${this.leftHand} item.name=${item.name}`);
+    // if (this.cube) {
+    //   this.place.playerGroup.remove(this.cube);
+    // }
     this.cube = Assets.meshes.get(item.modelName).clone();
     this.place.playerGroup.add(this.cube);
     this.item = item;
