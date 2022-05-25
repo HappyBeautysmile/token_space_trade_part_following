@@ -41,14 +41,14 @@ export class Hand extends THREE.Object3D {
     );
     this.add(this.debug);
 
-    // if (grip && this) {
-    //   Debug.log(`this.source.handedness=${this.source.handedness}`);
-    //   this.leftHand = this.source.handedness == 'left';
-    //   //grip.add(this);
-    // }
-    // else {
-    //   Debug.log("ERROR: grip or this not defined.")
-    // }
+    if (grip && this) {
+      Debug.log(`this.source.handedness=${this.source.handedness}`);
+      this.leftHand = this.source.handedness == 'left';
+      grip.add(this);
+    }
+    else {
+      Debug.log("ERROR: grip or this not defined.")
+    }
 
     this.line.visible = false;
     this.add(this.line);
