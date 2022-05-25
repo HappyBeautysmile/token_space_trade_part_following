@@ -561,7 +561,6 @@ const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(723);
-const buttonDispatcher_1 = __webpack_require__(770);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -728,14 +727,14 @@ class BlockBuild {
         //this.computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
         this.computer.scale.set(computerScale, computerScale, computerScale);
-        buttonDispatcher_1.ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
-            if (this.computer.scale.x > 2) {
-                this.computer.scale.set(1, 1, 1);
-            }
-            else {
-                this.computer.scale.set(10, 10, 10);
-            }
-        });
+        // ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
+        //   0.1, () => {
+        //     if (this.computer.scale.x > 2) {
+        //       this.computer.scale.set(1, 1, 1);
+        //     } else {
+        //       this.computer.scale.set(10, 10, 10);
+        //     }
+        //   });
         this.playerGroup.add(this.computer);
         debug_1.Debug.log("restore handedness 2");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
