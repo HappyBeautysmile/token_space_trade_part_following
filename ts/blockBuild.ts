@@ -209,14 +209,14 @@ export class BlockBuild {
     const computerScale = S.float('cs');
     this.computer.scale.set(computerScale, computerScale, computerScale);
 
-    ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
-      0.1, () => {
-        if (this.computer.scale.x > 2) {
-          this.computer.scale.set(1, 1, 1);
-        } else {
-          this.computer.scale.set(10, 10, 10);
-        }
-      });
+    // ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
+    //   0.1, () => {
+    //     if (this.computer.scale.x > 2) {
+    //       this.computer.scale.set(1, 1, 1);
+    //     } else {
+    //       this.computer.scale.set(10, 10, 10);
+    //     }
+    //   });
 
     this.playerGroup.add(this.computer);
 
