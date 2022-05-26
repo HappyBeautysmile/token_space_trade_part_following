@@ -16,7 +16,6 @@ import { Computer } from "./computer";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
-  private leftHand: boolean = undefined;
 
   private debug: THREE.Object3D;
   private debugMaterial: THREE.MeshStandardMaterial;
@@ -26,6 +25,8 @@ export class Hand extends THREE.Object3D {
   ];
   private line = new THREE.Line(this.lineGeometry,
     new THREE.LineBasicMaterial({ color: '#aa9' }));
+
+  private computerAdded = false;
 
   constructor(private grip: GripLike, private item: Item,
     private index: number, private xr: THREE.WebXRManager,
@@ -119,12 +120,11 @@ export class Hand extends THREE.Object3D {
     }
 
     if (this.source) {
-      if (this.leftHand === undefined) {
-        this.leftHand = this.source.handedness == "left";
-        if (this.leftHand == true) {
-          this.add(this.computer);
-        }
+      if (this.grip.getHandedness() === 'left' && !this.computerAdded) {
+        this.add(this.computer);
+        this.computerAdded = true;
       }
+
       //this.debugMaterial.color = new THREE.Color('blue');
       const rateUpDown = 5;
       const rateMove = 10;
@@ -137,11 +137,11 @@ export class Hand extends THREE.Object3D {
         } else {
           //this.debugMaterial.color = new THREE.Color('orange');
           this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
-          if (this.leftHand) {
+          if (this.grip.getHandedness() === 'left') {
             this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
             this.v.multiplyScalar(rateMove * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);
-          } else {
+          } else if (this.grip.getHandedness() === 'right') {
             this.v.set(0, -Math.pow(axes[3], 3), 0);
             this.v.multiplyScalar(rateUpDown * t.deltaS);
             this.place.movePlayerRelativeToCamera(this.v);

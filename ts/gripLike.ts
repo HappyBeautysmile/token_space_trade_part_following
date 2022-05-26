@@ -4,95 +4,66 @@ import { Tick, Ticker } from "./tick";
 
 export type GripEventType = 'squeeze' | 'selectstart';
 
-// export type Handedness = 'left' | 'right';
+export type Handedness = 'left' | 'right';
 
 export interface GripLike extends THREE.Object3D {
   setSelectStartCallback(callback: () => void): void;
   setSqueezeCallback(callback: () => void): void;
   getButtons(): number[];
   getStick(): number;
+  getHandedness(): THREE.XRHandedness;
 }
 
 export class GripGrip extends THREE.Object3D implements GripLike {
+  private handedness: THREE.XRHandedness = undefined;
   private grip: THREE.Object3D;
-  // private source: THREE.XRInputSource = null;
+  private source: THREE.XRInputSource = undefined;
   constructor(readonly index: number, private xr: THREE.WebXRManager) {
     super();
     this.grip = xr.getControllerGrip(index);
     this.add(this.grip);
-    // this.tryGetGrip();
+    this.tryGetGrip();
   }
 
-  // private tryGetGrip() {
-  //   let correctIndex = null;
-  //   for (const index of [0, 1]) {
-  //     const session = this.xr.getSession();
-  //     if (!session) {
-  //       Debug.log("No XR session!");
-  //       return;
-  //     }
-  //     if (session.inputSources && session.inputSources.length > index) {
-  //       this.source = session.inputSources[index];
-  //     } else {
-  //       Debug.log("Bad session");
-  //       return;
-  //     }
-  //     if (this.source.handedness === this.handedness) {
-  //       correctIndex = index;
-  //       break;
-  //     }
-  //     this.grip = this.xr.getControllerGrip(correctIndex);
-  //     Debug.log(`Found ${this.handedness} hand.`);
-  //   }
-  //   this.grip =
-  //     this.add(this.grip);
-  //   if (!!this.selectStartCallback) {
-  //     this.setSelectStartCallback(this.selectStartCallback);
-  //   }
-  //   if (!!this.squeezeCallback) {
-  //     this.setSqueezeCallback(this.squeezeCallback);
-  //   }
-  // }
-
-  // getSource(): THREE.XRInputSource {
-  //   return this.source;
-  // }
+  private tryGetGrip() {
+    const session = this.xr.getSession();
+    if (!session) {
+      return;
+    }
+    if (session.inputSources && session.inputSources.length > this.index) {
+      this.source = session.inputSources[this.index];
+    } else {
+      return;
+    }
+    this.handedness = this.source.handedness;
+    Debug.log(`Found ${this.handedness} hand.`);
+  }
 
   tick(t: Tick) {
-    // if (!!this.grip) {
     this.position.copy(this.grip.position);
     this.rotation.copy(this.grip.rotation);
     this.quaternion.copy(this.grip.quaternion);
     this.matrix.copy(this.grip.matrix);
-    // } else {
-    //   if (t.frameCount % 50 === 0) {
-    //     this.tryGetGrip();
-    //   }
-    // }
+    if (this.handedness === undefined && t.frameCount % 10 === 0) {
+      this.tryGetGrip();
+    }
   }
-
-  private selectStartCallback: () => void;
-  private squeezeCallback: () => void;
 
   setSelectStartCallback(callback: () => void) {
-    if (this.grip) {
-      this.grip.addEventListener('selectstart', callback);
-    } else {
-      this.selectStartCallback = callback;
-    }
+    this.grip.addEventListener('selectstart', callback);
   }
   setSqueezeCallback(callback: () => void) {
-    if (this.grip) {
-      this.grip.addEventListener('squeeze', callback);
-    } else {
-      this.squeezeCallback = callback;
-    }
+    this.grip.addEventListener('squeeze', callback);
   }
   getButtons(): number[] {
     throw new Error("Not implemented.");
   }
   getStick(): number {
     throw new Error("Not implemented.");
+  }
+
+  getHandedness(): THREE.XRHandedness {
+    return this.handedness;
   }
 }
 
@@ -128,6 +99,10 @@ export class MouseGrip extends THREE.Object3D implements GripLike {
     //   new THREE.MeshPhongMaterial({ color: 'pink' })
     // );
     // this.add(ball);
+  }
+
+  getHandedness(): Handedness {
+    return 'left';
   }
 
   onPointerMove(event: MouseEvent) {

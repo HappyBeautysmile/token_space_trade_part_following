@@ -1709,14 +1709,12 @@ class GripGrip extends THREE.Object3D {
     tryGetGrip() {
         const session = this.xr.getSession();
         if (!session) {
-            debug_1.Debug.log("No XR session!");
             return;
         }
         if (session.inputSources && session.inputSources.length > this.index) {
             this.source = session.inputSources[this.index];
         }
         else {
-            debug_1.Debug.log("Bad session");
             return;
         }
         this.handedness = this.source.handedness;
