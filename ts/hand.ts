@@ -122,7 +122,8 @@ export class Hand extends THREE.Object3D {
     if (this.source) {
       if (this.grip.getHandedness() === 'left' && !this.computerAdded) {
         this.add(this.computer);
-        this.computer.translateX(-0.2)
+        this.computer.translateX(0.2);
+        this.computer.rotateZ(Math.PI / 2);
         this.computerAdded = true;
       }
 
