@@ -1731,87 +1731,58 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MouseGrip = exports.GripGrip = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const debug_1 = __webpack_require__(756);
 class GripGrip extends THREE.Object3D {
     index;
     xr;
+    handedness = undefined;
     grip;
-    // private source: THREE.XRInputSource = null;
+    source = undefined;
     constructor(index, xr) {
         super();
         this.index = index;
         this.xr = xr;
         this.grip = xr.getControllerGrip(index);
         this.add(this.grip);
-        // this.tryGetGrip();
+        this.tryGetGrip();
     }
-    // private tryGetGrip() {
-    //   let correctIndex = null;
-    //   for (const index of [0, 1]) {
-    //     const session = this.xr.getSession();
-    //     if (!session) {
-    //       Debug.log("No XR session!");
-    //       return;
-    //     }
-    //     if (session.inputSources && session.inputSources.length > index) {
-    //       this.source = session.inputSources[index];
-    //     } else {
-    //       Debug.log("Bad session");
-    //       return;
-    //     }
-    //     if (this.source.handedness === this.handedness) {
-    //       correctIndex = index;
-    //       break;
-    //     }
-    //     this.grip = this.xr.getControllerGrip(correctIndex);
-    //     Debug.log(`Found ${this.handedness} hand.`);
-    //   }
-    //   this.grip =
-    //     this.add(this.grip);
-    //   if (!!this.selectStartCallback) {
-    //     this.setSelectStartCallback(this.selectStartCallback);
-    //   }
-    //   if (!!this.squeezeCallback) {
-    //     this.setSqueezeCallback(this.squeezeCallback);
-    //   }
-    // }
-    // getSource(): THREE.XRInputSource {
-    //   return this.source;
-    // }
+    tryGetGrip() {
+        const session = this.xr.getSession();
+        if (!session) {
+            return;
+        }
+        if (session.inputSources && session.inputSources.length > this.index) {
+            this.source = session.inputSources[this.index];
+        }
+        else {
+            return;
+        }
+        this.handedness = this.source.handedness;
+        debug_1.Debug.log(`Found ${this.handedness} hand.`);
+    }
     tick(t) {
-        // if (!!this.grip) {
         this.position.copy(this.grip.position);
         this.rotation.copy(this.grip.rotation);
         this.quaternion.copy(this.grip.quaternion);
         this.matrix.copy(this.grip.matrix);
-        // } else {
-        //   if (t.frameCount % 50 === 0) {
-        //     this.tryGetGrip();
-        //   }
-        // }
+        if (this.handedness === undefined && t.frameCount % 10 === 0) {
+            this.tryGetGrip();
+        }
     }
-    selectStartCallback;
-    squeezeCallback;
     setSelectStartCallback(callback) {
-        if (this.grip) {
-            this.grip.addEventListener('selectstart', callback);
-        }
-        else {
-            this.selectStartCallback = callback;
-        }
+        this.grip.addEventListener('selectstart', callback);
     }
     setSqueezeCallback(callback) {
-        if (this.grip) {
-            this.grip.addEventListener('squeeze', callback);
-        }
-        else {
-            this.squeezeCallback = callback;
-        }
+        this.grip.addEventListener('squeeze', callback);
     }
     getButtons() {
         throw new Error("Not implemented.");
     }
     getStick() {
         throw new Error("Not implemented.");
+    }
+    getHandedness() {
+        return this.handedness;
     }
 }
 exports.GripGrip = GripGrip;
@@ -1851,6 +1822,9 @@ class MouseGrip extends THREE.Object3D {
         //   new THREE.MeshPhongMaterial({ color: 'pink' })
         // );
         // this.add(ball);
+    }
+    getHandedness() {
+        return 'left';
     }
     onPointerMove(event) {
         this.pointer.x = (event.clientX / this.canvas.width) * 2 - 1;
@@ -1926,7 +1900,6 @@ class Hand extends THREE.Object3D {
     inventory;
     computer;
     cube;
-    leftHand = undefined;
     debug;
     debugMaterial;
     lineGeometry = new THREE.BufferGeometry();
@@ -1934,6 +1907,7 @@ class Hand extends THREE.Object3D {
         new THREE.Vector3(), new THREE.Vector3()
     ];
     line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: '#aa9' }));
+    computerAdded = false;
     constructor(grip, item, index, xr, place, keysDown, construction, inventory, computer) {
         super();
         this.grip = grip;
@@ -2016,11 +1990,10 @@ class Hand extends THREE.Object3D {
             }
         }
         if (this.source) {
-            if (this.leftHand === undefined) {
-                this.leftHand = this.source.handedness == "left";
-                if (this.leftHand == true) {
-                    this.add(this.computer);
-                }
+            if (this.grip.getHandedness() === 'left' && !this.computerAdded) {
+                this.add(this.computer);
+                this.computer.translateY(-0.2);
+                this.computerAdded = true;
             }
             //this.debugMaterial.color = new THREE.Color('blue');
             const rateUpDown = 5;
@@ -2035,12 +2008,12 @@ class Hand extends THREE.Object3D {
                 else {
                     //this.debugMaterial.color = new THREE.Color('orange');
                     this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
-                    if (this.leftHand) {
+                    if (this.grip.getHandedness() === 'left') {
                         this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
                         this.v.multiplyScalar(rateMove * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
                     }
-                    else {
+                    else if (this.grip.getHandedness() === 'right') {
                         this.v.set(0, -Math.pow(axes[3], 3), 0);
                         this.v.multiplyScalar(rateUpDown * t.deltaS);
                         this.place.movePlayerRelativeToCamera(this.v);
