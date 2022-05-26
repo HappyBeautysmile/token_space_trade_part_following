@@ -736,7 +736,7 @@ class BlockBuild {
         //     }
         //   });
         this.playerGroup.add(this.computer);
-        debug_1.Debug.log("restore handedness 2");
+        debug_1.Debug.log("Three Version=" + THREE.REVISION);
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
