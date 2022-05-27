@@ -737,6 +737,7 @@ class BlockBuild {
         //   });
         this.playerGroup.add(this.computer);
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
+        debug_1.Debug.log("computer adjust");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1993,7 +1994,7 @@ class Hand extends THREE.Object3D {
             if (this.grip.getHandedness() === 'left' && !this.computerAdded) {
                 this.add(this.computer);
                 this.computer.translateX(-0.2);
-                this.computer.rotateZ(Math.PI / 4);
+                this.computer.rotateZ(-Math.PI / 4);
                 this.computerAdded = true;
             }
             //this.debugMaterial.color = new THREE.Color('blue');
