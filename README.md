@@ -12,7 +12,7 @@ webpack
 
 Required packages:
 ```
-npm -D install three
+npm -D install three@0.140.0              //Version 0.141.0 is not working with this project.
 npm -D install --save-dev @types/three
 npm -g install webpack
 npm install html-webpack-plugin
