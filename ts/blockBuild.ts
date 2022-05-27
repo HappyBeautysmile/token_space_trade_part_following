@@ -221,7 +221,7 @@ export class BlockBuild {
     this.playerGroup.add(this.computer);
 
     Debug.log("Three Version=" + THREE.REVISION);
-    Debug.log("computer adjust 3");
+    Debug.log("computer adjust 4");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

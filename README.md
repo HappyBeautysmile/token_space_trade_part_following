@@ -12,6 +12,10 @@ webpack
 
 Required packages:
 ```
+npm install                               // to install from the package lock
+
+-- or --
+
 npm -D install three@0.140.0              //Version 0.141.0 is not working with this project.
 npm -D install --save-dev @types/three
 npm -g install webpack
