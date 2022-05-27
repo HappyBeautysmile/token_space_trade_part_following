@@ -4,9 +4,13 @@
   "description": "Real Time Economy",
   "main": "webpack.config.js",
   "dependencies": {
-    "html-webpack-plugin": "^5.5.0"
+    "@types/three": "^0.140.0",
+    "ammojs-typed": "^1.0.6",
+    "html-webpack-plugin": "^5.5.0",
+    "three": "^0.140.0"
   },
   "devDependencies": {
+    "typescript": "^4.7.2",
     "webpack": "^5.72.0"
   },
   "scripts": {
