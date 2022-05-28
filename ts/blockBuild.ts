@@ -220,6 +220,22 @@ export class BlockBuild {
 
     this.playerGroup.add(this.computer);
 
+    // create an AudioListener and add it to the camera
+    const listener = new THREE.AudioListener();
+    this.computer.add(listener);
+
+    // create a global audio source
+    const sound = new THREE.Audio(listener);
+
+    // load a sound and set it as the Audio object's buffer
+    const audioLoader = new THREE.AudioLoader();
+    audioLoader.load('sounds/spaceship-ambience.ogg', function (buffer) {
+      sound.setBuffer(buffer);
+      sound.setLoop(true);
+      sound.setVolume(0.5);
+      sound.play();
+    });
+
     Debug.log("Three Version=" + THREE.REVISION);
     Debug.log("computer adjust 4");
 
@@ -257,6 +273,7 @@ export class BlockBuild {
       if (S.float('mouse') == i) {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
+        this.playerGroup.add(this.computer);
       } else {
         grip = new GripGrip(i, this.renderer.xr);
         // source = (grip as GripGrip).getSource();

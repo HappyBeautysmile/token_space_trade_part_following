@@ -736,6 +736,19 @@ class BlockBuild {
         //     }
         //   });
         this.playerGroup.add(this.computer);
+        // create an AudioListener and add it to the camera
+        const listener = new THREE.AudioListener();
+        this.computer.add(listener);
+        // create a global audio source
+        const sound = new THREE.Audio(listener);
+        // load a sound and set it as the Audio object's buffer
+        const audioLoader = new THREE.AudioLoader();
+        audioLoader.load('sounds/spaceship-ambience.ogg', function (buffer) {
+            sound.setBuffer(buffer);
+            sound.setLoop(true);
+            sound.setVolume(0.5);
+            sound.play();
+        });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
         debug_1.Debug.log("computer adjust 4");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -768,6 +781,7 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
+                this.playerGroup.add(this.computer);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
@@ -1909,6 +1923,9 @@ class Hand extends THREE.Object3D {
     ];
     line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: '#aa9' }));
     computerAdded = false;
+    listener = new THREE.AudioListener();
+    sound;
+    audioLoader = new THREE.AudioLoader();
     constructor(grip, item, index, xr, place, keysDown, construction, inventory, computer) {
         super();
         this.grip = grip;
@@ -1933,6 +1950,12 @@ class Hand extends THREE.Object3D {
         this.add(this.line);
         this.setCube(item);
         this.initialize();
+        // create an AudioListener and add it to the camera
+        this.add(this.listener);
+        // create a global audio source
+        this.sound = new THREE.Audio(this.listener);
+        // load a sound and set it as the Audio object's buffer
+        const audioLoader = new THREE.AudioLoader();
     }
     // We create these private temporary variables here so we aren't
     // creating new objects on every frame.  This reduces the amount of
@@ -2109,6 +2132,13 @@ class Hand extends THREE.Object3D {
                     if (!itemQty.has(this.item)) {
                         this.setCube(assets_1.Assets.itemsByName.get('guide'));
                     }
+                    const num = Math.ceil(Math.random() * 5).toFixed(0);
+                    this.audioLoader.load(`sounds/build${num}.ogg`, function (buffer) {
+                        this.sound.setBuffer(buffer);
+                        this.sound.setLoop(true);
+                        this.sound.setVolume(0.5);
+                        this.sound.play();
+                    });
                 }
             }
         });

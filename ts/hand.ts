@@ -27,7 +27,9 @@ export class Hand extends THREE.Object3D {
     new THREE.LineBasicMaterial({ color: '#aa9' }));
 
   private computerAdded = false;
-
+  private listener = new THREE.AudioListener();
+  private sound: THREE.Audio;
+  private audioLoader = new THREE.AudioLoader();
   constructor(private grip: GripLike, private item: Item,
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
@@ -54,6 +56,15 @@ export class Hand extends THREE.Object3D {
 
     this.setCube(item);
     this.initialize();
+
+    // create an AudioListener and add it to the camera
+    this.add(this.listener);
+
+    // create a global audio source
+    this.sound = new THREE.Audio(this.listener);
+
+    // load a sound and set it as the Audio object's buffer
+    const audioLoader = new THREE.AudioLoader();
   }
 
   // We create these private temporary variables here so we aren't
@@ -243,6 +254,16 @@ export class Hand extends THREE.Object3D {
           if (!itemQty.has(this.item)) {
             this.setCube(Assets.itemsByName.get('guide'));
           }
+          const num = Math.ceil(Math.random() * 5).toFixed(0);
+          this.audioLoader.load(`sounds/build${num}.ogg`, function (buffer) {
+            this.sound.setBuffer(buffer);
+            this.sound.setLoop(true);
+            this.sound.setVolume(0.5);
+            this.sound.play();
+          });
+
+
+
         }
       }
     });
