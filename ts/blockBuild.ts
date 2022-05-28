@@ -148,9 +148,30 @@ export class BlockBuild {
     if (this.keysDown.has('Digit5') && !this.isSaving) {
       this.isSaving = true;
       this.construction.save();
-    } else {
       this.isSaving = false;
     }
+    if (this.keysDown.has('Digit6')) {
+      this.keysDown.delete('Digit6');
+      // create an AudioListener and add it to the camera
+      const listener = new THREE.AudioListener();
+      this.computer.add(listener);
+
+      // create a global audio source
+      const sound = new THREE.Audio(listener);
+
+      // load a sound and set it as the Audio object's buffer
+      const audioLoader = new THREE.AudioLoader();
+      const num = Math.ceil(Math.random() * 5).toFixed(0);
+      const soundname = `sounds/mine${num}.ogg`;
+      //const soundname = "sounds/build5.ogg";
+      audioLoader.load(soundname, function (buffer) {
+        sound.setBuffer(buffer);
+        sound.setLoop(false);
+        sound.setVolume(0.5);
+        sound.play();
+      });
+    }
+
   }
   private async setScene() {
     await Assets.init();
@@ -220,24 +241,24 @@ export class BlockBuild {
 
     this.playerGroup.add(this.computer);
 
-    // create an AudioListener and add it to the camera
-    const listener = new THREE.AudioListener();
-    this.computer.add(listener);
+    // // create an AudioListener and add it to the camera
+    // const listener = new THREE.AudioListener();
+    // this.computer.add(listener);
 
-    // create a global audio source
-    const sound = new THREE.Audio(listener);
+    // // create a global audio source
+    // const sound = new THREE.Audio(listener);
 
-    // load a sound and set it as the Audio object's buffer
-    const audioLoader = new THREE.AudioLoader();
-    audioLoader.load('sounds/spaceship-ambience.ogg', function (buffer) {
-      sound.setBuffer(buffer);
-      sound.setLoop(true);
-      sound.setVolume(0.5);
-      sound.play();
-    });
+    // // load a sound and set it as the Audio object's buffer
+    // const audioLoader = new THREE.AudioLoader();
+    // audioLoader.load('sounds/spaceship-ambience.ogg', function (buffer) {
+    //   sound.setBuffer(buffer);
+    //   sound.setLoop(true);
+    //   sound.setVolume(0.5);
+    //   sound.play();
+    // });
 
     Debug.log("Three Version=" + THREE.REVISION);
-    Debug.log("computer adjust 4");
+    Debug.log("sound when placed.");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

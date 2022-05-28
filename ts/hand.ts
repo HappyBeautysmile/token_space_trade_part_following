@@ -229,7 +229,7 @@ export class Hand extends THREE.Object3D {
       this.deleteCube();
     });
 
-    this.grip.setSelectStartCallback(() => {
+    this.grip.setSelectStartCallback(() => { // add block or click
       Debug.log('selectstart');
       if (this.line.visible) {
         this.sendRay();
@@ -254,16 +254,22 @@ export class Hand extends THREE.Object3D {
           if (!itemQty.has(this.item)) {
             this.setCube(Assets.itemsByName.get('guide'));
           }
+          const listener = new THREE.AudioListener();
+          this.computer.add(listener);
+
+          // create a global audio source
+          const sound = new THREE.Audio(listener);
+
+          // load a sound and set it as the Audio object's buffer
+          const audioLoader = new THREE.AudioLoader();
           const num = Math.ceil(Math.random() * 5).toFixed(0);
-          this.audioLoader.load(`sounds/build${num}.ogg`, function (buffer) {
-            this.sound.setBuffer(buffer);
-            this.sound.setLoop(true);
-            this.sound.setVolume(0.5);
-            this.sound.play();
+          const soundname = `sounds/mine${num}.ogg`;
+          audioLoader.load(soundname, function (buffer) {
+            sound.setBuffer(buffer);
+            sound.setLoop(false);
+            sound.setVolume(0.5);
+            sound.play();
           });
-
-
-
         }
       }
     });
