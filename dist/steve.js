@@ -687,7 +687,6 @@ class BlockBuild {
             const audioLoader = new THREE.AudioLoader();
             const num = Math.ceil(Math.random() * 5).toFixed(0);
             const soundname = `sounds/mine${num}.ogg`;
-            //const soundname = "sounds/build5.ogg";
             audioLoader.load(soundname, function (buffer) {
                 sound.setBuffer(buffer);
                 sound.setLoop(false);
@@ -767,7 +766,7 @@ class BlockBuild {
         //   sound.play();
         // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("sound when placed.");
+        debug_1.Debug.log("sound when placed 2");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2149,19 +2148,13 @@ class Hand extends THREE.Object3D {
                     if (!itemQty.has(this.item)) {
                         this.setCube(assets_1.Assets.itemsByName.get('guide'));
                     }
-                    const listener = new THREE.AudioListener();
-                    this.computer.add(listener);
-                    // create a global audio source
-                    const sound = new THREE.Audio(listener);
-                    // load a sound and set it as the Audio object's buffer
-                    const audioLoader = new THREE.AudioLoader();
                     const num = Math.ceil(Math.random() * 5).toFixed(0);
                     const soundname = `sounds/mine${num}.ogg`;
-                    audioLoader.load(soundname, function (buffer) {
-                        sound.setBuffer(buffer);
-                        sound.setLoop(false);
-                        sound.setVolume(0.5);
-                        sound.play();
+                    this.audioLoader.load(soundname, function (buffer) {
+                        this.sound.setBuffer(buffer);
+                        this.sound.setLoop(false);
+                        this.sound.setVolume(0.5);
+                        this.sound.play();
                     });
                 }
             }

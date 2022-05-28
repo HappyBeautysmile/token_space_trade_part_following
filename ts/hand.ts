@@ -254,21 +254,13 @@ export class Hand extends THREE.Object3D {
           if (!itemQty.has(this.item)) {
             this.setCube(Assets.itemsByName.get('guide'));
           }
-          const listener = new THREE.AudioListener();
-          this.computer.add(listener);
-
-          // create a global audio source
-          const sound = new THREE.Audio(listener);
-
-          // load a sound and set it as the Audio object's buffer
-          const audioLoader = new THREE.AudioLoader();
           const num = Math.ceil(Math.random() * 5).toFixed(0);
           const soundname = `sounds/mine${num}.ogg`;
-          audioLoader.load(soundname, function (buffer) {
-            sound.setBuffer(buffer);
-            sound.setLoop(false);
-            sound.setVolume(0.5);
-            sound.play();
+          this.audioLoader.load(soundname, function (buffer) {
+            this.sound.setBuffer(buffer);
+            this.sound.setLoop(false);
+            this.sound.setVolume(0.5);
+            this.sound.play();
           });
         }
       }

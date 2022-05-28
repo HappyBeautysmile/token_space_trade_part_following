@@ -163,7 +163,6 @@ export class BlockBuild {
       const audioLoader = new THREE.AudioLoader();
       const num = Math.ceil(Math.random() * 5).toFixed(0);
       const soundname = `sounds/mine${num}.ogg`;
-      //const soundname = "sounds/build5.ogg";
       audioLoader.load(soundname, function (buffer) {
         sound.setBuffer(buffer);
         sound.setLoop(false);
@@ -258,7 +257,7 @@ export class BlockBuild {
     // });
 
     Debug.log("Three Version=" + THREE.REVISION);
-    Debug.log("sound when placed.");
+    Debug.log("sound when placed 2");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
