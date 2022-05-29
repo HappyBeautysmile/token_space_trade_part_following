@@ -164,7 +164,7 @@ export class BlockBuild {
       const audioLoader = new THREE.AudioLoader();
       const num = Math.ceil(Math.random() * 5).toFixed(0);
       const soundname = `sounds/mine${num}.ogg`;
-      audioLoader.load(soundname, function (buffer) {
+      audioLoader.load(soundname, (buffer) => {
         sound.setBuffer(buffer);
         sound.setLoop(false);
         sound.setVolume(0.5);
@@ -180,19 +180,6 @@ export class BlockBuild {
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
 
-    //this.scene.background = new THREE.Color(0x552200);
-
-    // var skyGeo = new THREE.SphereGeometry(1900, 25, 25);
-    // var loader = new THREE.TextureLoader()
-    // var texture = loader.load("Model/sky6.jpg");
-    // var color = new THREE.Color(Math.random(), Math.random(), Math.random())
-    // var material = new THREE.MeshBasicMaterial({
-    //   map: texture,
-    //   color: color
-    // });
-    // var sky = new THREE.Mesh(skyGeo, material);
-    // sky.material.side = THREE.BackSide;
-    // this.universeGroup.add(sky);
     const sky = new SkyBox();
     this.universeGroup.add(sky);
 
