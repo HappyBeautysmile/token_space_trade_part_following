@@ -561,6 +561,7 @@ const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(723);
+const skyBox_1 = __webpack_require__(813);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -674,9 +675,25 @@ class BlockBuild {
         if (this.keysDown.has('Digit5') && !this.isSaving) {
             this.isSaving = true;
             this.construction.save();
-        }
-        else {
             this.isSaving = false;
+        }
+        if (this.keysDown.has('Digit6')) {
+            this.keysDown.delete('Digit6');
+            // create an AudioListener and add it to the camera
+            const listener = new THREE.AudioListener();
+            this.computer.add(listener);
+            // create a global audio source
+            const sound = new THREE.Audio(listener);
+            // load a sound and set it as the Audio object's buffer
+            const audioLoader = new THREE.AudioLoader();
+            const num = Math.ceil(Math.random() * 5).toFixed(0);
+            const soundname = `sounds/mine${num}.ogg`;
+            audioLoader.load(soundname, function (buffer) {
+                sound.setBuffer(buffer);
+                sound.setLoop(false);
+                sound.setVolume(0.5);
+                sound.play();
+            });
         }
     }
     async setScene() {
@@ -686,16 +703,18 @@ class BlockBuild {
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
         //this.scene.background = new THREE.Color(0x552200);
-        var skyGeo = new THREE.SphereGeometry(1900, 25, 25);
-        var loader = new THREE.TextureLoader();
-        var texture = loader.load("Model/sky6.jpg");
-        var color = new THREE.Color(Math.random(), Math.random(), Math.random());
-        var material = new THREE.MeshBasicMaterial({
-            map: texture,
-            color: color
-        });
-        var sky = new THREE.Mesh(skyGeo, material);
-        sky.material.side = THREE.BackSide;
+        // var skyGeo = new THREE.SphereGeometry(1900, 25, 25);
+        // var loader = new THREE.TextureLoader()
+        // var texture = loader.load("Model/sky6.jpg");
+        // var color = new THREE.Color(Math.random(), Math.random(), Math.random())
+        // var material = new THREE.MeshBasicMaterial({
+        //   map: texture,
+        //   color: color
+        // });
+        // var sky = new THREE.Mesh(skyGeo, material);
+        // sky.material.side = THREE.BackSide;
+        // this.universeGroup.add(sky);
+        const sky = new skyBox_1.SkyBox();
         this.universeGroup.add(sky);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
         this.camera.position.set(0, 1.7, 0);
@@ -736,8 +755,21 @@ class BlockBuild {
         //     }
         //   });
         this.playerGroup.add(this.computer);
+        // // create an AudioListener and add it to the camera
+        // const listener = new THREE.AudioListener();
+        // this.computer.add(listener);
+        // // create a global audio source
+        // const sound = new THREE.Audio(listener);
+        // // load a sound and set it as the Audio object's buffer
+        // const audioLoader = new THREE.AudioLoader();
+        // audioLoader.load('sounds/spaceship-ambience.ogg', function (buffer) {
+        //   sound.setBuffer(buffer);
+        //   sound.setLoop(true);
+        //   sound.setVolume(0.5);
+        //   sound.play();
+        // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("computer adjust 4");
+        debug_1.Debug.log("sound when placed 2");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -768,6 +800,7 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
+                this.playerGroup.add(this.computer);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
@@ -1909,6 +1942,9 @@ class Hand extends THREE.Object3D {
     ];
     line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: '#aa9' }));
     computerAdded = false;
+    listener = new THREE.AudioListener();
+    sound;
+    audioLoader = new THREE.AudioLoader();
     constructor(grip, item, index, xr, place, keysDown, construction, inventory, computer) {
         super();
         this.grip = grip;
@@ -1933,6 +1969,12 @@ class Hand extends THREE.Object3D {
         this.add(this.line);
         this.setCube(item);
         this.initialize();
+        // create an AudioListener and add it to the camera
+        this.add(this.listener);
+        // create a global audio source
+        this.sound = new THREE.Audio(this.listener);
+        // load a sound and set it as the Audio object's buffer
+        const audioLoader = new THREE.AudioLoader();
     }
     // We create these private temporary variables here so we aren't
     // creating new objects on every frame.  This reduces the amount of
@@ -2109,6 +2151,14 @@ class Hand extends THREE.Object3D {
                     if (!itemQty.has(this.item)) {
                         this.setCube(assets_1.Assets.itemsByName.get('guide'));
                     }
+                    const num = Math.ceil(Math.random() * 5).toFixed(0);
+                    const soundname = `sounds/mine${num}.ogg`;
+                    this.audioLoader.load(soundname, function (buffer) {
+                        this.sound.setBuffer(buffer);
+                        this.sound.setLoop(false);
+                        this.sound.setVolume(0.5);
+                        this.sound.play();
+                    });
                 }
             }
         });
@@ -3836,6 +3886,71 @@ class S {
 }
 exports.S = S;
 //# sourceMappingURL=settings.js.map
+
+/***/ }),
+
+/***/ 813:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SkyBox = void 0;
+const THREE = __importStar(__webpack_require__(232));
+class SkyBox extends THREE.Object3D {
+    constructor() {
+        super();
+        const num = Math.ceil(Math.random() * 5).toFixed(0);
+        const materialArray = this.createMaterialArray(num);
+        const skyboxGeo = new THREE.BoxGeometry(1000, 1000, 1000);
+        const skybox = new THREE.Mesh(skyboxGeo, materialArray);
+        this.add(skybox);
+    }
+    createPathStrings(filename) {
+        const basePath = "skyboxes/";
+        const baseFilename = basePath + filename;
+        const fileType = ".png";
+        // for sky boxes from https://tools.wwwtyro.net/space-3d
+        const sides = ["right", "left", "top", "bottom", "front", "back"];
+        const pathStings = sides.map(side => {
+            return baseFilename + "-" + side + fileType;
+        });
+        return pathStings;
+    }
+    createMaterialArray(filename) {
+        const skyboxImagepaths = this.createPathStrings(filename);
+        const color = new THREE.Color(Math.random(), Math.random(), Math.random());
+        const materialArray = skyboxImagepaths.map(image => {
+            let texture = new THREE.TextureLoader().load(image);
+            return new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, color: color });
+        });
+        return materialArray;
+    }
+}
+exports.SkyBox = SkyBox;
+//# sourceMappingURL=skyBox.js.map
 
 /***/ }),
 
