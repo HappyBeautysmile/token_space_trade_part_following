@@ -2115,6 +2115,14 @@ class Hand extends THREE.Object3D {
         const removedCube = this.construction.removeCube(this.p);
         if (removedCube) {
             this.inventory.addItem(removedCube);
+            const num = Math.ceil(Math.random() * 5).toFixed(0);
+            const soundname = `sounds/mine${num}.ogg`;
+            this.audioLoader.load(soundname, function (buffer) {
+                this.sound.setBuffer(buffer);
+                this.sound.setLoop(false);
+                this.sound.setVolume(0.5);
+                this.sound.play();
+            });
         }
     }
     eulerString(q) {
@@ -2152,7 +2160,7 @@ class Hand extends THREE.Object3D {
                         this.setCube(assets_1.Assets.itemsByName.get('guide'));
                     }
                     const num = Math.ceil(Math.random() * 5).toFixed(0);
-                    const soundname = `sounds/mine${num}.ogg`;
+                    const soundname = `sounds/build${num}.ogg`;
                     this.audioLoader.load(soundname, function (buffer) {
                         this.sound.setBuffer(buffer);
                         this.sound.setLoop(false);
