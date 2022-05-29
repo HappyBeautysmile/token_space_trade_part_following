@@ -216,6 +216,7 @@ export class Hand extends THREE.Object3D {
       this.inventory.addItem(removedCube);
       const num = Math.ceil(Math.random() * 5).toFixed(0);
       const soundname = `sounds/mine${num}.ogg`;
+      Debug.log(`playing sound ${soundname}`);
       this.audioLoader.load(soundname, function (buffer) {
         this.sound.setBuffer(buffer);
         this.sound.setLoop(false);
@@ -264,6 +265,7 @@ export class Hand extends THREE.Object3D {
           }
           const num = Math.ceil(Math.random() * 5).toFixed(0);
           const soundname = `sounds/build${num}.ogg`;
+          Debug.log(`playing sound ${soundname}`);
           this.audioLoader.load(soundname, function (buffer) {
             this.sound.setBuffer(buffer);
             this.sound.setLoop(false);

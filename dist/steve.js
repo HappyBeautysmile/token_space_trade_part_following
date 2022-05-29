@@ -769,7 +769,7 @@ class BlockBuild {
         //   sound.play();
         // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("sound when placed 2");
+        debug_1.Debug.log("sound when placed 3");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2117,6 +2117,7 @@ class Hand extends THREE.Object3D {
             this.inventory.addItem(removedCube);
             const num = Math.ceil(Math.random() * 5).toFixed(0);
             const soundname = `sounds/mine${num}.ogg`;
+            debug_1.Debug.log(`playing sound ${soundname}`);
             this.audioLoader.load(soundname, function (buffer) {
                 this.sound.setBuffer(buffer);
                 this.sound.setLoop(false);
@@ -2161,6 +2162,7 @@ class Hand extends THREE.Object3D {
                     }
                     const num = Math.ceil(Math.random() * 5).toFixed(0);
                     const soundname = `sounds/build${num}.ogg`;
+                    debug_1.Debug.log(`playing sound ${soundname}`);
                     this.audioLoader.load(soundname, function (buffer) {
                         this.sound.setBuffer(buffer);
                         this.sound.setLoop(false);

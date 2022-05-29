@@ -260,7 +260,7 @@ export class BlockBuild {
     // });
 
     Debug.log("Three Version=" + THREE.REVISION);
-    Debug.log("sound when placed 2");
+    Debug.log("sound when placed 3");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
