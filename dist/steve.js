@@ -1118,19 +1118,27 @@ class Computer extends THREE.Object3D {
         for (let i = 0; i < 8; i++) {
             let label = "T" + i.toFixed(0);
             this.topButtonLabels.push(label);
-            const m = this.findChildByName(label, this.model);
-            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.01, () => {
-                const num = Math.ceil(Math.random() * 5).toFixed(0);
-                const soundname = `sounds/key-press${num}.ogg`;
-                this.audioLoader.load(soundname, (buffer) => {
-                    this.sound.setBuffer(buffer);
-                    this.sound.setLoop(false);
-                    this.sound.setVolume(0.5);
-                    this.sound.play();
-                });
+            let m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.03, () => {
+                this.playRandomSound("key-press", 5);
             });
-            this.bottomButtonLabels.push("B" + String(i));
+            label = "B" + i.toFixed(0);
+            this.bottomButtonLabels.push(label);
+            m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.03, () => {
+                this.playRandomSound("key-press", 5);
+            });
         }
+    }
+    playRandomSound(name, max) {
+        const num = Math.ceil(Math.random() * max).toFixed(0);
+        const soundname = `sounds/${name}${num}.ogg`;
+        this.audioLoader.load(soundname, (buffer) => {
+            this.sound.setBuffer(buffer);
+            this.sound.setLoop(false);
+            this.sound.setVolume(0.5);
+            this.sound.play();
+        });
     }
     updateDisplay() {
         // clear display and add green bars
@@ -1982,7 +1990,7 @@ class Hand extends THREE.Object3D {
         this.inventory = inventory;
         this.computer = computer;
         // If you want to see where the "grip" is, uncomment this code.
-        this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
+        this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.005, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
         this.add(this.debug);
         if (grip && this) {
             grip.add(this);

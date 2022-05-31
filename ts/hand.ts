@@ -39,7 +39,7 @@ export class Hand extends THREE.Object3D {
 
     // If you want to see where the "grip" is, uncomment this code.
     this.debug = new THREE.Mesh(
-      new THREE.IcosahedronBufferGeometry(0.02, 3),
+      new THREE.IcosahedronBufferGeometry(0.005, 3),
       new THREE.MeshPhongMaterial({ color: 'pink' })
     );
     this.add(this.debug);

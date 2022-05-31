@@ -79,24 +79,31 @@ export class Computer extends THREE.Object3D implements Ticker {
     for (let i = 0; i < 8; i++) {
       let label = "T" + i.toFixed(0);
       this.topButtonLabels.push(label);
-      const m = this.findChildByName(label, this.model);
-
+      let m = this.findChildByName(label, this.model);
       ButtonDispatcher.registerButton(this, m.position,
-        0.01, () => {
-
-          const num = Math.ceil(Math.random() * 5).toFixed(0);
-          const soundname = `sounds/key-press${num}.ogg`;
-          this.audioLoader.load(soundname, (buffer) => {
-            this.sound.setBuffer(buffer);
-            this.sound.setLoop(false);
-            this.sound.setVolume(0.5);
-            this.sound.play();
-          });
-
+        0.03, () => {
+          this.playRandomSound("key-press", 5);
         });
 
-      this.bottomButtonLabels.push("B" + String(i));
+      label = "B" + i.toFixed(0);
+      this.bottomButtonLabels.push(label);
+      m = this.findChildByName(label, this.model);
+      ButtonDispatcher.registerButton(this, m.position,
+        0.03, () => {
+          this.playRandomSound("key-press", 5);
+        });
     }
+  }
+
+  playRandomSound(name: string, max: number) {
+    const num = Math.ceil(Math.random() * max).toFixed(0);
+    const soundname = `sounds/${name}${num}.ogg`;
+    this.audioLoader.load(soundname, (buffer) => {
+      this.sound.setBuffer(buffer);
+      this.sound.setLoop(false);
+      this.sound.setVolume(0.5);
+      this.sound.play();
+    });
   }
 
   public updateDisplay() {
