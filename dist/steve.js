@@ -561,7 +561,6 @@ const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(723);
-const buttonDispatcher_1 = __webpack_require__(770);
 const skyBox_1 = __webpack_require__(813);
 class BlockBuild {
     scene = new THREE.Scene();
@@ -735,14 +734,14 @@ class BlockBuild {
         //this.computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
         this.computer.scale.set(computerScale, computerScale, computerScale);
-        buttonDispatcher_1.ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
-            if (this.computer.scale.x > 2) {
-                this.computer.scale.set(1, 1, 1);
-            }
-            else {
-                this.computer.scale.set(10, 10, 10);
-            }
-        });
+        // ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
+        //   0.1, () => {
+        //     if (this.computer.scale.x > 2) {
+        //       this.computer.scale.set(1, 1, 1);
+        //     } else {
+        //       this.computer.scale.set(10, 10, 10);
+        //     }
+        //   });
         this.playerGroup.add(this.computer);
         // // create an AudioListener and add it to the camera
         // const listener = new THREE.AudioListener();
@@ -1119,15 +1118,27 @@ class Computer extends THREE.Object3D {
             let label = "T" + i.toFixed(0);
             this.topButtonLabels.push(label);
             let m = this.findChildByName(label, this.model);
-            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.03, () => {
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
                 this.playRandomSound("key-press", 5);
             });
             label = "B" + i.toFixed(0);
             this.bottomButtonLabels.push(label);
             m = this.findChildByName(label, this.model);
-            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.03, () => {
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
                 this.playRandomSound("key-press", 5);
             });
+            label = "L" + i.toFixed(0);
+            m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
+                this.playRandomSound("key-press", 5);
+            });
+            if (i < 7) {
+                label = "R" + i.toFixed(0);
+                m = this.findChildByName(label, this.model);
+                buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
+                    this.playRandomSound("key-press", 5);
+                });
+            }
         }
     }
     playRandomSound(name, max) {

@@ -81,7 +81,7 @@ export class Computer extends THREE.Object3D implements Ticker {
       this.topButtonLabels.push(label);
       let m = this.findChildByName(label, this.model);
       ButtonDispatcher.registerButton(this, m.position,
-        0.03, () => {
+        0.015, () => {
           this.playRandomSound("key-press", 5);
         });
 
@@ -89,9 +89,24 @@ export class Computer extends THREE.Object3D implements Ticker {
       this.bottomButtonLabels.push(label);
       m = this.findChildByName(label, this.model);
       ButtonDispatcher.registerButton(this, m.position,
-        0.03, () => {
+        0.015, () => {
           this.playRandomSound("key-press", 5);
         });
+
+      label = "L" + i.toFixed(0);
+      m = this.findChildByName(label, this.model);
+      ButtonDispatcher.registerButton(this, m.position,
+        0.005, () => {
+          this.playRandomSound("key-press", 5);
+        });
+      if (i < 7) {
+        label = "R" + i.toFixed(0);
+        m = this.findChildByName(label, this.model);
+        ButtonDispatcher.registerButton(this, m.position,
+          0.005, () => {
+            this.playRandomSound("key-press", 5);
+          });
+      }
     }
   }
 
