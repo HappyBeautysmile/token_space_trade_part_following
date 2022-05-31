@@ -13,14 +13,21 @@ export class Computer extends THREE.Object3D implements Ticker {
   rowText = [];
   topButtonLabels = [];
   bottomButtonLabels = [];
+  private listener = new THREE.AudioListener();
+  private sound: THREE.Audio;
+  private audioLoader = new THREE.AudioLoader();
 
 
-  private constructor(model: THREE.Object3D, private player: Player) {
+  private constructor(private model: THREE.Object3D, private player: Player) {
     super();
     this.add(model);
     this.canvas.width = 1056;
     this.canvas.height = 544;
     this.material.map = this.texture;
+
+    this.add(this.listener);
+    this.sound = new THREE.Audio(this.listener);
+
     this.labels();
     this.updateDisplay();
     model.children.forEach(o => {
@@ -31,6 +38,8 @@ export class Computer extends THREE.Object3D implements Ticker {
     })
     this.showInventory();
     this.enableButtons();
+
+
 
     setInterval(() => { }, 5000);
   }
@@ -46,6 +55,17 @@ export class Computer extends THREE.Object3D implements Ticker {
     return new Computer(model, player);
   }
 
+  findChildByName(name: string, model: THREE.Object3D): THREE.Object3D {
+    let retvalue = new THREE.Object3D();
+    for (const m of model.children) {
+      if (m.name == name) {
+        retvalue = m;
+        break;
+      }
+    }
+    return retvalue;
+  }
+
   labels() {
     this.rowText = [];
     for (let i = 0; i < 15; i++) {
@@ -57,7 +77,24 @@ export class Computer extends THREE.Object3D implements Ticker {
     this.topButtonLabels = [];
     this.bottomButtonLabels = [];
     for (let i = 0; i < 8; i++) {
-      this.topButtonLabels.push("T" + String(i));
+      let label = "T" + i.toFixed(0);
+      this.topButtonLabels.push(label);
+      const m = this.findChildByName(label, this.model);
+
+      ButtonDispatcher.registerButton(this, m.position,
+        0.01, () => {
+
+          const num = Math.ceil(Math.random() * 5).toFixed(0);
+          const soundname = `sounds/key-press${num}.ogg`;
+          this.audioLoader.load(soundname, (buffer) => {
+            this.sound.setBuffer(buffer);
+            this.sound.setLoop(false);
+            this.sound.setVolume(0.5);
+            this.sound.play();
+          });
+
+        });
+
       this.bottomButtonLabels.push("B" + String(i));
     }
   }
@@ -123,13 +160,6 @@ export class Computer extends THREE.Object3D implements Ticker {
   }
 
   enableButtons() {
-    ButtonDispatcher.registerButton(this, new THREE.Vector3(0, 0, 0),
-      0.1, () => {
-        if (this.scale.x > 2) {
-          this.scale.set(1, 1, 1);
-        } else {
-          this.scale.set(10, 10, 10);
-        }
-      });
+
   }
 }

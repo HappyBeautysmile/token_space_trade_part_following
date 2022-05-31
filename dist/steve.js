@@ -561,6 +561,7 @@ const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(723);
+const buttonDispatcher_1 = __webpack_require__(770);
 const skyBox_1 = __webpack_require__(813);
 class BlockBuild {
     scene = new THREE.Scene();
@@ -734,14 +735,14 @@ class BlockBuild {
         //this.computer.rotateX(Math.PI / 4);
         const computerScale = settings_1.S.float('cs');
         this.computer.scale.set(computerScale, computerScale, computerScale);
-        // ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
-        //   0.1, () => {
-        //     if (this.computer.scale.x > 2) {
-        //       this.computer.scale.set(1, 1, 1);
-        //     } else {
-        //       this.computer.scale.set(10, 10, 10);
-        //     }
-        //   });
+        buttonDispatcher_1.ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0), 0.1, () => {
+            if (this.computer.scale.x > 2) {
+                this.computer.scale.set(1, 1, 1);
+            }
+            else {
+                this.computer.scale.set(10, 10, 10);
+            }
+        });
         this.playerGroup.add(this.computer);
         // // create an AudioListener and add it to the camera
         // const listener = new THREE.AudioListener();
@@ -788,6 +789,9 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
+                this.computer.translateY(1.5);
+                this.computer.translateZ(-0.4);
+                this.computer.rotateX(Math.PI / 3);
                 this.playerGroup.add(this.computer);
             }
             else {
@@ -1049,6 +1053,7 @@ const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
 const buttonDispatcher_1 = __webpack_require__(770);
 class Computer extends THREE.Object3D {
+    model;
     player;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
@@ -1057,13 +1062,19 @@ class Computer extends THREE.Object3D {
     rowText = [];
     topButtonLabels = [];
     bottomButtonLabels = [];
+    listener = new THREE.AudioListener();
+    sound;
+    audioLoader = new THREE.AudioLoader();
     constructor(model, player) {
         super();
+        this.model = model;
         this.player = player;
         this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
+        this.add(this.listener);
+        this.sound = new THREE.Audio(this.listener);
         this.labels();
         this.updateDisplay();
         model.children.forEach(o => {
@@ -1085,6 +1096,16 @@ class Computer extends THREE.Object3D {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
         return new Computer(model, player);
     }
+    findChildByName(name, model) {
+        let retvalue = new THREE.Object3D();
+        for (const m of model.children) {
+            if (m.name == name) {
+                retvalue = m;
+                break;
+            }
+        }
+        return retvalue;
+    }
     labels() {
         this.rowText = [];
         for (let i = 0; i < 15; i++) {
@@ -1095,7 +1116,19 @@ class Computer extends THREE.Object3D {
         this.topButtonLabels = [];
         this.bottomButtonLabels = [];
         for (let i = 0; i < 8; i++) {
-            this.topButtonLabels.push("T" + String(i));
+            let label = "T" + i.toFixed(0);
+            this.topButtonLabels.push(label);
+            const m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.01, () => {
+                const num = Math.ceil(Math.random() * 5).toFixed(0);
+                const soundname = `sounds/key-press${num}.ogg`;
+                this.audioLoader.load(soundname, (buffer) => {
+                    this.sound.setBuffer(buffer);
+                    this.sound.setLoop(false);
+                    this.sound.setVolume(0.5);
+                    this.sound.play();
+                });
+            });
             this.bottomButtonLabels.push("B" + String(i));
         }
     }
@@ -1157,14 +1190,6 @@ class Computer extends THREE.Object3D {
         }
     }
     enableButtons() {
-        buttonDispatcher_1.ButtonDispatcher.registerButton(this, new THREE.Vector3(0, 0, 0), 0.1, () => {
-            if (this.scale.x > 2) {
-                this.scale.set(1, 1, 1);
-            }
-            else {
-                this.scale.set(10, 10, 10);
-            }
-        });
     }
 }
 exports.Computer = Computer;

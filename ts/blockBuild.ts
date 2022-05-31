@@ -219,14 +219,14 @@ export class BlockBuild {
     const computerScale = S.float('cs');
     this.computer.scale.set(computerScale, computerScale, computerScale);
 
-    // ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
-    //   0.1, () => {
-    //     if (this.computer.scale.x > 2) {
-    //       this.computer.scale.set(1, 1, 1);
-    //     } else {
-    //       this.computer.scale.set(10, 10, 10);
-    //     }
-    //   });
+    ButtonDispatcher.registerButton(this.computer, new THREE.Vector3(0, 0, 0),
+      0.1, () => {
+        if (this.computer.scale.x > 2) {
+          this.computer.scale.set(1, 1, 1);
+        } else {
+          this.computer.scale.set(10, 10, 10);
+        }
+      });
 
     this.playerGroup.add(this.computer);
 
@@ -283,6 +283,9 @@ export class BlockBuild {
       if (S.float('mouse') == i) {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
+        this.computer.translateY(1.5);
+        this.computer.translateZ(-0.4);
+        this.computer.rotateX(Math.PI / 3);
         this.playerGroup.add(this.computer);
       } else {
         grip = new GripGrip(i, this.renderer.xr);
