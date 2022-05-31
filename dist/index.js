@@ -788,6 +788,9 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
+                this.computer.translateY(1.5);
+                this.computer.translateZ(-0.4);
+                this.computer.rotateX(Math.PI / 3);
                 this.playerGroup.add(this.computer);
             }
             else {
@@ -1047,7 +1050,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Computer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
+const buttonDispatcher_1 = __webpack_require__(770);
 class Computer extends THREE.Object3D {
+    model;
     player;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
@@ -1056,13 +1061,19 @@ class Computer extends THREE.Object3D {
     rowText = [];
     topButtonLabels = [];
     bottomButtonLabels = [];
+    listener = new THREE.AudioListener();
+    sound;
+    audioLoader = new THREE.AudioLoader();
     constructor(model, player) {
         super();
+        this.model = model;
         this.player = player;
         this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
+        this.add(this.listener);
+        this.sound = new THREE.Audio(this.listener);
         this.labels();
         this.updateDisplay();
         model.children.forEach(o => {
@@ -1072,6 +1083,7 @@ class Computer extends THREE.Object3D {
             }
         });
         this.showInventory();
+        this.enableButtons();
         setInterval(() => { }, 5000);
     }
     tick(t) {
@@ -1083,6 +1095,16 @@ class Computer extends THREE.Object3D {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
         return new Computer(model, player);
     }
+    findChildByName(name, model) {
+        let retvalue = new THREE.Object3D();
+        for (const m of model.children) {
+            if (m.name == name) {
+                retvalue = m;
+                break;
+            }
+        }
+        return retvalue;
+    }
     labels() {
         this.rowText = [];
         for (let i = 0; i < 15; i++) {
@@ -1093,9 +1115,41 @@ class Computer extends THREE.Object3D {
         this.topButtonLabels = [];
         this.bottomButtonLabels = [];
         for (let i = 0; i < 8; i++) {
-            this.topButtonLabels.push("T" + String(i));
-            this.bottomButtonLabels.push("B" + String(i));
+            let label = "T" + i.toFixed(0);
+            this.topButtonLabels.push(label);
+            let m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
+                this.playRandomSound("key-press", 5);
+            });
+            label = "B" + i.toFixed(0);
+            this.bottomButtonLabels.push(label);
+            m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
+                this.playRandomSound("key-press", 5);
+            });
+            label = "L" + i.toFixed(0);
+            m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
+                this.playRandomSound("key-press", 5);
+            });
+            if (i < 7) {
+                label = "R" + i.toFixed(0);
+                m = this.findChildByName(label, this.model);
+                buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
+                    this.playRandomSound("key-press", 5);
+                });
+            }
         }
+    }
+    playRandomSound(name, max) {
+        const num = Math.ceil(Math.random() * max).toFixed(0);
+        const soundname = `sounds/${name}${num}.ogg`;
+        this.audioLoader.load(soundname, (buffer) => {
+            this.sound.setBuffer(buffer);
+            this.sound.setLoop(false);
+            this.sound.setVolume(0.5);
+            this.sound.play();
+        });
     }
     updateDisplay() {
         // clear display and add green bars
@@ -1153,6 +1207,8 @@ class Computer extends THREE.Object3D {
         for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8.5) {
             this.ctx.fillRect(0, y, this.canvas.width, this.canvas.height / 17);
         }
+    }
+    enableButtons() {
     }
 }
 exports.Computer = Computer;
@@ -1945,7 +2001,7 @@ class Hand extends THREE.Object3D {
         this.inventory = inventory;
         this.computer = computer;
         // If you want to see where the "grip" is, uncomment this code.
-        this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
+        this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.005, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
         this.add(this.debug);
         if (grip && this) {
             grip.add(this);
