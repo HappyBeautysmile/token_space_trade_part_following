@@ -1047,6 +1047,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Computer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
+const buttonDispatcher_1 = __webpack_require__(770);
 class Computer extends THREE.Object3D {
     player;
     canvas = document.createElement('canvas');
@@ -1072,6 +1073,7 @@ class Computer extends THREE.Object3D {
             }
         });
         this.showInventory();
+        this.enableButtons();
         setInterval(() => { }, 5000);
     }
     tick(t) {
@@ -1153,6 +1155,16 @@ class Computer extends THREE.Object3D {
         for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8.5) {
             this.ctx.fillRect(0, y, this.canvas.width, this.canvas.height / 17);
         }
+    }
+    enableButtons() {
+        buttonDispatcher_1.ButtonDispatcher.registerButton(this, new THREE.Vector3(0, 0, 0), 0.1, () => {
+            if (this.scale.x > 2) {
+                this.scale.set(1, 1, 1);
+            }
+            else {
+                this.scale.set(10, 10, 10);
+            }
+        });
     }
 }
 exports.Computer = Computer;

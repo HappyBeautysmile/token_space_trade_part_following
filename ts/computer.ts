@@ -3,6 +3,7 @@ import { inverseLerp } from "three/src/math/MathUtils";
 import { Assets, ModelLoader, Item } from "./assets";
 import { Player } from "./player";
 import { Ticker, Tick } from "./tick";
+import { ButtonDispatcher } from "./buttonDispatcher";
 
 export class Computer extends THREE.Object3D implements Ticker {
   private canvas = document.createElement('canvas');
@@ -29,6 +30,8 @@ export class Computer extends THREE.Object3D implements Ticker {
       }
     })
     this.showInventory();
+    this.enableButtons();
+
     setInterval(() => { }, 5000);
   }
 
@@ -117,5 +120,16 @@ export class Computer extends THREE.Object3D implements Ticker {
     for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8.5) {
       this.ctx.fillRect(0, y, this.canvas.width, this.canvas.height / 17);
     }
+  }
+
+  enableButtons() {
+    ButtonDispatcher.registerButton(this, new THREE.Vector3(0, 0, 0),
+      0.1, () => {
+        if (this.scale.x > 2) {
+          this.scale.set(1, 1, 1);
+        } else {
+          this.scale.set(10, 10, 10);
+        }
+      });
   }
 }
