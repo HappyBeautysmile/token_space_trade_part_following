@@ -1114,7 +1114,7 @@ class Computer extends THREE.Object3D {
         this.rowText[0] = "         1         2         3         4         5         6         7         8";
         this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
         this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
-        this.topButtonCallbacks = [this.showInventory, this.showNavigation];
+        this.topButtonCallbacks = [this.showInventory, this.showNavigation, null, null, null, null, null, null];
         this.bottomButtonLabels = [];
         for (let i = 0; i < 8; i++) {
             let label = "T" + i.toFixed(0);
@@ -1122,7 +1122,7 @@ class Computer extends THREE.Object3D {
             let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
                 this.playRandomSound("key-press", 5);
-                this.topButtonCallbacks[i];
+                this.topButtonCallbacks[i]();
             });
             label = "B" + i.toFixed(0);
             this.bottomButtonLabels.push(label);
@@ -1145,7 +1145,7 @@ class Computer extends THREE.Object3D {
         }
     }
     playRandomSound(name, max) {
-        const num = Math.ceil(Math.random() * max).toFixed(0);
+        const num = Math.floor(Math.random() * max).toFixed(0);
         const soundname = `sounds/${name}${num}.ogg`;
         this.audioLoader.load(soundname, (buffer) => {
             this.sound.setBuffer(buffer);

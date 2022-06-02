@@ -76,7 +76,7 @@ export class Computer extends THREE.Object3D implements Ticker {
     this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
 
     this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
-    this.topButtonCallbacks = [this.showInventory, this.showNavigation]
+    this.topButtonCallbacks = [this.showInventory, this.showNavigation, null, null, null, null, null, null];
     this.bottomButtonLabels = [];
     for (let i = 0; i < 8; i++) {
       let label = "T" + i.toFixed(0);
@@ -85,7 +85,7 @@ export class Computer extends THREE.Object3D implements Ticker {
       ButtonDispatcher.registerButton(this, m.position,
         0.015, () => {
           this.playRandomSound("key-press", 5);
-          this.topButtonCallbacks[i];
+          this.topButtonCallbacks[i]();
         });
 
 
@@ -115,7 +115,7 @@ export class Computer extends THREE.Object3D implements Ticker {
   }
 
   playRandomSound(name: string, max: number) {
-    const num = Math.ceil(Math.random() * max).toFixed(0);
+    const num = Math.floor(Math.random() * max).toFixed(0);
     const soundname = `sounds/${name}${num}.ogg`;
     this.audioLoader.load(soundname, (buffer) => {
       this.sound.setBuffer(buffer);
