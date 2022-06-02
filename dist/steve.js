@@ -1121,7 +1121,7 @@ class Computer extends THREE.Object3D {
             //this.topButtonLabels.push(label);
             let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
-                this.playRandomSound("key-press", 5);
+                this.playRandomSound("mine", 5);
                 this.topButtonCallbacks[i]();
             });
             label = "B" + i.toFixed(0);
