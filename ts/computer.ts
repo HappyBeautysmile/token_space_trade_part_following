@@ -86,7 +86,7 @@ export class Computer extends THREE.Object3D implements Ticker {
       ButtonDispatcher.registerButton(this, m.position,
         0.015, () => {
           this.playRandomSound("mine", 5);
-          this.currentDisplay = this.topButtonCallbacks[i]();
+          this.currentDisplay = this.topButtonCallbacks[i];
         });
 
 
