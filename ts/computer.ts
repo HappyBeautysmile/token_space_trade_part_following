@@ -12,6 +12,7 @@ export class Computer extends THREE.Object3D implements Ticker {
   material = new THREE.MeshBasicMaterial();
   rowText = [];
   topButtonLabels = [];
+  topButtonCallbacks = [];
   bottomButtonLabels = [];
   private listener = new THREE.AudioListener();
   private sound: THREE.Audio;
@@ -74,16 +75,19 @@ export class Computer extends THREE.Object3D implements Ticker {
     this.rowText[0] = "         1         2         3         4         5         6         7         8"
     this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
 
-    this.topButtonLabels = [];
+    this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
+    this.topButtonCallbacks = [this.showInventory, this.showNavigation]
     this.bottomButtonLabels = [];
     for (let i = 0; i < 8; i++) {
       let label = "T" + i.toFixed(0);
-      this.topButtonLabels.push(label);
+      //this.topButtonLabels.push(label);
       let m = this.findChildByName(label, this.model);
       ButtonDispatcher.registerButton(this, m.position,
         0.015, () => {
           this.playRandomSound("key-press", 5);
+          this.topButtonCallbacks[i];
         });
+
 
       label = "B" + i.toFixed(0);
       this.bottomButtonLabels.push(label);
@@ -169,6 +173,15 @@ export class Computer extends THREE.Object3D implements Ticker {
     if (this.startRow + 14 < items.length) {
       this.bottomButtonLabels[7] = "next";
     }
+    this.updateDisplay();
+  }
+
+  showNavigation() {
+    for (let r = 0; r < 8; r++) {
+      this.rowText[r] = "";
+    }
+    this.rowText[0] = "You are somewhere."
+
     this.updateDisplay();
   }
 
