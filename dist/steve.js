@@ -197,6 +197,8 @@ class Assets extends THREE.Object3D {
                 continue;
             }
             const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+            m.name = modelName;
+            m.material = newMat;
             m.userData = { "modelName": modelName };
             m.position.set((this.meshes.size - modelNames.length / 2) * 1.4, 0, -15);
             Assets.meshes.set(modelName, m);
@@ -844,6 +846,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ButtonDispatcher = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const debug_1 = __webpack_require__(756);
 class Button {
     o;
     localPosition;
@@ -877,6 +880,7 @@ class ButtonDispatcher {
     ;
     static callbacks = new Map();
     static registerButton(o, localPosition, radius, callback) {
+        debug_1.Debug.log(`o.name=${o.name} localPosition=${localPosition} radius=${radius}`);
         const button = new Button(o, localPosition, radius);
         ButtonDispatcher.callbacks.set(button, callback);
     }
@@ -1133,13 +1137,16 @@ class Computer extends THREE.Object3D {
                 this.playRandomSound("key-press", 4);
                 this.currentDisplay = this.buttonCallbacks.get(label);
             });
-            // label = "B" + i.toFixed(0);
-            // m = this.findChildByName(label, this.model);
-            // ButtonDispatcher.registerButton(this, m.position,
-            //   0.015, () => {
-            //     this.playRandomSound("key-press", 4);
-            //   });
         }
+        // for (let i = 0; i < 8; i++) {
+        //   let label = "B" + i.toFixed(0);
+        //   let m = this.findChildByName(label, this.model);
+        //   ButtonDispatcher.registerButton(this, m.position,
+        //     0.015, () => {
+        //       this.playRandomSound("key-press", 4);
+        //       this.currentDisplay = this.buttonCallbacks.get(label);
+        //     });
+        // }
         for (let i = 0; i < 15; i++) {
             let label = "R" + i.toFixed(0);
             let m = this.findChildByName(label, this.model);

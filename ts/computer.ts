@@ -93,13 +93,16 @@ export class Computer extends THREE.Object3D implements Ticker {
           this.playRandomSound("key-press", 4);
           this.currentDisplay = this.buttonCallbacks.get(label);
         });
-      // label = "B" + i.toFixed(0);
-      // m = this.findChildByName(label, this.model);
-      // ButtonDispatcher.registerButton(this, m.position,
-      //   0.015, () => {
-      //     this.playRandomSound("key-press", 4);
-      //   });
     }
+    // for (let i = 0; i < 8; i++) {
+    //   let label = "B" + i.toFixed(0);
+    //   let m = this.findChildByName(label, this.model);
+    //   ButtonDispatcher.registerButton(this, m.position,
+    //     0.015, () => {
+    //       this.playRandomSound("key-press", 4);
+    //       this.currentDisplay = this.buttonCallbacks.get(label);
+    //     });
+    // }
     for (let i = 0; i < 15; i++) {
       let label = "R" + i.toFixed(0);
       let m = this.findChildByName(label, this.model);

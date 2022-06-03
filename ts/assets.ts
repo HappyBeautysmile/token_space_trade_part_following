@@ -170,6 +170,8 @@ export class Assets extends THREE.Object3D {
         continue;
       }
       const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
+      m.name = modelName;
+      m.material = newMat;
       m.userData = { "modelName": modelName };
       m.position.set((this.meshes.size - modelNames.length / 2) * 1.4, 0, -15);
       Assets.meshes.set(modelName, m);
