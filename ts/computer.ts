@@ -47,12 +47,12 @@ export class Computer extends THREE.Object3D implements Ticker {
 
   public tick(t: Tick) {
     if (t.frameCount % 10 === 0) {
-      //if (this.currentDisplay) {
-      this.currentDisplay();
-      //}
-      //else {
-      //  this.show404();
-      //}
+      if (this.currentDisplay) {
+        this.currentDisplay();
+      }
+      else {
+        this.show404();
+      }
     }
   }
 
@@ -80,20 +80,13 @@ export class Computer extends THREE.Object3D implements Ticker {
   }
 
   labels() {
-    this.rowText = [];
-    for (let i = 0; i < 15; i++) {
-      this.rowText.push("row " + String(i));
-    }
-    this.rowText[0] = "         1         2         3         4         5         6         7         8"
-    this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
-
+    this.clearRowText();
     this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
+    this.bottomButtonLabels = ["", "", "", "", "", "", "", ""];
     this.buttonCallbacks.set("T0", this.showInventory);
     this.buttonCallbacks.set("T1", this.showNavigation);
-    this.bottomButtonLabels = [];
     for (let i = 0; i < 8; i++) {
       let label = "T" + i.toFixed(0);
-      //this.topButtonLabels.push(label);
       let m = this.findChildByName(label, this.model);
       ButtonDispatcher.registerButton(this, m.position,
         0.015, () => {
@@ -101,7 +94,6 @@ export class Computer extends THREE.Object3D implements Ticker {
           this.currentDisplay = this.buttonCallbacks.get(label);
         });
       label = "B" + i.toFixed(0);
-      this.bottomButtonLabels.push(label);
       m = this.findChildByName(label, this.model);
       ButtonDispatcher.registerButton(this, m.position,
         0.015, () => {

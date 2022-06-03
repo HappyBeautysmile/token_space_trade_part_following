@@ -191,8 +191,8 @@ export class BlockBuild {
     this.place = new Place(this.universeGroup, this.playerGroup, this.camera);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-    this.renderer.setSize(512, 512);
-    //this.renderer.setSize(1024, 1024);
+    //this.renderer.setSize(512, 512);
+    this.renderer.setSize(800, 800);
     document.body.appendChild(this.renderer.domElement);
     this.canvas = this.renderer.domElement;
     this.renderer.xr.enabled = true;
