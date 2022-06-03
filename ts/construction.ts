@@ -4,7 +4,8 @@ import { Codec, Encode, Decode } from "./codec";
 import { Debug } from "./debug";
 import { FileIO } from "./fileIO";
 import { InWorldItem } from "./inWorldItem";
-import { MergedGeometryContainer } from "./megedGeometryContainer";
+import { MergedGeometryContainer } from "./mergedGeometryContainer";
+import { S } from "./settings";
 
 export interface Construction {
   // Adds an object to this collection.
@@ -16,9 +17,34 @@ export interface Construction {
   loadFromLocal(): void;
 }
 
-export class ObjectConstruction implements Construction {
-  public constructor(private container: THREE.Object3D, private renderer: THREE.Renderer) {
+export interface Container {
+  addObject(key: string, object: THREE.Object3D): void;
+  removeObject(key: string): void;
+}
 
+class GroupContainer implements Container {
+  private objects = new Map<string, THREE.Object3D>();
+  constructor(private container: THREE.Object3D) { }
+  addObject(key: string, object: THREE.Object3D): void {
+    this.container.add(object);
+    this.objects.set(key, object);
+  }
+  removeObject(key: string): void {
+    this.container.remove(this.objects.get(key));
+    this.objects.delete(key);
+  }
+}
+
+export class ObjectConstruction implements Construction {
+  private container: Container;
+  public constructor(container: THREE.Object3D, private renderer: THREE.Renderer) {
+    if (S.float('m')) {
+      const mergedGeometryContainer = new MergedGeometryContainer();
+      this.container = mergedGeometryContainer;
+      container.add(mergedGeometryContainer);
+    } else {
+      this.container = new GroupContainer(container);
+    }
   }
   // TODO: Make this private and instead have some nicer methods for
   // inserting and deleting.  This is where code to make sure we have only
@@ -64,7 +90,7 @@ export class ObjectConstruction implements Construction {
     object.position.copy(o.position);
     object.quaternion.copy(o.quaternion);
     this.objects.set(key, object);
-    this.container.add(object);
+    this.container.addObject(key, object);
   }
 
   // Return Item if there is an item at the location.  Otherwise, return null.
@@ -74,8 +100,7 @@ export class ObjectConstruction implements Construction {
     let o = new THREE.Object3D();
     if (this.objects.has(key)) {
       o = this.objects.get(key);
-      Debug.assert(o.parent === this.container, 'Invalid parent!');
-      this.container.remove(o);
+      this.container.removeObject(key);
       item = this.items.get(key).item;
       this.items.delete(key);
       this.objects.delete(key);
@@ -86,69 +111,5 @@ export class ObjectConstruction implements Construction {
   public cubeAt(p: THREE.Vector3): boolean {
     const key = this.posToKey(p);
     return this.objects.has(key)
-  }
-}
-
-export class MergedConstruction implements Construction {
-  private mergedContainer = new MergedGeometryContainer();
-  public constructor(container: THREE.Object3D, private renderer: THREE.Renderer) {
-    container.add(this.mergedContainer);
-  }
-  private items = new Map<string, InWorldItem>();
-
-  public save() {
-    console.log('Saving...');
-    let c = new Codec();
-    const o = Encode.arrayOfInWorldItems(this.items.values())
-    FileIO.saveObjectAsJson(o, "what_you_built.json");
-
-    //var strMime = "image/jpeg";
-    //let imgData = this.renderer.domElement.toDataURL(strMime);
-    //FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
-  }
-
-  public saveToLocal() {
-    let c = new Codec();
-    const o = Encode.arrayOfInWorldItems(this.items.values())
-    window.localStorage.setItem("items", JSON.stringify(o));
-  }
-
-  public loadFromLocal() {
-    const loaded = window.localStorage.getItem("items");
-    if (loaded) {
-      for (const inWorldItem of JSON.parse(loaded)) {
-        const iwi = Decode.toInWorldItem(inWorldItem);
-        if (!this.cubeAt(iwi.position)) {
-          this.addCube(iwi);
-        }
-      }
-    }
-  }
-
-  private posToKey(p: THREE.Vector3): string {
-    return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
-  }
-
-  public addCube(o: InWorldItem) {
-    const key = this.posToKey(o.position);
-    this.items.set(key, o);
-    const object = o.getMesh();
-    Debug.assert(!!object);
-    object.position.copy(o.position);
-    object.quaternion.copy(o.quaternion);
-    this.mergedContainer.mergeIn(key, object);
-  }
-
-  // TODO: Return the InWorldItem.
-  public removeCube(p: THREE.Vector3): Item {
-    const key = this.posToKey(p);
-    this.mergedContainer.removeKey(key);
-    return null;
-  }
-
-  // return true if a block is already at the given location.  Otherwise return false.
-  public cubeAt(p: THREE.Vector3): boolean {
-    //TODO: impement this function
-    return false;
   }
 }

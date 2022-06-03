@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { BufferAttribute, MeshNormalMaterial } from "three";
+import { Container } from "./construction";
 import { Debug } from "./debug";
 import { Tick, Ticker } from "./tick";
 
@@ -8,6 +9,7 @@ interface Mergable {
   getPositionCount(): number;
   positions(): Iterable<number>;
   normals(): Iterable<number>;
+  colors(): Iterable<number>;
   index(): Iterable<number>;
   getCentroid(centroid: THREE.Vector3): void;
 }
@@ -40,6 +42,12 @@ class MergableSet implements Mergable {
   *normals() {
     for (const child of this.children) {
       yield* child.normals();
+    }
+  }
+
+  *colors() {
+    for (const child of this.children) {
+      yield* child.colors();
     }
   }
 
@@ -85,6 +93,7 @@ class MergableSet implements Mergable {
 class MergableGeometry implements Mergable {
   private positionsArray: Float32Array;
   private normalsArray: Float32Array;
+  private colorsArray: Float32Array;
   private indexArray: number[] = [];
   private centroid: THREE.Vector3;
 
@@ -94,6 +103,10 @@ class MergableGeometry implements Mergable {
 
   *normals() {
     yield* this.normalsArray;
+  }
+
+  *colors() {
+    yield* this.colorsArray;
   }
 
   *index() {
@@ -112,7 +125,8 @@ class MergableGeometry implements Mergable {
     return this.positions.length / 3;
   }
 
-  constructor(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4) {
+  constructor(geometry: THREE.BufferGeometry, matrix: THREE.Matrix4,
+    c: THREE.Color) {
     const positionsAtt = geometry.getAttribute('position');
     if (geometry.index) {
       for (let i = 0; i < geometry.index.count; ++i) {
@@ -125,11 +139,20 @@ class MergableGeometry implements Mergable {
     }
     this.positionsArray = new Float32Array(this.indexArray.length * 3);
     this.normalsArray = new Float32Array(this.indexArray.length * 3);
+    this.colorsArray = new Float32Array(this.indexArray.length * 3);
     this.copyAtt3(positionsAtt, this.positionsArray, matrix);
     const m3 = new THREE.Matrix3();
     m3.getNormalMatrix(matrix);
     matrix.setFromMatrix3(m3);
     this.copyAtt3(geometry.getAttribute('normal'), this.normalsArray, matrix);
+    m3.identity();
+
+    for (let i = 0; i < positionsAtt.count; ++i) {
+      this.colorsArray[i * 3 + 0] = c.r;
+      this.colorsArray[i * 3 + 1] = c.g;
+      this.colorsArray[i * 3 + 2] = c.b;
+    }
+
     this.setCentroid();
   }
 
@@ -157,7 +180,7 @@ class MergableGeometry implements Mergable {
   }
 }
 
-export class MergedGeometryContainer extends THREE.Object3D implements Ticker {
+export class MergedGeometryContainer extends THREE.Object3D implements Ticker, Container {
   private mergableSet = new MergableSet();
   private dirty = false;
   private geometry = new THREE.BufferGeometry();
@@ -168,7 +191,9 @@ export class MergedGeometryContainer extends THREE.Object3D implements Ticker {
   constructor() {
     super();
     const mesh = new THREE.Mesh(
-      this.geometry, new THREE.MeshPhongMaterial({ color: '#0f0' }));
+      this.geometry, new THREE.MeshPhongMaterial(
+        { color: '#fff', vertexColors: true }));
+    mesh.material.vertexColors = true;
     this.add(mesh);
   }
 
@@ -247,7 +272,7 @@ export class MergedGeometryContainer extends THREE.Object3D implements Ticker {
 
   // Adds the geometry of `o` to this, and associates it with `key`.  This
   // `key` can be used later to remove this chunk of geometry.
-  mergeIn(key: string, o: THREE.Object3D) {
+  addObject(key: string, o: THREE.Object3D): void {
     if (this.pieces.has(key)) {
       throw new Error(`Key already in use: ${key}`);
     }
@@ -256,7 +281,16 @@ export class MergedGeometryContainer extends THREE.Object3D implements Ticker {
     for (const mesh of this.allMeshes(o)) {
       const transform = new THREE.Matrix4();
       this.getTransform(mesh, o.parent, transform);
-      const mergablMesh = new MergableGeometry(mesh.geometry, transform);
+      let color = new THREE.Color('#f0f');
+      if (!Array.isArray(mesh.material)) {
+        // console.log(`color: ${JSON.stringify(mesh.material['color'])}`);
+        if (mesh.material['color']) {
+          color = mesh.material['color'];
+        }
+      } else {
+        console.log(`Array!`);
+      }
+      const mergablMesh = new MergableGeometry(mesh.geometry, transform, color);
       meshContainer.add(mergablMesh);
     }
     this.mergableSet.add(meshContainer);
@@ -267,7 +301,7 @@ export class MergedGeometryContainer extends THREE.Object3D implements Ticker {
 
 
   // Removes the geometry associated with `key` from this.
-  removeKey(key: string) {
+  removeObject(key: string) {
     throw new Error("Not implemented.");
   }
 
@@ -287,6 +321,11 @@ export class MergedGeometryContainer extends THREE.Object3D implements Ticker {
       new Float32Array(this.mergableSet.normals()), 3);
     normalAtt.needsUpdate = true;
     this.geometry.setAttribute('normal', normalAtt);
+
+    const colorAtt = new BufferAttribute(
+      new Float32Array(this.mergableSet.colors()), 3);
+    colorAtt.needsUpdate = true;
+    this.geometry.setAttribute('color', colorAtt);
 
     this.dirty = false;
     console.timeEnd('clean');

@@ -6,7 +6,7 @@ import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
-import { Construction, MergedConstruction, ObjectConstruction } from "./construction";
+import { Construction, ObjectConstruction } from "./construction";
 
 import { AstroGen } from "./astroGen";
 import { S } from "./settings";
@@ -48,12 +48,8 @@ export class BlockBuild {
     // this.universeGroup.add(Assets.models["ship"]);
     // this.construction.addCube(Assets.blocks[0]);
     // this.construction.save();
-
-    if (S.float('m')) {
-      this.construction = new MergedConstruction(this.place.universeGroup, this.renderer);
-    } else {
-      this.construction = new ObjectConstruction(this.place.universeGroup, this.renderer);
-    }
+    this.construction = new ObjectConstruction(
+      this.place.universeGroup, this.renderer);
     let ab = new AstroGen(this.construction);
 
     ab.buildPlatform(
