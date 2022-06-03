@@ -47,12 +47,12 @@ export class Computer extends THREE.Object3D implements Ticker {
 
   public tick(t: Tick) {
     if (t.frameCount % 10 === 0) {
-      if (this.currentDisplay) {
-        this.currentDisplay();
-      }
-      else {
-        this.show404();
-      }
+      //if (this.currentDisplay) {
+      this.currentDisplay();
+      //}
+      //else {
+      //  this.show404();
+      //}
     }
   }
 
