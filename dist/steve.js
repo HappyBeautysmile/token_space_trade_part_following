@@ -1051,6 +1051,7 @@ exports.Computer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
 const buttonDispatcher_1 = __webpack_require__(770);
+const debug_1 = __webpack_require__(756);
 class Computer extends THREE.Object3D {
     model;
     player;
@@ -1059,13 +1060,16 @@ class Computer extends THREE.Object3D {
     texture = new THREE.CanvasTexture(this.canvas);
     material = new THREE.MeshBasicMaterial();
     rowText = [];
+    buttonCallbacks = new Map();
+    buttonParameters = new Map();
     topButtonLabels = [];
-    topButtonCallbacks = [];
     bottomButtonLabels = [];
     listener = new THREE.AudioListener();
     sound;
     audioLoader = new THREE.AudioLoader();
     currentDisplay = this.showInventory;
+    currentParameters = "";
+    selectedItemIndex = 0;
     constructor(model, player) {
         super();
         this.model = model;
@@ -1090,7 +1094,12 @@ class Computer extends THREE.Object3D {
     }
     tick(t) {
         if (t.frameCount % 10 === 0) {
-            this.currentDisplay();
+            if (this.currentDisplay) {
+                this.currentDisplay();
+            }
+            else {
+                this.showInventory();
+            }
         }
     }
     static async make(player) {
@@ -1107,6 +1116,12 @@ class Computer extends THREE.Object3D {
         }
         return retvalue;
     }
+    clearRowText() {
+        this.rowText = [];
+        for (let i = 0; i < 15; i++) {
+            this.rowText.push("");
+        }
+    }
     labels() {
         this.rowText = [];
         for (let i = 0; i < 15; i++) {
@@ -1115,15 +1130,16 @@ class Computer extends THREE.Object3D {
         this.rowText[0] = "         1         2         3         4         5         6         7         8";
         this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
         this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
-        this.topButtonCallbacks = [this.showInventory, this.showNavigation, null, null, null, null, null, null];
+        this.buttonCallbacks.set("T0", this.showInventory);
+        this.buttonCallbacks.set("T1", this.showNavigation);
         this.bottomButtonLabels = [];
         for (let i = 0; i < 8; i++) {
             let label = "T" + i.toFixed(0);
             //this.topButtonLabels.push(label);
             let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
-                this.playRandomSound("mine", 5);
-                this.currentDisplay = this.topButtonCallbacks[i];
+                this.playRandomSound("key-press", 5);
+                this.currentDisplay = this.buttonCallbacks.get(label);
             });
             label = "B" + i.toFixed(0);
             this.bottomButtonLabels.push(label);
@@ -1131,18 +1147,14 @@ class Computer extends THREE.Object3D {
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
                 this.playRandomSound("key-press", 5);
             });
-            label = "L" + i.toFixed(0);
-            m = this.findChildByName(label, this.model);
+        }
+        for (let i = 0; i < 15; i++) {
+            let label = "R" + i.toFixed(0);
+            let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
                 this.playRandomSound("key-press", 5);
+                this.currentDisplay = this.buttonCallbacks.get(label);
             });
-            if (i < 7) {
-                label = "R" + i.toFixed(0);
-                m = this.findChildByName(label, this.model);
-                buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
-                    this.playRandomSound("key-press", 5);
-                });
-            }
         }
     }
     playRandomSound(name, max) {
@@ -1193,7 +1205,13 @@ class Computer extends THREE.Object3D {
                 break;
             }
             else {
-                this.rowText[i] = `${items[i + this.startRow].name} ${qtys[i + this.startRow]}`;
+                let item = items[i + this.startRow];
+                let qty = qtys[i + this.startRow];
+                this.rowText[i] = `${item.name} ${qty}`;
+                this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
+                    this.showItemDetails(item, qty);
+                    debug_1.Debug.log(`Item.name=${item.name}, qty=${qty}`);
+                });
             }
         }
         if (this.startRow > 0) {
@@ -1205,10 +1223,25 @@ class Computer extends THREE.Object3D {
         this.updateDisplay();
     }
     showNavigation() {
-        for (let r = 0; r < 8; r++) {
-            this.rowText[r] = "";
-        }
+        this.clearRowText();
         this.rowText[0] = "You are somewhere.";
+        this.updateDisplay();
+    }
+    showItemDetails(item, qty) {
+        this.rowText[0] = item.name;
+        this.rowText[1] = item.description;
+        this.rowText[2] = item.baseValue;
+        this.rowText[3] = qty;
+        if (item.paintable) {
+            this.rowText[4] = "Can be painted.";
+        }
+        else {
+            this.rowText[4] = "not paintable.";
+        }
+    }
+    show404() {
+        this.clearRowText();
+        this.rowText[0] = "Page not found (404)";
         this.updateDisplay();
     }
     createGreenBars() {
