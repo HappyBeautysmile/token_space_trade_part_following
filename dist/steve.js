@@ -1051,6 +1051,7 @@ exports.Computer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
 const buttonDispatcher_1 = __webpack_require__(770);
+const debug_1 = __webpack_require__(756);
 class Computer extends THREE.Object3D {
     model;
     player;
@@ -1059,7 +1060,7 @@ class Computer extends THREE.Object3D {
     texture = new THREE.CanvasTexture(this.canvas);
     material = new THREE.MeshBasicMaterial();
     rowText = [];
-    //buttonCallbacks = new Map();
+    buttonCallbacks = new Map();
     topButtonLabels = [];
     bottomButtonLabels = [];
     listener = new THREE.AudioListener();
@@ -1087,7 +1088,6 @@ class Computer extends THREE.Object3D {
             }
         });
         this.showInventory();
-        this.enableButtons();
         setInterval(() => { }, 5000);
     }
     tick(t) {
@@ -1096,7 +1096,7 @@ class Computer extends THREE.Object3D {
                 this.currentDisplay();
             }
             else {
-                this.showInventory();
+                this.show404();
             }
         }
     }
@@ -1128,8 +1128,8 @@ class Computer extends THREE.Object3D {
         this.rowText[0] = "         1         2         3         4         5         6         7         8";
         this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
         this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
-        // this.buttonCallbacks.set("T0", this.showInventory);
-        // this.buttonCallbacks.set("T1", this.showNavigation);
+        this.buttonCallbacks.set("T0", this.showInventory);
+        this.buttonCallbacks.set("T1", this.showNavigation);
         this.bottomButtonLabels = [];
         for (let i = 0; i < 8; i++) {
             let label = "T" + i.toFixed(0);
@@ -1137,7 +1137,7 @@ class Computer extends THREE.Object3D {
             let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
                 this.playRandomSound("key-press", 5);
-                //this.currentDisplay = this.buttonCallbacks.get(label);
+                this.currentDisplay = this.buttonCallbacks.get(label);
             });
             label = "B" + i.toFixed(0);
             this.bottomButtonLabels.push(label);
@@ -1151,7 +1151,7 @@ class Computer extends THREE.Object3D {
             let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
                 this.playRandomSound("key-press", 5);
-                //this.currentDisplay = this.buttonCallbacks.get(label);
+                this.currentDisplay = this.buttonCallbacks.get(label);
             });
         }
     }
@@ -1203,13 +1203,13 @@ class Computer extends THREE.Object3D {
                 break;
             }
             else {
-                // let item = items[i + this.startRow];
-                // let qty = qtys[i + this.startRow];
-                // this.rowText[i] = `${item.name} ${qty}`;
-                // this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
-                //   this.showItemDetails(item, qty);
-                //   Debug.log(`Item.name=${item.name}, qty=${qty}`);
-                // });
+                let item = items[i + this.startRow];
+                let qty = qtys[i + this.startRow];
+                this.rowText[i] = `${item.name} ${qty}`;
+                this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
+                    this.showItemDetails(item, qty);
+                    debug_1.Debug.log(`Item.name=${item.name}, qty=${qty}`);
+                });
             }
         }
         if (this.startRow > 0) {
@@ -1249,8 +1249,6 @@ class Computer extends THREE.Object3D {
         for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8.5) {
             this.ctx.fillRect(0, y, this.canvas.width, this.canvas.height / 17);
         }
-    }
-    enableButtons() {
     }
 }
 exports.Computer = Computer;

@@ -12,7 +12,7 @@ export class Computer extends THREE.Object3D implements Ticker {
   texture = new THREE.CanvasTexture(this.canvas);
   material = new THREE.MeshBasicMaterial();
   rowText = [];
-  //buttonCallbacks = new Map();
+  buttonCallbacks = new Map();
   topButtonLabels = [];
   bottomButtonLabels = [];
   private listener = new THREE.AudioListener();
@@ -42,10 +42,6 @@ export class Computer extends THREE.Object3D implements Ticker {
       }
     })
     this.showInventory();
-    this.enableButtons();
-
-
-
     setInterval(() => { }, 5000);
   }
 
@@ -55,7 +51,7 @@ export class Computer extends THREE.Object3D implements Ticker {
         this.currentDisplay();
       }
       else {
-        this.showInventory();
+        this.show404();
       }
     }
   }
@@ -92,8 +88,8 @@ export class Computer extends THREE.Object3D implements Ticker {
     this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
 
     this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
-    // this.buttonCallbacks.set("T0", this.showInventory);
-    // this.buttonCallbacks.set("T1", this.showNavigation);
+    this.buttonCallbacks.set("T0", this.showInventory);
+    this.buttonCallbacks.set("T1", this.showNavigation);
     this.bottomButtonLabels = [];
     for (let i = 0; i < 8; i++) {
       let label = "T" + i.toFixed(0);
@@ -102,7 +98,7 @@ export class Computer extends THREE.Object3D implements Ticker {
       ButtonDispatcher.registerButton(this, m.position,
         0.015, () => {
           this.playRandomSound("key-press", 5);
-          //this.currentDisplay = this.buttonCallbacks.get(label);
+          this.currentDisplay = this.buttonCallbacks.get(label);
         });
       label = "B" + i.toFixed(0);
       this.bottomButtonLabels.push(label);
@@ -118,7 +114,7 @@ export class Computer extends THREE.Object3D implements Ticker {
       ButtonDispatcher.registerButton(this, m.position,
         0.005, () => {
           this.playRandomSound("key-press", 5);
-          //this.currentDisplay = this.buttonCallbacks.get(label);
+          this.currentDisplay = this.buttonCallbacks.get(label);
         });
     }
   }
@@ -173,13 +169,13 @@ export class Computer extends THREE.Object3D implements Ticker {
         break;
       }
       else {
-        // let item = items[i + this.startRow];
-        // let qty = qtys[i + this.startRow];
-        // this.rowText[i] = `${item.name} ${qty}`;
-        // this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
-        //   this.showItemDetails(item, qty);
-        //   Debug.log(`Item.name=${item.name}, qty=${qty}`);
-        // });
+        let item = items[i + this.startRow];
+        let qty = qtys[i + this.startRow];
+        this.rowText[i] = `${item.name} ${qty}`;
+        this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
+          this.showItemDetails(item, qty);
+          Debug.log(`Item.name=${item.name}, qty=${qty}`);
+        });
       }
     }
     if (this.startRow > 0) {
@@ -224,9 +220,5 @@ export class Computer extends THREE.Object3D implements Ticker {
     for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8.5) {
       this.ctx.fillRect(0, y, this.canvas.width, this.canvas.height / 17);
     }
-  }
-
-  enableButtons() {
-
   }
 }
