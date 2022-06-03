@@ -6,12 +6,48 @@ import { Ticker, Tick } from "./tick";
 import { ButtonDispatcher } from "./buttonDispatcher";
 import { Debug } from "./debug";
 
+class RowText {
+  private rowText: string[] = [];
+  private dirty: boolean;
+
+  constructor() { }
+  clear() {
+    this.dirty = true;
+    for (let i = 0; i < 15; i++) {
+      this.rowText[i] = "";
+    }
+  }
+
+  empty() {
+    this.dirty = true;
+    this.rowText.length = 0;
+  }
+
+  length() {
+    return this.rowText.length;
+  }
+
+  get(): string[] {
+    this.dirty = false;
+    return this.rowText;
+  }
+
+  set(i: number, value: string) {
+    this.dirty = true;
+    this.rowText[i] = value;
+  }
+
+  isDirty() {
+    return this.dirty;
+  }
+}
+
 export class Computer extends THREE.Object3D implements Ticker {
   private canvas = document.createElement('canvas');
   private ctx = this.canvas.getContext('2d');
+  private rowText = new RowText();
   texture = new THREE.CanvasTexture(this.canvas);
   material = new THREE.MeshBasicMaterial();
-  rowText = [];
   buttonCallbacks = new Map();
   topButtonLabels = [];
   bottomButtonLabels = [];
@@ -21,7 +57,6 @@ export class Computer extends THREE.Object3D implements Ticker {
   private currentDisplay = this.showInventory;
   private currentParameters = "";
   private selectedItemIndex = 0;
-
 
   private constructor(private model: THREE.Object3D, private player: Player) {
     super();
@@ -73,10 +108,7 @@ export class Computer extends THREE.Object3D implements Ticker {
   }
 
   clearRowText() {
-    this.rowText = [];
-    for (let i = 0; i < 15; i++) {
-      this.rowText.push("");
-    }
+    this.rowText.clear();
   }
 
   labels() {
@@ -127,16 +159,20 @@ export class Computer extends THREE.Object3D implements Ticker {
   }
 
   public updateDisplay() {
+    if (!this.rowText.isDirty()) {
+      return;
+    }
     // clear display and add green bars
     this.createGreenBars();
     // update rows
     const middleOfRow = this.canvas.height / 17 / 2;
-    for (let i = 0; i < this.rowText.length; i++) {
+    const rowText = this.rowText.get();
+    for (let i = 0; i < this.rowText.length(); i++) {
       this.ctx.fillStyle = 'green';
       this.ctx.font = '24px monospace';
       this.ctx.textBaseline = 'middle'
       this.ctx.textAlign = 'left'
-      this.ctx.fillText(this.rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
+      this.ctx.fillText(rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
     }
     //update buttons
     const gridUnit = (this.canvas.width / 33)
@@ -158,7 +194,7 @@ export class Computer extends THREE.Object3D implements Ticker {
     const inv = this.player.inventory.getItemQty();
     const qtys = Array.from(inv.values());
     const items = Array.from(inv.keys())
-    this.rowText = [];
+    this.rowText.empty()
     let i = 0;
     for (let i = 0; i < 15; i++) {
       if (this.startRow + i >= items.length) {
@@ -167,7 +203,7 @@ export class Computer extends THREE.Object3D implements Ticker {
       else {
         let item = items[i + this.startRow];
         let qty = qtys[i + this.startRow];
-        this.rowText[i] = `${item.name} ${qty}`;
+        this.rowText.set(i, `${item.name} ${qty}`);
         this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
           this.showItemDetails(item, qty);
           //Debug.log(`Item.name=${item.name}, qty=${qty}`);
@@ -185,29 +221,29 @@ export class Computer extends THREE.Object3D implements Ticker {
 
   showNavigation() {
     this.clearRowText();
-    this.rowText[0] = "You are somewhere."
+    this.rowText.set(0, "You are somewhere.");
 
     this.updateDisplay();
   }
 
   showItemDetails(item: Item, qty: number) {
     this.clearRowText();
-    this.rowText[0] = item.name;
-    this.rowText[1] = item.description;
-    this.rowText[2] = item.baseValue;
-    this.rowText[3] = qty;
+    this.rowText.set(0, item.name);
+    this.rowText.set(1, item.description);
+    this.rowText.set(2, item.baseValue.toFixed(0));
+    this.rowText.set(3, qty.toFixed(0));
     if (item.paintable) {
-      this.rowText[4] = "Can be painted.";
+      this.rowText.set(4, "Can be painted.");
     }
     else {
-      this.rowText[4] = "not paintable."
+      this.rowText.set(4, "not paintable.");
     }
     this.updateDisplay();
   }
 
   show404() {
     this.clearRowText();
-    this.rowText[0] = "Page not found (404)"
+    this.rowText.set(0, "Page not found (404)");
     this.updateDisplay();
   }
 
