@@ -549,6 +549,7 @@ const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(723);
+const skyBox_1 = __webpack_require__(813);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -577,12 +578,7 @@ class BlockBuild {
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
-        if (settings_1.S.float('m')) {
-            this.construction = new construction_1.MergedConstruction(this.place.universeGroup, this.renderer);
-        }
-        else {
-            this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
-        }
+        this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
         // for (let i = 0; i < 10; i++) {
@@ -662,9 +658,25 @@ class BlockBuild {
         if (this.keysDown.has('Digit5') && !this.isSaving) {
             this.isSaving = true;
             this.construction.save();
-        }
-        else {
             this.isSaving = false;
+        }
+        if (this.keysDown.has('Digit6')) {
+            this.keysDown.delete('Digit6');
+            // create an AudioListener and add it to the camera
+            const listener = new THREE.AudioListener();
+            this.computer.add(listener);
+            // create a global audio source
+            const sound = new THREE.Audio(listener);
+            // load a sound and set it as the Audio object's buffer
+            const audioLoader = new THREE.AudioLoader();
+            const num = Math.ceil(Math.random() * 5).toFixed(0);
+            const soundname = `sounds/mine${num}.ogg`;
+            audioLoader.load(soundname, (buffer) => {
+                sound.setBuffer(buffer);
+                sound.setLoop(false);
+                sound.setVolume(0.5);
+                sound.play();
+            });
         }
     }
     async setScene() {
@@ -673,17 +685,7 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
-        //this.scene.background = new THREE.Color(0x552200);
-        var skyGeo = new THREE.SphereGeometry(1900, 25, 25);
-        var loader = new THREE.TextureLoader();
-        var texture = loader.load("Model/sky6.jpg");
-        var color = new THREE.Color(Math.random(), Math.random(), Math.random());
-        var material = new THREE.MeshBasicMaterial({
-            map: texture,
-            color: color
-        });
-        var sky = new THREE.Mesh(skyGeo, material);
-        sky.material.side = THREE.BackSide;
+        const sky = new skyBox_1.SkyBox();
         this.universeGroup.add(sky);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
         this.camera.position.set(0, 1.7, 0);
@@ -724,7 +726,21 @@ class BlockBuild {
         //     }
         //   });
         this.playerGroup.add(this.computer);
+        // // create an AudioListener and add it to the camera
+        // const listener = new THREE.AudioListener();
+        // this.computer.add(listener);
+        // // create a global audio source
+        // const sound = new THREE.Audio(listener);
+        // // load a sound and set it as the Audio object's buffer
+        // const audioLoader = new THREE.AudioLoader();
+        // audioLoader.load('sounds/spaceship-ambience.ogg', function (buffer) {
+        //   sound.setBuffer(buffer);
+        //   sound.setLoop(true);
+        //   sound.setVolume(0.5);
+        //   sound.play();
+        // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
+        debug_1.Debug.log("sound when placed 3");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -755,6 +771,10 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
+                this.computer.translateY(1.5);
+                this.computer.translateZ(-0.4);
+                this.computer.rotateX(Math.PI / 3);
+                this.playerGroup.add(this.computer);
             }
             else {
                 grip = new gripLike_1.GripGrip(i, this.renderer.xr);
@@ -1001,7 +1021,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Computer = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
+const buttonDispatcher_1 = __webpack_require__(770);
 class Computer extends THREE.Object3D {
+    model;
     player;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
@@ -1009,14 +1031,21 @@ class Computer extends THREE.Object3D {
     material = new THREE.MeshBasicMaterial();
     rowText = [];
     topButtonLabels = [];
+    topButtonCallbacks = [];
     bottomButtonLabels = [];
+    listener = new THREE.AudioListener();
+    sound;
+    audioLoader = new THREE.AudioLoader();
     constructor(model, player) {
         super();
+        this.model = model;
         this.player = player;
         this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
         this.material.map = this.texture;
+        this.add(this.listener);
+        this.sound = new THREE.Audio(this.listener);
         this.labels();
         this.updateDisplay();
         model.children.forEach(o => {
@@ -1026,6 +1055,7 @@ class Computer extends THREE.Object3D {
             }
         });
         this.showInventory();
+        this.enableButtons();
         setInterval(() => { }, 5000);
     }
     tick(t) {
@@ -1037,6 +1067,16 @@ class Computer extends THREE.Object3D {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
         return new Computer(model, player);
     }
+    findChildByName(name, model) {
+        let retvalue = new THREE.Object3D();
+        for (const m of model.children) {
+            if (m.name == name) {
+                retvalue = m;
+                break;
+            }
+        }
+        return retvalue;
+    }
     labels() {
         this.rowText = [];
         for (let i = 0; i < 15; i++) {
@@ -1044,12 +1084,46 @@ class Computer extends THREE.Object3D {
         }
         this.rowText[0] = "         1         2         3         4         5         6         7         8";
         this.rowText[1] = "12345678901234567890123456789012345678901234567890123456789012345678901234567890";
-        this.topButtonLabels = [];
+        this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
+        this.topButtonCallbacks = [this.showInventory, this.showNavigation, null, null, null, null, null, null];
         this.bottomButtonLabels = [];
         for (let i = 0; i < 8; i++) {
-            this.topButtonLabels.push("T" + String(i));
-            this.bottomButtonLabels.push("B" + String(i));
+            let label = "T" + i.toFixed(0);
+            //this.topButtonLabels.push(label);
+            let m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
+                this.playRandomSound("mine", 5);
+                this.topButtonCallbacks[i]();
+            });
+            label = "B" + i.toFixed(0);
+            this.bottomButtonLabels.push(label);
+            m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
+                this.playRandomSound("key-press", 5);
+            });
+            label = "L" + i.toFixed(0);
+            m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
+                this.playRandomSound("key-press", 5);
+            });
+            if (i < 7) {
+                label = "R" + i.toFixed(0);
+                m = this.findChildByName(label, this.model);
+                buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
+                    this.playRandomSound("key-press", 5);
+                });
+            }
         }
+    }
+    playRandomSound(name, max) {
+        const num = Math.floor(Math.random() * max).toFixed(0);
+        const soundname = `sounds/${name}${num}.ogg`;
+        this.audioLoader.load(soundname, (buffer) => {
+            this.sound.setBuffer(buffer);
+            this.sound.setLoop(false);
+            this.sound.setVolume(0.5);
+            this.sound.play();
+        });
     }
     updateDisplay() {
         // clear display and add green bars
@@ -1100,6 +1174,13 @@ class Computer extends THREE.Object3D {
         }
         this.updateDisplay();
     }
+    showNavigation() {
+        for (let r = 0; r < 8; r++) {
+            this.rowText[r] = "";
+        }
+        this.rowText[0] = "You are somewhere.";
+        this.updateDisplay();
+    }
     createGreenBars() {
         this.ctx.fillStyle = '#003300';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1107,6 +1188,8 @@ class Computer extends THREE.Object3D {
         for (let y = 0; y < this.canvas.height; y += this.canvas.height / 8.5) {
             this.ctx.fillRect(0, y, this.canvas.width, this.canvas.height / 17);
         }
+    }
+    enableButtons() {
     }
 }
 exports.Computer = Computer;
@@ -1138,18 +1221,41 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MergedConstruction = exports.ObjectConstruction = void 0;
+exports.ObjectConstruction = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const codec_1 = __webpack_require__(385);
 const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
-const megedGeometryContainer_1 = __webpack_require__(192);
-class ObjectConstruction {
+const mergedGeometryContainer_1 = __webpack_require__(529);
+const settings_1 = __webpack_require__(451);
+class GroupContainer {
     container;
-    renderer;
-    constructor(container, renderer) {
+    objects = new Map();
+    constructor(container) {
         this.container = container;
+    }
+    addObject(key, object) {
+        this.container.add(object);
+        this.objects.set(key, object);
+    }
+    removeObject(key) {
+        this.container.remove(this.objects.get(key));
+        this.objects.delete(key);
+    }
+}
+class ObjectConstruction {
+    renderer;
+    container;
+    constructor(container, renderer) {
         this.renderer = renderer;
+        if (settings_1.S.float('m')) {
+            const mergedGeometryContainer = new mergedGeometryContainer_1.MergedGeometryContainer();
+            this.container = mergedGeometryContainer;
+            container.add(mergedGeometryContainer);
+        }
+        else {
+            this.container = new GroupContainer(container);
+        }
     }
     // TODO: Make this private and instead have some nicer methods for
     // inserting and deleting.  This is where code to make sure we have only
@@ -1190,7 +1296,7 @@ class ObjectConstruction {
         object.position.copy(o.position);
         object.quaternion.copy(o.quaternion);
         this.objects.set(key, object);
-        this.container.add(object);
+        this.container.addObject(key, object);
     }
     // Return Item if there is an item at the location.  Otherwise, return null.
     removeCube(p) {
@@ -1199,8 +1305,7 @@ class ObjectConstruction {
         let o = new THREE.Object3D();
         if (this.objects.has(key)) {
             o = this.objects.get(key);
-            debug_1.Debug.assert(o.parent === this.container, 'Invalid parent!');
-            this.container.remove(o);
+            this.container.removeObject(key);
             item = this.items.get(key).item;
             this.items.delete(key);
             this.objects.delete(key);
@@ -1213,64 +1318,6 @@ class ObjectConstruction {
     }
 }
 exports.ObjectConstruction = ObjectConstruction;
-class MergedConstruction {
-    renderer;
-    mergedContainer = new megedGeometryContainer_1.MergedGeometryContainer();
-    constructor(container, renderer) {
-        this.renderer = renderer;
-        container.add(this.mergedContainer);
-    }
-    items = new Map();
-    save() {
-        console.log('Saving...');
-        let c = new codec_1.Codec();
-        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
-        fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
-        //var strMime = "image/jpeg";
-        //let imgData = this.renderer.domElement.toDataURL(strMime);
-        //FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
-    }
-    saveToLocal() {
-        let c = new codec_1.Codec();
-        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
-        window.localStorage.setItem("items", JSON.stringify(o));
-    }
-    loadFromLocal() {
-        const loaded = window.localStorage.getItem("items");
-        if (loaded) {
-            for (const inWorldItem of JSON.parse(loaded)) {
-                const iwi = codec_1.Decode.toInWorldItem(inWorldItem);
-                if (!this.cubeAt(iwi.position)) {
-                    this.addCube(iwi);
-                }
-            }
-        }
-    }
-    posToKey(p) {
-        return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
-    }
-    addCube(o) {
-        const key = this.posToKey(o.position);
-        this.items.set(key, o);
-        const object = o.getMesh();
-        debug_1.Debug.assert(!!object);
-        object.position.copy(o.position);
-        object.quaternion.copy(o.quaternion);
-        this.mergedContainer.mergeIn(key, object);
-    }
-    // TODO: Return the InWorldItem.
-    removeCube(p) {
-        const key = this.posToKey(p);
-        this.mergedContainer.removeKey(key);
-        return null;
-    }
-    // return true if a block is already at the given location.  Otherwise return false.
-    cubeAt(p) {
-        //TODO: impement this function
-        return false;
-    }
-}
-exports.MergedConstruction = MergedConstruction;
 //# sourceMappingURL=construction.js.map
 
 /***/ }),
@@ -1864,6 +1911,9 @@ class Hand extends THREE.Object3D {
     ];
     line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: '#aa9' }));
     computerAdded = false;
+    listener = new THREE.AudioListener();
+    sound;
+    audioLoader = new THREE.AudioLoader();
     constructor(grip, item, index, xr, place, keysDown, construction, inventory, computer) {
         super();
         this.grip = grip;
@@ -1876,7 +1926,7 @@ class Hand extends THREE.Object3D {
         this.inventory = inventory;
         this.computer = computer;
         // If you want to see where the "grip" is, uncomment this code.
-        this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.02, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
+        this.debug = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.005, 3), new THREE.MeshPhongMaterial({ color: 'pink' }));
         this.add(this.debug);
         if (grip && this) {
             grip.add(this);
@@ -1888,6 +1938,12 @@ class Hand extends THREE.Object3D {
         this.add(this.line);
         this.setCube(item);
         this.initialize();
+        // create an AudioListener and add it to the camera
+        this.add(this.listener);
+        // create a global audio source
+        this.sound = new THREE.Audio(this.listener);
+        // load a sound and set it as the Audio object's buffer
+        const audioLoader = new THREE.AudioLoader();
     }
     // We create these private temporary variables here so we aren't
     // creating new objects on every frame.  This reduces the amount of
@@ -1948,8 +2004,9 @@ class Hand extends THREE.Object3D {
         if (this.source) {
             if (this.grip.getHandedness() === 'left' && !this.computerAdded) {
                 this.add(this.computer);
-                this.computer.translateX(0.2);
-                this.computer.rotateZ(Math.PI / 4);
+                this.computer.translateX(0.0);
+                this.computer.translateY(0.2);
+                this.computer.rotateZ(-Math.PI / 4);
                 this.computerAdded = true;
             }
             //this.debugMaterial.color = new THREE.Color('blue');
@@ -2027,6 +2084,15 @@ class Hand extends THREE.Object3D {
         const removedCube = this.construction.removeCube(this.p);
         if (removedCube) {
             this.inventory.addItem(removedCube);
+            const num = Math.ceil(Math.random() * 5).toFixed(0);
+            const soundname = `sounds/mine${num}.ogg`;
+            debug_1.Debug.log(`playing sound ${soundname}`);
+            this.audioLoader.load(soundname, (buffer) => {
+                this.sound.setBuffer(buffer);
+                this.sound.setLoop(false);
+                this.sound.setVolume(0.5);
+                this.sound.play();
+            });
         }
     }
     eulerString(q) {
@@ -2063,6 +2129,15 @@ class Hand extends THREE.Object3D {
                     if (!itemQty.has(this.item)) {
                         this.setCube(assets_1.Assets.itemsByName.get('guide'));
                     }
+                    const num = Math.ceil(Math.random() * 5).toFixed(0);
+                    const soundname = `sounds/build${num}.ogg`;
+                    debug_1.Debug.log(`playing sound ${soundname}`);
+                    this.audioLoader.load(soundname, (buffer) => {
+                        this.sound.setBuffer(buffer);
+                        this.sound.setLoop(false);
+                        this.sound.setVolume(0.5);
+                        this.sound.play();
+                    });
                 }
             }
         });
@@ -2207,7 +2282,7 @@ class MaterialExplorer extends THREE.Object3D {
         this.cube = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f0f' }));
         this.cube.position.set(1, 2.5, -2);
         this.add(this.cube);
-        const construction = new construction_1.MergedConstruction(this, null); // TODO 2nd parameter is the renderer to allow saving of the screen shot
+        const construction = new construction_1.ObjectConstruction(this, null); // TODO 2nd parameter is the renderer to allow saving of the screen shot
         const gen = new astroGen_1.AstroGen(construction);
         gen.buildAsteroid(5, -3, 2, -10);
     }
@@ -2573,7 +2648,7 @@ exports.MaterialExplorer = MaterialExplorer;
 
 /***/ }),
 
-/***/ 192:
+/***/ 529:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2692,7 +2767,7 @@ class MergableGeometry {
     getPositionCount() {
         return this.positions.length / 3;
     }
-    constructor(geometry, matrix) {
+    constructor(geometry, matrix, c) {
         const positionsAtt = geometry.getAttribute('position');
         if (geometry.index) {
             for (let i = 0; i < geometry.index.count; ++i) {
@@ -2706,12 +2781,18 @@ class MergableGeometry {
         }
         this.positionsArray = new Float32Array(this.indexArray.length * 3);
         this.normalsArray = new Float32Array(this.indexArray.length * 3);
-        this.colorsArray = new Uint8Array(this.indexArray.length * 3);
+        this.colorsArray = new Float32Array(this.indexArray.length * 3);
         this.copyAtt3(positionsAtt, this.positionsArray, matrix);
         const m3 = new THREE.Matrix3();
         m3.getNormalMatrix(matrix);
         matrix.setFromMatrix3(m3);
         this.copyAtt3(geometry.getAttribute('normal'), this.normalsArray, matrix);
+        m3.identity();
+        for (let i = 0; i < positionsAtt.count; ++i) {
+            this.colorsArray[i * 3 + 0] = c.r;
+            this.colorsArray[i * 3 + 1] = c.g;
+            this.colorsArray[i * 3 + 2] = c.b;
+        }
         this.setCentroid();
     }
     setCentroid() {
@@ -2742,7 +2823,8 @@ class MergedGeometryContainer extends THREE.Object3D {
     static supportedAttributes = ['position', 'normal'];
     constructor() {
         super();
-        const mesh = new THREE.Mesh(this.geometry, new THREE.MeshPhongMaterial({ color: '#0f0' }));
+        const mesh = new THREE.Mesh(this.geometry, new THREE.MeshPhongMaterial({ color: '#fff', vertexColors: true }));
+        mesh.material.vertexColors = true;
         this.add(mesh);
     }
     values(att, index) {
@@ -2814,7 +2896,7 @@ class MergedGeometryContainer extends THREE.Object3D {
     }
     // Adds the geometry of `o` to this, and associates it with `key`.  This
     // `key` can be used later to remove this chunk of geometry.
-    mergeIn(key, o) {
+    addObject(key, o) {
         if (this.pieces.has(key)) {
             throw new Error(`Key already in use: ${key}`);
         }
@@ -2823,7 +2905,17 @@ class MergedGeometryContainer extends THREE.Object3D {
         for (const mesh of this.allMeshes(o)) {
             const transform = new THREE.Matrix4();
             this.getTransform(mesh, o.parent, transform);
-            const mergablMesh = new MergableGeometry(mesh.geometry, transform);
+            let color = new THREE.Color('#f0f');
+            if (!Array.isArray(mesh.material)) {
+                console.log(`color: ${JSON.stringify(mesh.material['color'])}`);
+                if (mesh.material['color']) {
+                    color = mesh.material['color'];
+                }
+            }
+            else {
+                console.log(`Array!`);
+            }
+            const mergablMesh = new MergableGeometry(mesh.geometry, transform, color);
             meshContainer.add(mergablMesh);
         }
         this.mergableSet.add(meshContainer);
@@ -2832,7 +2924,7 @@ class MergedGeometryContainer extends THREE.Object3D {
     // const objectIndex = this.keyIndex.size;
     //   this.keyIndex.set(key, objectIndex);
     // Removes the geometry associated with `key` from this.
-    removeKey(key) {
+    removeObject(key) {
         throw new Error("Not implemented.");
     }
     clean() {
@@ -2847,6 +2939,9 @@ class MergedGeometryContainer extends THREE.Object3D {
         const normalAtt = new three_1.BufferAttribute(new Float32Array(this.mergableSet.normals()), 3);
         normalAtt.needsUpdate = true;
         this.geometry.setAttribute('normal', normalAtt);
+        const colorAtt = new three_1.BufferAttribute(new Float32Array(this.mergableSet.colors()), 3);
+        colorAtt.needsUpdate = true;
+        this.geometry.setAttribute('color', colorAtt);
         this.dirty = false;
         console.timeEnd('clean');
     }
@@ -2857,7 +2952,7 @@ class MergedGeometryContainer extends THREE.Object3D {
     }
 }
 exports.MergedGeometryContainer = MergedGeometryContainer;
-//# sourceMappingURL=megedGeometryContainer.js.map
+//# sourceMappingURL=mergedGeometryContainer.js.map
 
 /***/ }),
 
@@ -3760,6 +3855,67 @@ class S {
 }
 exports.S = S;
 //# sourceMappingURL=settings.js.map
+
+/***/ }),
+
+/***/ 813:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SkyBox = void 0;
+const THREE = __importStar(__webpack_require__(232));
+class SkyBox extends THREE.Object3D {
+    constructor() {
+        super();
+        const num = Math.ceil(Math.random() * 5).toFixed(0);
+        const materialArray = this.createMaterialArray(num);
+        const skyboxGeo = new THREE.BoxGeometry(1000, 1000, 1000);
+        const skybox = new THREE.Mesh(skyboxGeo, materialArray);
+        this.add(skybox);
+    }
+    createPathStrings(filename) {
+        const basePath = "skyboxes/";
+        const baseFilename = basePath + filename;
+        const fileType = ".png";
+        // for sky boxes from https://tools.wwwtyro.net/space-3d
+        const sides = ["right", "left", "top", "bottom", "front", "back"];
+        const pathStings = sides.map(side => {
+            return baseFilename + "-" + side + fileType;
+        });
+        return pathStings;
+    }
+    createMaterialArray(filename) {
+        const skyboxImagepaths = this.createPathStrings(filename);
+        const color = new THREE.Color(Math.random(), Math.random(), Math.random());
+        const materialArray = skyboxImagepaths.map(image => {
+            let texture = new THREE.TextureLoader().load(image);
+            return new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, color: color });
+        });
+        return materialArray;
+    }
+}
+exports.SkyBox = SkyBox;
+//# sourceMappingURL=skyBox.js.map
 
 /***/ }),
 
