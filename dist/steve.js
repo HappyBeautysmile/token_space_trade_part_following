@@ -742,7 +742,7 @@ class BlockBuild {
         //       this.computer.scale.set(10, 10, 10);
         //     }
         //   });
-        this.playerGroup.add(this.computer);
+        //this.playerGroup.add(this.computer);
         // // create an AudioListener and add it to the camera
         // const listener = new THREE.AudioListener();
         // this.computer.add(listener);
@@ -788,9 +788,9 @@ class BlockBuild {
             if (settings_1.S.float('mouse') == i) {
                 console.assert(!!this.canvas);
                 grip = new gripLike_1.MouseGrip(this.canvas, this.camera, this.keysDown);
-                this.computer.translateY(1.5);
+                this.computer.translateY(1.7);
                 this.computer.translateZ(-0.4);
-                this.computer.rotateX(Math.PI / 3);
+                this.computer.rotateX(Math.PI / 2);
                 this.playerGroup.add(this.computer);
             }
             else {
@@ -1130,27 +1130,29 @@ class Computer extends THREE.Object3D {
             let label = "T" + i.toFixed(0);
             let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
-                this.playRandomSound("key-press", 5);
+                this.playRandomSound("key-press", 4);
                 this.currentDisplay = this.buttonCallbacks.get(label);
             });
-            label = "B" + i.toFixed(0);
-            m = this.findChildByName(label, this.model);
-            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
-                this.playRandomSound("key-press", 5);
-            });
+            // label = "B" + i.toFixed(0);
+            // m = this.findChildByName(label, this.model);
+            // ButtonDispatcher.registerButton(this, m.position,
+            //   0.015, () => {
+            //     this.playRandomSound("key-press", 4);
+            //   });
         }
         for (let i = 0; i < 15; i++) {
             let label = "R" + i.toFixed(0);
             let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.005, () => {
-                this.playRandomSound("key-press", 5);
+                this.playRandomSound("key-press", 4);
                 this.currentDisplay = this.buttonCallbacks.get(label);
             });
         }
     }
     playRandomSound(name, max) {
-        const num = Math.floor(Math.random() * max).toFixed(0);
+        const num = Math.floor(Math.random() * max + 1).toFixed(0);
         const soundname = `sounds/${name}${num}.ogg`;
+        debug_1.Debug.log(`playing ${soundname}`);
         this.audioLoader.load(soundname, (buffer) => {
             this.sound.setBuffer(buffer);
             this.sound.setLoop(false);
@@ -1201,7 +1203,7 @@ class Computer extends THREE.Object3D {
                 this.rowText[i] = `${item.name} ${qty}`;
                 this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
                     this.showItemDetails(item, qty);
-                    debug_1.Debug.log(`Item.name=${item.name}, qty=${qty}`);
+                    //Debug.log(`Item.name=${item.name}, qty=${qty}`);
                 });
             }
         }
@@ -1219,6 +1221,7 @@ class Computer extends THREE.Object3D {
         this.updateDisplay();
     }
     showItemDetails(item, qty) {
+        this.clearRowText();
         this.rowText[0] = item.name;
         this.rowText[1] = item.description;
         this.rowText[2] = item.baseValue;
@@ -1229,6 +1232,7 @@ class Computer extends THREE.Object3D {
         else {
             this.rowText[4] = "not paintable.";
         }
+        this.updateDisplay();
     }
     show404() {
         this.clearRowText();
@@ -1944,7 +1948,7 @@ class MouseGrip extends THREE.Object3D {
         this.raycaster.setFromCamera(this.pointer, this.camera);
         this.position.copy(this.raycaster.ray.direction);
         // Distance from camera to hand = 0.6 meters
-        this.position.setLength(0.6);
+        this.position.setLength(0.425);
         this.position.add(this.raycaster.ray.origin);
     }
     setSelectStartCallback(callback) {

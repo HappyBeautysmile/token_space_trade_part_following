@@ -228,7 +228,7 @@ export class BlockBuild {
     //     }
     //   });
 
-    this.playerGroup.add(this.computer);
+    //this.playerGroup.add(this.computer);
 
     // // create an AudioListener and add it to the camera
     // const listener = new THREE.AudioListener();
@@ -283,9 +283,9 @@ export class BlockBuild {
       if (S.float('mouse') == i) {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
-        this.computer.translateY(1.5);
+        this.computer.translateY(1.7);
         this.computer.translateZ(-0.4);
-        this.computer.rotateX(Math.PI / 3);
+        this.computer.rotateX(Math.PI / 2);
         this.playerGroup.add(this.computer);
       } else {
         grip = new GripGrip(i, this.renderer.xr);

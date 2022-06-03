@@ -90,30 +90,31 @@ export class Computer extends THREE.Object3D implements Ticker {
       let m = this.findChildByName(label, this.model);
       ButtonDispatcher.registerButton(this, m.position,
         0.015, () => {
-          this.playRandomSound("key-press", 5);
+          this.playRandomSound("key-press", 4);
           this.currentDisplay = this.buttonCallbacks.get(label);
         });
-      label = "B" + i.toFixed(0);
-      m = this.findChildByName(label, this.model);
-      ButtonDispatcher.registerButton(this, m.position,
-        0.015, () => {
-          this.playRandomSound("key-press", 5);
-        });
+      // label = "B" + i.toFixed(0);
+      // m = this.findChildByName(label, this.model);
+      // ButtonDispatcher.registerButton(this, m.position,
+      //   0.015, () => {
+      //     this.playRandomSound("key-press", 4);
+      //   });
     }
     for (let i = 0; i < 15; i++) {
       let label = "R" + i.toFixed(0);
       let m = this.findChildByName(label, this.model);
       ButtonDispatcher.registerButton(this, m.position,
         0.005, () => {
-          this.playRandomSound("key-press", 5);
+          this.playRandomSound("key-press", 4);
           this.currentDisplay = this.buttonCallbacks.get(label);
         });
     }
   }
 
   playRandomSound(name: string, max: number) {
-    const num = Math.floor(Math.random() * max).toFixed(0);
+    const num = Math.floor(Math.random() * max + 1).toFixed(0);
     const soundname = `sounds/${name}${num}.ogg`;
+    Debug.log(`playing ${soundname}`);
     this.audioLoader.load(soundname, (buffer) => {
       this.sound.setBuffer(buffer);
       this.sound.setLoop(false);
@@ -166,7 +167,7 @@ export class Computer extends THREE.Object3D implements Ticker {
         this.rowText[i] = `${item.name} ${qty}`;
         this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
           this.showItemDetails(item, qty);
-          Debug.log(`Item.name=${item.name}, qty=${qty}`);
+          //Debug.log(`Item.name=${item.name}, qty=${qty}`);
         });
       }
     }
@@ -187,6 +188,7 @@ export class Computer extends THREE.Object3D implements Ticker {
   }
 
   showItemDetails(item: Item, qty: number) {
+    this.clearRowText();
     this.rowText[0] = item.name;
     this.rowText[1] = item.description;
     this.rowText[2] = item.baseValue;
@@ -197,6 +199,7 @@ export class Computer extends THREE.Object3D implements Ticker {
     else {
       this.rowText[4] = "not paintable."
     }
+    this.updateDisplay();
   }
 
   show404() {
