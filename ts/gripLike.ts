@@ -112,7 +112,7 @@ export class MouseGrip extends THREE.Object3D implements GripLike {
     this.raycaster.setFromCamera(this.pointer, this.camera);
     this.position.copy(this.raycaster.ray.direction);
     // Distance from camera to hand = 0.6 meters
-    this.position.setLength(0.6);
+    this.position.setLength(0.425);
     this.position.add(this.raycaster.ray.origin);
   }
 

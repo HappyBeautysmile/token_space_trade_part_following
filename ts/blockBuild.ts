@@ -187,8 +187,8 @@ export class BlockBuild {
     this.place = new Place(this.universeGroup, this.playerGroup, this.camera);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-    this.renderer.setSize(512, 512);
-    //this.renderer.setSize(1024, 1024);
+    //this.renderer.setSize(512, 512);
+    this.renderer.setSize(800, 800);
     document.body.appendChild(this.renderer.domElement);
     this.canvas = this.renderer.domElement;
     this.renderer.xr.enabled = true;
@@ -224,7 +224,7 @@ export class BlockBuild {
     //     }
     //   });
 
-    this.playerGroup.add(this.computer);
+    //this.playerGroup.add(this.computer);
 
     // // create an AudioListener and add it to the camera
     // const listener = new THREE.AudioListener();
@@ -279,9 +279,9 @@ export class BlockBuild {
       if (S.float('mouse') == i) {
         console.assert(!!this.canvas);
         grip = new MouseGrip(this.canvas, this.camera, this.keysDown);
-        this.computer.translateY(1.5);
+        this.computer.translateY(1.7);
         this.computer.translateZ(-0.4);
-        this.computer.rotateX(Math.PI / 3);
+        this.computer.rotateX(Math.PI / 2);
         this.playerGroup.add(this.computer);
       } else {
         grip = new GripGrip(i, this.renderer.xr);
