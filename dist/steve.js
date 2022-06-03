@@ -1065,6 +1065,7 @@ class Computer extends THREE.Object3D {
     listener = new THREE.AudioListener();
     sound;
     audioLoader = new THREE.AudioLoader();
+    currentDisplay = this.showInventory;
     constructor(model, player) {
         super();
         this.model = model;
@@ -1089,7 +1090,7 @@ class Computer extends THREE.Object3D {
     }
     tick(t) {
         if (t.frameCount % 10 === 0) {
-            this.showInventory();
+            this.currentDisplay();
         }
     }
     static async make(player) {
@@ -1122,7 +1123,7 @@ class Computer extends THREE.Object3D {
             let m = this.findChildByName(label, this.model);
             buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
                 this.playRandomSound("mine", 5);
-                this.topButtonCallbacks[i]();
+                this.currentDisplay = this.topButtonCallbacks[i];
             });
             label = "B" + i.toFixed(0);
             this.bottomButtonLabels.push(label);

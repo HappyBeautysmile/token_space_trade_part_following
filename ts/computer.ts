@@ -17,6 +17,7 @@ export class Computer extends THREE.Object3D implements Ticker {
   private listener = new THREE.AudioListener();
   private sound: THREE.Audio;
   private audioLoader = new THREE.AudioLoader();
+  private currentDisplay = this.showInventory;
 
 
   private constructor(private model: THREE.Object3D, private player: Player) {
@@ -47,7 +48,7 @@ export class Computer extends THREE.Object3D implements Ticker {
 
   public tick(t: Tick) {
     if (t.frameCount % 10 === 0) {
-      this.showInventory();
+      this.currentDisplay();
     }
   }
 
@@ -85,7 +86,7 @@ export class Computer extends THREE.Object3D implements Ticker {
       ButtonDispatcher.registerButton(this, m.position,
         0.015, () => {
           this.playRandomSound("mine", 5);
-          this.topButtonCallbacks[i]();
+          this.currentDisplay = this.topButtonCallbacks[i];
         });
 
 
