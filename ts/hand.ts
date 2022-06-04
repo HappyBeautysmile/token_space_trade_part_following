@@ -12,7 +12,6 @@ import { Inventory } from "./player";
 import { GripLike } from "./gripLike";
 import { S } from "./settings";
 import { ButtonDispatcher } from "./buttonDispatcher";
-import { Computer } from "./computer";
 
 export class Hand extends THREE.Object3D {
   private cube: THREE.Object3D;
@@ -34,7 +33,7 @@ export class Hand extends THREE.Object3D {
     private index: number, private xr: THREE.WebXRManager,
     private place: Place,
     private keysDown: Set<string>, private construction: Construction,
-    private inventory: Inventory, private computer: Computer) {
+    private inventory: Inventory, private computer: THREE.Object3D) {
     super();
 
     // If you want to see where the "grip" is, uncomment this code.
