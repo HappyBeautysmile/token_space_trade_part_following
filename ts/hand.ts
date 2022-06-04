@@ -93,7 +93,8 @@ export class Hand extends THREE.Object3D {
 
   private setRay() {
     this.getWorldPosition(this.r.origin);
-    this.r.direction.set(0, -1, 0);
+    // this.r.direction.set(0, -1, 0);
+    this.r.direction.set(0, -0.707, -0.707);
     this.worldNormalMatrix.getNormalMatrix(this.matrixWorld);
     this.r.direction.applyMatrix3(this.worldNormalMatrix);
   }
