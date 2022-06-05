@@ -37,7 +37,7 @@ export class ButtonDispatcher {
   static registerButton(
     o: THREE.Object3D, localPosition: THREE.Vector3, radius: number,
     callback: ButtonCallback) {
-    Debug.log(`o.name=${o.name} localPosition=${localPosition} radius=${radius}`);
+    Debug.log(`localPosition=${JSON.stringify(localPosition)} radius=${radius}`);
     const button = new Button(o, localPosition, radius);
     ButtonDispatcher.callbacks.set(button, callback);
   }

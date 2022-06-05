@@ -196,9 +196,7 @@ class Assets extends THREE.Object3D {
             if (!m) {
                 continue;
             }
-            const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
             m.name = modelName;
-            m.material = newMat;
             m.userData = { "modelName": modelName };
             m.position.set((this.meshes.size - modelNames.length / 2) * 1.4, 0, -15);
             Assets.meshes.set(modelName, m);
@@ -214,7 +212,7 @@ class Assets extends THREE.Object3D {
         Assets.items = [];
         for (const [key, value] of Assets.meshes.entries()) {
             const i = Item.make(key, "A wonderful item.", 0, key);
-            if (paintableItems.includes) {
+            if (paintableItems.includes(key)) {
                 i.paintable = true;
             }
             else {
@@ -592,12 +590,7 @@ class BlockBuild {
         // this.universeGroup.add(Assets.models["ship"]);
         // this.construction.addCube(Assets.blocks[0]);
         // this.construction.save();
-        if (settings_1.S.float('m')) {
-            this.construction = new construction_1.MergedConstruction(this.place.universeGroup, this.renderer);
-        }
-        else {
-            this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
-        }
+        this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
         // for (let i = 0; i < 10; i++) {
@@ -880,7 +873,7 @@ class ButtonDispatcher {
     ;
     static callbacks = new Map();
     static registerButton(o, localPosition, radius, callback) {
-        debug_1.Debug.log(`o.name=${o.name} localPosition=${localPosition} radius=${radius}`);
+        debug_1.Debug.log(`localPosition=${JSON.stringify(localPosition)} radius=${radius}`);
         const button = new Button(o, localPosition, radius);
         ButtonDispatcher.callbacks.set(button, callback);
     }
@@ -1056,14 +1049,43 @@ const THREE = __importStar(__webpack_require__(232));
 const assets_1 = __webpack_require__(398);
 const buttonDispatcher_1 = __webpack_require__(770);
 const debug_1 = __webpack_require__(756);
+class RowText {
+    rowText = [];
+    dirty;
+    constructor() { }
+    clear() {
+        this.dirty = true;
+        for (let i = 0; i < 15; i++) {
+            this.rowText[i] = "";
+        }
+    }
+    empty() {
+        this.dirty = true;
+        this.rowText.length = 0;
+    }
+    length() {
+        return this.rowText.length;
+    }
+    get() {
+        this.dirty = false;
+        return this.rowText;
+    }
+    set(i, value) {
+        this.dirty = true;
+        this.rowText[i] = value;
+    }
+    isDirty() {
+        return this.dirty;
+    }
+}
 class Computer extends THREE.Object3D {
     model;
     player;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
+    rowText = new RowText();
     texture = new THREE.CanvasTexture(this.canvas);
     material = new THREE.MeshBasicMaterial();
-    rowText = [];
     buttonCallbacks = new Map();
     topButtonLabels = [];
     bottomButtonLabels = [];
@@ -1119,10 +1141,7 @@ class Computer extends THREE.Object3D {
         return retvalue;
     }
     clearRowText() {
-        this.rowText = [];
-        for (let i = 0; i < 15; i++) {
-            this.rowText.push("");
-        }
+        this.rowText.clear();
     }
     labels() {
         this.clearRowText();
@@ -1133,20 +1152,19 @@ class Computer extends THREE.Object3D {
         for (let i = 0; i < 8; i++) {
             let label = "T" + i.toFixed(0);
             let m = this.findChildByName(label, this.model);
-            buttonDispatcher_1.ButtonDispatcher.registerButton(this, m.position, 0.015, () => {
+            buttonDispatcher_1.ButtonDispatcher.registerButton(m, m.position, 0.015, () => {
                 this.playRandomSound("key-press", 4);
                 this.currentDisplay = this.buttonCallbacks.get(label);
             });
         }
-        // for (let i = 0; i < 8; i++) {
-        //   let label = "B" + i.toFixed(0);
-        //   let m = this.findChildByName(label, this.model);
-        //   ButtonDispatcher.registerButton(this, m.position,
-        //     0.015, () => {
-        //       this.playRandomSound("key-press", 4);
-        //       this.currentDisplay = this.buttonCallbacks.get(label);
-        //     });
-        // }
+        for (let i = 0; i < 8; i++) {
+            let label = "B" + i.toFixed(0);
+            let m = this.findChildByName(label, this.model);
+            buttonDispatcher_1.ButtonDispatcher.registerButton(m, m.position, 0.015, () => {
+                this.playRandomSound("key-press", 4);
+                this.currentDisplay = this.buttonCallbacks.get(label);
+            });
+        }
         for (let i = 0; i < 15; i++) {
             let label = "R" + i.toFixed(0);
             let m = this.findChildByName(label, this.model);
@@ -1168,16 +1186,20 @@ class Computer extends THREE.Object3D {
         });
     }
     updateDisplay() {
+        if (!this.rowText.isDirty()) {
+            return;
+        }
         // clear display and add green bars
         this.createGreenBars();
         // update rows
         const middleOfRow = this.canvas.height / 17 / 2;
-        for (let i = 0; i < this.rowText.length; i++) {
+        const rowText = this.rowText.get();
+        for (let i = 0; i < this.rowText.length(); i++) {
             this.ctx.fillStyle = 'green';
             this.ctx.font = '24px monospace';
             this.ctx.textBaseline = 'middle';
             this.ctx.textAlign = 'left';
-            this.ctx.fillText(this.rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
+            this.ctx.fillText(rowText[i], 0, (i * this.canvas.height / 17) + 3 * middleOfRow);
         }
         //update buttons
         const gridUnit = (this.canvas.width / 33);
@@ -1198,7 +1220,7 @@ class Computer extends THREE.Object3D {
         const inv = this.player.inventory.getItemQty();
         const qtys = Array.from(inv.values());
         const items = Array.from(inv.keys());
-        this.rowText = [];
+        this.rowText.empty();
         let i = 0;
         for (let i = 0; i < 15; i++) {
             if (this.startRow + i >= items.length) {
@@ -1207,7 +1229,7 @@ class Computer extends THREE.Object3D {
             else {
                 let item = items[i + this.startRow];
                 let qty = qtys[i + this.startRow];
-                this.rowText[i] = `${item.name} ${qty}`;
+                this.rowText.set(i, `${item.name} ${qty}`);
                 this.buttonCallbacks.set(`R${i.toFixed(0)}`, () => {
                     this.showItemDetails(item, qty);
                     //Debug.log(`Item.name=${item.name}, qty=${qty}`);
@@ -1224,26 +1246,26 @@ class Computer extends THREE.Object3D {
     }
     showNavigation() {
         this.clearRowText();
-        this.rowText[0] = "You are somewhere.";
+        this.rowText.set(0, "You are somewhere.");
         this.updateDisplay();
     }
     showItemDetails(item, qty) {
         this.clearRowText();
-        this.rowText[0] = item.name;
-        this.rowText[1] = item.description;
-        this.rowText[2] = item.baseValue;
-        this.rowText[3] = qty;
+        this.rowText.set(0, item.name);
+        this.rowText.set(1, item.description);
+        this.rowText.set(2, item.baseValue.toFixed(0));
+        this.rowText.set(3, qty.toFixed(0));
         if (item.paintable) {
-            this.rowText[4] = "Can be painted.";
+            this.rowText.set(4, "Can be painted.");
         }
         else {
-            this.rowText[4] = "not paintable.";
+            this.rowText.set(4, "not paintable.");
         }
         this.updateDisplay();
     }
     show404() {
         this.clearRowText();
-        this.rowText[0] = "Page not found (404)";
+        this.rowText.set(0, "Page not found (404)");
         this.updateDisplay();
     }
     createGreenBars() {
@@ -1288,18 +1310,41 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MergedConstruction = exports.ObjectConstruction = void 0;
+exports.ObjectConstruction = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const codec_1 = __webpack_require__(385);
 const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
-const megedGeometryContainer_1 = __webpack_require__(192);
-class ObjectConstruction {
+const mergedGeometryContainer_1 = __webpack_require__(529);
+const settings_1 = __webpack_require__(451);
+class GroupContainer {
     container;
-    renderer;
-    constructor(container, renderer) {
+    objects = new Map();
+    constructor(container) {
         this.container = container;
+    }
+    addObject(key, object) {
+        this.container.add(object);
+        this.objects.set(key, object);
+    }
+    removeObject(key) {
+        this.container.remove(this.objects.get(key));
+        this.objects.delete(key);
+    }
+}
+class ObjectConstruction {
+    renderer;
+    container;
+    constructor(container, renderer) {
         this.renderer = renderer;
+        if (settings_1.S.float('m')) {
+            const mergedGeometryContainer = new mergedGeometryContainer_1.MergedGeometryContainer();
+            this.container = mergedGeometryContainer;
+            container.add(mergedGeometryContainer);
+        }
+        else {
+            this.container = new GroupContainer(container);
+        }
     }
     // TODO: Make this private and instead have some nicer methods for
     // inserting and deleting.  This is where code to make sure we have only
@@ -1340,7 +1385,7 @@ class ObjectConstruction {
         object.position.copy(o.position);
         object.quaternion.copy(o.quaternion);
         this.objects.set(key, object);
-        this.container.add(object);
+        this.container.addObject(key, object);
     }
     // Return Item if there is an item at the location.  Otherwise, return null.
     removeCube(p) {
@@ -1349,8 +1394,7 @@ class ObjectConstruction {
         let o = new THREE.Object3D();
         if (this.objects.has(key)) {
             o = this.objects.get(key);
-            debug_1.Debug.assert(o.parent === this.container, 'Invalid parent!');
-            this.container.remove(o);
+            this.container.removeObject(key);
             item = this.items.get(key).item;
             this.items.delete(key);
             this.objects.delete(key);
@@ -1363,64 +1407,6 @@ class ObjectConstruction {
     }
 }
 exports.ObjectConstruction = ObjectConstruction;
-class MergedConstruction {
-    renderer;
-    mergedContainer = new megedGeometryContainer_1.MergedGeometryContainer();
-    constructor(container, renderer) {
-        this.renderer = renderer;
-        container.add(this.mergedContainer);
-    }
-    items = new Map();
-    save() {
-        console.log('Saving...');
-        let c = new codec_1.Codec();
-        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
-        fileIO_1.FileIO.saveObjectAsJson(o, "what_you_built.json");
-        //var strMime = "image/jpeg";
-        //let imgData = this.renderer.domElement.toDataURL(strMime);
-        //FileIO.saveImage(imgData.replace(strMime, "image/octet-stream"), "test.jpg");
-    }
-    saveToLocal() {
-        let c = new codec_1.Codec();
-        const o = codec_1.Encode.arrayOfInWorldItems(this.items.values());
-        window.localStorage.setItem("items", JSON.stringify(o));
-    }
-    loadFromLocal() {
-        const loaded = window.localStorage.getItem("items");
-        if (loaded) {
-            for (const inWorldItem of JSON.parse(loaded)) {
-                const iwi = codec_1.Decode.toInWorldItem(inWorldItem);
-                if (!this.cubeAt(iwi.position)) {
-                    this.addCube(iwi);
-                }
-            }
-        }
-    }
-    posToKey(p) {
-        return `${p.x.toFixed(0)},${p.y.toFixed(0)},${p.z.toFixed(0)}`;
-    }
-    addCube(o) {
-        const key = this.posToKey(o.position);
-        this.items.set(key, o);
-        const object = o.getMesh();
-        debug_1.Debug.assert(!!object);
-        object.position.copy(o.position);
-        object.quaternion.copy(o.quaternion);
-        this.mergedContainer.mergeIn(key, object);
-    }
-    // TODO: Return the InWorldItem.
-    removeCube(p) {
-        const key = this.posToKey(p);
-        this.mergedContainer.removeKey(key);
-        return null;
-    }
-    // return true if a block is already at the given location.  Otherwise return false.
-    cubeAt(p) {
-        //TODO: impement this function
-        return false;
-    }
-}
-exports.MergedConstruction = MergedConstruction;
 //# sourceMappingURL=construction.js.map
 
 /***/ }),
@@ -2086,7 +2072,8 @@ class Hand extends THREE.Object3D {
     worldNormalMatrix = new THREE.Matrix3;
     setRay() {
         this.getWorldPosition(this.r.origin);
-        this.r.direction.set(0, -1, 0);
+        // this.r.direction.set(0, -1, 0);
+        this.r.direction.set(0, -0.707, -0.707);
         this.worldNormalMatrix.getNormalMatrix(this.matrixWorld);
         this.r.direction.applyMatrix3(this.worldNormalMatrix);
     }
@@ -2409,7 +2396,7 @@ class MaterialExplorer extends THREE.Object3D {
         this.cube = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1, 0), new THREE.MeshBasicMaterial({ color: '#f0f' }));
         this.cube.position.set(1, 2.5, -2);
         this.add(this.cube);
-        const construction = new construction_1.MergedConstruction(this, null); // TODO 2nd parameter is the renderer to allow saving of the screen shot
+        const construction = new construction_1.ObjectConstruction(this, null); // TODO 2nd parameter is the renderer to allow saving of the screen shot
         const gen = new astroGen_1.AstroGen(construction);
         gen.buildAsteroid(5, -3, 2, -10);
     }
@@ -2775,7 +2762,7 @@ exports.MaterialExplorer = MaterialExplorer;
 
 /***/ }),
 
-/***/ 192:
+/***/ 529:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2833,6 +2820,11 @@ class MergableSet {
             yield* child.normals();
         }
     }
+    *colors() {
+        for (const child of this.children) {
+            yield* child.colors();
+        }
+    }
     *index() {
         let indexOffset = 0;
         for (const child of this.children) {
@@ -2869,6 +2861,7 @@ class MergableSet {
 class MergableGeometry {
     positionsArray;
     normalsArray;
+    colorsArray;
     indexArray = [];
     centroid;
     *positions() {
@@ -2876,6 +2869,9 @@ class MergableGeometry {
     }
     *normals() {
         yield* this.normalsArray;
+    }
+    *colors() {
+        yield* this.colorsArray;
     }
     *index() {
         yield* this.indexArray;
@@ -2889,7 +2885,7 @@ class MergableGeometry {
     getPositionCount() {
         return this.positions.length / 3;
     }
-    constructor(geometry, matrix) {
+    constructor(geometry, matrix, c) {
         const positionsAtt = geometry.getAttribute('position');
         if (geometry.index) {
             for (let i = 0; i < geometry.index.count; ++i) {
@@ -2903,11 +2899,18 @@ class MergableGeometry {
         }
         this.positionsArray = new Float32Array(this.indexArray.length * 3);
         this.normalsArray = new Float32Array(this.indexArray.length * 3);
+        this.colorsArray = new Float32Array(this.indexArray.length * 3);
         this.copyAtt3(positionsAtt, this.positionsArray, matrix);
         const m3 = new THREE.Matrix3();
         m3.getNormalMatrix(matrix);
         matrix.setFromMatrix3(m3);
         this.copyAtt3(geometry.getAttribute('normal'), this.normalsArray, matrix);
+        m3.identity();
+        for (let i = 0; i < positionsAtt.count; ++i) {
+            this.colorsArray[i * 3 + 0] = c.r;
+            this.colorsArray[i * 3 + 1] = c.g;
+            this.colorsArray[i * 3 + 2] = c.b;
+        }
         this.setCentroid();
     }
     setCentroid() {
@@ -2938,7 +2941,8 @@ class MergedGeometryContainer extends THREE.Object3D {
     static supportedAttributes = ['position', 'normal'];
     constructor() {
         super();
-        const mesh = new THREE.Mesh(this.geometry, new THREE.MeshPhongMaterial({ color: '#0f0' }));
+        const mesh = new THREE.Mesh(this.geometry, new THREE.MeshPhongMaterial({ color: '#fff', vertexColors: true }));
+        mesh.material.vertexColors = true;
         this.add(mesh);
     }
     values(att, index) {
@@ -3010,7 +3014,7 @@ class MergedGeometryContainer extends THREE.Object3D {
     }
     // Adds the geometry of `o` to this, and associates it with `key`.  This
     // `key` can be used later to remove this chunk of geometry.
-    mergeIn(key, o) {
+    addObject(key, o) {
         if (this.pieces.has(key)) {
             throw new Error(`Key already in use: ${key}`);
         }
@@ -3019,7 +3023,17 @@ class MergedGeometryContainer extends THREE.Object3D {
         for (const mesh of this.allMeshes(o)) {
             const transform = new THREE.Matrix4();
             this.getTransform(mesh, o.parent, transform);
-            const mergablMesh = new MergableGeometry(mesh.geometry, transform);
+            let color = new THREE.Color('#f0f');
+            if (!Array.isArray(mesh.material)) {
+                // console.log(`color: ${JSON.stringify(mesh.material['color'])}`);
+                if (mesh.material['color']) {
+                    color = mesh.material['color'];
+                }
+            }
+            else {
+                console.log(`Array!`);
+            }
+            const mergablMesh = new MergableGeometry(mesh.geometry, transform, color);
             meshContainer.add(mergablMesh);
         }
         this.mergableSet.add(meshContainer);
@@ -3028,7 +3042,7 @@ class MergedGeometryContainer extends THREE.Object3D {
     // const objectIndex = this.keyIndex.size;
     //   this.keyIndex.set(key, objectIndex);
     // Removes the geometry associated with `key` from this.
-    removeKey(key) {
+    removeObject(key) {
         throw new Error("Not implemented.");
     }
     clean() {
@@ -3043,6 +3057,9 @@ class MergedGeometryContainer extends THREE.Object3D {
         const normalAtt = new three_1.BufferAttribute(new Float32Array(this.mergableSet.normals()), 3);
         normalAtt.needsUpdate = true;
         this.geometry.setAttribute('normal', normalAtt);
+        const colorAtt = new three_1.BufferAttribute(new Float32Array(this.mergableSet.colors()), 3);
+        colorAtt.needsUpdate = true;
+        this.geometry.setAttribute('color', colorAtt);
         this.dirty = false;
         console.timeEnd('clean');
     }
@@ -3053,7 +3070,7 @@ class MergedGeometryContainer extends THREE.Object3D {
     }
 }
 exports.MergedGeometryContainer = MergedGeometryContainer;
-//# sourceMappingURL=megedGeometryContainer.js.map
+//# sourceMappingURL=mergedGeometryContainer.js.map
 
 /***/ }),
 

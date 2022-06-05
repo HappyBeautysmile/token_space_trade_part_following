@@ -169,9 +169,7 @@ export class Assets extends THREE.Object3D {
       if (!m) {
         continue;
       }
-      const newMat = new THREE.MeshPhongMaterial({ color: new THREE.Color(Math.random(), Math.random(), Math.random()) });
       m.name = modelName;
-      m.material = newMat;
       m.userData = { "modelName": modelName };
       m.position.set((this.meshes.size - modelNames.length / 2) * 1.4, 0, -15);
       Assets.meshes.set(modelName, m);
@@ -187,7 +185,7 @@ export class Assets extends THREE.Object3D {
     Assets.items = [];
     for (const [key, value] of Assets.meshes.entries()) {
       const i = Item.make(key, "A wonderful item.", 0, key);
-      if (paintableItems.includes) {
+      if (paintableItems.includes(key)) {
         i.paintable = true;
       }
       else {
