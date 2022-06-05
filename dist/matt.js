@@ -550,6 +550,7 @@ const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(723);
 const skyBox_1 = __webpack_require__(813);
+const pointCloud_1 = __webpack_require__(996);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -685,6 +686,9 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
+        const stars = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
+        /*visibleDistance=*/ settings_1.S.float('sr'));
+        this.universeGroup.add(stars);
         const sky = new skyBox_1.SkyBox();
         this.universeGroup.add(sky);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
@@ -740,7 +744,7 @@ class BlockBuild {
         //   sound.play();
         // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("sound when placed 3");
+        debug_1.Debug.log("Stars");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -823,7 +827,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ButtonDispatcher = void 0;
 const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
 class Button {
     o;
     localPosition;
@@ -857,7 +860,7 @@ class ButtonDispatcher {
     ;
     static callbacks = new Map();
     static registerButton(o, localPosition, radius, callback) {
-        debug_1.Debug.log(`localPosition=${JSON.stringify(localPosition)} radius=${radius}`);
+        // Debug.log(`localPosition=${JSON.stringify(localPosition)} radius=${radius}`);
         const button = new Button(o, localPosition, radius);
         ButtonDispatcher.callbacks.set(button, callback);
     }
@@ -4071,7 +4074,8 @@ class SkyBox extends THREE.Object3D {
         super();
         const num = Math.ceil(Math.random() * 5).toFixed(0);
         const materialArray = this.createMaterialArray(num);
-        const skyboxGeo = new THREE.BoxGeometry(1000, 1000, 1000);
+        // We make the skybox 10% larger than the VLU radius
+        const skyboxGeo = new THREE.BoxGeometry(1.1e3, 1.1e3, 1.1e3);
         const skybox = new THREE.Mesh(skyboxGeo, materialArray);
         this.add(skybox);
     }
@@ -4091,7 +4095,12 @@ class SkyBox extends THREE.Object3D {
         const color = new THREE.Color(Math.random(), Math.random(), Math.random());
         const materialArray = skyboxImagepaths.map(image => {
             let texture = new THREE.TextureLoader().load(image);
-            return new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, color: color });
+            return new THREE.MeshBasicMaterial({
+                map: texture, side: THREE.BackSide, color: color,
+                blending: THREE.AdditiveBlending,
+                depthTest: true,
+                depthWrite: false
+            });
         });
         return materialArray;
     }

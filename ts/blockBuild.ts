@@ -15,6 +15,7 @@ import { GripGrip, GripLike, MouseGrip } from "./gripLike";
 import { Computer } from "./computer";
 import { ButtonDispatcher } from "./buttonDispatcher";
 import { SkyBox } from "./skyBox";
+import { PointCloud } from "./pointCloud";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -176,6 +177,11 @@ export class BlockBuild {
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
 
+    const stars = new PointCloud(0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
+      new THREE.Color('#ddd'), /*pointRadius=*/1e4,
+    /*visibleDistance=*/S.float('sr'));
+    this.universeGroup.add(stars);
+
     const sky = new SkyBox();
     this.universeGroup.add(sky);
 
@@ -242,7 +248,7 @@ export class BlockBuild {
     // });
 
     Debug.log("Three Version=" + THREE.REVISION);
-    Debug.log("sound when placed 3");
+    Debug.log("Stars");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
