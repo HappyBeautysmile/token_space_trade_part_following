@@ -33,6 +33,23 @@ class MergableSet implements Mergable {
     this.positionCount += m.getPositionCount();
   }
 
+  public remove(m: Mergable) {
+    this.centroid.multiplyScalar(this.size);
+    const mCentroid = new THREE.Vector3();
+    m.getCentroid(mCentroid);
+    mCentroid.multiplyScalar(m.getIndexCount());
+    this.centroid.sub(mCentroid);
+    this.centroid.multiplyScalar(1 / (this.size - m.getIndexCount()));
+    this.size -= m.getIndexCount();
+    this.positionCount -= m.getPositionCount();
+
+    const deleteIndex = this.children.indexOf(m);
+    if (deleteIndex < 0) {
+      throw new Error("Missing element!");
+    }
+    this.children.splice(deleteIndex, 1);
+  }
+
   *positions() {
     for (const child of this.children) {
       yield* child.positions();
@@ -293,6 +310,7 @@ export class MergedGeometryContainer extends THREE.Object3D implements Ticker, C
       const mergablMesh = new MergableGeometry(mesh.geometry, transform, color);
       meshContainer.add(mergablMesh);
     }
+    this.pieces.set(key, meshContainer);
     this.mergableSet.add(meshContainer);
     this.dirty = true;
   }
@@ -302,7 +320,8 @@ export class MergedGeometryContainer extends THREE.Object3D implements Ticker, C
 
   // Removes the geometry associated with `key` from this.
   removeObject(key: string) {
-    throw new Error("Not implemented.");
+    this.mergableSet.remove(this.pieces.get(key));
+    this.dirty = true;
   }
 
   private clean() {

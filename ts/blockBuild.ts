@@ -179,8 +179,7 @@ export class BlockBuild {
     const sky = new SkyBox();
     this.universeGroup.add(sky);
 
-    this.camera = new THREE.PerspectiveCamera(75,
-      1.0, 0.1, 2000);
+    this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
     this.camera.position.set(0, 1.7, 0);
     this.camera.lookAt(0, 1.7, -1.5);
     this.playerGroup.add(this.camera);
