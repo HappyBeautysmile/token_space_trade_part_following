@@ -12,7 +12,7 @@ export class PointCloud extends THREE.Object3D implements Ticker {
 
   constructor(radius: number, radiusSd: number, ySd: number,
     count: number, private color: THREE.Color, private pointRadius: number,
-    private visibleDistance: number) {
+    private visibleDistance: number, private includeOrigin = false) {
     super();
     this.addStars(radius, radiusSd, ySd, count)
   }
@@ -43,21 +43,35 @@ export class PointCloud extends THREE.Object3D implements Ticker {
     colorAttribute.needsUpdate = true;
   }
 
+  private addStar(x: number, y: number, z: number,
+    positions: number[], colors: number[]) {
+    const i = Math.round(positions.length / 3);
+    if (i === 0 && this.includeOrigin) {
+      colors.push(0, 0, 0);
+    } else {
+      colors.push(this.color.r, this.color.g, this.color.b);
+    }
+    const v = new THREE.Vector3(x, y, z);
+    this.starPositions.add(v, v);
+    positions.push(v.x, v.y, v.z);
+    this.pointIndex.set(v, i);
+
+  }
+
   private addStars(radius: number, radiusSd: number, ySd: number, count: number) {
     const positions: number[] = [];
     const colors: number[] = [];
+    if (this.includeOrigin) {
+      this.addStar(0, 0, 0, positions, colors);
+    }
     for (let i = 0; i < count; ++i) {
       const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
       const orbitalHeight = PointCloud.gaussian(ySd);
       const theta = Math.random() * Math.PI * 2;
-      const v = new THREE.Vector3(
+      this.addStar(
         orbitalRadius * Math.cos(theta),
         orbitalHeight,
-        orbitalRadius * Math.sin(theta));
-      this.starPositions.add(v, v);
-      positions.push(v.x, v.y, v.z);
-      colors.push(this.color.r, this.color.g, this.color.b);
-      this.pointIndex.set(v, i);
+        orbitalRadius * Math.sin(theta), positions, colors);
     }
     this.geometry = new THREE.BufferGeometry();
     this.geometry.setAttribute('position',

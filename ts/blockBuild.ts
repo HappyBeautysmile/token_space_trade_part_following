@@ -30,6 +30,7 @@ export class BlockBuild {
   private construction: Construction;
   private player: Player;
   private computer: Computer;
+  private stars: PointCloud;
 
   constructor() {
     this.playerGroup.name = 'Player Group';
@@ -177,19 +178,21 @@ export class BlockBuild {
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
 
-    const stars = new PointCloud(0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
+    this.stars = new PointCloud(
+      0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
       new THREE.Color('#ddd'), /*pointRadius=*/1e4,
-    /*visibleDistance=*/S.float('sr'));
-    this.universeGroup.add(stars);
+    /*visibleDistance=*/S.float('sr'), /*includeOrigin=*/true);
+    this.universeGroup.add(this.stars);
 
     const sky = new SkyBox();
-    this.universeGroup.add(sky);
+    this.scene.add(sky);
 
     this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
     this.camera.position.set(0, 1.7, 0);
     this.camera.lookAt(0, 1.7, -1.5);
     this.playerGroup.add(this.camera);
-    this.place = new Place(this.universeGroup, this.playerGroup, this.camera);
+    this.place = new Place(this.universeGroup, this.playerGroup, this.camera,
+      this.stars);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     //this.renderer.setSize(512, 512);
@@ -248,7 +251,7 @@ export class BlockBuild {
     // });
 
     Debug.log("Three Version=" + THREE.REVISION);
-    Debug.log("Stars");
+    Debug.log("Warp speed");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

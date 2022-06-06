@@ -145,22 +145,17 @@ export class Hand extends THREE.Object3D {
       const rotRate = 2;
       const axes = this.source.gamepad.axes.slice(0);
       if (axes.length >= 4) {
-        //this.debugMaterial.color = new THREE.Color('green');
-        if (!axes[2] && !axes[3]) {
-          // Sticks are not being touched.
-        } else {
-          //this.debugMaterial.color = new THREE.Color('orange');
-          this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
-          if (this.grip.getHandedness() === 'left') {
-            this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
-            this.v.multiplyScalar(rateMove * t.deltaS);
-            this.place.movePlayerRelativeToCamera(this.v);
-          } else if (this.grip.getHandedness() === 'right') {
-            this.v.set(0, -Math.pow(axes[3], 3), 0);
-            this.v.multiplyScalar(rateUpDown * t.deltaS);
-            this.place.movePlayerRelativeToCamera(this.v);
-            this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
-          }
+        //this.debugMaterial.color = new THREE.Color('orange');
+        this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
+        if (this.grip.getHandedness() === 'left') {
+          this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
+          this.v.multiplyScalar(rateMove * t.deltaS);
+          this.place.movePlayerRelativeToCamera(this.v);
+        } else if (this.grip.getHandedness() === 'right') {
+          this.v.set(0, -Math.pow(axes[3], 3), 0);
+          this.v.multiplyScalar(rateUpDown * t.deltaS);
+          this.place.movePlayerRelativeToCamera(this.v);
+          this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
         }
       }
       const buttons = this.source.gamepad.buttons.map((b) => b.value);

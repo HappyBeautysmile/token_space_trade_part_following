@@ -563,6 +563,7 @@ class BlockBuild {
     construction;
     player;
     computer;
+    stars;
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -686,16 +687,16 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
-        const stars = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
-        /*visibleDistance=*/ settings_1.S.float('sr'));
-        this.universeGroup.add(stars);
+        this.stars = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
+        /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+        this.universeGroup.add(this.stars);
         const sky = new skyBox_1.SkyBox();
-        this.universeGroup.add(sky);
+        this.scene.add(sky);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
         this.playerGroup.add(this.camera);
-        this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera);
+        this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera, this.stars);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         //this.renderer.setSize(512, 512);
         this.renderer.setSize(800, 800);
@@ -744,7 +745,7 @@ class BlockBuild {
         //   sound.play();
         // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("Stars");
+        debug_1.Debug.log("Warp speed");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -2080,24 +2081,18 @@ class Hand extends THREE.Object3D {
             const rotRate = 2;
             const axes = this.source.gamepad.axes.slice(0);
             if (axes.length >= 4) {
-                //this.debugMaterial.color = new THREE.Color('green');
-                if (!axes[2] && !axes[3]) {
-                    // Sticks are not being touched.
+                //this.debugMaterial.color = new THREE.Color('orange');
+                this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
+                if (this.grip.getHandedness() === 'left') {
+                    this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
+                    this.v.multiplyScalar(rateMove * t.deltaS);
+                    this.place.movePlayerRelativeToCamera(this.v);
                 }
-                else {
-                    //this.debugMaterial.color = new THREE.Color('orange');
-                    this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
-                    if (this.grip.getHandedness() === 'left') {
-                        this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
-                        this.v.multiplyScalar(rateMove * t.deltaS);
-                        this.place.movePlayerRelativeToCamera(this.v);
-                    }
-                    else if (this.grip.getHandedness() === 'right') {
-                        this.v.set(0, -Math.pow(axes[3], 3), 0);
-                        this.v.multiplyScalar(rateUpDown * t.deltaS);
-                        this.place.movePlayerRelativeToCamera(this.v);
-                        this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
-                    }
+                else if (this.grip.getHandedness() === 'right') {
+                    this.v.set(0, -Math.pow(axes[3], 3), 0);
+                    this.v.multiplyScalar(rateUpDown * t.deltaS);
+                    this.place.movePlayerRelativeToCamera(this.v);
+                    this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
                 }
             }
             const buttons = this.source.gamepad.buttons.map((b) => b.value);
@@ -3442,16 +3437,19 @@ class Place {
     universeGroup;
     playerGroup;
     camera;
-    constructor(universeGroup, playerGroup, camera) {
+    stars;
+    constructor(universeGroup, playerGroup, camera, stars) {
         this.universeGroup = universeGroup;
         this.playerGroup = playerGroup;
         this.camera = camera;
+        this.stars = stars;
     }
     p = new THREE.Vector3();
     cameraNormalMatrix = new THREE.Matrix3();
-    velocity = new THREE.Vector3();
     q = new THREE.Quaternion();
     e = new THREE.Euler();
+    distanceToNearestStar = 1e14;
+    speedFactor = 1.0;
     // Moves the player relative to the camera's orientation.
     movePlayerRelativeToCamera(motion) {
         if (motion.length() === 0) {
@@ -3460,13 +3458,14 @@ class Place {
         this.q.copy(this.playerGroup.quaternion);
         this.p.copy(motion);
         this.p.applyQuaternion(this.q);
+        this.p.multiplyScalar(this.speedFactor);
         // this.p.applyMatrix3(this.cameraNormalMatrix);
-        this.velocity.add(this.p);
         // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
         // Debug.log(`motion=${JSON.stringify(motion)}`);
         //this.playerGroup.position.add(this.p);
         this.universeGroup.position.sub(this.p);
         //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
+        this.updateDistanceToNearestStar();
     }
     rotatePlayerRelativeToWorldY(rotation) {
         this.playerGroup.rotation.y += rotation;
@@ -3503,7 +3502,36 @@ class Place {
         p.z = Math.round(p.z);
     }
     stop() {
-        this.velocity = new THREE.Vector3(0, 0, 0);
+    }
+    tmp = new THREE.Vector3();
+    searchForStar(radius) {
+        let distanceToNearestStar = 1e12;
+        for (const s of this.stars.starPositions.getAllWithinRadius(this.p, radius)) {
+            this.tmp.copy(s);
+            this.tmp.sub(this.p);
+            distanceToNearestStar = Math.min(distanceToNearestStar, this.tmp.length());
+        }
+        if (distanceToNearestStar < radius) {
+            this.distanceToNearestStar = distanceToNearestStar;
+            return distanceToNearestStar;
+        }
+        else {
+            return undefined;
+        }
+    }
+    updateDistanceToNearestStar() {
+        this.p.set(0, 0, 0);
+        this.playerToUniverse(this.p);
+        // p is the player position in Universe Coordinates
+        for (const radius of [1e3, 1e5, 1e7]) {
+            const distance = this.searchForStar(radius);
+            if (distance <= radius) {
+                this.distanceToNearestStar = distance;
+                this.speedFactor =
+                    Math.max(1.0, this.distanceToNearestStar / 10);
+                return;
+            }
+        }
     }
 }
 exports.Place = Place;
@@ -3691,15 +3719,17 @@ class PointCloud extends THREE.Object3D {
     color;
     pointRadius;
     visibleDistance;
+    includeOrigin;
     starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     material;
     pointIndex = new Map();
     geometry;
-    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance) {
+    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance, includeOrigin = false) {
         super();
         this.color = color;
         this.pointRadius = pointRadius;
         this.visibleDistance = visibleDistance;
+        this.includeOrigin = includeOrigin;
         this.addStars(radius, radiusSd, ySd, count);
     }
     static gaussian(sd) {
@@ -3721,18 +3751,30 @@ class PointCloud extends THREE.Object3D {
         colorAttribute.setXYZ(this.pointIndex.get(point), 0, 0, 0);
         colorAttribute.needsUpdate = true;
     }
+    addStar(x, y, z, positions, colors) {
+        const i = Math.round(positions.length / 3);
+        if (i === 0 && this.includeOrigin) {
+            colors.push(0, 0, 0);
+        }
+        else {
+            colors.push(this.color.r, this.color.g, this.color.b);
+        }
+        const v = new THREE.Vector3(x, y, z);
+        this.starPositions.add(v, v);
+        positions.push(v.x, v.y, v.z);
+        this.pointIndex.set(v, i);
+    }
     addStars(radius, radiusSd, ySd, count) {
         const positions = [];
         const colors = [];
+        if (this.includeOrigin) {
+            this.addStar(0, 0, 0, positions, colors);
+        }
         for (let i = 0; i < count; ++i) {
             const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
             const orbitalHeight = PointCloud.gaussian(ySd);
             const theta = Math.random() * Math.PI * 2;
-            const v = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
-            this.starPositions.add(v, v);
-            positions.push(v.x, v.y, v.z);
-            colors.push(this.color.r, this.color.g, this.color.b);
-            this.pointIndex.set(v, i);
+            this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), positions, colors);
         }
         this.geometry = new THREE.BufferGeometry();
         this.geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));

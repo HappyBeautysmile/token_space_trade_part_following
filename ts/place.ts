@@ -1,5 +1,7 @@
 import * as THREE from "three";
+import { DiscreteInterpolant } from "three";
 import { Debug } from "./debug";
+import { PointCloud } from "./pointCloud";
 
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
@@ -9,13 +11,16 @@ import { Debug } from "./debug";
 export class Place {
   constructor(readonly universeGroup: THREE.Group,
     readonly playerGroup: THREE.Group,
-    readonly camera: THREE.Camera) { }
+    readonly camera: THREE.Camera,
+    private stars: PointCloud) { }
 
   private p = new THREE.Vector3();
   private cameraNormalMatrix = new THREE.Matrix3();
-  private velocity = new THREE.Vector3();
   private q = new THREE.Quaternion();
   private e = new THREE.Euler();
+
+  private distanceToNearestStar = 1e14;
+  private speedFactor = 1.0;
 
   // Moves the player relative to the camera's orientation.
   public movePlayerRelativeToCamera(motion: THREE.Vector3) {
@@ -25,14 +30,15 @@ export class Place {
     this.q.copy(this.playerGroup.quaternion);
     this.p.copy(motion);
     this.p.applyQuaternion(this.q);
+    this.p.multiplyScalar(this.speedFactor);
 
     // this.p.applyMatrix3(this.cameraNormalMatrix);
-    this.velocity.add(this.p);
     // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
     // Debug.log(`motion=${JSON.stringify(motion)}`);
     //this.playerGroup.position.add(this.p);
     this.universeGroup.position.sub(this.p);
     //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
+    this.updateDistanceToNearestStar();
   }
 
   public rotatePlayerRelativeToWorldY(rotation: number) {
@@ -75,6 +81,39 @@ export class Place {
   }
 
   public stop() {
-    this.velocity = new THREE.Vector3(0, 0, 0);
+  }
+
+  private tmp = new THREE.Vector3();
+
+  private searchForStar(radius: number): number {
+    let distanceToNearestStar = 1e12;
+    for (const s of this.stars.starPositions.getAllWithinRadius(
+      this.p, radius)) {
+      this.tmp.copy(s);
+      this.tmp.sub(this.p);
+      distanceToNearestStar = Math.min(
+        distanceToNearestStar, this.tmp.length());
+    }
+    if (distanceToNearestStar < radius) {
+      this.distanceToNearestStar = distanceToNearestStar;
+      return distanceToNearestStar;
+    } else {
+      return undefined;
+    }
+  }
+
+  private updateDistanceToNearestStar() {
+    this.p.set(0, 0, 0);
+    this.playerToUniverse(this.p);
+    // p is the player position in Universe Coordinates
+    for (const radius of [1e3, 1e5, 1e7]) {
+      const distance = this.searchForStar(radius);
+      if (distance <= radius) {
+        this.distanceToNearestStar = distance;
+        this.speedFactor =
+          Math.max(1.0, this.distanceToNearestStar / 10);
+        return;
+      }
+    }
   }
 }
