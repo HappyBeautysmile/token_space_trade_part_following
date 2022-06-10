@@ -3751,13 +3751,21 @@ class PointCloud extends THREE.Object3D {
         colorAttribute.setXYZ(this.pointIndex.get(point), 0, 0, 0);
         colorAttribute.needsUpdate = true;
     }
-    addStar(x, y, z, positions, colors) {
+    pushSix(x, y, z, target) {
+        target.push(x, y, z);
+        // target.push(x, y, z);
+        // target.push(x, y, z);
+        // target.push(x, y, z);
+        // target.push(x, y, z);
+        // target.push(x, y, z);
+    }
+    addStar(x, y, z, positions, colors, dx, dy) {
         const i = Math.round(positions.length / 3);
         if (i === 0 && this.includeOrigin) {
-            colors.push(0, 0, 0);
+            this.pushSix(0, 0, 0, colors);
         }
         else {
-            colors.push(this.color.r, this.color.g, this.color.b);
+            this.pushSix(this.color.r, this.color.g, this.color.b, colors);
         }
         const v = new THREE.Vector3(x, y, z);
         this.starPositions.add(v, v);
@@ -3767,14 +3775,16 @@ class PointCloud extends THREE.Object3D {
     addStars(radius, radiusSd, ySd, count) {
         const positions = [];
         const colors = [];
+        const dx = [];
+        const dy = [];
         if (this.includeOrigin) {
-            this.addStar(0, 0, 0, positions, colors);
+            this.addStar(0, 0, 0, positions, colors, dx, dy);
         }
         for (let i = 0; i < count; ++i) {
             const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
             const orbitalHeight = PointCloud.gaussian(ySd);
             const theta = Math.random() * Math.PI * 2;
-            this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), positions, colors);
+            this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), positions, colors, dx, dy);
         }
         this.geometry = new THREE.BufferGeometry();
         this.geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -3804,7 +3814,7 @@ class PointCloud extends THREE.Object3D {
       void main() {
         vec2 coords = gl_PointCoord;
         float intensity = clamp(
-          10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
+          10.0 * (0.8 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
         float brightness = 
           (${this.visibleDistance.toFixed(1)} - vDistance) /
           (${this.visibleDistance.toFixed(1)} + vDistance);
