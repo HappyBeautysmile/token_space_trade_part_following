@@ -752,7 +752,7 @@ class BlockBuild {
         //   sound.play();
         // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("Warp speed");
+        debug_1.Debug.log("Union Geometry");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1310,8 +1310,8 @@ const THREE = __importStar(__webpack_require__(232));
 const codec_1 = __webpack_require__(385);
 const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
-const mergedGeometryContainer_1 = __webpack_require__(529);
 const settings_1 = __webpack_require__(451);
+const unionGeometryContainer_1 = __webpack_require__(614);
 class GroupContainer {
     container;
     objects = new Map();
@@ -1333,9 +1333,9 @@ class ObjectConstruction {
     constructor(container, renderer) {
         this.renderer = renderer;
         if (settings_1.S.float('m')) {
-            const mergedGeometryContainer = new mergedGeometryContainer_1.MergedGeometryContainer();
-            this.container = mergedGeometryContainer;
-            container.add(mergedGeometryContainer);
+            const geometryContainer = new unionGeometryContainer_1.UnionGeometryContainer();
+            this.container = geometryContainer;
+            container.add(geometryContainer);
         }
         else {
             this.container = new GroupContainer(container);
@@ -4491,6 +4491,68 @@ class Tick {
 }
 exports.Tick = Tick;
 //# sourceMappingURL=tick.js.map
+
+/***/ }),
+
+/***/ 614:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UnionGeometryContainer = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const mergedGeometryContainer_1 = __webpack_require__(529);
+class UnionGeometryContainer extends THREE.Object3D {
+    childContainers = new Map();
+    locatedObjects = new Map();
+    constructor() {
+        super();
+    }
+    locationKey(location) {
+        const x = Math.round(location.x / 10);
+        const y = Math.round(location.y / 10);
+        const z = Math.round(location.z / 10);
+        return `${x.toFixed(0)},${y.toFixed(0)},${z.toFixed(0)}`;
+    }
+    addObject(key, object) {
+        const locationKey = this.locationKey(object.position);
+        if (!this.childContainers.has(locationKey)) {
+            const newContainer = new mergedGeometryContainer_1.MergedGeometryContainer();
+            this.childContainers.set(locationKey, newContainer);
+            this.add(newContainer);
+        }
+        this.locatedObjects.set(key, locationKey);
+        this.childContainers.get(locationKey).addObject(key, object);
+    }
+    removeObject(key) {
+        if (!this.locatedObjects.has(key)) {
+            return;
+        }
+        const locationKey = this.locatedObjects.get(key);
+        this.childContainers.get(locationKey).removeObject(key);
+    }
+}
+exports.UnionGeometryContainer = UnionGeometryContainer;
+//# sourceMappingURL=unionGeometryContainer.js.map
 
 /***/ }),
 
