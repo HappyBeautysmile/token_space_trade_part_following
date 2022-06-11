@@ -1,3 +1,5 @@
+import { Item } from "./assets";
+
 export class BankAccount {
   private balance: number;
   constructor(private initialBalance: number) {
@@ -30,7 +32,7 @@ export class SellOrder {
 
 
 export class Exchange {
-  constructor(readonly item: string) { }
+  constructor(readonly item: Item) { }
 
   private buyOrders: BuyOrder[] = [];
 

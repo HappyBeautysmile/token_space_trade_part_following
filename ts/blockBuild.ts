@@ -19,6 +19,9 @@ import { PointCloud, PointCloud1 } from "./pointCloud";
 import { PointCloud2 } from "./pointCloud2";
 import { ModelCloud } from "./modelCloud";
 import { StarSystem } from "./starSystem";
+import { Universe } from "./universe";
+import { System, Body } from "./system";
+import { Exchange } from "./exchange";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -28,6 +31,7 @@ export class BlockBuild {
 
   private playerGroup = new THREE.Group();
   private universeGroup = new THREE.Group();
+  private universe = new Universe();
   private place: Place;
   private keysDown = new Set<string>();
   private construction: Construction;
@@ -45,14 +49,30 @@ export class BlockBuild {
     document.body.addEventListener('keyup', (ev: KeyboardEvent) => {
       this.keysDown.delete(ev.code);
     });
-
   }
 
   private async initialize() {
     await this.setScene();
-    // this.universeGroup.add(Assets.models["ship"]);
-    // this.construction.addCube(Assets.blocks[0]);
-    // this.construction.save();
+
+    let exchanges = new Map();
+    for (let i of Assets.items) {
+      let exchange = new Exchange(i);
+      exchanges.set(i, exchange);
+    }
+
+    let station = new Body();
+    station.name = "station";
+    station.bodyType = 'Station';
+    station.position = new THREE.Vector3(10, 10, 10);
+    station.exchanges = exchanges;
+
+    let system = new System();
+    system.name = "system name";
+    system.bodies = new Map();
+    system.bodies.set(station.name, station);
+
+    this.universe.systems.set(system.name, system);
+
     this.construction = new ObjectConstruction(
       this.place.universeGroup, this.renderer);
     let ab = new AstroGen(this.construction);
@@ -73,7 +93,6 @@ export class BlockBuild {
     //     Math.floor(Math.random() * 500) - 250);
     // }
 
-    // await ab.loadJson("test", 10, 10, 10);
 
     ab.buildOriginMarker(S.float('om'));
 
