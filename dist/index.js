@@ -554,6 +554,9 @@ const pointCloud_1 = __webpack_require__(996);
 const pointCloud2_1 = __webpack_require__(386);
 const modelCloud_1 = __webpack_require__(879);
 const starSystem_1 = __webpack_require__(445);
+const universe_1 = __webpack_require__(670);
+const system_1 = __webpack_require__(855);
+const exchange_1 = __webpack_require__(253);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -561,6 +564,7 @@ class BlockBuild {
     canvas;
     playerGroup = new THREE.Group();
     universeGroup = new THREE.Group();
+    universe = new universe_1.Universe();
     place;
     keysDown = new Set();
     construction;
@@ -580,9 +584,21 @@ class BlockBuild {
     }
     async initialize() {
         await this.setScene();
-        // this.universeGroup.add(Assets.models["ship"]);
-        // this.construction.addCube(Assets.blocks[0]);
-        // this.construction.save();
+        let exchanges = new Map();
+        for (let i of assets_1.Assets.items) {
+            let exchange = new exchange_1.Exchange(i);
+            exchanges.set(i, exchange);
+        }
+        let station = new system_1.Body();
+        station.name = "station";
+        station.bodyType = 'Station';
+        station.position = new THREE.Vector3(10, 10, 10);
+        station.exchanges = exchanges;
+        let system = new system_1.System();
+        system.name = "system name";
+        system.bodies = new Map();
+        system.bodies.set(station.name, station);
+        this.universe.systems.set(system.name, system);
         this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
@@ -595,7 +611,6 @@ class BlockBuild {
         //     Math.floor(Math.random() * 500) - 250,
         //     Math.floor(Math.random() * 500) - 250);
         // }
-        // await ab.loadJson("test", 10, 10, 10);
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
         this.construction.loadFromLocal();
@@ -4463,6 +4478,28 @@ exports.StarSystem = StarSystem;
 
 /***/ }),
 
+/***/ 855:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Body = exports.System = void 0;
+class System {
+    name;
+    bodies;
+}
+exports.System = System;
+class Body {
+    name;
+    exchanges;
+    position;
+    bodyType;
+}
+exports.Body = Body;
+//# sourceMappingURL=system.js.map
+
+/***/ }),
+
 /***/ 544:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -4543,6 +4580,20 @@ class UnionGeometryContainer extends THREE.Object3D {
 }
 exports.UnionGeometryContainer = UnionGeometryContainer;
 //# sourceMappingURL=unionGeometryContainer.js.map
+
+/***/ }),
+
+/***/ 670:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Universe = void 0;
+class Universe {
+    systems = new Map();
+}
+exports.Universe = Universe;
+//# sourceMappingURL=universe.js.map
 
 /***/ }),
 
