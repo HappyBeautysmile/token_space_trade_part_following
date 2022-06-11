@@ -17,6 +17,8 @@ import { ButtonDispatcher } from "./buttonDispatcher";
 import { SkyBox } from "./skyBox";
 import { PointCloud, PointCloud1 } from "./pointCloud";
 import { PointCloud2 } from "./pointCloud2";
+import { ModelCloud } from "./modelCloud";
+import { StarSystem } from "./starSystem";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -179,11 +181,18 @@ export class BlockBuild {
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
 
+    this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
+    this.camera.position.set(0, 1.7, 0);
+    this.camera.lookAt(0, 1.7, -1.5);
+
     if (S.float('pv') === 2) {
-      this.stars = new PointCloud2(
+      const starCloud = new PointCloud2(
         0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
-        new THREE.Color('#ddd'), /*pointRadius=*/1e4,
+        new THREE.Color('#fff'), S.float('ss'),
         /*visibleDistance=*/S.float('sr'), /*includeOrigin=*/true);
+      this.stars = new ModelCloud((pos: THREE.Vector3) => {
+        return new StarSystem(this.camera);
+      }, starCloud, /*showRadius=*/S.float('sp'), this.camera);
     } else {
       this.stars = new PointCloud1(
         0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
@@ -195,9 +204,6 @@ export class BlockBuild {
     const sky = new SkyBox();
     this.scene.add(sky);
 
-    this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
-    this.camera.position.set(0, 1.7, 0);
-    this.camera.lookAt(0, 1.7, -1.5);
     this.playerGroup.add(this.camera);
     this.place = new Place(this.universeGroup, this.playerGroup, this.camera,
       this.stars);

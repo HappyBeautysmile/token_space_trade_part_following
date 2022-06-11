@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import { cli } from "webpack";
 import { ModelCloud } from "./modelCloud";
 import { PlanetPlatform } from "./planetPlatform";
 import { PointCloud1 } from "./pointCloud";
+import { PointCloud2 } from "./pointCloud2";
 import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 
@@ -12,33 +12,36 @@ export class StarSystem extends THREE.Object3D implements Ticker {
   constructor(camera: THREE.Camera) {
     super();
     this.material = StarSystem.makeStarMaterial();
-    const mesh = new THREE.Mesh(
-      new THREE.IcosahedronBufferGeometry(1, 2),
-      this.material);
-    mesh.geometry.boundingSphere =
-      new THREE.Sphere(new THREE.Vector3, 1e30);
+    // const mesh = new THREE.Mesh(
+    //   new THREE.IcosahedronBufferGeometry(1, 2),
+    //   this.material);
+    // mesh.geometry.boundingSphere =
+    //   new THREE.Sphere(new THREE.Vector3, 1e30);
 
-    mesh.scale.setLength(1e3);
-    this.add(mesh);
+    // mesh.scale.setLength(1e3);
+    // this.add(mesh);
 
-    const belt = new PointCloud1(
+    const belt = new PointCloud2(
       /*radius=*/S.float('ar'),
       /*radiusSd=*/S.float('ar') / 10, /*ySd=*/S.float('ar') / 20,
-      S.float('na'), new THREE.Color('#888'),
+      S.float('na'), new THREE.Color('#88f'),
       /*pointRadius=*/1e2, /*visibleDistance=*/S.float('sp'));
     this.add(belt);
 
-    const planets = new PointCloud1(
-      /*radius=*/S.float('ar'),
-      /*radiusSd=*/S.float('ar') * 3, /*ySd=*/S.float('ar') / 2,
-      10, new THREE.Color('#8ff'),
-      /*pointRadius=*/1e3, /*visibleDistance=*/S.float('sp'));
-    const planetModelCloud = new ModelCloud((pos: THREE.Vector3) => {
-      return new PlanetPlatform(pos, camera);
-    }, planets, /*showRadius=*/1e6,
-      camera)
+    // const planets = new PointCloud2(
+    //   /*radius=*/S.float('ar'),
+    //   /*radiusSd=*/S.float('ar') * 3, /*ySd=*/S.float('ar') / 2,
+    //   10, new THREE.Color('#8ff'),
+    //   /*pointRadius=*/1e1, /*visibleDistance=*/S.float('sp'));
+    // this.add(planets);
 
-    this.add(planetModelCloud);
+
+    // const planetModelCloud = new ModelCloud((pos: THREE.Vector3) => {
+    //   return new PlanetPlatform(pos, camera);
+    // }, planets, /*showRadius=*/1e6,
+    //   camera)
+
+    // this.add(planetModelCloud);
 
   }
   static makeStarMaterial() {

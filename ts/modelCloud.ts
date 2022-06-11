@@ -5,11 +5,28 @@ import { Tick, Ticker } from "./tick";
 
 export type ModelFactory = (pos: THREE.Vector3) => THREE.Object3D;
 
-export class ModelCloud extends THREE.Object3D implements Ticker {
+export class ModelCloud extends THREE.Object3D implements Ticker, PointCloud {
   constructor(private factory: ModelFactory, private cloud: PointCloud,
     private showRadius: number, private camera: THREE.Object3D) {
     super();
     this.add(cloud);
+    if (!camera) {
+      throw new Error("Camera required.");
+    }
+  }
+
+  public showStar(point: THREE.Vector3) {
+    // TODO: Not implemented
+  }
+
+  public hideStar(point: THREE.Vector3) {
+    // TODO: Not implemented
+  }
+
+  public getAllWithinRadius(point: THREE.Vector3, radius: number)
+    : Iterable<THREE.Vector3> {
+    // TODO: Also return planets etc.
+    return this.cloud.getAllWithinRadius(point, radius);
   }
 
   private currentStarMap = new Map<THREE.Vector3, THREE.Object3D>();

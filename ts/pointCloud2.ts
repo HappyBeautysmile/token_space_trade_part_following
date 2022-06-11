@@ -14,11 +14,13 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
 
   constructor(radius: number, radiusSd: number, ySd: number,
     count: number, private color: THREE.Color, private pointRadius: number,
-    private visibleDistance: number, private includeOrigin = false) {
+    private visibleDistance: number, includeOrigin = false) {
     super();
-    const origin = new THREE.Vector3();
-    this.starPositions.add(origin, origin);
-    this.addStars(radius, radiusSd, ySd, count);
+    if (includeOrigin) {
+      const origin = new THREE.Vector3();
+      this.starPositions.add(origin, origin);
+    }
+    this.addStars(radius, radiusSd, ySd, count, pointRadius);
   }
 
   public showStar(point: THREE.Vector3) {
@@ -46,7 +48,7 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
   }
 
   private addStar(
-    x: number, y: number, z: number,
+    x: number, y: number, z: number, pointRadius: number,
     index: number[],
     vertices: number[],
     colors: number[],
@@ -57,7 +59,6 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
     this.starPositions.add(pos, pos);
     const o = Math.round(vertices.length / 3);
     index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
-    const ss = S.float('ss');
     const c = new THREE.Color(
       Math.random() * 0.2 + 0.8 * this.color.r,
       Math.random() * 0.2 + 0.8 * this.color.g,
@@ -68,17 +69,16 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
       vertices.push();
     }
     dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
-    r.push(ss, ss, ss, ss)
+    r.push(pointRadius, pointRadius, pointRadius, pointRadius)
   }
 
-  private addStars(radius: number, radiusSd: number, ySd: number, count: number) {
+  private addStars(radius: number, radiusSd: number, ySd: number, count: number,
+    pointRadius: number) {
     const index: number[] = [];
     const vertices: number[] = [];
     const colors: number[] = [];
     const dxy: number[] = [];
     const r: number[] = [];
-
-    const ss = S.float('ss');  // Star size
 
     for (let i = 0; i < count; ++i) {
       const orbitalRadius = PointCloud2.gaussian(radiusSd) + radius;
@@ -88,6 +88,7 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
         orbitalRadius * Math.cos(theta),
         orbitalHeight,
         orbitalRadius * Math.sin(theta),
+        pointRadius,
         index, vertices, colors, dxy, r);
     }
 
