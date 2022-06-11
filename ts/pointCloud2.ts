@@ -16,7 +16,8 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
     count: number, private color: THREE.Color, private pointRadius: number,
     private visibleDistance: number, private includeOrigin = false) {
     super();
-
+    const origin = new THREE.Vector3();
+    this.starPositions.add(origin, origin);
     this.addStars(radius, radiusSd, ySd, count);
   }
 
@@ -46,6 +47,8 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
     dxy: number[],
     r: number[]
   ) {
+    const pos = new THREE.Vector3(x, y, z);
+    this.starPositions.add(pos, pos);
     const o = Math.round(vertices.length / 3);
     index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
     const ss = S.float('ss');
