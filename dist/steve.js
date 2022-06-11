@@ -563,6 +563,10 @@ const gripLike_1 = __webpack_require__(875);
 const computer_1 = __webpack_require__(885);
 const skyBox_1 = __webpack_require__(813);
 const pointCloud_1 = __webpack_require__(996);
+const pointCloud2_1 = __webpack_require__(386);
+const universe_1 = __webpack_require__(670);
+const system_1 = __webpack_require__(855);
+const exchange_1 = __webpack_require__(253);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -570,6 +574,7 @@ class BlockBuild {
     canvas;
     playerGroup = new THREE.Group();
     universeGroup = new THREE.Group();
+    universe = new universe_1.Universe();
     place;
     keysDown = new Set();
     construction;
@@ -589,9 +594,21 @@ class BlockBuild {
     }
     async initialize() {
         await this.setScene();
-        // this.universeGroup.add(Assets.models["ship"]);
-        // this.construction.addCube(Assets.blocks[0]);
-        // this.construction.save();
+        let exchanges = new Map();
+        for (let i of assets_1.Assets.items) {
+            let exchange = new exchange_1.Exchange(i);
+            exchanges.set(i, exchange);
+        }
+        let station = new system_1.Body();
+        station.name = "station";
+        station.bodyType = 'Station';
+        station.position = new THREE.Vector3(10, 10, 10);
+        station.exchanges = exchanges;
+        let system = new system_1.System();
+        system.name = "system name";
+        system.bodies = new Map();
+        system.bodies.set(station.name, station);
+        this.universe.systems.set(system.name, system);
         this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
@@ -604,7 +621,6 @@ class BlockBuild {
         //     Math.floor(Math.random() * 500) - 250,
         //     Math.floor(Math.random() * 500) - 250);
         // }
-        // await ab.loadJson("test", 10, 10, 10);
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
         this.construction.loadFromLocal();
@@ -699,8 +715,14 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
-        this.stars = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
-        /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+        if (settings_1.S.float('pv') === 2) {
+            this.stars = new pointCloud2_1.PointCloud2(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
+            /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+        }
+        else {
+            this.stars = new pointCloud_1.PointCloud1(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
+            /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+        }
         this.universeGroup.add(this.stars);
         const sky = new skyBox_1.SkyBox();
         this.scene.add(sky);
@@ -757,7 +779,7 @@ class BlockBuild {
         //   sound.play();
         // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("Warp speed");
+        debug_1.Debug.log("Union Geometry");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1331,8 +1353,8 @@ const THREE = __importStar(__webpack_require__(232));
 const codec_1 = __webpack_require__(385);
 const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
-const mergedGeometryContainer_1 = __webpack_require__(529);
 const settings_1 = __webpack_require__(451);
+const unionGeometryContainer_1 = __webpack_require__(614);
 class GroupContainer {
     container;
     objects = new Map();
@@ -1354,9 +1376,9 @@ class ObjectConstruction {
     constructor(container, renderer) {
         this.renderer = renderer;
         if (settings_1.S.float('m')) {
-            const mergedGeometryContainer = new mergedGeometryContainer_1.MergedGeometryContainer();
-            this.container = mergedGeometryContainer;
-            container.add(mergedGeometryContainer);
+            const geometryContainer = new unionGeometryContainer_1.UnionGeometryContainer();
+            this.container = geometryContainer;
+            container.add(geometryContainer);
         }
         else {
             this.container = new GroupContainer(container);
@@ -3256,7 +3278,7 @@ class ModelCloud extends THREE.Object3D {
         for (const k of this.currentStarMap.keys()) {
             currentStars.add(k);
         }
-        for (const closePoint of this.cloud.starPositions.getAllWithinRadius(this.p1, this.showRadius)) {
+        for (const closePoint of this.cloud.getAllWithinRadius(this.p1, this.showRadius)) {
             if (!this.currentStarMap.has(closePoint)) {
                 const starSystem = this.factory(closePoint);
                 starSystem.position.copy(closePoint);
@@ -3586,7 +3608,7 @@ class Place {
     tmp = new THREE.Vector3();
     searchForStar(radius) {
         let distanceToNearestStar = 1e12;
-        for (const s of this.stars.starPositions.getAllWithinRadius(this.p, radius)) {
+        for (const s of this.stars.getAllWithinRadius(this.p, radius)) {
             this.tmp.copy(s);
             this.tmp.sub(this.p);
             distanceToNearestStar = Math.min(distanceToNearestStar, this.tmp.length());
@@ -3804,10 +3826,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PointCloud = void 0;
+exports.PointCloud1 = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const pointMap_1 = __webpack_require__(228);
-class PointCloud extends THREE.Object3D {
+class PointCloud1 extends THREE.Object3D {
     color;
     pointRadius;
     visibleDistance;
@@ -3843,6 +3865,9 @@ class PointCloud extends THREE.Object3D {
         colorAttribute.setXYZ(this.pointIndex.get(point), 0, 0, 0);
         colorAttribute.needsUpdate = true;
     }
+    getAllWithinRadius(point, radius) {
+        return this.starPositions.getAllWithinRadius(point, radius);
+    }
     addStar(x, y, z, positions, colors) {
         const i = Math.round(positions.length / 3);
         if (i === 0 && this.includeOrigin) {
@@ -3863,8 +3888,8 @@ class PointCloud extends THREE.Object3D {
             this.addStar(0, 0, 0, positions, colors);
         }
         for (let i = 0; i < count; ++i) {
-            const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
-            const orbitalHeight = PointCloud.gaussian(ySd);
+            const orbitalRadius = PointCloud1.gaussian(radiusSd) + radius;
+            const orbitalHeight = PointCloud1.gaussian(ySd);
             const theta = Math.random() * Math.PI * 2;
             this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), positions, colors);
         }
@@ -3924,8 +3949,178 @@ class PointCloud extends THREE.Object3D {
         this.material.uniformsNeedUpdate = true;
     }
 }
-exports.PointCloud = PointCloud;
+exports.PointCloud1 = PointCloud1;
 //# sourceMappingURL=pointCloud.js.map
+
+/***/ }),
+
+/***/ 386:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PointCloud2 = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const pointMap_1 = __webpack_require__(228);
+const settings_1 = __webpack_require__(451);
+class PointCloud2 extends THREE.Object3D {
+    color;
+    pointRadius;
+    visibleDistance;
+    includeOrigin;
+    starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
+    material;
+    geometry;
+    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance, includeOrigin = false) {
+        super();
+        this.color = color;
+        this.pointRadius = pointRadius;
+        this.visibleDistance = visibleDistance;
+        this.includeOrigin = includeOrigin;
+        const origin = new THREE.Vector3();
+        this.starPositions.add(origin, origin);
+        this.addStars(radius, radiusSd, ySd, count);
+    }
+    showStar(point) {
+        // TODO: Not implemented
+    }
+    hideStar(point) {
+        // TODO: Not implemented
+    }
+    getAllWithinRadius(point, radius) {
+        return this.starPositions.getAllWithinRadius(point, radius);
+    }
+    static gaussian(sd) {
+        const n = 6;
+        let x = 0;
+        for (let i = 0; i < n; ++i) {
+            x += Math.random();
+            x -= Math.random();
+        }
+        return sd * (x / Math.sqrt(n));
+    }
+    addStar(x, y, z, index, vertices, colors, dxy, r) {
+        const pos = new THREE.Vector3(x, y, z);
+        this.starPositions.add(pos, pos);
+        const o = Math.round(vertices.length / 3);
+        index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
+        const ss = settings_1.S.float('ss');
+        const c = new THREE.Color(Math.random() * 0.2 + 0.8 * this.color.r, Math.random() * 0.2 + 0.8 * this.color.g, Math.random() * 0.2 + 0.8 * this.color.b);
+        for (let i = 0; i < 4; ++i) {
+            vertices.push(x, y, z);
+            colors.push(c.r, c.g, c.b);
+            vertices.push();
+        }
+        dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
+        r.push(ss, ss, ss, ss);
+    }
+    addStars(radius, radiusSd, ySd, count) {
+        const index = [];
+        const vertices = [];
+        const colors = [];
+        const dxy = [];
+        const r = [];
+        const ss = settings_1.S.float('ss'); // Star size
+        for (let i = 0; i < count; ++i) {
+            const orbitalRadius = PointCloud2.gaussian(radiusSd) + radius;
+            const orbitalHeight = PointCloud2.gaussian(ySd);
+            const theta = Math.random() * Math.PI * 2;
+            this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), index, vertices, colors, dxy, r);
+        }
+        this.geometry = new THREE.BufferGeometry();
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+        this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+        this.geometry.setAttribute('dxy', new THREE.BufferAttribute(new Float32Array(dxy), 2));
+        this.geometry.setAttribute('r', new THREE.BufferAttribute(new Float32Array(r), 1));
+        this.geometry.setIndex(index);
+        this.material = new THREE.ShaderMaterial({
+            uniforms: {
+                'sizeScale': { value: 1.0 },
+            },
+            vertexShader: `
+        attribute vec2 dxy;
+        attribute float r;
+        varying vec3 vColor;
+        varying vec2 vDxy;
+        varying float vIntensity;
+        void main() {
+          vDxy = dxy;
+          vColor = color;
+          vIntensity = 1.0;
+          float sizeScale = 1.0;
+
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          float distance = length(worldPosition.xyz / worldPosition.w);
+          if (distance > 500.0 * r) {
+            sizeScale *= distance / (500.0 * r);
+            vIntensity = 1.0 / sizeScale;
+          }
+          if (distance > 100.0) {
+            worldPosition.xyz *= 100.0 / distance;
+            sizeScale *= 100.0 / distance;
+          }
+          vec4 mvPosition = viewMatrix * worldPosition;
+          mvPosition += sizeScale * r * vec4(dxy, 0.0, 0.0);
+
+          gl_Position = projectionMatrix * mvPosition;
+        }`,
+            fragmentShader: `
+      varying float vIntensity;
+      varying vec3 vColor;
+      varying vec2 vDxy;
+      void main() {
+        float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
+        gl_FragColor = vec4(vColor * intensity, 1.0);
+      }`,
+            blending: THREE.AdditiveBlending,
+            depthTest: true,
+            depthWrite: false,
+            transparent: false,
+            vertexColors: true,
+            clipping: false,
+            clipIntersection: false,
+            clippingPlanes: [],
+            side: THREE.DoubleSide,
+        });
+        this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e30);
+        const points = new THREE.Mesh(this.geometry, this.material);
+        this.add(points);
+    }
+    // private worldPosition = new THREE.Vector3();
+    // private worldRotation = new THREE.Quaternion();
+    worldScale = new THREE.Vector3();
+    tick(t) {
+        this.worldScale.setFromMatrixScale(this.matrixWorld);
+        this.material.uniforms['sizeScale'].value =
+            this.worldScale.x * this.pointRadius;
+        this.material.uniformsNeedUpdate = true;
+    }
+}
+exports.PointCloud2 = PointCloud2;
+//# sourceMappingURL=pointCloud2.js.map
 
 /***/ }),
 
@@ -4145,13 +4340,14 @@ class S {
         S.setDefault('mouse', -1, 'Which grip the mouse controls.');
         S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-        S.setDefault('sr', 1e9, 'Starfield radius');
+        S.setDefault('sr', 1e10, 'Starfield radius');
+        S.setDefault('ss', 1e5, 'Radius of a single star');
         S.setDefault('ar', 3e4, 'Asteroid radius');
         S.setDefault('ns', 1e5, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
-        S.setDefault('m', 0, 'Use merged geometry in Block Build.');
+        S.setDefault('m', 1, 'Use merged geometry in Block Build.');
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
@@ -4159,6 +4355,7 @@ class S {
         S.setDefault('cs', 1.0, 'Scale of the computer model.');
         S.setDefault('ch', 0.7, 'Height of computer from the floor');
         S.setDefault('om', 0, 'Size of origin marker');
+        S.setDefault('pv', 2, 'Point cloud version');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -4296,12 +4493,12 @@ class StarSystem extends THREE.Object3D {
             new THREE.Sphere(new THREE.Vector3, 1e30);
         mesh.scale.setLength(1e3);
         this.add(mesh);
-        const belt = new pointCloud_1.PointCloud(
+        const belt = new pointCloud_1.PointCloud1(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') / 10, /*ySd=*/ settings_1.S.float('ar') / 20, settings_1.S.float('na'), new THREE.Color('#888'), 
         /*pointRadius=*/ 1e2, /*visibleDistance=*/ settings_1.S.float('sp'));
         this.add(belt);
-        const planets = new pointCloud_1.PointCloud(
+        const planets = new pointCloud_1.PointCloud1(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') * 3, /*ySd=*/ settings_1.S.float('ar') / 2, 10, new THREE.Color('#8ff'), 
         /*pointRadius=*/ 1e3, /*visibleDistance=*/ settings_1.S.float('sp'));
@@ -4409,6 +4606,28 @@ exports.StarSystem = StarSystem;
 
 /***/ }),
 
+/***/ 855:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Body = exports.System = void 0;
+class System {
+    name;
+    bodies;
+}
+exports.System = System;
+class Body {
+    name;
+    exchanges;
+    position;
+    bodyType;
+}
+exports.Body = Body;
+//# sourceMappingURL=system.js.map
+
+/***/ }),
+
 /***/ 544:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -4427,6 +4646,86 @@ class Tick {
 }
 exports.Tick = Tick;
 //# sourceMappingURL=tick.js.map
+
+/***/ }),
+
+/***/ 614:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UnionGeometryContainer = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const mergedGeometryContainer_1 = __webpack_require__(529);
+class UnionGeometryContainer extends THREE.Object3D {
+    childContainers = new Map();
+    locatedObjects = new Map();
+    constructor() {
+        super();
+    }
+    locationKey(location) {
+        const x = Math.round(location.x / 10);
+        const y = Math.round(location.y / 10);
+        const z = Math.round(location.z / 10);
+        return `${x.toFixed(0)},${y.toFixed(0)},${z.toFixed(0)}`;
+    }
+    addObject(key, object) {
+        const locationKey = this.locationKey(object.position);
+        if (!this.childContainers.has(locationKey)) {
+            const newContainer = new mergedGeometryContainer_1.MergedGeometryContainer();
+            this.childContainers.set(locationKey, newContainer);
+            this.add(newContainer);
+        }
+        this.locatedObjects.set(key, locationKey);
+        this.childContainers.get(locationKey).addObject(key, object);
+    }
+    removeObject(key) {
+        if (!this.locatedObjects.has(key)) {
+            return;
+        }
+        const locationKey = this.locatedObjects.get(key);
+        this.childContainers.get(locationKey).removeObject(key);
+    }
+}
+exports.UnionGeometryContainer = UnionGeometryContainer;
+//# sourceMappingURL=unionGeometryContainer.js.map
+
+/***/ }),
+
+/***/ 670:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Universe = void 0;
+class Universe {
+    systems;
+}
+exports.Universe = Universe;
+//# sourceMappingURL=universe.js.map
 
 /***/ }),
 
@@ -4478,7 +4777,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.camera = camera;
         this.xr = xr;
         this.keysDown = keysDown;
-        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ffa'), /*pointRadius=*/ 1e4, 
+        this.starCloud = new pointCloud_1.PointCloud1(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ffa'), /*pointRadius=*/ 1e4, 
         /*visibleDistance=*/ settings_1.S.float('sr'));
         const modelCloud = new modelCloud_1.ModelCloud((pos) => {
             return new starSystem_1.StarSystem(this.camera);

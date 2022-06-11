@@ -1,7 +1,9 @@
 import { BankAccount, BuyOrder, Exchange, SellOrder } from "./exchange";
+import { Item } from "./assets";
 
 var time = 0;
-var exchange = new Exchange('iron');
+let item = Item.make("", "", 0, "");
+var exchange = new Exchange(item);
 
 class Buyer {
   private timeRemaining: number;
