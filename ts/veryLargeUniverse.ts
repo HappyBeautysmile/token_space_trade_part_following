@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 import { StarSystem } from "./starSystem";
-import { PointCloud } from "./pointCloud";
+import { PointCloud, PointCloud1 } from "./pointCloud";
 import { ModelCloud } from "./modelCloud";
 
 // A collection of StarSystems.  We only instantiate the StarSystem object
@@ -16,7 +16,7 @@ export class VeryLargeUniverse extends THREE.Object3D implements Ticker {
     private keysDown: Set<string>) {
     super();
 
-    this.starCloud = new PointCloud(
+    this.starCloud = new PointCloud1(
       0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
       new THREE.Color('#ffa'), /*pointRadius=*/1e4,
       /*visibleDistance=*/S.float('sr'));

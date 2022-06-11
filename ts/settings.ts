@@ -25,6 +25,7 @@ export class S {
     S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
     S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
     S.setDefault('sr', 1e9, 'Starfield radius');
+    S.setDefault('ss', 1e3, 'Radius of a single star')
     S.setDefault('ar', 3e4, 'Asteroid radius');
     S.setDefault('ns', 1e5, 'Number of stars in the VLU');
     S.setDefault('na', 700, 'Number of asteroids in a belt.');
@@ -38,6 +39,7 @@ export class S {
     S.setDefault('cs', 1.0, 'Scale of the computer model.');
     S.setDefault('ch', 0.7, 'Height of computer from the floor');
     S.setDefault('om', 0, 'Size of origin marker');
+    S.setDefault('pv', 1, 'Point cloud version');
   }
 
   public static float(name: string): number {

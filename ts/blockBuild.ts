@@ -1,21 +1,22 @@
 import * as THREE from "three";
 // import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+
 import { Tick, Ticker } from "./tick";
 import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
 import { Assets } from "./assets";
 import { Construction, ObjectConstruction } from "./construction";
-
 import { AstroGen } from "./astroGen";
 import { S } from "./settings";
 import { Inventory, Player } from "./player";
 import { GripGrip, GripLike, MouseGrip } from "./gripLike";
-import { Computer } from "./computer";
+import { Computer } from "./computer/computer";
 import { ButtonDispatcher } from "./buttonDispatcher";
 import { SkyBox } from "./skyBox";
-import { PointCloud } from "./pointCloud";
+import { PointCloud, PointCloud1 } from "./pointCloud";
+import { PointCloud2 } from "./pointCloud2";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -178,10 +179,17 @@ export class BlockBuild {
     this.scene.add(this.playerGroup);
     this.scene.add(this.universeGroup);
 
-    this.stars = new PointCloud(
-      0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
-      new THREE.Color('#ddd'), /*pointRadius=*/1e4,
-    /*visibleDistance=*/S.float('sr'), /*includeOrigin=*/true);
+    if (S.float('pv') === 2) {
+      this.stars = new PointCloud2(
+        0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
+        new THREE.Color('#ddd'), /*pointRadius=*/1e4,
+        /*visibleDistance=*/S.float('sr'), /*includeOrigin=*/true);
+    } else {
+      this.stars = new PointCloud1(
+        0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
+        new THREE.Color('#ddd'), /*pointRadius=*/1e4,
+        /*visibleDistance=*/S.float('sr'), /*includeOrigin=*/true);
+    }
     this.universeGroup.add(this.stars);
 
     const sky = new SkyBox();

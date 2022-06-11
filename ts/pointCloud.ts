@@ -3,7 +3,13 @@ import { PointMapOctoTree } from "./pointMap";
 import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 
-export class PointCloud extends THREE.Object3D implements Ticker {
+export interface PointCloud extends THREE.Object3D {
+  starPositions: PointMapOctoTree<THREE.Vector3>;
+  showStar(point: THREE.Vector3);
+  hideStar(point: THREE.Vector3);
+}
+
+export class PointCloud1 extends THREE.Object3D implements PointCloud, Ticker {
   readonly starPositions = new PointMapOctoTree<THREE.Vector3>(
     new THREE.Vector3(), 1e10);
   private material: THREE.ShaderMaterial;
@@ -65,8 +71,8 @@ export class PointCloud extends THREE.Object3D implements Ticker {
       this.addStar(0, 0, 0, positions, colors);
     }
     for (let i = 0; i < count; ++i) {
-      const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
-      const orbitalHeight = PointCloud.gaussian(ySd);
+      const orbitalRadius = PointCloud1.gaussian(radiusSd) + radius;
+      const orbitalHeight = PointCloud1.gaussian(ySd);
       const theta = Math.random() * Math.PI * 2;
       this.addStar(
         orbitalRadius * Math.cos(theta),

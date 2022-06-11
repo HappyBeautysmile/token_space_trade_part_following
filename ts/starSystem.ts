@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { cli } from "webpack";
 import { ModelCloud } from "./modelCloud";
 import { PlanetPlatform } from "./planetPlatform";
-import { PointCloud } from "./pointCloud";
+import { PointCloud1 } from "./pointCloud";
 import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 
@@ -21,14 +21,14 @@ export class StarSystem extends THREE.Object3D implements Ticker {
     mesh.scale.setLength(1e3);
     this.add(mesh);
 
-    const belt = new PointCloud(
+    const belt = new PointCloud1(
       /*radius=*/S.float('ar'),
       /*radiusSd=*/S.float('ar') / 10, /*ySd=*/S.float('ar') / 20,
       S.float('na'), new THREE.Color('#888'),
       /*pointRadius=*/1e2, /*visibleDistance=*/S.float('sp'));
     this.add(belt);
 
-    const planets = new PointCloud(
+    const planets = new PointCloud1(
       /*radius=*/S.float('ar'),
       /*radiusSd=*/S.float('ar') * 3, /*ySd=*/S.float('ar') / 2,
       10, new THREE.Color('#8ff'),
