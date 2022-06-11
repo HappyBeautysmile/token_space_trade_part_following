@@ -560,8 +560,9 @@ const astroGen_1 = __webpack_require__(419);
 const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
-const computer_1 = __webpack_require__(723);
+const computer_1 = __webpack_require__(885);
 const skyBox_1 = __webpack_require__(813);
+const pointCloud_1 = __webpack_require__(996);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -574,6 +575,7 @@ class BlockBuild {
     construction;
     player;
     computer;
+    stars;
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -697,16 +699,19 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
+        this.stars = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
+        /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+        this.universeGroup.add(this.stars);
         const sky = new skyBox_1.SkyBox();
-        this.universeGroup.add(sky);
+        this.scene.add(sky);
         this.camera = new THREE.PerspectiveCamera(75, 1.0, 0.1, 2000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
         this.playerGroup.add(this.camera);
-        this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera);
+        this.place = new place_1.Place(this.universeGroup, this.playerGroup, this.camera, this.stars);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         //this.renderer.setSize(512, 512);
-        this.renderer.setSize(800, 800);
+        this.renderer.setSize(32, 32);
         document.body.appendChild(this.renderer.domElement);
         this.canvas = this.renderer.domElement;
         this.renderer.xr.enabled = true;
@@ -752,7 +757,7 @@ class BlockBuild {
         //   sound.play();
         // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("sound when placed 3");
+        debug_1.Debug.log("Warp speed");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -839,7 +844,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ButtonDispatcher = void 0;
 const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
 class Button {
     o;
     localPosition;
@@ -873,7 +877,7 @@ class ButtonDispatcher {
     ;
     static callbacks = new Map();
     static registerButton(o, localPosition, radius, callback) {
-        debug_1.Debug.log(`localPosition=${JSON.stringify(localPosition)} radius=${radius}`);
+        // Debug.log(`localPosition=${JSON.stringify(localPosition)} radius=${radius}`);
         const button = new Button(o, localPosition, radius);
         ButtonDispatcher.callbacks.set(button, callback);
     }
@@ -1016,7 +1020,7 @@ exports.Codec = Codec;
 
 /***/ }),
 
-/***/ 723:
+/***/ 885:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1114,7 +1118,6 @@ class Computer extends THREE.Object3D {
             }
         });
         this.showInventory();
-        setInterval(() => { }, 5000);
     }
     tick(t) {
         if (t.frameCount % 10 === 0) {
@@ -1145,10 +1148,10 @@ class Computer extends THREE.Object3D {
     }
     labels() {
         this.clearRowText();
-        this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
-        this.bottomButtonLabels = ["", "", "", "", "", "", "", ""];
-        this.buttonCallbacks.set("T0", this.showInventory);
-        this.buttonCallbacks.set("T1", this.showNavigation);
+        this.topButtonLabels = ["", "", "", "", "", "", "", ""];
+        this.bottomButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
+        this.buttonCallbacks.set("B0", this.showInventory);
+        this.buttonCallbacks.set("B1", this.showNavigation);
         for (let i = 0; i < 8; i++) {
             let label = "T" + i.toFixed(0);
             let m = this.findChildByName(label, this.model);
@@ -1236,11 +1239,24 @@ class Computer extends THREE.Object3D {
                 });
             }
         }
+        // this.topButtonLabels[0] = "v ^";
+        // this.buttonCallbacks.set("T0", () => { this.player.inventory.sortByName});
+        // this.topButtonLabels[1] = "v ^";
         if (this.startRow > 0) {
             this.bottomButtonLabels[6] = "back";
+            this.buttonCallbacks.set("B6", () => {
+                debug_1.Debug.log("Back Pressed.");
+                this.startRow -= 15;
+                this.currentDisplay = this.showInventory;
+            });
         }
         if (this.startRow + 14 < items.length) {
             this.bottomButtonLabels[7] = "next";
+            this.buttonCallbacks.set("B7", () => {
+                debug_1.Debug.log("Next Pressed.");
+                this.startRow += 15;
+                this.currentDisplay = this.showInventory;
+            });
         }
         this.updateDisplay();
     }
@@ -2121,24 +2137,18 @@ class Hand extends THREE.Object3D {
             const rotRate = 2;
             const axes = this.source.gamepad.axes.slice(0);
             if (axes.length >= 4) {
-                //this.debugMaterial.color = new THREE.Color('green');
-                if (!axes[2] && !axes[3]) {
-                    // Sticks are not being touched.
+                //this.debugMaterial.color = new THREE.Color('orange');
+                this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
+                if (this.grip.getHandedness() === 'left') {
+                    this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
+                    this.v.multiplyScalar(rateMove * t.deltaS);
+                    this.place.movePlayerRelativeToCamera(this.v);
                 }
-                else {
-                    //this.debugMaterial.color = new THREE.Color('orange');
-                    this.debug.scale.set(1.1 + axes[2], 1.1 + axes[3], 1.0);
-                    if (this.grip.getHandedness() === 'left') {
-                        this.v.set(Math.pow(axes[2], 3), 0, Math.pow(axes[3], 3));
-                        this.v.multiplyScalar(rateMove * t.deltaS);
-                        this.place.movePlayerRelativeToCamera(this.v);
-                    }
-                    else if (this.grip.getHandedness() === 'right') {
-                        this.v.set(0, -Math.pow(axes[3], 3), 0);
-                        this.v.multiplyScalar(rateUpDown * t.deltaS);
-                        this.place.movePlayerRelativeToCamera(this.v);
-                        this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
-                    }
+                else if (this.grip.getHandedness() === 'right') {
+                    this.v.set(0, -Math.pow(axes[3], 3), 0);
+                    this.v.multiplyScalar(rateUpDown * t.deltaS);
+                    this.place.movePlayerRelativeToCamera(this.v);
+                    this.place.playerGroup.rotateY(-axes[2] * rotRate * t.deltaS);
                 }
             }
             const buttons = this.source.gamepad.buttons.map((b) => b.value);
@@ -2754,6 +2764,109 @@ void main() {
   c = c * 0.5 + 0.5;
   gl_FragColor = vec4(c, 1.0);
 }`));
+            this.snippets.push(new CodeSnippet('vertex', `
+#define PHONG
+varying vec3 vViewPosition;
+#include <common>
+#include <uv_pars_vertex>
+#include <uv2_pars_vertex>
+#include <displacementmap_pars_vertex>
+#include <envmap_pars_vertex>
+#include <color_pars_vertex>
+#include <fog_pars_vertex>
+#include <normal_pars_vertex>
+#include <morphtarget_pars_vertex>
+#include <skinning_pars_vertex>
+#include <shadowmap_pars_vertex>
+#include <logdepthbuf_pars_vertex>
+#include <clipping_planes_pars_vertex>
+void main() {
+	#include <uv_vertex>
+	#include <uv2_vertex>
+	#include <color_vertex>
+	#include <morphcolor_vertex>
+	#include <beginnormal_vertex>
+	#include <morphnormal_vertex>
+	#include <skinbase_vertex>
+	#include <skinnormal_vertex>
+	#include <defaultnormal_vertex>
+	#include <normal_vertex>
+	#include <begin_vertex>
+	#include <morphtarget_vertex>
+	#include <skinning_vertex>
+	#include <displacementmap_vertex>
+	#include <project_vertex>
+	#include <logdepthbuf_vertex>
+	#include <clipping_planes_vertex>
+	vViewPosition = - mvPosition.xyz;
+	#include <worldpos_vertex>
+	#include <envmap_vertex>
+	#include <shadowmap_vertex>
+	#include <fog_vertex>
+}
+`));
+            this.snippets.push(new CodeSnippet('fragment', `
+#define PHONG
+uniform vec3 diffuse;
+uniform vec3 emissive;
+uniform vec3 specular;
+uniform float shininess;
+uniform float opacity;
+#include <common>
+#include <packing>
+#include <dithering_pars_fragment>
+#include <color_pars_fragment>
+#include <uv_pars_fragment>
+#include <uv2_pars_fragment>
+#include <map_pars_fragment>
+#include <alphamap_pars_fragment>
+#include <alphatest_pars_fragment>
+#include <aomap_pars_fragment>
+#include <lightmap_pars_fragment>
+#include <emissivemap_pars_fragment>
+#include <envmap_common_pars_fragment>
+#include <envmap_pars_fragment>
+#include <cube_uv_reflection_fragment>
+#include <fog_pars_fragment>
+#include <bsdfs>
+#include <lights_pars_begin>   // Yes
+#include <normal_pars_fragment>
+#include <lights_phong_pars_fragment>
+#include <shadowmap_pars_fragment>
+#include <bumpmap_pars_fragment>
+#include <normalmap_pars_fragment>
+#include <specularmap_pars_fragment>
+#include <logdepthbuf_pars_fragment>
+#include <clipping_planes_pars_fragment>
+void main() {
+	#include <clipping_planes_fragment>
+	vec4 diffuseColor = vec4( diffuse, opacity );
+	ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
+	vec3 totalEmissiveRadiance = emissive;
+	#include <logdepthbuf_fragment>
+	#include <map_fragment>
+	#include <color_fragment>
+	#include <alphamap_fragment>
+	#include <alphatest_fragment>
+	#include <specularmap_fragment>
+	#include <normal_fragment_begin>
+	#include <normal_fragment_maps>
+	#include <emissivemap_fragment>
+	#include <lights_phong_fragment>
+	#include <lights_fragment_begin>
+	#include <lights_fragment_maps>
+	#include <lights_fragment_end>
+	#include <aomap_fragment>
+	vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+	#include <envmap_fragment>
+	#include <output_fragment>
+	#include <tonemapping_fragment>
+	#include <encodings_fragment>
+	#include <fog_fragment>
+	#include <premultiplied_alpha_fragment>
+	#include <dithering_fragment>
+}
+  `));
         }
     }
 }
@@ -2809,6 +2922,21 @@ class MergableSet {
         this.centroid.multiplyScalar(1 / (this.size + m.getIndexCount()));
         this.size += m.getIndexCount();
         this.positionCount += m.getPositionCount();
+    }
+    remove(m) {
+        this.centroid.multiplyScalar(this.size);
+        const mCentroid = new THREE.Vector3();
+        m.getCentroid(mCentroid);
+        mCentroid.multiplyScalar(m.getIndexCount());
+        this.centroid.sub(mCentroid);
+        this.centroid.multiplyScalar(1 / (this.size - m.getIndexCount()));
+        this.size -= m.getIndexCount();
+        this.positionCount -= m.getPositionCount();
+        const deleteIndex = this.children.indexOf(m);
+        if (deleteIndex < 0) {
+            throw new Error("Missing element!");
+        }
+        this.children.splice(deleteIndex, 1);
     }
     *positions() {
         for (const child of this.children) {
@@ -3036,6 +3164,7 @@ class MergedGeometryContainer extends THREE.Object3D {
             const mergablMesh = new MergableGeometry(mesh.geometry, transform, color);
             meshContainer.add(mergablMesh);
         }
+        this.pieces.set(key, meshContainer);
         this.mergableSet.add(meshContainer);
         this.dirty = true;
     }
@@ -3043,7 +3172,8 @@ class MergedGeometryContainer extends THREE.Object3D {
     //   this.keyIndex.set(key, objectIndex);
     // Removes the geometry associated with `key` from this.
     removeObject(key) {
-        throw new Error("Not implemented.");
+        this.mergableSet.remove(this.pieces.get(key));
+        this.dirty = true;
     }
     clean() {
         console.time('clean');
@@ -3387,16 +3517,19 @@ class Place {
     universeGroup;
     playerGroup;
     camera;
-    constructor(universeGroup, playerGroup, camera) {
+    stars;
+    constructor(universeGroup, playerGroup, camera, stars) {
         this.universeGroup = universeGroup;
         this.playerGroup = playerGroup;
         this.camera = camera;
+        this.stars = stars;
     }
     p = new THREE.Vector3();
     cameraNormalMatrix = new THREE.Matrix3();
-    velocity = new THREE.Vector3();
     q = new THREE.Quaternion();
     e = new THREE.Euler();
+    distanceToNearestStar = 1e14;
+    speedFactor = 1.0;
     // Moves the player relative to the camera's orientation.
     movePlayerRelativeToCamera(motion) {
         if (motion.length() === 0) {
@@ -3405,13 +3538,14 @@ class Place {
         this.q.copy(this.playerGroup.quaternion);
         this.p.copy(motion);
         this.p.applyQuaternion(this.q);
+        this.p.multiplyScalar(this.speedFactor);
         // this.p.applyMatrix3(this.cameraNormalMatrix);
-        this.velocity.add(this.p);
         // Debug.log(`velocity=${JSON.stringify(this.velocity)}`);
         // Debug.log(`motion=${JSON.stringify(motion)}`);
         //this.playerGroup.position.add(this.p);
         this.universeGroup.position.sub(this.p);
         //Debug.log(`Camera: ${JSON.stringify(this.camera.position)}`);
+        this.updateDistanceToNearestStar();
     }
     rotatePlayerRelativeToWorldY(rotation) {
         this.playerGroup.rotation.y += rotation;
@@ -3448,7 +3582,36 @@ class Place {
         p.z = Math.round(p.z);
     }
     stop() {
-        this.velocity = new THREE.Vector3(0, 0, 0);
+    }
+    tmp = new THREE.Vector3();
+    searchForStar(radius) {
+        let distanceToNearestStar = 1e12;
+        for (const s of this.stars.starPositions.getAllWithinRadius(this.p, radius)) {
+            this.tmp.copy(s);
+            this.tmp.sub(this.p);
+            distanceToNearestStar = Math.min(distanceToNearestStar, this.tmp.length());
+        }
+        if (distanceToNearestStar < radius) {
+            this.distanceToNearestStar = distanceToNearestStar;
+            return distanceToNearestStar;
+        }
+        else {
+            return undefined;
+        }
+    }
+    updateDistanceToNearestStar() {
+        this.p.set(0, 0, 0);
+        this.playerToUniverse(this.p);
+        // p is the player position in Universe Coordinates
+        for (const radius of [1e3, 1e5, 1e7]) {
+            const distance = this.searchForStar(radius);
+            if (distance <= radius) {
+                this.distanceToNearestStar = distance;
+                this.speedFactor =
+                    Math.max(1.0, this.distanceToNearestStar / 10);
+                return;
+            }
+        }
     }
 }
 exports.Place = Place;
@@ -3648,15 +3811,17 @@ class PointCloud extends THREE.Object3D {
     color;
     pointRadius;
     visibleDistance;
+    includeOrigin;
     starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     material;
     pointIndex = new Map();
     geometry;
-    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance) {
+    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance, includeOrigin = false) {
         super();
         this.color = color;
         this.pointRadius = pointRadius;
         this.visibleDistance = visibleDistance;
+        this.includeOrigin = includeOrigin;
         this.addStars(radius, radiusSd, ySd, count);
     }
     static gaussian(sd) {
@@ -3678,18 +3843,30 @@ class PointCloud extends THREE.Object3D {
         colorAttribute.setXYZ(this.pointIndex.get(point), 0, 0, 0);
         colorAttribute.needsUpdate = true;
     }
+    addStar(x, y, z, positions, colors) {
+        const i = Math.round(positions.length / 3);
+        if (i === 0 && this.includeOrigin) {
+            colors.push(0, 0, 0);
+        }
+        else {
+            colors.push(this.color.r, this.color.g, this.color.b);
+        }
+        const v = new THREE.Vector3(x, y, z);
+        this.starPositions.add(v, v);
+        positions.push(v.x, v.y, v.z);
+        this.pointIndex.set(v, i);
+    }
     addStars(radius, radiusSd, ySd, count) {
         const positions = [];
         const colors = [];
+        if (this.includeOrigin) {
+            this.addStar(0, 0, 0, positions, colors);
+        }
         for (let i = 0; i < count; ++i) {
             const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
             const orbitalHeight = PointCloud.gaussian(ySd);
             const theta = Math.random() * Math.PI * 2;
-            const v = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
-            this.starPositions.add(v, v);
-            positions.push(v.x, v.y, v.z);
-            colors.push(this.color.r, this.color.g, this.color.b);
-            this.pointIndex.set(v, i);
+            this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), positions, colors);
         }
         this.geometry = new THREE.BufferGeometry();
         this.geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -4039,7 +4216,8 @@ class SkyBox extends THREE.Object3D {
         super();
         const num = Math.ceil(Math.random() * 5).toFixed(0);
         const materialArray = this.createMaterialArray(num);
-        const skyboxGeo = new THREE.BoxGeometry(1000, 1000, 1000);
+        // We make the skybox 10% larger than the VLU radius
+        const skyboxGeo = new THREE.BoxGeometry(1.1e3, 1.1e3, 1.1e3);
         const skybox = new THREE.Mesh(skyboxGeo, materialArray);
         this.add(skybox);
     }
@@ -4059,7 +4237,12 @@ class SkyBox extends THREE.Object3D {
         const color = new THREE.Color(Math.random(), Math.random(), Math.random());
         const materialArray = skyboxImagepaths.map(image => {
             let texture = new THREE.TextureLoader().load(image);
-            return new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, color: color });
+            return new THREE.MeshBasicMaterial({
+                map: texture, side: THREE.BackSide, color: color,
+                blending: THREE.AdditiveBlending,
+                depthTest: true,
+                depthWrite: false
+            });
         });
         return materialArray;
     }
