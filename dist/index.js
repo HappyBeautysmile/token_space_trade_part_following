@@ -3919,9 +3919,10 @@ class PointCloud2 extends THREE.Object3D {
         const o = Math.round(vertices.length / 3);
         index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
         const ss = settings_1.S.float('ss');
+        const c = new THREE.Color(Math.random() * 0.2 + 0.8, Math.random() * 0.2 + 0.8, Math.random() * 0.2 + 0.8);
         for (let i = 0; i < 4; ++i) {
             vertices.push(x, y, z);
-            colors.push(Math.random(), Math.random(), Math.random());
+            colors.push(c.r, c.g, c.b);
             vertices.push();
         }
         dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
@@ -3955,23 +3956,34 @@ class PointCloud2 extends THREE.Object3D {
         attribute float r;
         varying vec3 vColor;
         varying vec2 vDxy;
+        varying float vIntensity;
         void main() {
           vDxy = dxy;
           vColor = color;
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          mvPosition = mvPosition + r * vec4(dxy, 0.0, 0.0);
-          float mvDistance = length(mvPosition);
-          if (mvDistance > 150.0) {
-            mvPosition = mvPosition * (150.0 / mvDistance);
+          vIntensity = 1.0;
+          float sizeScale = 1.0;
+
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          float distance = length(worldPosition.xyz / worldPosition.w);
+          if (distance > 500.0 * r) {
+            sizeScale *= distance / (500.0 * r);
+            vIntensity = 1.0 / sizeScale;
           }
+          if (distance > 100.0) {
+            worldPosition.xyz *= 100.0 / distance;
+            sizeScale *= 100.0 / distance;
+          }
+          vec4 mvPosition = viewMatrix * worldPosition;
+          mvPosition += sizeScale * r * vec4(dxy, 0.0, 0.0);
 
           gl_Position = projectionMatrix * mvPosition;
         }`,
             fragmentShader: `
+      varying float vIntensity;
       varying vec3 vColor;
       varying vec2 vDxy;
       void main() {
-        float intensity = clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
+        float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
         gl_FragColor = vec4(vColor * intensity, 1.0);
       }`,
             blending: THREE.AdditiveBlending,
@@ -3984,7 +3996,7 @@ class PointCloud2 extends THREE.Object3D {
             clippingPlanes: [],
             side: THREE.DoubleSide,
         });
-        this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3, 1e30);
+        this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e30);
         const points = new THREE.Mesh(this.geometry, this.material);
         this.add(points);
     }
@@ -4215,14 +4227,14 @@ class S {
         S.setDefault('mouse', -1, 'Which grip the mouse controls.');
         S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-        S.setDefault('sr', 1e9, 'Starfield radius');
-        S.setDefault('ss', 1e3, 'Radius of a single star');
+        S.setDefault('sr', 1e10, 'Starfield radius');
+        S.setDefault('ss', 1e5, 'Radius of a single star');
         S.setDefault('ar', 3e4, 'Asteroid radius');
         S.setDefault('ns', 1e5, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('sp', 3e6, 'Star System "Pop" radius');
-        S.setDefault('m', 0, 'Use merged geometry in Block Build.');
+        S.setDefault('m', 1, 'Use merged geometry in Block Build.');
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
@@ -4230,7 +4242,7 @@ class S {
         S.setDefault('cs', 1.0, 'Scale of the computer model.');
         S.setDefault('ch', 0.7, 'Height of computer from the floor');
         S.setDefault('om', 0, 'Size of origin marker');
-        S.setDefault('pv', 1, 'Point cloud version');
+        S.setDefault('pv', 2, 'Point cloud version');
     }
     static float(name) {
         if (S.cache.has(name)) {

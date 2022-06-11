@@ -49,9 +49,13 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
     const o = Math.round(vertices.length / 3);
     index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
     const ss = S.float('ss');
+    const c = new THREE.Color(
+      Math.random() * 0.2 + 0.8,
+      Math.random() * 0.2 + 0.8,
+      Math.random() * 0.2 + 0.8);
     for (let i = 0; i < 4; ++i) {
       vertices.push(x, y, z);
-      colors.push(Math.random(), Math.random(), Math.random());
+      colors.push(c.r, c.g, c.b);
       vertices.push();
     }
     dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
@@ -98,23 +102,34 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
         attribute float r;
         varying vec3 vColor;
         varying vec2 vDxy;
+        varying float vIntensity;
         void main() {
           vDxy = dxy;
           vColor = color;
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          mvPosition = mvPosition + r * vec4(dxy, 0.0, 0.0);
-          float mvDistance = length(mvPosition);
-          if (mvDistance > 150.0) {
-            mvPosition = mvPosition * (150.0 / mvDistance);
+          vIntensity = 1.0;
+          float sizeScale = 1.0;
+
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          float distance = length(worldPosition.xyz / worldPosition.w);
+          if (distance > 500.0 * r) {
+            sizeScale *= distance / (500.0 * r);
+            vIntensity = 1.0 / sizeScale;
           }
+          if (distance > 100.0) {
+            worldPosition.xyz *= 100.0 / distance;
+            sizeScale *= 100.0 / distance;
+          }
+          vec4 mvPosition = viewMatrix * worldPosition;
+          mvPosition += sizeScale * r * vec4(dxy, 0.0, 0.0);
 
           gl_Position = projectionMatrix * mvPosition;
         }`,
       fragmentShader: `
+      varying float vIntensity;
       varying vec3 vColor;
       varying vec2 vDxy;
       void main() {
-        float intensity = clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
+        float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
         gl_FragColor = vec4(vColor * intensity, 1.0);
       }`,
       blending: THREE.AdditiveBlending,
@@ -128,7 +143,7 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
       side: THREE.DoubleSide,
     });
 
-    this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3, 1e30);
+    this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e30);
 
     const points = new THREE.Mesh(this.geometry, this.material);
     this.add(points);
