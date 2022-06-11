@@ -548,9 +548,10 @@ const astroGen_1 = __webpack_require__(419);
 const settings_1 = __webpack_require__(451);
 const player_1 = __webpack_require__(507);
 const gripLike_1 = __webpack_require__(875);
-const computer_1 = __webpack_require__(723);
+const computer_1 = __webpack_require__(885);
 const skyBox_1 = __webpack_require__(813);
 const pointCloud_1 = __webpack_require__(996);
+const pointCloud2_1 = __webpack_require__(386);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -687,8 +688,14 @@ class BlockBuild {
         document.body.innerHTML = "";
         this.scene.add(this.playerGroup);
         this.scene.add(this.universeGroup);
-        this.stars = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
-        /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+        if (settings_1.S.float('pv') === 2) {
+            this.stars = new pointCloud2_1.PointCloud2(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
+            /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+        }
+        else {
+            this.stars = new pointCloud_1.PointCloud1(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ddd'), /*pointRadius=*/ 1e4, 
+            /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+        }
         this.universeGroup.add(this.stars);
         const sky = new skyBox_1.SkyBox();
         this.scene.add(sky);
@@ -1000,7 +1007,7 @@ exports.Codec = Codec;
 
 /***/ }),
 
-/***/ 723:
+/***/ 885:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1094,7 +1101,6 @@ class Computer extends THREE.Object3D {
             }
         });
         this.showInventory();
-        setInterval(() => { }, 5000);
     }
     tick(t) {
         if (t.frameCount % 10 === 0) {
@@ -1125,10 +1131,10 @@ class Computer extends THREE.Object3D {
     }
     labels() {
         this.clearRowText();
-        this.topButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
-        this.bottomButtonLabels = ["", "", "", "", "", "", "", ""];
-        this.buttonCallbacks.set("T0", this.showInventory);
-        this.buttonCallbacks.set("T1", this.showNavigation);
+        this.topButtonLabels = ["", "", "", "", "", "", "", ""];
+        this.bottomButtonLabels = ["INV", "NAV", "", "", "", "", "", ""];
+        this.buttonCallbacks.set("B0", this.showInventory);
+        this.buttonCallbacks.set("B1", this.showNavigation);
         for (let i = 0; i < 8; i++) {
             let label = "T" + i.toFixed(0);
             let m = this.findChildByName(label, this.model);
@@ -1216,11 +1222,24 @@ class Computer extends THREE.Object3D {
                 });
             }
         }
+        // this.topButtonLabels[0] = "v ^";
+        // this.buttonCallbacks.set("T0", () => { this.player.inventory.sortByName});
+        // this.topButtonLabels[1] = "v ^";
         if (this.startRow > 0) {
             this.bottomButtonLabels[6] = "back";
+            this.buttonCallbacks.set("B6", () => {
+                debug_1.Debug.log("Back Pressed.");
+                this.startRow -= 15;
+                this.currentDisplay = this.showInventory;
+            });
         }
         if (this.startRow + 14 < items.length) {
             this.bottomButtonLabels[7] = "next";
+            this.buttonCallbacks.set("B7", () => {
+                debug_1.Debug.log("Next Pressed.");
+                this.startRow += 15;
+                this.currentDisplay = this.showInventory;
+            });
         }
         this.updateDisplay();
     }
@@ -3712,10 +3731,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PointCloud = void 0;
+exports.PointCloud1 = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const pointMap_1 = __webpack_require__(228);
-class PointCloud extends THREE.Object3D {
+class PointCloud1 extends THREE.Object3D {
     color;
     pointRadius;
     visibleDistance;
@@ -3751,21 +3770,13 @@ class PointCloud extends THREE.Object3D {
         colorAttribute.setXYZ(this.pointIndex.get(point), 0, 0, 0);
         colorAttribute.needsUpdate = true;
     }
-    pushSix(x, y, z, target) {
-        target.push(x, y, z);
-        // target.push(x, y, z);
-        // target.push(x, y, z);
-        // target.push(x, y, z);
-        // target.push(x, y, z);
-        // target.push(x, y, z);
-    }
-    addStar(x, y, z, positions, colors, dx, dy) {
+    addStar(x, y, z, positions, colors) {
         const i = Math.round(positions.length / 3);
         if (i === 0 && this.includeOrigin) {
-            this.pushSix(0, 0, 0, colors);
+            colors.push(0, 0, 0);
         }
         else {
-            this.pushSix(this.color.r, this.color.g, this.color.b, colors);
+            colors.push(this.color.r, this.color.g, this.color.b);
         }
         const v = new THREE.Vector3(x, y, z);
         this.starPositions.add(v, v);
@@ -3775,16 +3786,14 @@ class PointCloud extends THREE.Object3D {
     addStars(radius, radiusSd, ySd, count) {
         const positions = [];
         const colors = [];
-        const dx = [];
-        const dy = [];
         if (this.includeOrigin) {
-            this.addStar(0, 0, 0, positions, colors, dx, dy);
+            this.addStar(0, 0, 0, positions, colors);
         }
         for (let i = 0; i < count; ++i) {
-            const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
-            const orbitalHeight = PointCloud.gaussian(ySd);
+            const orbitalRadius = PointCloud1.gaussian(radiusSd) + radius;
+            const orbitalHeight = PointCloud1.gaussian(ySd);
             const theta = Math.random() * Math.PI * 2;
-            this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), positions, colors, dx, dy);
+            this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), positions, colors);
         }
         this.geometry = new THREE.BufferGeometry();
         this.geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -3814,7 +3823,7 @@ class PointCloud extends THREE.Object3D {
       void main() {
         vec2 coords = gl_PointCoord;
         float intensity = clamp(
-          10.0 * (0.8 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
+          10.0 * (0.5 - length(gl_PointCoord - 0.5)), 0.0, 1.0);
         float brightness = 
           (${this.visibleDistance.toFixed(1)} - vDistance) /
           (${this.visibleDistance.toFixed(1)} + vDistance);
@@ -3842,8 +3851,155 @@ class PointCloud extends THREE.Object3D {
         this.material.uniformsNeedUpdate = true;
     }
 }
-exports.PointCloud = PointCloud;
+exports.PointCloud1 = PointCloud1;
 //# sourceMappingURL=pointCloud.js.map
+
+/***/ }),
+
+/***/ 386:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PointCloud2 = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const pointMap_1 = __webpack_require__(228);
+const settings_1 = __webpack_require__(451);
+class PointCloud2 extends THREE.Object3D {
+    color;
+    pointRadius;
+    visibleDistance;
+    includeOrigin;
+    starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
+    material;
+    geometry;
+    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance, includeOrigin = false) {
+        super();
+        this.color = color;
+        this.pointRadius = pointRadius;
+        this.visibleDistance = visibleDistance;
+        this.includeOrigin = includeOrigin;
+        this.addStars(radius, radiusSd, ySd, count);
+    }
+    showStar(point) {
+        // TODO: Not implemented
+    }
+    hideStar(point) {
+        // TODO: Not implemented
+    }
+    static gaussian(sd) {
+        const n = 6;
+        let x = 0;
+        for (let i = 0; i < n; ++i) {
+            x += Math.random();
+            x -= Math.random();
+        }
+        return sd * (x / Math.sqrt(n));
+    }
+    addStar(x, y, z, index, vertices, colors, dxy, r) {
+        const o = Math.round(vertices.length / 3);
+        index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
+        const ss = settings_1.S.float('ss');
+        for (let i = 0; i < 4; ++i) {
+            vertices.push(x, y, z);
+            colors.push(Math.random(), Math.random(), Math.random());
+            vertices.push();
+        }
+        dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
+        r.push(ss, ss, ss, ss);
+    }
+    addStars(radius, radiusSd, ySd, count) {
+        const index = [];
+        const vertices = [];
+        const colors = [];
+        const dxy = [];
+        const r = [];
+        const ss = settings_1.S.float('ss'); // Star size
+        for (let i = 0; i < count; ++i) {
+            const orbitalRadius = PointCloud2.gaussian(radiusSd) + radius;
+            const orbitalHeight = PointCloud2.gaussian(ySd);
+            const theta = Math.random() * Math.PI * 2;
+            this.addStar(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta), index, vertices, colors, dxy, r);
+        }
+        this.geometry = new THREE.BufferGeometry();
+        this.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+        this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+        this.geometry.setAttribute('dxy', new THREE.BufferAttribute(new Float32Array(dxy), 2));
+        this.geometry.setAttribute('r', new THREE.BufferAttribute(new Float32Array(r), 1));
+        this.geometry.setIndex(index);
+        this.material = new THREE.ShaderMaterial({
+            uniforms: {
+                'sizeScale': { value: 1.0 },
+            },
+            vertexShader: `
+        attribute vec2 dxy;
+        attribute float r;
+        varying vec3 vColor;
+        varying vec2 vDxy;
+        void main() {
+          vDxy = dxy;
+          vColor = color;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          mvPosition = mvPosition + r * vec4(dxy, 0.0, 0.0);
+          float mvDistance = length(mvPosition);
+          if (mvDistance > 150.0) {
+            mvPosition = mvPosition * (150.0 / mvDistance);
+          }
+
+          gl_Position = projectionMatrix * mvPosition;
+        }`,
+            fragmentShader: `
+      varying vec3 vColor;
+      varying vec2 vDxy;
+      void main() {
+        float intensity = clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
+        gl_FragColor = vec4(vColor * intensity, 1.0);
+      }`,
+            blending: THREE.AdditiveBlending,
+            depthTest: true,
+            depthWrite: false,
+            transparent: false,
+            vertexColors: true,
+            clipping: false,
+            clipIntersection: false,
+            clippingPlanes: [],
+            side: THREE.DoubleSide,
+        });
+        this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3, 1e30);
+        const points = new THREE.Mesh(this.geometry, this.material);
+        this.add(points);
+    }
+    // private worldPosition = new THREE.Vector3();
+    // private worldRotation = new THREE.Quaternion();
+    worldScale = new THREE.Vector3();
+    tick(t) {
+        this.worldScale.setFromMatrixScale(this.matrixWorld);
+        this.material.uniforms['sizeScale'].value =
+            this.worldScale.x * this.pointRadius;
+        this.material.uniformsNeedUpdate = true;
+    }
+}
+exports.PointCloud2 = PointCloud2;
+//# sourceMappingURL=pointCloud2.js.map
 
 /***/ }),
 
@@ -4060,6 +4216,7 @@ class S {
         S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 1e9, 'Starfield radius');
+        S.setDefault('ss', 1e3, 'Radius of a single star');
         S.setDefault('ar', 3e4, 'Asteroid radius');
         S.setDefault('ns', 1e5, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
@@ -4073,6 +4230,7 @@ class S {
         S.setDefault('cs', 1.0, 'Scale of the computer model.');
         S.setDefault('ch', 0.7, 'Height of computer from the floor');
         S.setDefault('om', 0, 'Size of origin marker');
+        S.setDefault('pv', 1, 'Point cloud version');
     }
     static float(name) {
         if (S.cache.has(name)) {
@@ -4202,12 +4360,12 @@ class StarSystem extends THREE.Object3D {
             new THREE.Sphere(new THREE.Vector3, 1e30);
         mesh.scale.setLength(1e3);
         this.add(mesh);
-        const belt = new pointCloud_1.PointCloud(
+        const belt = new pointCloud_1.PointCloud1(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') / 10, /*ySd=*/ settings_1.S.float('ar') / 20, settings_1.S.float('na'), new THREE.Color('#888'), 
         /*pointRadius=*/ 1e2, /*visibleDistance=*/ settings_1.S.float('sp'));
         this.add(belt);
-        const planets = new pointCloud_1.PointCloud(
+        const planets = new pointCloud_1.PointCloud1(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') * 3, /*ySd=*/ settings_1.S.float('ar') / 2, 10, new THREE.Color('#8ff'), 
         /*pointRadius=*/ 1e3, /*visibleDistance=*/ settings_1.S.float('sp'));
@@ -4380,7 +4538,7 @@ class VeryLargeUniverse extends THREE.Object3D {
         this.camera = camera;
         this.xr = xr;
         this.keysDown = keysDown;
-        this.starCloud = new pointCloud_1.PointCloud(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ffa'), /*pointRadius=*/ 1e4, 
+        this.starCloud = new pointCloud_1.PointCloud1(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#ffa'), /*pointRadius=*/ 1e4, 
         /*visibleDistance=*/ settings_1.S.float('sr'));
         const modelCloud = new modelCloud_1.ModelCloud((pos) => {
             return new starSystem_1.StarSystem(this.camera);
