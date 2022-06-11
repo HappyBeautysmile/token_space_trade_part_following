@@ -4,8 +4,8 @@ import { Codec, Encode, Decode } from "./codec";
 import { Debug } from "./debug";
 import { FileIO } from "./fileIO";
 import { InWorldItem } from "./inWorldItem";
-import { MergedGeometryContainer } from "./mergedGeometryContainer";
 import { S } from "./settings";
+import { UnionGeometryContainer } from "./unionGeometryContainer";
 
 export interface Construction {
   // Adds an object to this collection.
@@ -39,9 +39,9 @@ export class ObjectConstruction implements Construction {
   private container: Container;
   public constructor(container: THREE.Object3D, private renderer: THREE.Renderer) {
     if (S.float('m')) {
-      const mergedGeometryContainer = new MergedGeometryContainer();
-      this.container = mergedGeometryContainer;
-      container.add(mergedGeometryContainer);
+      const geometryContainer = new UnionGeometryContainer();
+      this.container = geometryContainer;
+      container.add(geometryContainer);
     } else {
       this.container = new GroupContainer(container);
     }

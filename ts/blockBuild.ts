@@ -259,7 +259,7 @@ export class BlockBuild {
     // });
 
     Debug.log("Three Version=" + THREE.REVISION);
-    Debug.log("Warp speed");
+    Debug.log("Union Geometry");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);
