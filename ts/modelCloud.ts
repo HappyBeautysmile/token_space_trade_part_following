@@ -24,7 +24,7 @@ export class ModelCloud extends THREE.Object3D implements Ticker {
       currentStars.add(k);
     }
 
-    for (const closePoint of this.cloud.starPositions.getAllWithinRadius(
+    for (const closePoint of this.cloud.getAllWithinRadius(
       this.p1, this.showRadius)) {
       if (!this.currentStarMap.has(closePoint)) {
         const starSystem = this.factory(closePoint);

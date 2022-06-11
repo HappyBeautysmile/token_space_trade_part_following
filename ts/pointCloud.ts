@@ -4,9 +4,10 @@ import { S } from "./settings";
 import { Tick, Ticker } from "./tick";
 
 export interface PointCloud extends THREE.Object3D {
-  starPositions: PointMapOctoTree<THREE.Vector3>;
-  showStar(point: THREE.Vector3);
-  hideStar(point: THREE.Vector3);
+  showStar(point: THREE.Vector3): void;
+  hideStar(point: THREE.Vector3): void;
+  getAllWithinRadius(point: THREE.Vector3, radius: number)
+    : Iterable<THREE.Vector3>;
 }
 
 export class PointCloud1 extends THREE.Object3D implements PointCloud, Ticker {
@@ -48,6 +49,12 @@ export class PointCloud1 extends THREE.Object3D implements PointCloud, Ticker {
       this.pointIndex.get(point), 0, 0, 0);
     colorAttribute.needsUpdate = true;
   }
+
+  getAllWithinRadius(point: THREE.Vector3, radius: number)
+    : Iterable<THREE.Vector3> {
+    return this.starPositions.getAllWithinRadius(point, radius);
+  }
+
 
   private addStar(x: number, y: number, z: number,
     positions: number[], colors: number[]) {

@@ -29,6 +29,12 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
     // TODO: Not implemented
   }
 
+  public getAllWithinRadius(point: THREE.Vector3, radius: number)
+    : Iterable<THREE.Vector3> {
+    return this.starPositions.getAllWithinRadius(point, radius);
+  }
+
+
   private static gaussian(sd: number): number {
     const n = 6;
     let x = 0;
@@ -53,9 +59,9 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
     index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
     const ss = S.float('ss');
     const c = new THREE.Color(
-      Math.random() * 0.2 + 0.8,
-      Math.random() * 0.2 + 0.8,
-      Math.random() * 0.2 + 0.8);
+      Math.random() * 0.2 + 0.8 * this.color.r,
+      Math.random() * 0.2 + 0.8 * this.color.g,
+      Math.random() * 0.2 + 0.8 * this.color.b);
     for (let i = 0; i < 4; ++i) {
       vertices.push(x, y, z);
       colors.push(c.r, c.g, c.b);

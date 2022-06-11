@@ -87,7 +87,7 @@ export class Place {
 
   private searchForStar(radius: number): number {
     let distanceToNearestStar = 1e12;
-    for (const s of this.stars.starPositions.getAllWithinRadius(
+    for (const s of this.stars.getAllWithinRadius(
       this.p, radius)) {
       this.tmp.copy(s);
       this.tmp.sub(this.p);
