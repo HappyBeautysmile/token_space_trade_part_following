@@ -14,7 +14,8 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
 
   constructor(radius: number, radiusSd: number, ySd: number,
     count: number, private color: THREE.Color, private pointRadius: number,
-    private visibleDistance: number, includeOrigin = false) {
+    private visibleDistance: number, includeOrigin = false,
+    private initialIntensity: number) {
     super();
     if (includeOrigin) {
       const origin = new THREE.Vector3();
@@ -116,14 +117,14 @@ export class PointCloud2 extends THREE.Object3D implements PointCloud, Ticker {
         void main() {
           vDxy = dxy;
           vColor = color;
-          vIntensity = 1.0;
+          vIntensity = ${this.initialIntensity.toFixed(2)};
           float sizeScale = 1.0;
 
           vec4 worldPosition = modelMatrix * vec4(position, 1.0);
           float distance = length(worldPosition.xyz / worldPosition.w);
           if (distance > 500.0 * r) {
             sizeScale *= distance / (500.0 * r);
-            vIntensity = 1.0 / sizeScale;
+            vIntensity *= 1.0 / sizeScale;
           }
           if (distance > 100.0) {
             worldPosition.xyz *= 100.0 / distance;

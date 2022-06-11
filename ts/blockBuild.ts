@@ -208,7 +208,8 @@ export class BlockBuild {
       const starCloud = new PointCloud2(
         0, S.float('sr'), S.float('sr') / 10, S.float('ns'),
         new THREE.Color('#fff'), S.float('ss'),
-        /*visibleDistance=*/S.float('sr'), /*includeOrigin=*/true);
+        /*visibleDistance=*/S.float('sr'), /*includeOrigin=*/true,
+        /*initialIntensity=*/1.0);
       this.stars = new ModelCloud((pos: THREE.Vector3) => {
         return new StarSystem(this.camera);
       }, starCloud, /*showRadius=*/S.float('sp'), this.camera);

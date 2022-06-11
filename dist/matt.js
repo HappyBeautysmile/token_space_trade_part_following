@@ -710,7 +710,8 @@ class BlockBuild {
         this.camera.lookAt(0, 1.7, -1.5);
         if (settings_1.S.float('pv') === 2) {
             const starCloud = new pointCloud2_1.PointCloud2(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
-            /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+            /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true, 
+            /*initialIntensity=*/ 1.0);
             this.stars = new modelCloud_1.ModelCloud((pos) => {
                 return new starSystem_1.StarSystem(this.camera);
             }, starCloud, /*showRadius=*/ settings_1.S.float('sp'), this.camera);
@@ -3873,14 +3874,16 @@ class PointCloud2 extends THREE.Object3D {
     color;
     pointRadius;
     visibleDistance;
+    initialIntensity;
     starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     material;
     geometry;
-    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance, includeOrigin = false) {
+    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance, includeOrigin = false, initialIntensity) {
         super();
         this.color = color;
         this.pointRadius = pointRadius;
         this.visibleDistance = visibleDistance;
+        this.initialIntensity = initialIntensity;
         if (includeOrigin) {
             const origin = new THREE.Vector3();
             this.starPositions.add(origin, origin);
@@ -3950,14 +3953,14 @@ class PointCloud2 extends THREE.Object3D {
         void main() {
           vDxy = dxy;
           vColor = color;
-          vIntensity = 1.0;
+          vIntensity = ${this.initialIntensity.toFixed(2)};
           float sizeScale = 1.0;
 
           vec4 worldPosition = modelMatrix * vec4(position, 1.0);
           float distance = length(worldPosition.xyz / worldPosition.w);
           if (distance > 500.0 * r) {
             sizeScale *= distance / (500.0 * r);
-            vIntensity = 1.0 / sizeScale;
+            vIntensity *= 1.0 / sizeScale;
           }
           if (distance > 100.0) {
             worldPosition.xyz *= 100.0 / distance;
@@ -4365,7 +4368,8 @@ class StarSystem extends THREE.Object3D {
         const belt = new pointCloud2_1.PointCloud2(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') / 10, /*ySd=*/ settings_1.S.float('ar') / 20, settings_1.S.float('na'), new THREE.Color('#88f'), 
-        /*pointRadius=*/ 1e2, /*visibleDistance=*/ settings_1.S.float('sp'));
+        /*pointRadius=*/ 1e2, /*visibleDistance=*/ settings_1.S.float('sp'), 
+        /*includeOrigin=*/ false, /*initialIntensity=*/ 10.0);
         this.add(belt);
         // const planets = new PointCloud2(
         //   /*radius=*/S.float('ar'),
