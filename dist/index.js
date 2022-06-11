@@ -3898,6 +3898,8 @@ class PointCloud2 extends THREE.Object3D {
         this.pointRadius = pointRadius;
         this.visibleDistance = visibleDistance;
         this.includeOrigin = includeOrigin;
+        const origin = new THREE.Vector3();
+        this.starPositions.add(origin, origin);
         this.addStars(radius, radiusSd, ySd, count);
     }
     showStar(point) {
@@ -3916,6 +3918,8 @@ class PointCloud2 extends THREE.Object3D {
         return sd * (x / Math.sqrt(n));
     }
     addStar(x, y, z, index, vertices, colors, dxy, r) {
+        const pos = new THREE.Vector3(x, y, z);
+        this.starPositions.add(pos, pos);
         const o = Math.round(vertices.length / 3);
         index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
         const ss = settings_1.S.float('ss');
