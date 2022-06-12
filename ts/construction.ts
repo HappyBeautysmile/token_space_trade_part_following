@@ -15,6 +15,7 @@ export interface Construction {
   save(): void;
   saveToLocal(): void;
   loadFromLocal(): void;
+  cubes(): Iterable<InWorldItem>;
 }
 
 export interface Container {
@@ -51,6 +52,10 @@ export class ObjectConstruction implements Construction {
   // one block per location would go, also where Vector3 to key would go.
   private items = new Map<string, InWorldItem>();
   private objects = new Map<string, THREE.Object3D>();
+
+  public cubes(): Iterable<InWorldItem> {
+    return this.items.values();
+  }
 
   public save() {
     console.log('Saving...');

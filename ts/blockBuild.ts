@@ -6,7 +6,7 @@ import { Tick, Ticker } from "./tick";
 import { Hand } from "./hand";
 import { Place } from "./place";
 import { Debug } from "./debug";
-import { Assets } from "./assets";
+import { Assets, Item } from "./assets";
 import { Construction, ObjectConstruction } from "./construction";
 import { AstroGen } from "./astroGen";
 import { S } from "./settings";
@@ -22,6 +22,7 @@ import { StarSystem } from "./starSystem";
 import { Universe } from "./universe";
 import { System, Body } from "./system";
 import { Exchange } from "./exchange";
+import { Factory } from "./factory";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -38,6 +39,7 @@ export class BlockBuild {
   private player: Player;
   private computer: Computer;
   private stars: PointCloud;
+  private factories: Factory[] = [];
 
   constructor() {
     this.playerGroup.name = 'Player Group';
@@ -82,6 +84,14 @@ export class BlockBuild {
       10,
       Math.round(S.float('ps')),
       0, 0, 0);
+
+    const inputSpec = new Map<Item, number>();
+    const clay = Assets.itemsByName.get('clay');
+    inputSpec.set(clay, 1);
+    const factory = new Factory(inputSpec, clay, 1, 1.2, 1.2);
+    factory.setHome(this.construction, new THREE.Vector3(0, 1, -5),
+      new THREE.Vector3(0, 0, -1));
+    this.factories.push(factory);
 
     // for (let i = 0; i < 10; i++) {
     //   ab.buildPlatform(
@@ -191,7 +201,9 @@ export class BlockBuild {
         sound.play();
       });
     }
-
+    for (const f of this.factories) {
+      f.tick(t);
+    }
   }
   private async setScene() {
     await Assets.init();
@@ -285,7 +297,7 @@ export class BlockBuild {
     // });
 
     Debug.log("Three Version=" + THREE.REVISION);
-    Debug.log("Union Geometry");
+    Debug.log("Factory Example");
 
     // const controls = new OrbitControls(this.camera, this.renderer.domElement);
     // controls.target.set(0, 0, -5);

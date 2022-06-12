@@ -321,6 +321,7 @@ export class MergedGeometryContainer extends THREE.Object3D implements Ticker, C
   // Removes the geometry associated with `key` from this.
   removeObject(key: string) {
     this.mergableSet.remove(this.pieces.get(key));
+    this.pieces.delete(key);
     this.dirty = true;
   }
 

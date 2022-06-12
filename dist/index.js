@@ -557,6 +557,7 @@ const starSystem_1 = __webpack_require__(445);
 const universe_1 = __webpack_require__(670);
 const system_1 = __webpack_require__(855);
 const exchange_1 = __webpack_require__(253);
+const factory_1 = __webpack_require__(211);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -571,6 +572,7 @@ class BlockBuild {
     player;
     computer;
     stars;
+    factories = [];
     constructor() {
         this.playerGroup.name = 'Player Group';
         this.universeGroup.name = 'Universe Group';
@@ -602,6 +604,12 @@ class BlockBuild {
         this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         let ab = new astroGen_1.AstroGen(this.construction);
         ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
+        const inputSpec = new Map();
+        const clay = assets_1.Assets.itemsByName.get('clay');
+        inputSpec.set(clay, 1);
+        const factory = new factory_1.Factory(inputSpec, clay, 1, 1.2, 1.2);
+        factory.setHome(this.construction, new THREE.Vector3(0, 1, -5), new THREE.Vector3(0, 0, -1));
+        this.factories.push(factory);
         // for (let i = 0; i < 10; i++) {
         //   ab.buildPlatform(
         //     Math.round(S.float('ps') / 3),
@@ -698,6 +706,9 @@ class BlockBuild {
                 sound.play();
             });
         }
+        for (const f of this.factories) {
+            f.tick(t);
+        }
     }
     async setScene() {
         await assets_1.Assets.init();
@@ -710,7 +721,8 @@ class BlockBuild {
         this.camera.lookAt(0, 1.7, -1.5);
         if (settings_1.S.float('pv') === 2) {
             const starCloud = new pointCloud2_1.PointCloud2(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
-            /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true);
+            /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true, 
+            /*initialIntensity=*/ 1.0);
             this.stars = new modelCloud_1.ModelCloud((pos) => {
                 return new starSystem_1.StarSystem(this.camera);
             }, starCloud, /*showRadius=*/ settings_1.S.float('sp'), this.camera);
@@ -772,7 +784,7 @@ class BlockBuild {
         //   sound.play();
         // });
         debug_1.Debug.log("Three Version=" + THREE.REVISION);
-        debug_1.Debug.log("Union Geometry");
+        debug_1.Debug.log("Factory Example");
         // const controls = new OrbitControls(this.camera, this.renderer.domElement);
         // controls.target.set(0, 0, -5);
         // controls.update();
@@ -1366,6 +1378,9 @@ class ObjectConstruction {
     // one block per location would go, also where Vector3 to key would go.
     items = new Map();
     objects = new Map();
+    cubes() {
+        return this.items.values();
+    }
     save() {
         console.log('Saving...');
         let c = new codec_1.Codec();
@@ -1653,6 +1668,170 @@ class Exchange {
 }
 exports.Exchange = Exchange;
 //# sourceMappingURL=exchange.js.map
+
+/***/ }),
+
+/***/ 211:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Factory = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const inWorldItem_1 = __webpack_require__(116);
+class Counter {
+    m = new Map();
+    get(k) {
+        if (this.m.has(k)) {
+            return this.m.get(k).length;
+        }
+        return 0;
+    }
+    getItems(k) {
+        return this.m.get(k);
+    }
+    increment(i) {
+        if (!this.m.has(i.item)) {
+            this.m.set(i.item, []);
+        }
+        this.m.get(i.item).push(i);
+    }
+}
+class Factory {
+    inputSpec;
+    outputType;
+    outputQty;
+    searchTimeS;
+    buildTimeS;
+    state = 'searching';
+    // Time left to complete the task.
+    timeRemaining = 0;
+    construction = undefined;
+    position = new THREE.Vector3();
+    outDriection = new THREE.Vector3();
+    constructor(inputSpec, outputType, outputQty, searchTimeS, buildTimeS) {
+        this.inputSpec = inputSpec;
+        this.outputType = outputType;
+        this.outputQty = outputQty;
+        this.searchTimeS = searchTimeS;
+        this.buildTimeS = buildTimeS;
+    }
+    setHome(construction, position, outDirection) {
+        this.construction = construction;
+        this.position.copy(position);
+        this.outDriection.copy(outDirection);
+    }
+    search() {
+        // TODO: There might be some low-hanging performance fruit here.
+        // Caching the arrays that are used for these items might save
+        // a lot of garbage collection.
+        const itemsFound = new Counter();
+        for (const inWorldItem of this.construction.cubes()) {
+            if (this.inputSpec.has(inWorldItem.item)) {
+                itemsFound.increment(inWorldItem);
+            }
+        }
+        for (const [k, v] of this.inputSpec) {
+            if (itemsFound.get(k) < v) {
+                return false;
+            }
+        }
+        // Mine the furthest items.
+        const aPos = new THREE.Vector3();
+        const bPos = new THREE.Vector3();
+        for (const [k, v] of this.inputSpec) {
+            const allItems = itemsFound.getItems(k);
+            allItems.sort((a, b) => {
+                aPos.copy(a.position);
+                aPos.sub(this.position);
+                bPos.copy(b.position);
+                bPos.sub(this.position);
+                return bPos.lengthSq() - aPos.lengthSq();
+            });
+            for (let i = 0; i < v; ++i) {
+                console.log('Factory mining');
+                this.construction.removeCube(allItems[i].position);
+            }
+        }
+        return true;
+    }
+    unitDirections = [
+        new THREE.Vector3(0, 0, 1),
+        new THREE.Vector3(0, 0, -1),
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, -1, 0),
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(-1, 0, 0)
+    ];
+    addOrthogonal(cursor) {
+        while (true) {
+            const i = Math.trunc(Math.random() * this.unitDirections.length);
+            if (this.unitDirections[i].dot(this.outDriection) == 0) {
+                cursor.add(this.unitDirections[i]);
+                return;
+            }
+        }
+    }
+    dump() {
+        const cursor = new THREE.Vector3();
+        cursor.copy(this.position);
+        cursor.add(this.outDriection);
+        for (let i = 0; i < this.outputQty; ++i) {
+            while (this.construction.cubeAt(cursor)) {
+                if (Math.random() < 0.3) {
+                    cursor.add(this.outDriection);
+                }
+                else {
+                    this.addOrthogonal(cursor);
+                }
+            }
+            this.construction.addCube(new inWorldItem_1.InWorldItem(this.outputType, cursor, new THREE.Quaternion()));
+        }
+    }
+    tick(tick) {
+        this.timeRemaining -= tick.deltaS;
+        if (this.timeRemaining > 0) {
+            return;
+        }
+        switch (this.state) {
+            case 'searching':
+                if (this.construction) {
+                    if (this.search()) {
+                        this.state = 'building';
+                        this.timeRemaining += this.buildTimeS;
+                        return;
+                    }
+                }
+                this.timeRemaining += this.searchTimeS;
+                break;
+            case 'building':
+                this.dump();
+                this.state = 'searching';
+                this.timeRemaining += this.searchTimeS;
+        }
+    }
+}
+exports.Factory = Factory;
+//# sourceMappingURL=factory.js.map
 
 /***/ }),
 
@@ -3144,6 +3323,7 @@ class MergedGeometryContainer extends THREE.Object3D {
     // Removes the geometry associated with `key` from this.
     removeObject(key) {
         this.mergableSet.remove(this.pieces.get(key));
+        this.pieces.delete(key);
         this.dirty = true;
     }
     clean() {
@@ -3873,14 +4053,16 @@ class PointCloud2 extends THREE.Object3D {
     color;
     pointRadius;
     visibleDistance;
+    initialIntensity;
     starPositions = new pointMap_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     material;
     geometry;
-    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance, includeOrigin = false) {
+    constructor(radius, radiusSd, ySd, count, color, pointRadius, visibleDistance, includeOrigin = false, initialIntensity) {
         super();
         this.color = color;
         this.pointRadius = pointRadius;
         this.visibleDistance = visibleDistance;
+        this.initialIntensity = initialIntensity;
         if (includeOrigin) {
             const origin = new THREE.Vector3();
             this.starPositions.add(origin, origin);
@@ -3950,14 +4132,14 @@ class PointCloud2 extends THREE.Object3D {
         void main() {
           vDxy = dxy;
           vColor = color;
-          vIntensity = 1.0;
+          vIntensity = ${this.initialIntensity.toFixed(2)};
           float sizeScale = 1.0;
 
           vec4 worldPosition = modelMatrix * vec4(position, 1.0);
           float distance = length(worldPosition.xyz / worldPosition.w);
           if (distance > 500.0 * r) {
             sizeScale *= distance / (500.0 * r);
-            vIntensity = 1.0 / sizeScale;
+            vIntensity *= 1.0 / sizeScale;
           }
           if (distance > 100.0) {
             worldPosition.xyz *= 100.0 / distance;
@@ -4365,7 +4547,8 @@ class StarSystem extends THREE.Object3D {
         const belt = new pointCloud2_1.PointCloud2(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') / 10, /*ySd=*/ settings_1.S.float('ar') / 20, settings_1.S.float('na'), new THREE.Color('#88f'), 
-        /*pointRadius=*/ 1e2, /*visibleDistance=*/ settings_1.S.float('sp'));
+        /*pointRadius=*/ 1e2, /*visibleDistance=*/ settings_1.S.float('sp'), 
+        /*includeOrigin=*/ false, /*initialIntensity=*/ 10.0);
         this.add(belt);
         // const planets = new PointCloud2(
         //   /*radius=*/S.float('ar'),

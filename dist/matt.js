@@ -608,7 +608,7 @@ class BlockBuild {
         const clay = assets_1.Assets.itemsByName.get('clay');
         inputSpec.set(clay, 1);
         const factory = new factory_1.Factory(inputSpec, clay, 1, 1.2, 1.2);
-        factory.setHome(this.construction, new THREE.Vector3(0, 1, -5), new THREE.Vector3(0, 1, 0));
+        factory.setHome(this.construction, new THREE.Vector3(0, 1, -5), new THREE.Vector3(0, 0, -1));
         this.factories.push(factory);
         // for (let i = 0; i < 10; i++) {
         //   ab.buildPlatform(
@@ -1797,7 +1797,7 @@ class Factory {
         cursor.add(this.outDriection);
         for (let i = 0; i < this.outputQty; ++i) {
             while (this.construction.cubeAt(cursor)) {
-                if (Math.random() < 0.8) {
+                if (Math.random() < 0.3) {
                     cursor.add(this.outDriection);
                 }
                 else {
@@ -3323,6 +3323,7 @@ class MergedGeometryContainer extends THREE.Object3D {
     // Removes the geometry associated with `key` from this.
     removeObject(key) {
         this.mergableSet.remove(this.pieces.get(key));
+        this.pieces.delete(key);
         this.dirty = true;
     }
     clean() {
