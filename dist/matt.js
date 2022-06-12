@@ -722,7 +722,7 @@ class BlockBuild {
         if (settings_1.S.float('pv') === 2) {
             const starCloud = new pointCloud2_1.PointCloud2(0, settings_1.S.float('sr'), settings_1.S.float('sr') / 10, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
             /*visibleDistance=*/ settings_1.S.float('sr'), /*includeOrigin=*/ true, 
-            /*initialIntensity=*/ 1.0);
+            /*initialIntensity=*/ 4.0);
             this.stars = new modelCloud_1.ModelCloud((pos) => {
                 return new starSystem_1.StarSystem(this.camera);
             }, starCloud, /*showRadius=*/ settings_1.S.float('sp'), this.camera);
@@ -4399,15 +4399,16 @@ class S {
         S.setDefault('mouse', -1, 'Which grip the mouse controls.');
         S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
-        S.setDefault('sr', 1e10, 'Starfield radius');
-        S.setDefault('ss', 1e5, 'Radius of a single star');
-        S.setDefault('ar', 1e6, 'Asteroid radius');
-        S.setDefault('ns', 1e5, 'Number of stars in the VLU');
+        S.setDefault('sr', 10e9, 'Universe radius');
+        S.setDefault('ar', 1e6, 'Asteroid belt radius');
+        S.setDefault('ss', 100e3, 'Radius of a single star');
+        S.setDefault('sp', 50e6, 'Star System "Pop" radius');
+        S.setDefault('as', 1e2, 'Radius of a single asteroid');
+        S.setDefault('ps', 30, 'Platform size.');
+        S.setDefault('ns', 10e3, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
-        S.setDefault('sp', 3e6, 'Star System "Pop" radius');
         S.setDefault('m', 1, 'Use merged geometry in Block Build.');
-        S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
         S.setDefault('cr', 0, 'Creative mode.  Number of each item to start with.');
@@ -4547,7 +4548,7 @@ class StarSystem extends THREE.Object3D {
         const belt = new pointCloud2_1.PointCloud2(
         /*radius=*/ settings_1.S.float('ar'), 
         /*radiusSd=*/ settings_1.S.float('ar') / 10, /*ySd=*/ settings_1.S.float('ar') / 20, settings_1.S.float('na'), new THREE.Color('#88f'), 
-        /*pointRadius=*/ 1e2, /*visibleDistance=*/ settings_1.S.float('sp'), 
+        /*pointRadius=*/ settings_1.S.float('as'), /*visibleDistance=*/ settings_1.S.float('sp'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 10.0);
         this.add(belt);
         // const planets = new PointCloud2(
