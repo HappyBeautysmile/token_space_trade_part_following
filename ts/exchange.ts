@@ -34,7 +34,8 @@ export class SellOrder {
 export class Exchange {
   constructor(readonly item: Item) { }
 
-  private buyOrders: BuyOrder[] = [];
+  public buyOrders: BuyOrder[] = [];
+  public sellOrders: SellOrder[] = [];
 
   // If `update` is set to true, cancel the existing order and
   // replace it with this one.
@@ -49,6 +50,20 @@ export class Exchange {
       }
     }
     this.buyOrders.push(buyOrder);
+  }
+
+  placeSellOrder(sellOrder: SellOrder, update = true) {
+    this.sellOrders.push(sellOrder);
+  }
+
+  matchOrders() {
+    for (let b of this.buyOrders) {
+      for (let s of this.sellOrders) {
+        if (b.priceEach >= s.priceEach) {
+
+        }
+      }
+    }
   }
 
   // Removes any orders which cannot be filled because the

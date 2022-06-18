@@ -5,6 +5,7 @@ import { Player } from "../player";
 import { Ticker, Tick } from "../tick";
 import { ButtonDispatcher } from "../buttonDispatcher";
 import { Debug } from "../debug";
+import { Universe } from "../universe";
 
 class RowText {
   private rowText: string[] = [];
@@ -58,7 +59,7 @@ export class Computer extends THREE.Object3D implements Ticker {
   private currentParameters = "";
   private selectedItemIndex = 0;
 
-  private constructor(private model: THREE.Object3D, private player: Player) {
+  private constructor(private model: THREE.Object3D, private player: Player, private universe: Universe) {
     super();
     this.add(model);
     this.canvas.width = 1056;
@@ -90,9 +91,9 @@ export class Computer extends THREE.Object3D implements Ticker {
     }
   }
 
-  public static async make(player: Player) {
+  public static async make(player: Player, universe: Universe) {
     const model = await ModelLoader.loadModel(`Model/flight computer.glb`);
-    return new Computer(model, player);
+    return new Computer(model, player, universe);
   }
 
   findChildByName(name: string, model: THREE.Object3D): THREE.Object3D {
