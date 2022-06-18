@@ -192,7 +192,18 @@ export class Assets extends THREE.Object3D {
         i.paintable = false;
       }
       Assets.items.push(i);
-      this.itemsByName.set(key, i)
+      this.itemsByName.set(key, i);
+
+      if (key === 'clay') {
+        const producerKey = `${key}Producer`;
+        const smaller = new THREE.Group();
+        smaller.scale.set(0.5, 0.5, 0.5);
+        smaller.add(value);
+        const producer = new THREE.Mesh();
+        producer.add(smaller);
+        const i = Item.make(
+          producerKey, `Producer of ${key}`, 0, producerKey);
+      }
     };
   }
 }

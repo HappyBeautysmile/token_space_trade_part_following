@@ -79,11 +79,13 @@ export class BlockBuild {
       this.place.universeGroup, this.renderer);
     let ab = new AstroGen(this.construction);
 
-    ab.buildPlatform(
-      Math.round(S.float('ps') * 2 / 3),
-      10,
-      Math.round(S.float('ps')),
-      0, 0, 0);
+    // ab.buildPlatform(
+    //   Math.round(S.float('ps') * 2 / 3),
+    //   10,
+    //   Math.round(S.float('ps')),
+    //   0, 0, 0);
+
+    ab.buildAllItems();
 
     const inputSpec = new Map<Item, number>();
     const clay = Assets.itemsByName.get('clay');
@@ -108,8 +110,8 @@ export class BlockBuild {
 
     //ab.buildRandomItems(10, 100);
 
-    this.construction.loadFromLocal();
-    this.construction.saveToLocal();
+    // this.construction.loadFromLocal();
+    // this.construction.saveToLocal();
 
     this.getGrips();
     this.dumpScene(this.scene, '');
