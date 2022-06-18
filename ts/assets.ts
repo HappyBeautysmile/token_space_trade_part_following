@@ -161,7 +161,7 @@ export class Assets extends THREE.Object3D {
     const modelNames = [
       'accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube', 'guide', 'ice', 'light-blue',
       'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
-      'silicon-crystalized', 'tank', 'thruster', 'wedge']
+      'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer']
     for (const modelName of modelNames) {
       // console.log(`Loading ${modelName}`);
       const model = await ModelLoader.loadModel(`Model/${modelName}.glb`);
@@ -203,6 +203,25 @@ export class Assets extends THREE.Object3D {
         producer.add(smaller);
         const i = Item.make(
           producerKey, `Producer of ${key}`, 0, producerKey);
+      }
+    };
+    const producers = ['accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube',// 'ice', 'light-blue',
+      'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
+      'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer'
+    ]
+    for (const [key, value] of Assets.meshes.entries()) {
+      if (producers.includes(key)) {
+        let m = this.meshes.get(key).clone();
+        let geo = new THREE.BufferGeometry();
+        geo = m.geometry.clone();
+        m.geometry = geo;
+        geo.scale(0.5, 0.5, 0.5);
+        m.add(this.meshes.get("producer"));
+        let meshName = key.concat("Producer");
+        this.meshes.set(meshName, m);
+        const i = Item.make(meshName, `Prodcer of ${key}`, 0, meshName);
+        Assets.items.push(i);
+        this.itemsByName.set(meshName, i);
       }
     };
   }

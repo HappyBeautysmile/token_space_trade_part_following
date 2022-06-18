@@ -3,8 +3,17 @@ import { Item } from "./assets";
 import { Exchange } from "./exchange";
 
 export class System {
-    name: string;
-    bodies: Map<string, Body>
+    public bodies: Map<string, Body>
+
+    constructor(private name: string) {
+        this.bodies = new Map<string, Body>();
+    }
+    getName() {
+        return this.name;
+    }
+    public addBody(body: Body) {
+        this.bodies.set(body.name, body);
+    }
 }
 
 type BodyType = 'Asteroid' | 'Station';

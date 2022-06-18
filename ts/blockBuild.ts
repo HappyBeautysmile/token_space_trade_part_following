@@ -23,6 +23,7 @@ import { Universe } from "./universe";
 import { System, Body } from "./system";
 import { Exchange } from "./exchange";
 import { Factory } from "./factory";
+import { InWorldItem } from "./inWorldItem";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -68,12 +69,10 @@ export class BlockBuild {
     station.position = new THREE.Vector3(10, 10, 10);
     station.exchanges = exchanges;
 
-    let system = new System();
-    system.name = "system name";
-    system.bodies = new Map();
-    system.bodies.set(station.name, station);
+    let system = new System("system name");
+    system.addBody(station);
 
-    this.universe.systems.set(system.name, system);
+    this.universe.systems.set(system.getName(), system);
 
     this.construction = new ObjectConstruction(
       this.place.universeGroup, this.renderer);
@@ -86,6 +85,12 @@ export class BlockBuild {
     //   0, 0, 0);
 
     ab.buildAllItems();
+
+    const inWorldItem = new InWorldItem(
+      Assets.itemsByName.get("clayProducer"),
+      new THREE.Vector3(0, 1, -5),
+      new THREE.Quaternion());
+    this.construction.addCube(inWorldItem);
 
     const inputSpec = new Map<Item, number>();
     const clay = Assets.itemsByName.get('clay');
@@ -264,7 +269,7 @@ export class BlockBuild {
     const debugPanel = new Debug();
     debugPanel.position.set(0, 0, -3);
     this.universeGroup.add(debugPanel);
-    this.computer = await Computer.make(this.player);
+    this.computer = await Computer.make(this.player, this.universe);
     //this.computer.translateY(S.float('ch'));
     //this.computer.translateZ(-0.3);
     //this.computer.rotateX(Math.PI / 4);
