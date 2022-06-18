@@ -228,6 +228,16 @@ export class AstroGen {
     }
   }
 
+  buildAllItems() {
+    let x = -Math.round(Assets.items.length / 2);
+    for (const item of Assets.items) {
+      const iwo = new InWorldItem(item, new THREE.Vector3(x, 0, -5),
+        new THREE.Quaternion());
+      this.construction.addCube(iwo);
+      ++x;
+    }
+  }
+
   removeFar(dirty: InWorldItem[], r: number) {
     let clean = [];
     for (const item of dirty) {

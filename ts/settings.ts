@@ -33,6 +33,7 @@ export class S {
     S.setDefault('ns', 10e3, 'Number of stars in the VLU');
     S.setDefault('na', 700, 'Number of asteroids in a belt.');
 
+    S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.')
     S.setDefault('sa', 1e3, 'Starship Acceleration');
     S.setDefault('m', 1, 'Use merged geometry in Block Build.');
     S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');

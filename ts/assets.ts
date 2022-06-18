@@ -193,33 +193,24 @@ export class Assets extends THREE.Object3D {
       }
       Assets.items.push(i);
       this.itemsByName.set(key, i);
-
-      if (key === 'clay') {
-        const producerKey = `${key}Producer`;
-        const smaller = new THREE.Group();
-        smaller.scale.set(0.5, 0.5, 0.5);
-        smaller.add(value);
-        const producer = new THREE.Mesh();
-        producer.add(smaller);
-        const i = Item.make(
-          producerKey, `Producer of ${key}`, 0, producerKey);
-      }
-    };
+    }
     const producers = ['accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube',// 'ice', 'light-blue',
       'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
       'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer'
     ]
     for (const [key, value] of Assets.meshes.entries()) {
       if (producers.includes(key)) {
-        let m = this.meshes.get(key).clone();
-        let geo = new THREE.BufferGeometry();
-        geo = m.geometry.clone();
-        m.geometry = geo;
+        let originalMesh = this.meshes.get(key);
+        let geo = originalMesh.geometry.clone();
+        geo.scale(originalMesh.scale.x, originalMesh.scale.y, originalMesh.scale.z)
         geo.scale(0.5, 0.5, 0.5);
-        m.add(this.meshes.get("producer"));
+        const producerMesh = Assets.meshes.get('producer').clone();
+        const prototype = new THREE.Mesh(
+          geo, originalMesh.material);
+        producerMesh.add(prototype);
         let meshName = key.concat("Producer");
-        this.meshes.set(meshName, m);
-        const i = Item.make(meshName, `Prodcer of ${key}`, 0, meshName);
+        this.meshes.set(meshName, producerMesh);
+        const i = Item.make(meshName, `Producer of ${key}`, 0, meshName);
         Assets.items.push(i);
         this.itemsByName.set(meshName, i);
       }

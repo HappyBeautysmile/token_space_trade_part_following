@@ -183,7 +183,7 @@ class Assets extends THREE.Object3D {
         const modelNames = [
             'accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube', 'guide', 'ice', 'light-blue',
             'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
-            'silicon-crystalized', 'tank', 'thruster', 'wedge'
+            'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer'
         ];
         for (const modelName of modelNames) {
             // console.log(`Loading ${modelName}`);
@@ -216,6 +216,26 @@ class Assets extends THREE.Object3D {
             }
             Assets.items.push(i);
             this.itemsByName.set(key, i);
+        }
+        const producers = ['accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube',
+            'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
+            'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer'
+        ];
+        for (const [key, value] of Assets.meshes.entries()) {
+            if (producers.includes(key)) {
+                let originalMesh = this.meshes.get(key);
+                let geo = originalMesh.geometry.clone();
+                geo.scale(originalMesh.scale.x, originalMesh.scale.y, originalMesh.scale.z);
+                geo.scale(0.5, 0.5, 0.5);
+                const producerMesh = Assets.meshes.get('producer').clone();
+                const prototype = new THREE.Mesh(geo, originalMesh.material);
+                producerMesh.add(prototype);
+                let meshName = key.concat("Producer");
+                this.meshes.set(meshName, producerMesh);
+                const i = Item.make(meshName, `Producer of ${key}`, 0, meshName);
+                Assets.items.push(i);
+                this.itemsByName.set(meshName, i);
+            }
         }
         ;
     }
@@ -447,6 +467,14 @@ class AstroGen {
             }
         }
     }
+    buildAllItems() {
+        let x = -Math.round(assets_1.Assets.items.length / 2);
+        for (const item of assets_1.Assets.items) {
+            const iwo = new inWorldItem_1.InWorldItem(item, new THREE.Vector3(x, 0, -5), new THREE.Quaternion());
+            this.construction.addCube(iwo);
+            ++x;
+        }
+    }
     removeFar(dirty, r) {
         let clean = [];
         for (const item of dirty) {
@@ -558,6 +586,7 @@ const universe_1 = __webpack_require__(670);
 const system_1 = __webpack_require__(855);
 const exchange_1 = __webpack_require__(253);
 const factory_1 = __webpack_require__(211);
+const inWorldItem_1 = __webpack_require__(116);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -596,14 +625,19 @@ class BlockBuild {
         station.bodyType = 'Station';
         station.position = new THREE.Vector3(10, 10, 10);
         station.exchanges = exchanges;
-        let system = new system_1.System();
-        system.name = "system name";
-        system.bodies = new Map();
-        system.bodies.set(station.name, station);
-        this.universe.systems.set(system.name, system);
+        let system = new system_1.System("system name");
+        system.addBody(station);
+        this.universe.systems.set(system.getName(), system);
         this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         let ab = new astroGen_1.AstroGen(this.construction);
-        ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
+        if (settings_1.S.float('bai')) {
+            ab.buildAllItems();
+        }
+        else {
+            ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
+        }
+        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get("clayProducer"), new THREE.Vector3(0, 1, -5), new THREE.Quaternion());
+        this.construction.addCube(inWorldItem);
         const inputSpec = new Map();
         const clay = assets_1.Assets.itemsByName.get('clay');
         inputSpec.set(clay, 1);
@@ -621,8 +655,10 @@ class BlockBuild {
         // }
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
-        this.construction.loadFromLocal();
-        this.construction.saveToLocal();
+        if (!settings_1.S.float('bai')) {
+            this.construction.loadFromLocal();
+            this.construction.saveToLocal();
+        }
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -755,7 +791,7 @@ class BlockBuild {
         const debugPanel = new debug_1.Debug();
         debugPanel.position.set(0, 0, -3);
         this.universeGroup.add(debugPanel);
-        this.computer = await computer_1.Computer.make(this.player);
+        this.computer = await computer_1.Computer.make(this.player, this.universe);
         //this.computer.translateY(S.float('ch'));
         //this.computer.translateZ(-0.3);
         //this.computer.rotateX(Math.PI / 4);
@@ -1100,6 +1136,7 @@ class RowText {
 class Computer extends THREE.Object3D {
     model;
     player;
+    universe;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
     rowText = new RowText();
@@ -1114,10 +1151,11 @@ class Computer extends THREE.Object3D {
     currentDisplay = this.showInventory;
     currentParameters = "";
     selectedItemIndex = 0;
-    constructor(model, player) {
+    constructor(model, player, universe) {
         super();
         this.model = model;
         this.player = player;
+        this.universe = universe;
         this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
@@ -1144,9 +1182,9 @@ class Computer extends THREE.Object3D {
             }
         }
     }
-    static async make(player) {
+    static async make(player, universe) {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
-        return new Computer(model, player);
+        return new Computer(model, player, universe);
     }
     findChildByName(name, model) {
         let retvalue = new THREE.Object3D();
@@ -1574,6 +1612,7 @@ class Exchange {
         this.item = item;
     }
     buyOrders = [];
+    sellOrders = [];
     // If `update` is set to true, cancel the existing order and
     // replace it with this one.
     placeBuyOrder(buyOrder, update = true) {
@@ -1588,6 +1627,17 @@ class Exchange {
             }
         }
         this.buyOrders.push(buyOrder);
+    }
+    placeSellOrder(sellOrder, update = true) {
+        this.sellOrders.push(sellOrder);
+    }
+    matchOrders() {
+        for (let b of this.buyOrders) {
+            for (let s of this.sellOrders) {
+                if (b.priceEach >= s.priceEach) {
+                }
+            }
+        }
     }
     // Removes any orders which cannot be filled because the
     // buyer has insufficient funds.
@@ -4407,6 +4457,7 @@ class S {
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('ns', 10e3, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
+        S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('m', 1, 'Use merged geometry in Block Build.');
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
@@ -4671,6 +4722,16 @@ exports.Body = exports.System = void 0;
 class System {
     name;
     bodies;
+    constructor(name) {
+        this.name = name;
+        this.bodies = new Map();
+    }
+    getName() {
+        return this.name;
+    }
+    addBody(body) {
+        this.bodies.set(body.name, body);
+    }
 }
 exports.System = System;
 class Body {
