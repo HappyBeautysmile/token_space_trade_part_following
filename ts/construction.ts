@@ -18,6 +18,51 @@ export interface Construction {
   cubes(): Iterable<InWorldItem>;
 }
 
+// A construction which writes new blocks to `readWriteConstruction` and
+// reads cubes from either construction.
+// Typical usage is to populate readConstruction with some initial state
+// (e.g. a platform), and pass an empty construction to readWriteConstruction.
+// When mining (i.e. removeCube) it will mine from `readConstruction` if there
+// is something there, otherwise try to mine from `readWriteConstruction`.
+export class ReadWriteConstruction implements Construction {
+  constructor(private readConstruction: Construction,
+    private readWriteConstruction: Construction) {
+  }
+  addCube(o: InWorldItem): void {
+    this.readWriteConstruction.addCube(o);
+  }
+  removeCube(p: THREE.Vector3): Item {
+    if (this.readConstruction.cubeAt(p)) {
+      return this.readConstruction.removeCube(p);
+    } else {
+      return this.readWriteConstruction.removeCube(p);
+    }
+  }
+  cubeAt(p: THREE.Vector3): boolean {
+    return this.readConstruction.cubeAt(p) ||
+      this.readWriteConstruction.cubeAt(p);
+  }
+  save(): void {
+    // TODO: This probably needs some work.
+    this.readConstruction.save();
+    this.readWriteConstruction.save();
+  }
+  saveToLocal(): void {
+    // TODO: This probably needs some work.
+    this.readConstruction.saveToLocal();
+    this.readWriteConstruction.saveToLocal();
+  }
+  loadFromLocal(): void {
+    // TODO: This probably needs some work.
+    this.readConstruction.loadFromLocal();
+    this.readWriteConstruction.loadFromLocal();
+  }
+  *cubes(): Iterable<InWorldItem> {
+    yield* this.readConstruction.cubes();
+    yield* this.readWriteConstruction.cubes();
+  }
+}
+
 export interface Container {
   addObject(key: string, object: THREE.Object3D): void;
   removeObject(key: string): void;
