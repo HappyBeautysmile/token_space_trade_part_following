@@ -1,19 +1,25 @@
 import * as THREE from "three";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { Codeable, File } from "./file";
+import { PointCloud } from "./pointCloud";
+import { Stars } from "./stars";
 
 export class Stellar {
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
 
+  private stars: Stars;
+
   constructor() {
     this.initializeGraphics();
+    this.initializeWorld();
   }
 
-  initializeGraphics() {
+  private initializeGraphics() {
     document.body.innerHTML = '';
     this.camera = new THREE.PerspectiveCamera(75,
-      1.0, /*near=*/0, /*far=*/2000);
+      1.0, /*near=*/0.1, /*far=*/2000);
     this.camera.position.set(0, 1.7, 0);
     this.camera.lookAt(0, 1.7, -1.5);
     this.scene.add(this.camera);
@@ -23,10 +29,21 @@ export class Stellar {
     document.body.appendChild(this.renderer.domElement);
     document.body.appendChild(VRButton.createButton(this.renderer));
     this.renderer.xr.enabled = true;
-
     this.renderer.setAnimationLoop(() => {
       this.renderer.render(this.scene, this.camera);
     });
+  }
+
+  private initializeWorld() {
+    const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
+      1.0);
+    light.position.set(0, 10, 2);
+    this.scene.add(light);
+
+    console.log('Initialize World');
+    this.stars = new Stars();
+    File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
+    this.scene.add(this.stars);
   }
 }
 
