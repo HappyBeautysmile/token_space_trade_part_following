@@ -6,6 +6,7 @@ module.exports = {
     matt: "./src/index.js",
     steve: "./src/index.js",
     colorTest: "./src/colorTest.js",
+    stellar: "./src/v2/stellar.js"
   },
   output: {
     path: __dirname + "/dist",
@@ -38,6 +39,12 @@ module.exports = {
       template: "./src/colorTest.html",
       filename: "colorTest.html",
       chunks: ['colorTest']
+    }),
+    new HtmlWebPackPlugin({
+      name: "stellar",
+      template: "./src/index.html",
+      filename: "stellar.html",
+      chunks: ['stellar']
     }),
   ],
   devtool: "source-map",
