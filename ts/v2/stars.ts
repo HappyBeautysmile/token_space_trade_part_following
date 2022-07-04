@@ -3,11 +3,18 @@ import { S } from "../settings";
 
 import { Codeable } from "./file";
 import { PointCloud } from "./pointCloud";
+import { PointSet } from "./pointSet";
 
-export class Stars extends PointCloud implements Codeable {
+export class Stars extends PointCloud implements Codeable, PointSet {
   constructor() {
     super();
   }
+
+  private tmpV = new THREE.Vector3();
+  getClosestDistance(p: THREE.Vector3): number {
+    return this.starPositions.getClosestDistance(p);
+  }
+
   serialize(): Object {
     const o = {};
     const positions = [];

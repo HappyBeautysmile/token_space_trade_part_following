@@ -3,7 +3,9 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { Controls } from "./controls";
 import { Codeable, File } from "./file";
 import { PointCloud } from "./pointCloud";
+import { PointCloudUnion } from "./pointSet";
 import { Stars } from "./stars";
+import { System } from "./system";
 
 export class Stellar {
   private scene = new THREE.Scene();
@@ -12,7 +14,9 @@ export class Stellar {
   private universe = new THREE.Group();
   private player = new THREE.Group();
 
+  private allPoints = new PointCloudUnion();
   private stars: Stars;
+  private system: System;
 
   constructor() {
     this.scene.add(this.player);
@@ -46,9 +50,7 @@ export class Stellar {
   private distanceToClosest(): number {
     this.tmpV.copy(this.player.position);
     this.tmpV.sub(this.universe.position);
-    const p = this.stars.starPositions.getClosest(this.tmpV);
-    this.tmpV.sub(p);
-    return this.tmpV.length();
+    return this.allPoints.getClosestDistance(this.tmpV);
   }
 
   private velocityVector = new THREE.Vector3();
@@ -80,6 +82,13 @@ export class Stellar {
     this.stars = new Stars();
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
+
+    this.system = new System();
+    File.load(this.system, 'System0', new THREE.Vector3(0, 0, 0));
+    this.universe.add(this.system);
+
+    this.allPoints.add(this.stars);
+    this.allPoints.add(this.system);
   }
 }
 
