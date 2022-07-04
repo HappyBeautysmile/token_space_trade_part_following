@@ -43,6 +43,12 @@ export class Stellar {
       const deltaS = Math.min(clock.getDelta(), 0.1);
       this.renderer.render(this.scene, this.camera);
       this.handleControls(deltaS);
+      if (!Controls.hasSession()) {
+        const session = this.renderer.xr.getSession();
+        if (session) {
+          Controls.setSession(session);
+        }
+      }
     });
   }
 
