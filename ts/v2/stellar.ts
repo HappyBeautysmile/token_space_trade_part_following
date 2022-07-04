@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { Controls } from "./controls";
 import { Codeable, File } from "./file";
 import { PointCloud } from "./pointCloud";
 import { Stars } from "./stars";
@@ -8,10 +9,14 @@ export class Stellar {
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
+  private universe = new THREE.Group();
+  private player = new THREE.Group();
 
   private stars: Stars;
 
   constructor() {
+    this.scene.add(this.player);
+    this.scene.add(this.universe);
     this.initializeGraphics();
     this.initializeWorld();
   }
@@ -22,16 +27,47 @@ export class Stellar {
       1.0, /*near=*/0.1, /*far=*/2000);
     this.camera.position.set(0, 1.7, 0);
     this.camera.lookAt(0, 1.7, -1.5);
-    this.scene.add(this.camera);
+    this.player.add(this.camera);
 
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(512, 512);
     document.body.appendChild(this.renderer.domElement);
     document.body.appendChild(VRButton.createButton(this.renderer));
     this.renderer.xr.enabled = true;
+    const clock = new THREE.Clock();
     this.renderer.setAnimationLoop(() => {
+      const deltaS = Math.min(clock.getDelta(), 0.1);
       this.renderer.render(this.scene, this.camera);
+      this.handleControls(deltaS);
     });
+  }
+
+  private tmpV = new THREE.Vector3();
+  private distanceToClosest(): number {
+    this.tmpV.copy(this.player.position);
+    this.tmpV.sub(this.universe.position);
+    const p = this.stars.starPositions.getClosest(this.tmpV);
+    this.tmpV.sub(p);
+    return this.tmpV.length();
+  }
+
+  private velocityVector = new THREE.Vector3();
+  private handleControls(deltaS: number) {
+    const velocity = this.distanceToClosest() / 5.0;
+    this.velocityVector.set(
+      Controls.leftRight(),
+      Controls.upDown(),
+      Controls.forwardBack());
+    if (this.velocityVector.lengthSq() > 0) {
+      this.velocityVector.multiplyScalar(velocity * deltaS);
+      this.velocityVector.applyQuaternion(this.player.quaternion);
+      this.universe.position.sub(this.velocityVector);
+    }
+
+    const spinRate = Controls.spinLeftRight();
+    if (spinRate != 0) {
+      this.player.rotateY(deltaS * spinRate * 3);
+    }
   }
 
   private initializeWorld() {
@@ -43,7 +79,7 @@ export class Stellar {
     console.log('Initialize World');
     this.stars = new Stars();
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
-    this.scene.add(this.stars);
+    this.universe.add(this.stars);
   }
 }
 

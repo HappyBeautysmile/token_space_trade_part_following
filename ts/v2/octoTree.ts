@@ -178,4 +178,55 @@ export class PointMapOctoTree<T> implements PointMap<T> {
       }
     }
   }
+
+  private tmpV = new THREE.Vector3();
+  private getClosestKV(p: THREE.Vector3): PointKey<T> {
+    let closestDistance = Infinity;
+    let closestKV: PointKey<T> = undefined;
+    if (this.points) {
+      for (const kv of this.points) {
+        this.tmpV.copy(p);
+        this.tmpV.sub(kv.point);
+        const distance = this.tmpV.length();
+        if (distance < closestDistance) {
+          closestKV = kv;
+          closestDistance = distance;
+        }
+      }
+      return closestKV;
+    } else {
+      // First, traverse children to find the right bucket
+      let bucket: PointMapOctoTree<T> = this;
+      while (!!bucket.children) {
+        for (const child of bucket.children) {
+          if (child.bounds.contains(p)) {
+            bucket = child;
+            break;
+          }
+        }
+      }
+      // Second, find the closest in that bucket
+      closestKV = bucket.getClosestKV(p);
+
+      // Third, find all points within that radius
+      this.tmpV.copy(p);
+      this.tmpV.sub(closestKV.point);
+      const aabb = new AABB(p, this.tmpV.length());
+      for (const kv of this.getAllWithinAABB(aabb)) {
+        this.tmpV.copy(kv.point);
+        this.tmpV.sub(p);
+        const distance = this.tmpV.length();
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestKV = kv;
+        }
+      }
+      // Return the closest of those points
+      return closestKV;
+    }
+  }
+
+  getClosest(p: THREE.Vector3): T {
+    return this.getClosestKV(p).value;
+  }
 }
