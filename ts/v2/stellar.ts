@@ -127,7 +127,6 @@ export class Stellar {
     this.stars = new Stars();
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
-
     this.allPoints.add(this.stars);
   }
 }

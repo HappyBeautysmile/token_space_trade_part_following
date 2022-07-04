@@ -511,12 +511,12 @@ class PointCloud extends THREE.Object3D {
     constructor() {
         super();
     }
-    build(center, radius, radiusSd, ySd, count, color, pointRadius, includeOrigin, initialIntensity) {
+    build(radius, radiusSd, ySd, count, color, pointRadius, includeOrigin, initialIntensity) {
         if (includeOrigin) {
             const origin = new THREE.Vector3();
             this.starPositions.add(origin, origin);
         }
-        this.generateStarPositions(center, radius, radiusSd, ySd, count);
+        this.generateStarPositions(radius, radiusSd, ySd, count);
         this.addStars(color, pointRadius, initialIntensity);
     }
     static gaussian(sd) {
@@ -540,13 +540,12 @@ class PointCloud extends THREE.Object3D {
         dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
         r.push(pointRadius, pointRadius, pointRadius, pointRadius);
     }
-    generateStarPositions(center, radius, radiusSd, ySd, count) {
+    generateStarPositions(radius, radiusSd, ySd, count) {
         for (let i = 0; i < count; ++i) {
             const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
             const orbitalHeight = PointCloud.gaussian(ySd);
             const theta = Math.random() * Math.PI * 2;
             const pos = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
-            pos.add(center);
             this.starPositions.add(pos, pos);
         }
     }
@@ -692,7 +691,9 @@ class Stars extends pointCloud_1.PointCloud {
     }
     tmpV = new THREE.Vector3();
     getClosestDistance(p) {
-        return this.starPositions.getClosestDistance(p);
+        this.tmpV.copy(p);
+        this.tmpV.sub(this.position);
+        return this.starPositions.getClosestDistance(this.tmpV);
     }
     serialize() {
         const o = {};
@@ -713,9 +714,10 @@ class Stars extends pointCloud_1.PointCloud {
         /*initialIntensity=*/ 50);
         return this;
     }
+    zero = new THREE.Vector3();
     fallback(p) {
         this.starPositions.clear();
-        super.build(p, settings_1.S.float('sr'), settings_1.S.float('sr'), settings_1.S.float('sr') / 10.0, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
+        super.build(settings_1.S.float('sr'), settings_1.S.float('sr'), settings_1.S.float('sr') / 10.0, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 10);
         return this;
     }
@@ -916,8 +918,9 @@ class System extends THREE.Object3D {
     }
     tmpV = new THREE.Vector3();
     getClosestDistance(p) {
+        this.tmpV.copy(p);
+        this.tmpV.sub(this.position);
         let closestDistance = Infinity;
-        let closestPoint = undefined;
         for (const ps of [this.planets.starPositions, this.asteroids.starPositions]) {
             const distance = ps.getClosestDistance(p);
             if (distance < closestDistance) {
@@ -959,11 +962,13 @@ class System extends THREE.Object3D {
     }
     fallback(p) {
         this.asteroids.starPositions.clear();
-        this.asteroids.build(p, settings_1.S.float('ar'), settings_1.S.float('ar') / 10.0, settings_1.S.float('ar') / 30.0, settings_1.S.float('na'), new THREE.Color('#44f'), settings_1.S.float('as'), 
+        this.asteroids.build(settings_1.S.float('ar'), settings_1.S.float('ar') / 10.0, settings_1.S.float('ar') / 30.0, settings_1.S.float('na'), new THREE.Color('#44f'), settings_1.S.float('as'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 50);
+        this.asteroids.position.copy(p);
         this.planets.starPositions.clear();
-        this.planets.build(p, settings_1.S.float('ar') * 2, settings_1.S.float('ar'), settings_1.S.float('ar') / 50.0, 10 /*planets*/, new THREE.Color('#0ff'), settings_1.S.float('as'), 
+        this.planets.build(settings_1.S.float('ar') * 2, settings_1.S.float('ar'), settings_1.S.float('ar') / 50.0, 10 /*planets*/, new THREE.Color('#0ff'), settings_1.S.float('as'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 50);
+        this.planets.position.copy(p);
         return this;
     }
 }

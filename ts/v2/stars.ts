@@ -12,7 +12,9 @@ export class Stars extends PointCloud implements Codeable, PointSet {
 
   private tmpV = new THREE.Vector3();
   getClosestDistance(p: THREE.Vector3): number {
-    return this.starPositions.getClosestDistance(p);
+    this.tmpV.copy(p);
+    this.tmpV.sub(this.position);
+    return this.starPositions.getClosestDistance(this.tmpV);
   }
 
   serialize(): Object {
@@ -36,9 +38,10 @@ export class Stars extends PointCloud implements Codeable, PointSet {
     return this;
   }
 
+  private zero = new THREE.Vector3();
   fallback(p: THREE.Vector3) {
     this.starPositions.clear();
-    super.build(p,
+    super.build(
       S.float('sr'), S.float('sr'), S.float('sr') / 10.0,
       S.float('ns'), new THREE.Color('#fff'), S.float('ss'),
       /*includeOrigin=*/false, /*initialIntensity=*/10);

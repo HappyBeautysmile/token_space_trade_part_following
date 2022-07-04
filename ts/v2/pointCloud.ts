@@ -12,15 +12,14 @@ export class PointCloud extends THREE.Object3D {
     super();
   }
 
-  build(center: THREE.Vector3,
-    radius: number, radiusSd: number, ySd: number,
+  build(radius: number, radiusSd: number, ySd: number,
     count: number, color: THREE.Color, pointRadius: number,
     includeOrigin, initialIntensity: number) {
     if (includeOrigin) {
       const origin = new THREE.Vector3();
       this.starPositions.add(origin, origin);
     }
-    this.generateStarPositions(center, radius, radiusSd, ySd, count);
+    this.generateStarPositions(radius, radiusSd, ySd, count);
     this.addStars(color, pointRadius, initialIntensity);
   }
 
@@ -61,7 +60,7 @@ export class PointCloud extends THREE.Object3D {
     r.push(pointRadius, pointRadius, pointRadius, pointRadius)
   }
 
-  private generateStarPositions(center: THREE.Vector3,
+  private generateStarPositions(
     radius: number, radiusSd: number,
     ySd: number, count: number) {
     for (let i = 0; i < count; ++i) {
@@ -72,7 +71,6 @@ export class PointCloud extends THREE.Object3D {
         orbitalRadius * Math.cos(theta),
         orbitalHeight,
         orbitalRadius * Math.sin(theta));
-      pos.add(center);
       this.starPositions.add(pos, pos);
     }
   }

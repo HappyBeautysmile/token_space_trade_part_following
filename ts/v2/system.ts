@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import * as THREE from "three";
 import { S } from "../settings";
 
@@ -23,8 +24,9 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
 
   private tmpV = new THREE.Vector3();
   getClosestDistance(p: THREE.Vector3): number {
+    this.tmpV.copy(p);
+    this.tmpV.sub(this.position);
     let closestDistance = Infinity;
-    let closestPoint: THREE.Vector3 = undefined;
     for (const ps of [this.planets.starPositions, this.asteroids.starPositions]) {
       const distance = ps.getClosestDistance(p);
       if (distance < closestDistance) {
@@ -73,17 +75,17 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
   fallback(p: THREE.Vector3) {
     this.asteroids.starPositions.clear();
     this.asteroids.build(
-      p,
       S.float('ar'), S.float('ar') / 10.0, S.float('ar') / 30.0,
       S.float('na'), new THREE.Color('#44f'), S.float('as'),
       /*includeOrigin=*/false, /*initialIntensity=*/50);
+    this.asteroids.position.copy(p);
 
     this.planets.starPositions.clear();
     this.planets.build(
-      p,
       S.float('ar') * 2, S.float('ar'), S.float('ar') / 50.0,
       10/*planets*/, new THREE.Color('#0ff'), S.float('as'),
         /*includeOrigin=*/false, /*initialIntensity=*/50);
+    this.planets.position.copy(p);
 
     return this;
   }
