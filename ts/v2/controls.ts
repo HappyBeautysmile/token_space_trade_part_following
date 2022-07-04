@@ -42,7 +42,7 @@ export class Controls {
   static upDown() {
     let result = 0;
     if (!!Controls.rightSource) {
-      result = Controls.rightSource.gamepad.axes[3];
+      result = -Controls.rightSource.gamepad.axes[3];
     }
     if (Controls.keysDown.has('ArrowUp')) {
       result += 1.0;
@@ -55,7 +55,7 @@ export class Controls {
   static spinLeftRight() {
     let result = 0;
     if (!!Controls.rightSource) {
-      result = Controls.rightSource.gamepad.axes[2];
+      result = -Math.pow(Controls.rightSource.gamepad.axes[2], 3);
     }
     if (Controls.keysDown.has('ArrowRight')) {
       result += -1.0;
