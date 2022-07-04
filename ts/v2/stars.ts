@@ -38,7 +38,8 @@ export class Stars extends PointCloud implements Codeable, PointSet {
 
   fallback(p: THREE.Vector3) {
     this.starPositions.clear();
-    super.build(S.float('sr'), S.float('sr'), S.float('sr') / 10.0,
+    super.build(p,
+      S.float('sr'), S.float('sr'), S.float('sr') / 10.0,
       S.float('ns'), new THREE.Color('#fff'), S.float('ss'),
       /*includeOrigin=*/false, /*initialIntensity=*/10);
     return this;

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { S } from "../settings";
 import { Controls } from "./controls";
 import { Codeable, File } from "./file";
 import { PointCloud } from "./pointCloud";
@@ -16,7 +17,7 @@ export class Stellar {
 
   private allPoints = new PointCloudUnion();
   private stars: Stars;
-  private system: System;
+  private activeSystems = new Map<THREE.Vector3, System>();
 
   constructor() {
     this.scene.add(this.player);
@@ -43,12 +44,7 @@ export class Stellar {
       const deltaS = Math.min(clock.getDelta(), 0.1);
       this.renderer.render(this.scene, this.camera);
       this.handleControls(deltaS);
-      if (!Controls.hasSession()) {
-        const session = this.renderer.xr.getSession();
-        if (session) {
-          Controls.setSession(session);
-        }
-      }
+      this.handlePops();
     });
   }
 
@@ -61,7 +57,13 @@ export class Stellar {
 
   private velocityVector = new THREE.Vector3();
   private handleControls(deltaS: number) {
-    const velocity = this.distanceToClosest() / 5.0;
+    if (!Controls.hasSession()) {
+      const session = this.renderer.xr.getSession();
+      if (session) {
+        Controls.setSession(session);
+      }
+    }
+    const velocity = S.float('rv') * this.distanceToClosest();
     this.velocityVector.set(
       Controls.leftRight(),
       Controls.upDown(),
@@ -78,6 +80,43 @@ export class Stellar {
     }
   }
 
+  private tmpSet = new Set<THREE.Vector3>();
+  private handlePops() {
+    this.tmpV.copy(this.universe.position);
+    this.tmpV.multiplyScalar(-1);
+    const previousSize = this.activeSystems.size;
+    this.tmpSet.clear();
+    for (const star of this.stars.starPositions.getAllWithinRadius(
+      this.tmpV, S.float('sp'))) {
+      this.tmpSet.add(star);
+    }
+    const toRemove: THREE.Vector3[] = [];
+    for (const k of this.activeSystems.keys()) {
+      if (!this.tmpSet.has(k)) {
+        toRemove.push(k);
+      }
+    }
+    for (const k of toRemove) {
+      const oldSystem = this.activeSystems.get(k);
+      this.universe.remove(oldSystem);
+      this.allPoints.delete(oldSystem);
+      this.activeSystems.delete(k);
+    }
+    for (const k of this.tmpSet) {
+      if (!this.activeSystems.has(k)) {
+        const system = new System();
+        const name = `System:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+        File.load(system, name, k);
+        this.activeSystems.set(k, system);
+        this.universe.add(system);
+        this.allPoints.add(system);
+      }
+    }
+    if (previousSize != this.activeSystems.size) {
+      console.log(`New size: ${this.activeSystems.size}`);
+    }
+  }
+
   private initializeWorld() {
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
       1.0);
@@ -89,12 +128,7 @@ export class Stellar {
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
 
-    this.system = new System();
-    File.load(this.system, 'System0', new THREE.Vector3(0, 0, 0));
-    this.universe.add(this.system);
-
     this.allPoints.add(this.stars);
-    this.allPoints.add(this.system);
   }
 }
 

@@ -57,7 +57,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
       this.asteroids.starPositions.add(v, v);
     }
     this.asteroids.addStars(new THREE.Color('#44f'), S.float('as'),
-    /*initialIntensity=*/5);
+    /*initialIntensity=*/50);
 
     this.planets.starPositions.clear();
     for (const p of o['planetPositions']) {
@@ -65,7 +65,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
       this.planets.starPositions.add(v, v);
     }
     this.planets.addStars(new THREE.Color('#0ff'), S.float('as'),
-    /*initialIntensity=*/5);
+    /*initialIntensity=*/50);
 
     return this;
   }
@@ -73,12 +73,14 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
   fallback(p: THREE.Vector3) {
     this.asteroids.starPositions.clear();
     this.asteroids.build(
+      p,
       S.float('ar'), S.float('ar') / 10.0, S.float('ar') / 30.0,
       S.float('na'), new THREE.Color('#44f'), S.float('as'),
       /*includeOrigin=*/false, /*initialIntensity=*/50);
 
     this.planets.starPositions.clear();
     this.planets.build(
+      p,
       S.float('ar') * 2, S.float('ar'), S.float('ar') / 50.0,
       10/*planets*/, new THREE.Color('#0ff'), S.float('as'),
         /*includeOrigin=*/false, /*initialIntensity=*/50);

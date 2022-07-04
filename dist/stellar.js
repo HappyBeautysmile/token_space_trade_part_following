@@ -34,13 +34,14 @@ class S {
         S.setDefault('sr', 10e9, 'Universe radius');
         S.setDefault('ar', 1e6, 'Asteroid belt radius');
         S.setDefault('ss', 100e3, 'Radius of a single star');
-        S.setDefault('sp', 50e6, 'Star System "Pop" radius');
+        S.setDefault('sp', 200e6, 'Star System "Pop" radius');
         S.setDefault('as', 1e2, 'Radius of a single asteroid');
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('ns', 10e3, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
+        S.setDefault('rv', 2.0, 'Starship relative velocity');
         S.setDefault('m', 1, 'Use merged geometry in Block Build.');
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
@@ -510,12 +511,12 @@ class PointCloud extends THREE.Object3D {
     constructor() {
         super();
     }
-    build(radius, radiusSd, ySd, count, color, pointRadius, includeOrigin, initialIntensity) {
+    build(center, radius, radiusSd, ySd, count, color, pointRadius, includeOrigin, initialIntensity) {
         if (includeOrigin) {
             const origin = new THREE.Vector3();
             this.starPositions.add(origin, origin);
         }
-        this.generateStarPositions(radius, radiusSd, ySd, count);
+        this.generateStarPositions(center, radius, radiusSd, ySd, count);
         this.addStars(color, pointRadius, initialIntensity);
     }
     static gaussian(sd) {
@@ -539,12 +540,13 @@ class PointCloud extends THREE.Object3D {
         dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
         r.push(pointRadius, pointRadius, pointRadius, pointRadius);
     }
-    generateStarPositions(radius, radiusSd, ySd, count) {
+    generateStarPositions(center, radius, radiusSd, ySd, count) {
         for (let i = 0; i < count; ++i) {
             const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
             const orbitalHeight = PointCloud.gaussian(ySd);
             const theta = Math.random() * Math.PI * 2;
             const pos = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
+            pos.add(center);
             this.starPositions.add(pos, pos);
         }
     }
@@ -713,7 +715,7 @@ class Stars extends pointCloud_1.PointCloud {
     }
     fallback(p) {
         this.starPositions.clear();
-        super.build(settings_1.S.float('sr'), settings_1.S.float('sr'), settings_1.S.float('sr') / 10.0, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
+        super.build(p, settings_1.S.float('sr'), settings_1.S.float('sr'), settings_1.S.float('sr') / 10.0, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 10);
         return this;
     }
@@ -750,6 +752,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Stellar = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const VRButton_js_1 = __webpack_require__(18);
+const settings_1 = __webpack_require__(451);
 const controls_1 = __webpack_require__(925);
 const file_1 = __webpack_require__(13);
 const pointSet_1 = __webpack_require__(536);
@@ -763,7 +766,7 @@ class Stellar {
     player = new THREE.Group();
     allPoints = new pointSet_1.PointCloudUnion();
     stars;
-    system;
+    activeSystems = new Map();
     constructor() {
         this.scene.add(this.player);
         this.scene.add(this.universe);
@@ -786,12 +789,7 @@ class Stellar {
             const deltaS = Math.min(clock.getDelta(), 0.1);
             this.renderer.render(this.scene, this.camera);
             this.handleControls(deltaS);
-            if (!controls_1.Controls.hasSession()) {
-                const session = this.renderer.xr.getSession();
-                if (session) {
-                    controls_1.Controls.setSession(session);
-                }
-            }
+            this.handlePops();
         });
     }
     tmpV = new THREE.Vector3();
@@ -802,7 +800,13 @@ class Stellar {
     }
     velocityVector = new THREE.Vector3();
     handleControls(deltaS) {
-        const velocity = this.distanceToClosest() / 5.0;
+        if (!controls_1.Controls.hasSession()) {
+            const session = this.renderer.xr.getSession();
+            if (session) {
+                controls_1.Controls.setSession(session);
+            }
+        }
+        const velocity = settings_1.S.float('rv') * this.distanceToClosest();
         this.velocityVector.set(controls_1.Controls.leftRight(), controls_1.Controls.upDown(), controls_1.Controls.forwardBack());
         if (this.velocityVector.lengthSq() > 0) {
             this.velocityVector.multiplyScalar(velocity * deltaS);
@@ -814,6 +818,41 @@ class Stellar {
             this.player.rotateY(deltaS * spinRate * 3);
         }
     }
+    tmpSet = new Set();
+    handlePops() {
+        this.tmpV.copy(this.universe.position);
+        this.tmpV.multiplyScalar(-1);
+        const previousSize = this.activeSystems.size;
+        this.tmpSet.clear();
+        for (const star of this.stars.starPositions.getAllWithinRadius(this.tmpV, settings_1.S.float('sp'))) {
+            this.tmpSet.add(star);
+        }
+        const toRemove = [];
+        for (const k of this.activeSystems.keys()) {
+            if (!this.tmpSet.has(k)) {
+                toRemove.push(k);
+            }
+        }
+        for (const k of toRemove) {
+            const oldSystem = this.activeSystems.get(k);
+            this.universe.remove(oldSystem);
+            this.allPoints.delete(oldSystem);
+            this.activeSystems.delete(k);
+        }
+        for (const k of this.tmpSet) {
+            if (!this.activeSystems.has(k)) {
+                const system = new system_1.System();
+                const name = `System:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+                file_1.File.load(system, name, k);
+                this.activeSystems.set(k, system);
+                this.universe.add(system);
+                this.allPoints.add(system);
+            }
+        }
+        if (previousSize != this.activeSystems.size) {
+            console.log(`New size: ${this.activeSystems.size}`);
+        }
+    }
     initializeWorld() {
         const light = new THREE.DirectionalLight(new THREE.Color('#fff'), 1.0);
         light.position.set(0, 10, 2);
@@ -822,11 +861,7 @@ class Stellar {
         this.stars = new stars_1.Stars();
         file_1.File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
         this.universe.add(this.stars);
-        this.system = new system_1.System();
-        file_1.File.load(this.system, 'System0', new THREE.Vector3(0, 0, 0));
-        this.universe.add(this.system);
         this.allPoints.add(this.stars);
-        this.allPoints.add(this.system);
     }
 }
 exports.Stellar = Stellar;
@@ -912,22 +947,22 @@ class System extends THREE.Object3D {
             this.asteroids.starPositions.add(v, v);
         }
         this.asteroids.addStars(new THREE.Color('#44f'), settings_1.S.float('as'), 
-        /*initialIntensity=*/ 5);
+        /*initialIntensity=*/ 50);
         this.planets.starPositions.clear();
         for (const p of o['planetPositions']) {
             const v = new THREE.Vector3(p.x, p.y, p.z);
             this.planets.starPositions.add(v, v);
         }
         this.planets.addStars(new THREE.Color('#0ff'), settings_1.S.float('as'), 
-        /*initialIntensity=*/ 5);
+        /*initialIntensity=*/ 50);
         return this;
     }
     fallback(p) {
         this.asteroids.starPositions.clear();
-        this.asteroids.build(settings_1.S.float('ar'), settings_1.S.float('ar') / 10.0, settings_1.S.float('ar') / 30.0, settings_1.S.float('na'), new THREE.Color('#44f'), settings_1.S.float('as'), 
+        this.asteroids.build(p, settings_1.S.float('ar'), settings_1.S.float('ar') / 10.0, settings_1.S.float('ar') / 30.0, settings_1.S.float('na'), new THREE.Color('#44f'), settings_1.S.float('as'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 50);
         this.planets.starPositions.clear();
-        this.planets.build(settings_1.S.float('ar') * 2, settings_1.S.float('ar'), settings_1.S.float('ar') / 50.0, 10 /*planets*/, new THREE.Color('#0ff'), settings_1.S.float('as'), 
+        this.planets.build(p, settings_1.S.float('ar') * 2, settings_1.S.float('ar'), settings_1.S.float('ar') / 50.0, 10 /*planets*/, new THREE.Color('#0ff'), settings_1.S.float('as'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 50);
         return this;
     }

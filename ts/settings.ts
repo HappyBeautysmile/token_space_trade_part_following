@@ -27,7 +27,7 @@ export class S {
     S.setDefault('sr', 10e9, 'Universe radius');
     S.setDefault('ar', 1e6, 'Asteroid belt radius');
     S.setDefault('ss', 100e3, 'Radius of a single star')
-    S.setDefault('sp', 50e6, 'Star System "Pop" radius');
+    S.setDefault('sp', 200e6, 'Star System "Pop" radius');
     S.setDefault('as', 1e2, 'Radius of a single asteroid');
     S.setDefault('ps', 30, 'Platform size.');
     S.setDefault('ns', 10e3, 'Number of stars in the VLU');
@@ -35,6 +35,7 @@ export class S {
 
     S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.')
     S.setDefault('sa', 1e3, 'Starship Acceleration');
+    S.setDefault('rv', 2.0, 'Starship relative velocity');
     S.setDefault('m', 1, 'Use merged geometry in Block Build.');
     S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
     S.setDefault('pbf', 1e7, 'Point brightness factor');
