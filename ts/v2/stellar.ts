@@ -17,7 +17,6 @@ export class Stellar {
 
   private allPoints = new PointCloudUnion();
   private stars: Stars;
-  private activeSystems = new Map<THREE.Vector3, System>();
 
   constructor() {
     this.scene.add(this.player);
@@ -44,7 +43,7 @@ export class Stellar {
       const deltaS = Math.min(clock.getDelta(), 0.1);
       this.renderer.render(this.scene, this.camera);
       this.handleControls(deltaS);
-      this.handlePops();
+      this.stars.handlePops(this.universe, this.allPoints);
     });
   }
 
@@ -80,42 +79,6 @@ export class Stellar {
     }
   }
 
-  private tmpSet = new Set<THREE.Vector3>();
-  private handlePops() {
-    this.tmpV.copy(this.universe.position);
-    this.tmpV.multiplyScalar(-1);
-    const previousSize = this.activeSystems.size;
-    this.tmpSet.clear();
-    for (const star of this.stars.starPositions.getAllWithinRadius(
-      this.tmpV, S.float('sp'))) {
-      this.tmpSet.add(star);
-    }
-    const toRemove: THREE.Vector3[] = [];
-    for (const k of this.activeSystems.keys()) {
-      if (!this.tmpSet.has(k)) {
-        toRemove.push(k);
-      }
-    }
-    for (const k of toRemove) {
-      const oldSystem = this.activeSystems.get(k);
-      this.universe.remove(oldSystem);
-      this.allPoints.delete(oldSystem);
-      this.activeSystems.delete(k);
-    }
-    for (const k of this.tmpSet) {
-      if (!this.activeSystems.has(k)) {
-        const system = new System();
-        const name = `System:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
-        File.load(system, name, k);
-        this.activeSystems.set(k, system);
-        this.universe.add(system);
-        this.allPoints.add(system);
-      }
-    }
-    if (previousSize != this.activeSystems.size) {
-      console.log(`New size: ${this.activeSystems.size}`);
-    }
-  }
 
   private initializeWorld() {
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),

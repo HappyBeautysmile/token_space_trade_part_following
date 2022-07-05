@@ -136,8 +136,8 @@ export class PointCloud extends THREE.Object3D {
       varying vec2 vDxy;
       void main() {
         float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
+        intensity = min(intensity, 1.0);
         gl_FragColor = vec4(vColor * intensity, 1.0);
-        // gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
       }`,
       blending: THREE.AdditiveBlending,
       depthTest: true,

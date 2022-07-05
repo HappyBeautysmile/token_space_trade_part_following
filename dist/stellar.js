@@ -39,6 +39,7 @@ class S {
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('ns', 10e3, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
+        S.setDefault('ni', 1000, 'Instances Per Mesh');
         S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('rv', 2.0, 'Starship relative velocity');
@@ -69,6 +70,87 @@ class S {
 }
 exports.S = S;
 //# sourceMappingURL=settings.js.map
+
+/***/ }),
+
+/***/ 38:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Asteroid = void 0;
+const THREE = __importStar(__webpack_require__(232));
+const three_1 = __webpack_require__(232);
+const settings_1 = __webpack_require__(451);
+class Asteroid extends THREE.Object3D {
+    asteroids = new Set();
+    constructor() {
+        super();
+    }
+    serialize() {
+        const o = {};
+        const asteroidPositions = [];
+        for (const p of this.asteroids) {
+            asteroidPositions.push({ x: p.x, y: p.y, z: p.z });
+        }
+        o['asteroidPositions'] = asteroidPositions;
+        return o;
+    }
+    buildGeometry() {
+        this.children.splice(0);
+        const mesh = new THREE.InstancedMesh(new THREE.BoxBufferGeometry(1, 1), new THREE.MeshStandardMaterial({ color: '#4ff', emissive: 0.5 }), this.asteroids.size);
+        let index = 0;
+        for (const v of this.asteroids) {
+            const m = new THREE.Matrix4();
+            m.identity();
+            m.makeTranslation(v.x, v.y, v.z);
+            mesh.setMatrixAt(index, m);
+            ++index;
+        }
+        this.add(mesh);
+    }
+    deserialize(o) {
+        this.asteroids.clear();
+        for (const p of o['asteroidPositions']) {
+            const v = new THREE.Vector3(p.x, p.y, p.z);
+            this.asteroids.add(v);
+        }
+        this.buildGeometry();
+        return this;
+    }
+    gridPosition() {
+        return Math.round((Math.random() - 0.5) * 200);
+    }
+    fallback(p) {
+        this.asteroids.clear();
+        for (let i = 0; i < settings_1.S.float('ni'); ++i) {
+            this.asteroids.add(new three_1.Vector3(this.gridPosition(), this.gridPosition(), this.gridPosition()));
+        }
+        this.buildGeometry();
+        return this;
+    }
+}
+exports.Asteroid = Asteroid;
+//# sourceMappingURL=asteroid.js.map
 
 /***/ }),
 
@@ -602,8 +684,8 @@ class PointCloud extends THREE.Object3D {
       varying vec2 vDxy;
       void main() {
         float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
+        intensity = min(intensity, 1.0);
         gl_FragColor = vec4(vColor * intensity, 1.0);
-        // gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
       }`,
             blending: THREE.AdditiveBlending,
             depthTest: true,
@@ -684,8 +766,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Stars = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const settings_1 = __webpack_require__(451);
+const file_1 = __webpack_require__(13);
 const pointCloud_1 = __webpack_require__(273);
+const system_1 = __webpack_require__(404);
 class Stars extends pointCloud_1.PointCloud {
+    activeSystems = new Map();
     constructor() {
         super();
     }
@@ -694,6 +779,44 @@ class Stars extends pointCloud_1.PointCloud {
         this.tmpV.copy(p);
         this.tmpV.sub(this.position);
         return this.starPositions.getClosestDistance(this.tmpV);
+    }
+    tmpSet = new Set();
+    handlePops(universe, allPoints) {
+        this.tmpV.copy(universe.position);
+        this.tmpV.multiplyScalar(-1);
+        const previousSize = this.activeSystems.size;
+        this.tmpSet.clear();
+        for (const star of this.starPositions.getAllWithinRadius(this.tmpV, settings_1.S.float('sp'))) {
+            this.tmpSet.add(star);
+        }
+        const toRemove = [];
+        for (const k of this.activeSystems.keys()) {
+            if (!this.tmpSet.has(k)) {
+                toRemove.push(k);
+            }
+        }
+        for (const k of toRemove) {
+            const oldSystem = this.activeSystems.get(k);
+            universe.remove(oldSystem);
+            allPoints.delete(oldSystem);
+            this.activeSystems.delete(k);
+        }
+        for (const k of this.tmpSet) {
+            if (!this.activeSystems.has(k)) {
+                const system = new system_1.System();
+                const name = `System:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+                file_1.File.load(system, name, k);
+                this.activeSystems.set(k, system);
+                universe.add(system);
+                allPoints.add(system);
+            }
+        }
+        if (previousSize != this.activeSystems.size) {
+            console.log(`New size: ${this.activeSystems.size}`);
+        }
+        for (const activeSystem of this.activeSystems.values()) {
+            activeSystem.handlePops(universe, allPoints);
+        }
     }
     serialize() {
         const o = {};
@@ -759,7 +882,6 @@ const controls_1 = __webpack_require__(925);
 const file_1 = __webpack_require__(13);
 const pointSet_1 = __webpack_require__(536);
 const stars_1 = __webpack_require__(652);
-const system_1 = __webpack_require__(404);
 class Stellar {
     scene = new THREE.Scene();
     camera;
@@ -768,7 +890,6 @@ class Stellar {
     player = new THREE.Group();
     allPoints = new pointSet_1.PointCloudUnion();
     stars;
-    activeSystems = new Map();
     constructor() {
         this.scene.add(this.player);
         this.scene.add(this.universe);
@@ -791,7 +912,7 @@ class Stellar {
             const deltaS = Math.min(clock.getDelta(), 0.1);
             this.renderer.render(this.scene, this.camera);
             this.handleControls(deltaS);
-            this.handlePops();
+            this.stars.handlePops(this.universe, this.allPoints);
         });
     }
     tmpV = new THREE.Vector3();
@@ -818,41 +939,6 @@ class Stellar {
         const spinRate = controls_1.Controls.spinLeftRight();
         if (spinRate != 0) {
             this.player.rotateY(deltaS * spinRate * 3);
-        }
-    }
-    tmpSet = new Set();
-    handlePops() {
-        this.tmpV.copy(this.universe.position);
-        this.tmpV.multiplyScalar(-1);
-        const previousSize = this.activeSystems.size;
-        this.tmpSet.clear();
-        for (const star of this.stars.starPositions.getAllWithinRadius(this.tmpV, settings_1.S.float('sp'))) {
-            this.tmpSet.add(star);
-        }
-        const toRemove = [];
-        for (const k of this.activeSystems.keys()) {
-            if (!this.tmpSet.has(k)) {
-                toRemove.push(k);
-            }
-        }
-        for (const k of toRemove) {
-            const oldSystem = this.activeSystems.get(k);
-            this.universe.remove(oldSystem);
-            this.allPoints.delete(oldSystem);
-            this.activeSystems.delete(k);
-        }
-        for (const k of this.tmpSet) {
-            if (!this.activeSystems.has(k)) {
-                const system = new system_1.System();
-                const name = `System:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
-                file_1.File.load(system, name, k);
-                this.activeSystems.set(k, system);
-                this.universe.add(system);
-                this.allPoints.add(system);
-            }
-        }
-        if (previousSize != this.activeSystems.size) {
-            console.log(`New size: ${this.activeSystems.size}`);
         }
     }
     initializeWorld() {
@@ -904,22 +990,26 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.System = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const settings_1 = __webpack_require__(451);
+const asteroid_1 = __webpack_require__(38);
+const file_1 = __webpack_require__(13);
 const pointCloud_1 = __webpack_require__(273);
 class System extends THREE.Object3D {
     asteroids = new pointCloud_1.PointCloud();
     planets = new pointCloud_1.PointCloud();
-    star;
+    // private star: THREE.Mesh;
+    activeAsteroids = new Map();
     constructor() {
         super();
-        this.star = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(settings_1.S.float('sr'), 4), new THREE.MeshPhongMaterial({ color: 'yellow', shininess: 1.0, emissive: 0.8 }));
-        this.add(this.star);
+        // this.star = new THREE.Mesh(
+        //   new THREE.IcosahedronBufferGeometry(S.float('sr'), 4),
+        //   new THREE.MeshPhongMaterial(
+        //     { color: 'yellow', shininess: 1.0, emissive: 0.8 }));
+        // this.add(this.star);
         this.add(this.asteroids);
         this.add(this.planets);
     }
     tmpV = new THREE.Vector3();
     getClosestDistance(p) {
-        this.tmpV.copy(p);
-        this.tmpV.sub(this.position);
         let closestDistance = Infinity;
         for (const ps of [this.planets.starPositions, this.asteroids.starPositions]) {
             const distance = ps.getClosestDistance(p);
@@ -928,6 +1018,42 @@ class System extends THREE.Object3D {
             }
         }
         return closestDistance;
+    }
+    tmpSet = new Set();
+    handlePops(universe, allPoints) {
+        this.tmpV.copy(universe.position);
+        this.tmpV.multiplyScalar(-1);
+        this.tmpSet.clear();
+        for (const asteroid of this.asteroids.starPositions.getAllWithinRadius(this.tmpV, 10000)) {
+            this.tmpSet.add(asteroid);
+        }
+        if (this.tmpSet.size === 0 && this.activeAsteroids.size === 0) {
+            // Nothing to do.
+            return;
+        }
+        const toRemove = [];
+        for (const k of this.activeAsteroids.keys()) {
+            if (!this.tmpSet.has(k)) {
+                toRemove.push(k);
+            }
+        }
+        for (const k of toRemove) {
+            const oldAsteroid = this.activeAsteroids.get(k);
+            universe.remove(oldAsteroid);
+            // allPoints.delete(oldAsteroid);
+            this.activeAsteroids.delete(k);
+        }
+        for (const k of this.tmpSet) {
+            if (!this.activeAsteroids.has(k)) {
+                console.log('Pop asteroid.');
+                const asteroid = new asteroid_1.Asteroid();
+                const name = `Asteroid:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+                file_1.File.load(asteroid, name, k);
+                asteroid.position.copy(k);
+                this.activeAsteroids.set(k, asteroid);
+                universe.add(asteroid);
+            }
+        }
     }
     serialize() {
         const o = {};

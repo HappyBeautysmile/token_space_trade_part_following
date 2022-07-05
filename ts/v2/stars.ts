@@ -1,11 +1,14 @@
 import * as THREE from "three";
 import { S } from "../settings";
 
-import { Codeable } from "./file";
+import { Codeable, File } from "./file";
 import { PointCloud } from "./pointCloud";
-import { PointSet } from "./pointSet";
+import { PointCloudUnion, PointSet } from "./pointSet";
+import { System } from "./system";
 
 export class Stars extends PointCloud implements Codeable, PointSet {
+  private activeSystems = new Map<THREE.Vector3, System>();
+
   constructor() {
     super();
   }
@@ -15,6 +18,46 @@ export class Stars extends PointCloud implements Codeable, PointSet {
     this.tmpV.copy(p);
     this.tmpV.sub(this.position);
     return this.starPositions.getClosestDistance(this.tmpV);
+  }
+
+  private tmpSet = new Set<THREE.Vector3>();
+  public handlePops(universe: THREE.Object3D, allPoints: PointCloudUnion) {
+    this.tmpV.copy(universe.position);
+    this.tmpV.multiplyScalar(-1);
+    const previousSize = this.activeSystems.size;
+    this.tmpSet.clear();
+    for (const star of this.starPositions.getAllWithinRadius(
+      this.tmpV, S.float('sp'))) {
+      this.tmpSet.add(star);
+    }
+    const toRemove: THREE.Vector3[] = [];
+    for (const k of this.activeSystems.keys()) {
+      if (!this.tmpSet.has(k)) {
+        toRemove.push(k);
+      }
+    }
+    for (const k of toRemove) {
+      const oldSystem = this.activeSystems.get(k);
+      universe.remove(oldSystem);
+      allPoints.delete(oldSystem);
+      this.activeSystems.delete(k);
+    }
+    for (const k of this.tmpSet) {
+      if (!this.activeSystems.has(k)) {
+        const system = new System();
+        const name = `System:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+        File.load(system, name, k);
+        this.activeSystems.set(k, system);
+        universe.add(system);
+        allPoints.add(system);
+      }
+    }
+    if (previousSize != this.activeSystems.size) {
+      console.log(`New size: ${this.activeSystems.size}`);
+    }
+    for (const activeSystem of this.activeSystems.values()) {
+      activeSystem.handlePops(universe, allPoints);
+    }
   }
 
   serialize(): Object {

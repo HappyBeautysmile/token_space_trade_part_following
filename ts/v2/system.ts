@@ -1,31 +1,31 @@
-import { timingSafeEqual } from "crypto";
 import * as THREE from "three";
 import { S } from "../settings";
+import { Asteroid } from "./asteroid";
 
-import { Codeable } from "./file";
+import { Codeable, File } from "./file";
 import { PointCloud } from "./pointCloud";
-import { PointSet } from "./pointSet";
+import { PointCloudUnion, PointSet } from "./pointSet";
 
 export class System extends THREE.Object3D implements Codeable, PointSet {
   private asteroids = new PointCloud();
   private planets = new PointCloud();
-  private star: THREE.Mesh;
+  // private star: THREE.Mesh;
+  private activeAsteroids = new Map<THREE.Vector3, Asteroid>();
+
   constructor() {
     super();
 
-    this.star = new THREE.Mesh(
-      new THREE.IcosahedronBufferGeometry(S.float('sr'), 4),
-      new THREE.MeshPhongMaterial(
-        { color: 'yellow', shininess: 1.0, emissive: 0.8 }));
-    this.add(this.star);
+    // this.star = new THREE.Mesh(
+    //   new THREE.IcosahedronBufferGeometry(S.float('sr'), 4),
+    //   new THREE.MeshPhongMaterial(
+    //     { color: 'yellow', shininess: 1.0, emissive: 0.8 }));
+    // this.add(this.star);
     this.add(this.asteroids);
     this.add(this.planets);
   }
 
   private tmpV = new THREE.Vector3();
   getClosestDistance(p: THREE.Vector3): number {
-    this.tmpV.copy(p);
-    this.tmpV.sub(this.position);
     let closestDistance = Infinity;
     for (const ps of [this.planets.starPositions, this.asteroids.starPositions]) {
       const distance = ps.getClosestDistance(p);
@@ -34,6 +34,44 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
       }
     }
     return closestDistance;
+  }
+
+  private tmpSet = new Set<THREE.Vector3>();
+  public handlePops(universe: THREE.Object3D, allPoints: PointCloudUnion) {
+    this.tmpV.copy(universe.position);
+    this.tmpV.multiplyScalar(-1);
+    this.tmpSet.clear();
+    for (const asteroid of this.asteroids.starPositions.getAllWithinRadius(
+      this.tmpV, 10000)) {
+      this.tmpSet.add(asteroid);
+    }
+    if (this.tmpSet.size === 0 && this.activeAsteroids.size === 0) {
+      // Nothing to do.
+      return;
+    }
+    const toRemove: THREE.Vector3[] = [];
+    for (const k of this.activeAsteroids.keys()) {
+      if (!this.tmpSet.has(k)) {
+        toRemove.push(k);
+      }
+    }
+    for (const k of toRemove) {
+      const oldAsteroid = this.activeAsteroids.get(k);
+      universe.remove(oldAsteroid);
+      // allPoints.delete(oldAsteroid);
+      this.activeAsteroids.delete(k);
+    }
+    for (const k of this.tmpSet) {
+      if (!this.activeAsteroids.has(k)) {
+        console.log('Pop asteroid.');
+        const asteroid = new Asteroid();
+        const name = `Asteroid:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+        File.load(asteroid, name, k);
+        asteroid.position.copy(k);
+        this.activeAsteroids.set(k, asteroid);
+        universe.add(asteroid);
+      }
+    }
   }
 
   serialize(): Object {
