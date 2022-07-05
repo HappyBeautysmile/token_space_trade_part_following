@@ -87,7 +87,6 @@ export class PointCloud extends THREE.Object3D {
         orbitalHeight,
         orbitalRadius * Math.sin(theta));
       this.starPositions.add(pos, pos);
-      this.starIndex.set(pos, i);
     }
   }
 
@@ -100,9 +99,12 @@ export class PointCloud extends THREE.Object3D {
     const r: number[] = [];
     const alpha: number[] = [];
 
+    let starIndex = 0;
     for (const v of this.starPositions.elements()) {
       this.addStar(v, color, pointRadius, index, vertices, colors, dxy,
         r, alpha);
+      this.starIndex.set(v, starIndex);
+      ++starIndex;
     }
 
     this.children.splice(0);
