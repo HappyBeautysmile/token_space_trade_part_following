@@ -5,17 +5,17 @@ import { S } from "../settings";
 import { Codeable } from "./file";
 
 export class Asteroid extends THREE.Object3D implements Codeable {
-  private asteroids = new Set<THREE.Vector3>();
+  private rocks = new Set<THREE.Vector3>();
   constructor() {
     super();
   }
   serialize(): Object {
     const o = {};
-    const asteroidPositions = [];
-    for (const p of this.asteroids) {
-      asteroidPositions.push({ x: p.x, y: p.y, z: p.z });
+    const rockPositions = [];
+    for (const p of this.rocks) {
+      rockPositions.push({ x: p.x, y: p.y, z: p.z });
     }
-    o['asteroidPositions'] = asteroidPositions;
+    o['rockPositions'] = rockPositions;
     return o;
   }
 
@@ -24,10 +24,10 @@ export class Asteroid extends THREE.Object3D implements Codeable {
     const mesh = new THREE.InstancedMesh(
       new THREE.BoxBufferGeometry(1, 1),
       new THREE.MeshStandardMaterial({ color: '#4ff', emissive: 0.5 }),
-      this.asteroids.size
+      this.rocks.size
     );
     let index = 0;
-    for (const v of this.asteroids) {
+    for (const v of this.rocks) {
       const m = new THREE.Matrix4();
       m.identity();
       m.makeTranslation(v.x, v.y, v.z);
@@ -38,10 +38,10 @@ export class Asteroid extends THREE.Object3D implements Codeable {
   }
 
   deserialize(o: Object): this {
-    this.asteroids.clear();
-    for (const p of o['asteroidPositions']) {
+    this.rocks.clear();
+    for (const p of o['rockPositions']) {
       const v = new THREE.Vector3(p.x, p.y, p.z);
-      this.asteroids.add(v);
+      this.rocks.add(v);
     }
     this.buildGeometry();
     return this;
@@ -52,10 +52,11 @@ export class Asteroid extends THREE.Object3D implements Codeable {
   }
 
   fallback(p: THREE.Vector3) {
-    this.asteroids.clear();
+    this.rocks.clear();
     for (let i = 0; i < S.float('ni'); ++i) {
-      this.asteroids.add(new Vector3(
-        this.gridPosition(), this.gridPosition(), this.gridPosition()));
+      const pos = new Vector3(
+        this.gridPosition(), this.gridPosition(), this.gridPosition());
+      this.rocks.add(pos);
     }
     this.buildGeometry();
     return this;

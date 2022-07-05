@@ -10,7 +10,7 @@ export class Stars extends PointCloud implements Codeable, PointSet {
   private activeSystems = new Map<THREE.Vector3, System>();
 
   constructor() {
-    super();
+    super(true);
   }
 
   private tmpV = new THREE.Vector3();
@@ -38,7 +38,7 @@ export class Stars extends PointCloud implements Codeable, PointSet {
     }
     for (const k of toRemove) {
       const oldSystem = this.activeSystems.get(k);
-      universe.remove(oldSystem);
+      this.remove(oldSystem);
       allPoints.delete(oldSystem);
       this.activeSystems.delete(k);
     }
@@ -48,8 +48,8 @@ export class Stars extends PointCloud implements Codeable, PointSet {
         const name = `System:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
         File.load(system, name, k);
         this.activeSystems.set(k, system);
+        this.add(system);
         system.position.copy(k);
-        universe.add(system);
         allPoints.add(system);
       }
     }
@@ -85,7 +85,7 @@ export class Stars extends PointCloud implements Codeable, PointSet {
   private zero = new THREE.Vector3();
   fallback(p: THREE.Vector3) {
     this.starPositions.clear();
-    super.build(
+    super.build(p,
       S.float('sr'), S.float('sr'), S.float('sr') / 10.0,
       S.float('ns'), new THREE.Color('#fff'), S.float('ss'),
       /*includeOrigin=*/false, /*initialIntensity=*/10);

@@ -4,18 +4,18 @@ import { Universe } from "../universe";
 import { Asteroid } from "./asteroid";
 
 import { Codeable, File } from "./file";
+import { Grid } from "./grid";
 import { PointCloud } from "./pointCloud";
 import { PointCloudUnion, PointSet } from "./pointSet";
 
 export class System extends THREE.Object3D implements Codeable, PointSet {
-  private asteroids = new PointCloud();
-  private planets = new PointCloud();
+  private asteroids = new PointCloud(false);
+  private planets = new PointCloud(false);
   // private star: THREE.Mesh;
   private activeAsteroids = new Map<THREE.Vector3, Asteroid>();
 
   constructor() {
     super();
-
     // this.star = new THREE.Mesh(
     //   new THREE.IcosahedronBufferGeometry(S.float('sr'), 4),
     //   new THREE.MeshPhongMaterial(
@@ -61,21 +61,22 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
     }
     for (const k of toRemove) {
       const oldAsteroid = this.activeAsteroids.get(k);
-      universe.remove(oldAsteroid);
+      this.remove(oldAsteroid);
       // allPoints.delete(oldAsteroid);
       this.activeAsteroids.delete(k);
       this.asteroids.setStarAlpha(k, 1.0);
     }
     for (const k of this.tmpSet) {
       if (!this.activeAsteroids.has(k)) {
+        console.log(`Asteroid ${k.x}; Universe: ${universe.position.x}; v: ${this.tmpV.x}`);
         console.log('Pop asteroid.');
         const asteroid = new Asteroid();
         const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
         File.load(asteroid, name, k);
-        asteroid.position.copy(k);
         this.activeAsteroids.set(k, asteroid);
-        universe.add(asteroid);
-        this.asteroids.setStarAlpha(k, 0.0);
+        asteroid.position.copy(k);
+        this.add(asteroid);
+        this.asteroids.setStarAlpha(k, 0.1);
       }
     }
   }
@@ -118,13 +119,13 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
 
   fallback(p: THREE.Vector3) {
     this.asteroids.starPositions.clear();
-    this.asteroids.build(
+    this.asteroids.build(Grid.zero,
       S.float('ar'), S.float('ar') / 10.0, S.float('ar') / 30.0,
       S.float('na'), new THREE.Color('#44f'), S.float('as'),
       /*includeOrigin=*/false, /*initialIntensity=*/50);
 
     this.planets.starPositions.clear();
-    this.planets.build(
+    this.planets.build(Grid.zero,
       S.float('ar') * 2, S.float('ar'), S.float('ar') / 50.0,
       10/*planets*/, new THREE.Color('#0ff'), S.float('as'),
         /*includeOrigin=*/false, /*initialIntensity=*/50);

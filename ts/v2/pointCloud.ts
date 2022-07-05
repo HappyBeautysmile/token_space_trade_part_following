@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Grid } from "./grid";
 
 import { PointMapOctoTree } from "./octoTree";
 
@@ -9,18 +10,19 @@ export class PointCloud extends THREE.Object3D {
   private geometry: THREE.BufferGeometry;
   private starIndex = new Map<THREE.Vector3, number>();
 
-  constructor() {
+  constructor(private flat: boolean) {
     super();
   }
 
-  build(radius: number, radiusSd: number, ySd: number,
+  build(center: THREE.Vector3,
+    radius: number, radiusSd: number, ySd: number,
     count: number, color: THREE.Color, pointRadius: number,
     includeOrigin, initialIntensity: number) {
     if (includeOrigin) {
       const origin = new THREE.Vector3();
       this.starPositions.add(origin, origin);
     }
-    this.generateStarPositions(radius, radiusSd, ySd, count);
+    this.generateStarPositions(center, radius, radiusSd, ySd, count);
     this.addStars(color, pointRadius, initialIntensity);
   }
 
@@ -40,11 +42,11 @@ export class PointCloud extends THREE.Object3D {
       throw new Error("No such point.");
     }
     const alphaAttribute = this.geometry.getAttribute('alpha');
-    const index = this.starIndex.get(p);
-    alphaAttribute.setX(index, alpha);
+    const index = this.starIndex.get(p) * 4;
+    for (let di = 0; di < 4; ++di) {
+      alphaAttribute.setX(index + di, alpha);
+    }
     alphaAttribute.needsUpdate = true;
-    this.geometry.setAttribute('alpha', alphaAttribute);
-    console.log(`Alpha: ${index} = ${alphaAttribute.getX(index)}`)
   }
 
   private addStar(
@@ -76,8 +78,13 @@ export class PointCloud extends THREE.Object3D {
   }
 
   private generateStarPositions(
-    radius: number, radiusSd: number,
+    center: THREE.Vector3, radius: number, radiusSd: number,
     ySd: number, count: number) {
+    const m = new THREE.Matrix4();
+    m.makeRotationFromEuler(
+      new THREE.Euler(0,
+        Math.random() * 2 * Math.PI,
+        Math.random() * Math.PI));
     for (let i = 0; i < count; ++i) {
       const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
       const orbitalHeight = PointCloud.gaussian(ySd);
@@ -86,6 +93,12 @@ export class PointCloud extends THREE.Object3D {
         orbitalRadius * Math.cos(theta),
         orbitalHeight,
         orbitalRadius * Math.sin(theta));
+      if (!this.flat) {
+        pos.applyMatrix4(m);
+
+      }
+      pos.add(center);
+      Grid.round(pos);
       this.starPositions.add(pos, pos);
     }
   }
@@ -132,9 +145,11 @@ export class PointCloud extends THREE.Object3D {
         varying vec3 vColor;
         varying vec2 vDxy;
         varying float vIntensity;
+        varying float vAlpha;
         void main() {
           vDxy = dxy;
           vColor = color;
+          vAlpha = alpha;
           vIntensity = ${initialIntensity.toFixed(2)} * alpha;
           float sizeScale = 1.0;
 
@@ -157,10 +172,11 @@ export class PointCloud extends THREE.Object3D {
       varying float vIntensity;
       varying vec3 vColor;
       varying vec2 vDxy;
+      varying float vAlpha;
       void main() {
         float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy),
           0.0, 1.0);
-        gl_FragColor = vec4(vColor * intensity, 1.0);
+        gl_FragColor = vec4(vColor * intensity, vAlpha);
       }`,
       blending: THREE.AdditiveBlending,
       depthTest: true,

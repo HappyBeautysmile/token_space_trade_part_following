@@ -2,11 +2,9 @@ import * as THREE from "three";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { S } from "../settings";
 import { Controls } from "./controls";
-import { Codeable, File } from "./file";
-import { PointCloud } from "./pointCloud";
+import { File } from "./file";
 import { PointCloudUnion } from "./pointSet";
 import { Stars } from "./stars";
-import { System } from "./system";
 
 export class Stellar {
   private scene = new THREE.Scene();
