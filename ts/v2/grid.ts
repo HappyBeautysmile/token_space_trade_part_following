@@ -6,4 +6,6 @@ export class Grid {
   }
 
   public static zero = new THREE.Vector3(0, 0, 0);
+  public static one = new THREE.Vector3(1, 1, 1);
+  public static notRotated = new THREE.Quaternion(0, 0, 0, 1);
 }

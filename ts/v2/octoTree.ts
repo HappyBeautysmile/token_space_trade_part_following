@@ -161,6 +161,18 @@ export class PointMapOctoTree<T> implements PointMap<T> {
     }
   }
 
+  *keys(): Iterable<THREE.Vector3> {
+    if (this.points) {
+      for (const kv of this.points) {
+        yield kv.point;
+      }
+    } else {
+      for (const child of this.children) {
+        yield* child.keys();
+      }
+    }
+  }
+
   private *getAllWithinAABB(aabb: AABB): Iterable<PointKey<T>> {
     if (this.bounds.intersects(aabb)) {
       if (this.points) {
