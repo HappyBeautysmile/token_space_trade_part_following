@@ -89,6 +89,7 @@ export class PointMapOctoTree<T> implements PointMap<T> {
   private points: PointKey<T>[] = [];
   private children: PointMapOctoTree<T>[] = null;
   private bounds: AABB;
+  private size = 0;
 
   constructor(center: THREE.Vector3, radius: number) {
     this.bounds = new AABB(center, radius);
@@ -97,10 +98,15 @@ export class PointMapOctoTree<T> implements PointMap<T> {
   clear() {
     this.points.splice(0);
     this.children = null;
+    this.size = 0;
   }
 
   add(p: THREE.Vector3, value: T) {
     this.insert(p, value);
+  }
+
+  getSize() {
+    return this.size;
   }
 
   private p1 = new THREE.Vector3;
@@ -113,10 +119,12 @@ export class PointMapOctoTree<T> implements PointMap<T> {
       if (this.points.length > 64) {
         this.split();
       }
+      ++this.size;
       return true;
     } else {
       for (const c of this.children) {
         if (c.insert(p, value)) {
+          ++this.size;
           return true;
         }
       }
@@ -247,11 +255,17 @@ export class PointMapOctoTree<T> implements PointMap<T> {
       // First, traverse children to find the right bucket
       let bucket: PointMapOctoTree<T> = this;
       while (!!bucket.children) {
+        let found = false;
         for (const child of bucket.children) {
           if (child.bounds.contains(p)) {
             bucket = child;
+            found = true;
             break;
           }
+        }
+        if (!found) {
+          // We are outside the octotree, return something large and approximate
+          return this.bounds.radius * 2;
         }
       }
       // If the bucket is empty, just return something approximate.

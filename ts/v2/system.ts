@@ -65,6 +65,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
       // allPoints.delete(oldAsteroid);
       this.activeAsteroids.delete(k);
       this.asteroids.setStarAlpha(k, 1.0);
+      allPoints.delete(oldAsteroid);
     }
     for (const k of this.tmpSet) {
       if (!this.activeAsteroids.has(k)) {
@@ -77,6 +78,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
         asteroid.position.copy(k);
         this.add(asteroid);
         this.asteroids.setStarAlpha(k, 0.1);
+        allPoints.add(asteroid);
       }
     }
   }

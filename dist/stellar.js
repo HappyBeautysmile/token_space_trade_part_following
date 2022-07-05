@@ -101,25 +101,35 @@ exports.Asteroid = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const three_1 = __webpack_require__(232);
 const settings_1 = __webpack_require__(451);
+const grid_1 = __webpack_require__(424);
+const octoTree_1 = __webpack_require__(343);
 class Asteroid extends THREE.Object3D {
-    asteroids = new Set();
+    rocks = new octoTree_1.PointMapOctoTree(grid_1.Grid.zero, 1e3);
     constructor() {
         super();
     }
     serialize() {
         const o = {};
-        const asteroidPositions = [];
-        for (const p of this.asteroids) {
-            asteroidPositions.push({ x: p.x, y: p.y, z: p.z });
+        const rockPositions = [];
+        for (const p of this.rocks.elements()) {
+            rockPositions.push({ x: p.x, y: p.y, z: p.z });
         }
-        o['asteroidPositions'] = asteroidPositions;
+        o['rockPositions'] = rockPositions;
         return o;
+    }
+    tmpV = new THREE.Vector3();
+    getClosestDistance(p) {
+        this.tmpV.copy(p);
+        this.tmpV.sub(this.position); // Astroid relative to System
+        this.tmpV.sub(this.parent.position); // System relative to Universe
+        const distance = this.rocks.getClosestDistance(this.tmpV);
+        return distance;
     }
     buildGeometry() {
         this.children.splice(0);
-        const mesh = new THREE.InstancedMesh(new THREE.BoxBufferGeometry(1, 1), new THREE.MeshStandardMaterial({ color: '#4ff', emissive: 0.5 }), this.asteroids.size);
+        const mesh = new THREE.InstancedMesh(new THREE.BoxBufferGeometry(1, 1), new THREE.MeshStandardMaterial({ color: '#4ff', emissive: 0.5 }), this.rocks.getSize());
         let index = 0;
-        for (const v of this.asteroids) {
+        for (const v of this.rocks.elements()) {
             const m = new THREE.Matrix4();
             m.identity();
             m.makeTranslation(v.x, v.y, v.z);
@@ -129,10 +139,10 @@ class Asteroid extends THREE.Object3D {
         this.add(mesh);
     }
     deserialize(o) {
-        this.asteroids.clear();
-        for (const p of o['asteroidPositions']) {
+        this.rocks.clear();
+        for (const p of o['rockPositions']) {
             const v = new THREE.Vector3(p.x, p.y, p.z);
-            this.asteroids.add(v);
+            this.rocks.add(v, v);
         }
         this.buildGeometry();
         return this;
@@ -141,9 +151,10 @@ class Asteroid extends THREE.Object3D {
         return Math.round((Math.random() - 0.5) * 200);
     }
     fallback(p) {
-        this.asteroids.clear();
+        this.rocks.clear();
         for (let i = 0; i < settings_1.S.float('ni'); ++i) {
-            this.asteroids.add(new three_1.Vector3(this.gridPosition(), this.gridPosition(), this.gridPosition()));
+            const pos = new three_1.Vector3(this.gridPosition(), this.gridPosition(), this.gridPosition());
+            this.rocks.add(pos, pos);
         }
         this.buildGeometry();
         return this;
@@ -279,6 +290,43 @@ exports.File = File;
 
 /***/ }),
 
+/***/ 424:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Grid = void 0;
+const THREE = __importStar(__webpack_require__(232));
+class Grid {
+    static round(v) {
+        v.set(Math.round(v.x), Math.round(v.y), Math.round(v.z));
+    }
+    static zero = new THREE.Vector3(0, 0, 0);
+}
+exports.Grid = Grid;
+//# sourceMappingURL=grid.js.map
+
+/***/ }),
+
 /***/ 343:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -378,15 +426,20 @@ class PointMapOctoTree {
     points = [];
     children = null;
     bounds;
+    size = 0;
     constructor(center, radius) {
         this.bounds = new AABB(center, radius);
     }
     clear() {
         this.points.splice(0);
         this.children = null;
+        this.size = 0;
     }
     add(p, value) {
         this.insert(p, value);
+    }
+    getSize() {
+        return this.size;
     }
     p1 = new THREE.Vector3;
     insert(p, value) {
@@ -398,11 +451,13 @@ class PointMapOctoTree {
             if (this.points.length > 64) {
                 this.split();
             }
+            ++this.size;
             return true;
         }
         else {
             for (const c of this.children) {
                 if (c.insert(p, value)) {
+                    ++this.size;
                     return true;
                 }
             }
@@ -526,11 +581,17 @@ class PointMapOctoTree {
             // First, traverse children to find the right bucket
             let bucket = this;
             while (!!bucket.children) {
+                let found = false;
                 for (const child of bucket.children) {
                     if (child.bounds.contains(p)) {
                         bucket = child;
+                        found = true;
                         break;
                     }
+                }
+                if (!found) {
+                    // We are outside the octotree, return something large and approximate
+                    return this.bounds.radius * 2;
                 }
             }
             // If the bucket is empty, just return something approximate.
@@ -585,20 +646,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PointCloud = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const grid_1 = __webpack_require__(424);
 const octoTree_1 = __webpack_require__(343);
 class PointCloud extends THREE.Object3D {
+    flat;
     starPositions = new octoTree_1.PointMapOctoTree(new THREE.Vector3(), 1e10);
     material;
     geometry;
-    constructor() {
+    starIndex = new Map();
+    constructor(flat) {
         super();
+        this.flat = flat;
     }
-    build(radius, radiusSd, ySd, count, color, pointRadius, includeOrigin, initialIntensity) {
+    build(center, radius, radiusSd, ySd, count, color, pointRadius, includeOrigin, initialIntensity) {
         if (includeOrigin) {
             const origin = new THREE.Vector3();
             this.starPositions.add(origin, origin);
         }
-        this.generateStarPositions(radius, radiusSd, ySd, count);
+        this.generateStarPositions(center, radius, radiusSd, ySd, count);
         this.addStars(color, pointRadius, initialIntensity);
     }
     static gaussian(sd) {
@@ -610,7 +675,18 @@ class PointCloud extends THREE.Object3D {
         }
         return sd * (x / Math.sqrt(n));
     }
-    addStar(pos, color, pointRadius, index, vertices, colors, dxy, r) {
+    setStarAlpha(p, alpha) {
+        if (!this.starIndex.has(p)) {
+            throw new Error("No such point.");
+        }
+        const alphaAttribute = this.geometry.getAttribute('alpha');
+        const index = this.starIndex.get(p) * 4;
+        for (let di = 0; di < 4; ++di) {
+            alphaAttribute.setX(index + di, alpha);
+        }
+        alphaAttribute.needsUpdate = true;
+    }
+    addStar(pos, color, pointRadius, index, vertices, colors, dxy, r, alpha) {
         const o = Math.round(vertices.length / 3);
         index.push(o + 0, o + 1, o + 2, o + 2, o + 3, o + 0);
         const c = new THREE.Color(Math.random() * 0.2 + 0.8 * color.r, Math.random() * 0.2 + 0.8 * color.g, Math.random() * 0.2 + 0.8 * color.b);
@@ -621,13 +697,21 @@ class PointCloud extends THREE.Object3D {
         }
         dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
         r.push(pointRadius, pointRadius, pointRadius, pointRadius);
+        alpha.push(1.0, 1.0, 1.0, 1.0);
     }
-    generateStarPositions(radius, radiusSd, ySd, count) {
+    generateStarPositions(center, radius, radiusSd, ySd, count) {
+        const m = new THREE.Matrix4();
+        m.makeRotationFromEuler(new THREE.Euler(0, Math.random() * 2 * Math.PI, Math.random() * Math.PI));
         for (let i = 0; i < count; ++i) {
             const orbitalRadius = PointCloud.gaussian(radiusSd) + radius;
             const orbitalHeight = PointCloud.gaussian(ySd);
             const theta = Math.random() * Math.PI * 2;
             const pos = new THREE.Vector3(orbitalRadius * Math.cos(theta), orbitalHeight, orbitalRadius * Math.sin(theta));
+            if (!this.flat) {
+                pos.applyMatrix4(m);
+            }
+            pos.add(center);
+            grid_1.Grid.round(pos);
             this.starPositions.add(pos, pos);
         }
     }
@@ -637,8 +721,12 @@ class PointCloud extends THREE.Object3D {
         const colors = [];
         const dxy = [];
         const r = [];
+        const alpha = [];
+        let starIndex = 0;
         for (const v of this.starPositions.elements()) {
-            this.addStar(v, color, pointRadius, index, vertices, colors, dxy, r);
+            this.addStar(v, color, pointRadius, index, vertices, colors, dxy, r, alpha);
+            this.starIndex.set(v, starIndex);
+            ++starIndex;
         }
         this.children.splice(0);
         this.geometry = new THREE.BufferGeometry();
@@ -646,6 +734,7 @@ class PointCloud extends THREE.Object3D {
         this.geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
         this.geometry.setAttribute('dxy', new THREE.BufferAttribute(new Float32Array(dxy), 2));
         this.geometry.setAttribute('r', new THREE.BufferAttribute(new Float32Array(r), 1));
+        this.geometry.setAttribute('alpha', new THREE.BufferAttribute(new Float32Array(alpha), 1));
         this.geometry.setIndex(index);
         this.material = new THREE.ShaderMaterial({
             uniforms: {
@@ -654,13 +743,16 @@ class PointCloud extends THREE.Object3D {
             vertexShader: `
         attribute vec2 dxy;
         attribute float r;
+        attribute float alpha;
         varying vec3 vColor;
         varying vec2 vDxy;
         varying float vIntensity;
+        varying float vAlpha;
         void main() {
           vDxy = dxy;
           vColor = color;
-          vIntensity = ${initialIntensity.toFixed(2)};
+          vAlpha = alpha;
+          vIntensity = ${initialIntensity.toFixed(2)} * alpha;
           float sizeScale = 1.0;
 
           vec4 worldPosition = modelMatrix * vec4(position, 1.0);
@@ -682,10 +774,11 @@ class PointCloud extends THREE.Object3D {
       varying float vIntensity;
       varying vec3 vColor;
       varying vec2 vDxy;
+      varying float vAlpha;
       void main() {
-        float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
-        intensity = min(intensity, 1.0);
-        gl_FragColor = vec4(vColor * intensity, 1.0);
+        float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy),
+          0.0, 1.0);
+        gl_FragColor = vec4(vColor * intensity, vAlpha);
       }`,
             blending: THREE.AdditiveBlending,
             depthTest: true,
@@ -772,7 +865,7 @@ const system_1 = __webpack_require__(404);
 class Stars extends pointCloud_1.PointCloud {
     activeSystems = new Map();
     constructor() {
-        super();
+        super(true);
     }
     tmpV = new THREE.Vector3();
     getClosestDistance(p) {
@@ -797,17 +890,18 @@ class Stars extends pointCloud_1.PointCloud {
         }
         for (const k of toRemove) {
             const oldSystem = this.activeSystems.get(k);
-            universe.remove(oldSystem);
+            this.remove(oldSystem);
             allPoints.delete(oldSystem);
             this.activeSystems.delete(k);
         }
         for (const k of this.tmpSet) {
             if (!this.activeSystems.has(k)) {
                 const system = new system_1.System();
-                const name = `System:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+                const name = `System:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(system, name, k);
                 this.activeSystems.set(k, system);
-                universe.add(system);
+                this.add(system);
+                system.position.copy(k);
                 allPoints.add(system);
             }
         }
@@ -840,7 +934,7 @@ class Stars extends pointCloud_1.PointCloud {
     zero = new THREE.Vector3();
     fallback(p) {
         this.starPositions.clear();
-        super.build(settings_1.S.float('sr'), settings_1.S.float('sr'), settings_1.S.float('sr') / 10.0, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
+        super.build(p, settings_1.S.float('sr'), settings_1.S.float('sr'), settings_1.S.float('sr') / 10.0, settings_1.S.float('ns'), new THREE.Color('#fff'), settings_1.S.float('ss'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 10);
         return this;
     }
@@ -992,10 +1086,11 @@ const THREE = __importStar(__webpack_require__(232));
 const settings_1 = __webpack_require__(451);
 const asteroid_1 = __webpack_require__(38);
 const file_1 = __webpack_require__(13);
+const grid_1 = __webpack_require__(424);
 const pointCloud_1 = __webpack_require__(273);
 class System extends THREE.Object3D {
-    asteroids = new pointCloud_1.PointCloud();
-    planets = new pointCloud_1.PointCloud();
+    asteroids = new pointCloud_1.PointCloud(false);
+    planets = new pointCloud_1.PointCloud(false);
     // private star: THREE.Mesh;
     activeAsteroids = new Map();
     constructor() {
@@ -1010,9 +1105,11 @@ class System extends THREE.Object3D {
     }
     tmpV = new THREE.Vector3();
     getClosestDistance(p) {
+        this.tmpV.copy(p);
+        this.tmpV.sub(this.position);
         let closestDistance = Infinity;
         for (const ps of [this.planets.starPositions, this.asteroids.starPositions]) {
-            const distance = ps.getClosestDistance(p);
+            const distance = ps.getClosestDistance(this.tmpV);
             if (distance < closestDistance) {
                 closestDistance = distance;
             }
@@ -1023,6 +1120,7 @@ class System extends THREE.Object3D {
     handlePops(universe, allPoints) {
         this.tmpV.copy(universe.position);
         this.tmpV.multiplyScalar(-1);
+        this.tmpV.sub(this.position);
         this.tmpSet.clear();
         for (const asteroid of this.asteroids.starPositions.getAllWithinRadius(this.tmpV, 10000)) {
             this.tmpSet.add(asteroid);
@@ -1039,19 +1137,24 @@ class System extends THREE.Object3D {
         }
         for (const k of toRemove) {
             const oldAsteroid = this.activeAsteroids.get(k);
-            universe.remove(oldAsteroid);
+            this.remove(oldAsteroid);
             // allPoints.delete(oldAsteroid);
             this.activeAsteroids.delete(k);
+            this.asteroids.setStarAlpha(k, 1.0);
+            allPoints.delete(oldAsteroid);
         }
         for (const k of this.tmpSet) {
             if (!this.activeAsteroids.has(k)) {
+                console.log(`Asteroid ${k.x}; Universe: ${universe.position.x}; v: ${this.tmpV.x}`);
                 console.log('Pop asteroid.');
                 const asteroid = new asteroid_1.Asteroid();
-                const name = `Asteroid:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+                const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(asteroid, name, k);
-                asteroid.position.copy(k);
                 this.activeAsteroids.set(k, asteroid);
-                universe.add(asteroid);
+                asteroid.position.copy(k);
+                this.add(asteroid);
+                this.asteroids.setStarAlpha(k, 0.1);
+                allPoints.add(asteroid);
             }
         }
     }
@@ -1088,13 +1191,11 @@ class System extends THREE.Object3D {
     }
     fallback(p) {
         this.asteroids.starPositions.clear();
-        this.asteroids.build(settings_1.S.float('ar'), settings_1.S.float('ar') / 10.0, settings_1.S.float('ar') / 30.0, settings_1.S.float('na'), new THREE.Color('#44f'), settings_1.S.float('as'), 
+        this.asteroids.build(grid_1.Grid.zero, settings_1.S.float('ar'), settings_1.S.float('ar') / 10.0, settings_1.S.float('ar') / 30.0, settings_1.S.float('na'), new THREE.Color('#44f'), settings_1.S.float('as'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 50);
-        this.asteroids.position.copy(p);
         this.planets.starPositions.clear();
-        this.planets.build(settings_1.S.float('ar') * 2, settings_1.S.float('ar'), settings_1.S.float('ar') / 50.0, 10 /*planets*/, new THREE.Color('#0ff'), settings_1.S.float('as'), 
+        this.planets.build(grid_1.Grid.zero, settings_1.S.float('ar') * 2, settings_1.S.float('ar'), settings_1.S.float('ar') / 50.0, 10 /*planets*/, new THREE.Color('#0ff'), settings_1.S.float('as'), 
         /*includeOrigin=*/ false, /*initialIntensity=*/ 50);
-        this.planets.position.copy(p);
         return this;
     }
 }
