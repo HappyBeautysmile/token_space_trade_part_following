@@ -72,19 +72,33 @@ export class MeshCollection extends THREE.Object3D implements PointSet {
 
   serialize(): Object {
     const o = {};
-    const rockPositions = [];
-    for (const p of this.rocks.elements()) {
-      rockPositions.push({ x: p.x, y: p.y, z: p.z });
+    const p = new THREE.Vector3();
+    const q = new THREE.Quaternion();
+    const s = new THREE.Vector3();
+    for (const [name, matricies] of this.matrixMap.entries()) {
+      const rockPositions = [];
+      for (const matrix of matricies) {
+        matrix.decompose(p, q, s);
+        rockPositions.push({ x: p.x, y: p.y, z: p.z });
+
+      }
+      o[`${name}Positions`] = rockPositions;
     }
-    o['rockPositions'] = rockPositions;
     return o;
   }
 
   deserialize(o: Object): this {
     this.rocks.clear();
-    for (const p of o['rockPositions']) {
-      const v = new THREE.Vector3(p.x, p.y, p.z);
-      this.addItem('cube', v, Grid.notRotated);
+    for (const name of this.geometryMap.keys()) {
+      const key = `${name}Positions`;
+      const positions = o[key];
+      if (!positions) {
+        continue;
+      }
+      for (const p of positions) {
+        const v = new THREE.Vector3(p.x, p.y, p.z);
+        this.addItem(name, v, Grid.notRotated);
+      }
     }
     this.buildGeometry();
     return this;
