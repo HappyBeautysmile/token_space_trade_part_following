@@ -31,7 +31,7 @@ export class NebulaSphere extends THREE.Object3D {
         }`,
         fragmentShader: `
 #define kDistanceToScreen 1.0
-#define kRaySteps 10
+#define kRaySteps ${S.float('rs').toFixed(0)}
 #define kRayLength 10.0
 #define kOrbitRadius 3.0
 

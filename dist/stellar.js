@@ -40,6 +40,7 @@ class S {
         S.setDefault('ns', 10e3, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
         S.setDefault('ni', 1000, 'Instances Per Mesh');
+        S.setDefault('rs', 20, 'Number of ray steps');
         S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('rv', 2.0, 'Starship relative velocity');
@@ -454,7 +455,7 @@ class NebulaSphere extends THREE.Object3D {
         }`,
             fragmentShader: `
 #define kDistanceToScreen 1.0
-#define kRaySteps 10
+#define kRaySteps ${settings_1.S.float('rs').toFixed(0)}
 #define kRayLength 10.0
 #define kOrbitRadius 3.0
 
