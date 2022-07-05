@@ -7,6 +7,7 @@ export class PointCloud extends THREE.Object3D {
     new THREE.Vector3(), 1e10);
   private material: THREE.ShaderMaterial;
   private geometry: THREE.BufferGeometry;
+  private starIndex = new Map<THREE.Vector3, number>();
 
   constructor() {
     super();
@@ -34,6 +35,18 @@ export class PointCloud extends THREE.Object3D {
     return sd * (x / Math.sqrt(n));
   }
 
+  public setStarAlpha(p: THREE.Vector3, alpha: number) {
+    if (!this.starIndex.has(p)) {
+      throw new Error("No such point.");
+    }
+    const alphaAttribute = this.geometry.getAttribute('alpha');
+    const index = this.starIndex.get(p);
+    alphaAttribute.setX(index, alpha);
+    alphaAttribute.needsUpdate = true;
+    this.geometry.setAttribute('alpha', alphaAttribute);
+    console.log(`Alpha: ${index} = ${alphaAttribute.getX(index)}`)
+  }
+
   private addStar(
     pos: THREE.Vector3,
     color: THREE.Color,
@@ -42,7 +55,8 @@ export class PointCloud extends THREE.Object3D {
     vertices: number[],
     colors: number[],
     dxy: number[],
-    r: number[]
+    r: number[],
+    alpha: number[],
   ) {
 
     const o = Math.round(vertices.length / 3);
@@ -57,7 +71,8 @@ export class PointCloud extends THREE.Object3D {
       vertices.push();
     }
     dxy.push(-1, -1, 1, -1, 1, 1, -1, 1);
-    r.push(pointRadius, pointRadius, pointRadius, pointRadius)
+    r.push(pointRadius, pointRadius, pointRadius, pointRadius);
+    alpha.push(1.0, 1.0, 1.0, 1.0);
   }
 
   private generateStarPositions(
@@ -72,6 +87,7 @@ export class PointCloud extends THREE.Object3D {
         orbitalHeight,
         orbitalRadius * Math.sin(theta));
       this.starPositions.add(pos, pos);
+      this.starIndex.set(pos, i);
     }
   }
 
@@ -82,9 +98,11 @@ export class PointCloud extends THREE.Object3D {
     const colors: number[] = [];
     const dxy: number[] = [];
     const r: number[] = [];
+    const alpha: number[] = [];
 
     for (const v of this.starPositions.elements()) {
-      this.addStar(v, color, pointRadius, index, vertices, colors, dxy, r);
+      this.addStar(v, color, pointRadius, index, vertices, colors, dxy,
+        r, alpha);
     }
 
     this.children.splice(0);
@@ -97,6 +115,8 @@ export class PointCloud extends THREE.Object3D {
       new THREE.BufferAttribute(new Float32Array(dxy), 2));
     this.geometry.setAttribute('r',
       new THREE.BufferAttribute(new Float32Array(r), 1));
+    this.geometry.setAttribute('alpha',
+      new THREE.BufferAttribute(new Float32Array(alpha), 1));
     this.geometry.setIndex(index);
 
     this.material = new THREE.ShaderMaterial({
@@ -106,13 +126,14 @@ export class PointCloud extends THREE.Object3D {
       vertexShader: `
         attribute vec2 dxy;
         attribute float r;
+        attribute float alpha;
         varying vec3 vColor;
         varying vec2 vDxy;
         varying float vIntensity;
         void main() {
           vDxy = dxy;
           vColor = color;
-          vIntensity = ${initialIntensity.toFixed(2)};
+          vIntensity = ${initialIntensity.toFixed(2)} * alpha;
           float sizeScale = 1.0;
 
           vec4 worldPosition = modelMatrix * vec4(position, 1.0);
@@ -135,8 +156,8 @@ export class PointCloud extends THREE.Object3D {
       varying vec3 vColor;
       varying vec2 vDxy;
       void main() {
-        float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy), 0.0, 1.0);
-        intensity = min(intensity, 1.0);
+        float intensity = vIntensity * clamp(10.0 - 10.0 * length(vDxy),
+          0.0, 1.0);
         gl_FragColor = vec4(vColor * intensity, 1.0);
       }`,
       blending: THREE.AdditiveBlending,

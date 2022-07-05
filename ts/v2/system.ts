@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { S } from "../settings";
+import { Universe } from "../universe";
 import { Asteroid } from "./asteroid";
 
 import { Codeable, File } from "./file";
@@ -26,9 +27,11 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
 
   private tmpV = new THREE.Vector3();
   getClosestDistance(p: THREE.Vector3): number {
+    this.tmpV.copy(p);
+    this.tmpV.sub(this.position);
     let closestDistance = Infinity;
     for (const ps of [this.planets.starPositions, this.asteroids.starPositions]) {
-      const distance = ps.getClosestDistance(p);
+      const distance = ps.getClosestDistance(this.tmpV);
       if (distance < closestDistance) {
         closestDistance = distance;
       }
@@ -40,6 +43,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
   public handlePops(universe: THREE.Object3D, allPoints: PointCloudUnion) {
     this.tmpV.copy(universe.position);
     this.tmpV.multiplyScalar(-1);
+    this.tmpV.sub(this.position);
     this.tmpSet.clear();
     for (const asteroid of this.asteroids.starPositions.getAllWithinRadius(
       this.tmpV, 10000)) {
@@ -60,16 +64,18 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
       universe.remove(oldAsteroid);
       // allPoints.delete(oldAsteroid);
       this.activeAsteroids.delete(k);
+      this.asteroids.setStarAlpha(k, 1.0);
     }
     for (const k of this.tmpSet) {
       if (!this.activeAsteroids.has(k)) {
         console.log('Pop asteroid.');
         const asteroid = new Asteroid();
-        const name = `Asteroid:${Math.round(k.x), Math.round(k.y), Math.round(k.z)}`;
+        const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
         File.load(asteroid, name, k);
         asteroid.position.copy(k);
         this.activeAsteroids.set(k, asteroid);
         universe.add(asteroid);
+        this.asteroids.setStarAlpha(k, 0.0);
       }
     }
   }
@@ -116,14 +122,12 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
       S.float('ar'), S.float('ar') / 10.0, S.float('ar') / 30.0,
       S.float('na'), new THREE.Color('#44f'), S.float('as'),
       /*includeOrigin=*/false, /*initialIntensity=*/50);
-    this.asteroids.position.copy(p);
 
     this.planets.starPositions.clear();
     this.planets.build(
       S.float('ar') * 2, S.float('ar'), S.float('ar') / 50.0,
       10/*planets*/, new THREE.Color('#0ff'), S.float('as'),
         /*includeOrigin=*/false, /*initialIntensity=*/50);
-    this.planets.position.copy(p);
 
     return this;
   }
