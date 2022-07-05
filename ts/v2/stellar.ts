@@ -3,6 +3,7 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { S } from "../settings";
 import { Controls } from "./controls";
 import { File } from "./file";
+import { NebulaSphere } from "./nebulaSphere";
 import { PointCloudUnion } from "./pointSet";
 import { Stars } from "./stars";
 
@@ -79,6 +80,9 @@ export class Stellar {
 
 
   private initializeWorld() {
+    const skySphere = new NebulaSphere();
+    this.scene.add(skySphere);
+
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
       1.0);
     light.position.set(0, 10, 2);
