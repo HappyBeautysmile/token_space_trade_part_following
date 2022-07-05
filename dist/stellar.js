@@ -429,11 +429,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NebulaSphere = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const settings_1 = __webpack_require__(451);
 class NebulaSphere extends THREE.Object3D {
+    material;
     constructor() {
         super();
-        const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1000, 3), this.makeMaterial());
+        this.material = this.makeMaterial();
+        const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1000, 3), this.material);
         this.add(mesh);
+    }
+    updatePosition(pos) {
+        this.material.uniforms['pos'].value.copy(pos);
+        this.material.uniformsNeedUpdate = true;
     }
     makeMaterial() {
         const material = new THREE.ShaderMaterial({
@@ -447,8 +454,8 @@ class NebulaSphere extends THREE.Object3D {
         }`,
             fragmentShader: `
 #define kDistanceToScreen 1.0
-#define kRaySteps 5
-#define kRayLength 15.0
+#define kRaySteps 10
+#define kRayLength 10.0
 #define kOrbitRadius 3.0
 
 varying vec3 vDirection;
@@ -488,16 +495,23 @@ vec3 noise(in vec3 x) {
   return grey(x) * p * q;
 }
 
+uniform vec3 pos;
 void main()
 {
     vec3 step = vDirection * kRayLength / float(kRaySteps);
     vec3 col = vec3(0.0,0.0,0.0);
+    vec3 scaledPos = pos * ${(8.0 / settings_1.S.float('sr'))};
     for (int i = 0; i <= kRaySteps; ++i) {
-      col += noise(step * float(i + 1));
+      col += noise(scaledPos + step * float(i + 1));
     }
     col = smoothstep(0.0, 1.0, 5.0 * col / float(kRaySteps));
     gl_FragColor = vec4(col,1.0);
 }`,
+            uniforms: {
+                pos: {
+                    value: new THREE.Vector3()
+                }
+            },
             depthWrite: false,
             depthTest: true,
             blending: THREE.AdditiveBlending,
@@ -1181,6 +1195,7 @@ class Stellar {
     player = new THREE.Group();
     allPoints = new pointSet_1.PointCloudUnion();
     stars;
+    nebulae = new nebulaSphere_1.NebulaSphere();
     constructor() {
         this.scene.add(this.player);
         this.scene.add(this.universe);
@@ -1204,6 +1219,9 @@ class Stellar {
             this.renderer.render(this.scene, this.camera);
             this.handleControls(deltaS);
             this.stars.handlePops(this.universe, this.allPoints);
+            this.tmpV.copy(this.universe.position);
+            this.tmpV.multiplyScalar(-1);
+            this.nebulae.updatePosition(this.tmpV);
         });
     }
     tmpV = new THREE.Vector3();
@@ -1233,8 +1251,7 @@ class Stellar {
         }
     }
     initializeWorld() {
-        const skySphere = new nebulaSphere_1.NebulaSphere();
-        this.scene.add(skySphere);
+        this.scene.add(this.nebulae);
         const light = new THREE.DirectionalLight(new THREE.Color('#fff'), 1.0);
         light.position.set(0, 10, 2);
         this.scene.add(light);

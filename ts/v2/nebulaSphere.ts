@@ -1,14 +1,21 @@
 import * as THREE from "three";
+import { S } from "../settings";
 
 export class NebulaSphere extends THREE.Object3D {
+  private material: THREE.ShaderMaterial;
   constructor() {
     super();
-
+    this.material = this.makeMaterial();
     const mesh = new THREE.Mesh(
       new THREE.IcosahedronBufferGeometry(1000, 3),
-      this.makeMaterial()
+      this.material
     );
     this.add(mesh);
+  }
+
+  public updatePosition(pos: THREE.Vector3) {
+    this.material.uniforms['pos'].value.copy(pos);
+    this.material.uniformsNeedUpdate = true;
   }
 
   private makeMaterial(): THREE.ShaderMaterial {
@@ -24,8 +31,8 @@ export class NebulaSphere extends THREE.Object3D {
         }`,
         fragmentShader: `
 #define kDistanceToScreen 1.0
-#define kRaySteps 5
-#define kRayLength 15.0
+#define kRaySteps 10
+#define kRayLength 10.0
 #define kOrbitRadius 3.0
 
 varying vec3 vDirection;
@@ -65,16 +72,23 @@ vec3 noise(in vec3 x) {
   return grey(x) * p * q;
 }
 
+uniform vec3 pos;
 void main()
 {
     vec3 step = vDirection * kRayLength / float(kRaySteps);
     vec3 col = vec3(0.0,0.0,0.0);
+    vec3 scaledPos = pos * ${(8.0 / S.float('sr'))};
     for (int i = 0; i <= kRaySteps; ++i) {
-      col += noise(step * float(i + 1));
+      col += noise(scaledPos + step * float(i + 1));
     }
     col = smoothstep(0.0, 1.0, 5.0 * col / float(kRaySteps));
     gl_FragColor = vec4(col,1.0);
 }`,
+        uniforms: {
+          pos: {
+            value: new THREE.Vector3()
+          }
+        },
         depthWrite: false,
         depthTest: true,
         blending: THREE.AdditiveBlending,

@@ -16,6 +16,7 @@ export class Stellar {
 
   private allPoints = new PointCloudUnion();
   private stars: Stars;
+  private nebulae = new NebulaSphere();
 
   constructor() {
     this.scene.add(this.player);
@@ -43,6 +44,9 @@ export class Stellar {
       this.renderer.render(this.scene, this.camera);
       this.handleControls(deltaS);
       this.stars.handlePops(this.universe, this.allPoints);
+      this.tmpV.copy(this.universe.position);
+      this.tmpV.multiplyScalar(-1);
+      this.nebulae.updatePosition(this.tmpV);
     });
   }
 
@@ -80,8 +84,7 @@ export class Stellar {
 
 
   private initializeWorld() {
-    const skySphere = new NebulaSphere();
-    this.scene.add(skySphere);
+    this.scene.add(this.nebulae);
 
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
       1.0);
