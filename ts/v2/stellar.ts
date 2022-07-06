@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { S } from "../settings";
+import { Assets } from "./assets";
 import { Controls } from "./controls";
 import { File } from "./file";
 import { NebulaSphere } from "./nebulaSphere";
@@ -21,8 +22,24 @@ export class Stellar {
   constructor() {
     this.scene.add(this.player);
     this.scene.add(this.universe);
+    this.initialize();
+  }
+
+  private async initialize() {
     this.initializeGraphics();
-    this.initializeWorld();
+    await this.initializeWorld();
+
+    // Set up animation loop last - after everything is loaded.
+    const clock = new THREE.Clock();
+    this.renderer.setAnimationLoop(() => {
+      const deltaS = Math.min(clock.getDelta(), 0.1);
+      this.renderer.render(this.scene, this.camera);
+      this.handleControls(deltaS);
+      this.stars.handlePops(this.universe, this.allPoints);
+      this.tmpV.copy(this.universe.position);
+      this.tmpV.multiplyScalar(-1);
+      // this.nebulae.updatePosition(this.tmpV);
+    });
   }
 
   private initializeGraphics() {
@@ -38,16 +55,6 @@ export class Stellar {
     document.body.appendChild(this.renderer.domElement);
     document.body.appendChild(VRButton.createButton(this.renderer));
     this.renderer.xr.enabled = true;
-    const clock = new THREE.Clock();
-    this.renderer.setAnimationLoop(() => {
-      const deltaS = Math.min(clock.getDelta(), 0.1);
-      this.renderer.render(this.scene, this.camera);
-      this.handleControls(deltaS);
-      this.stars.handlePops(this.universe, this.allPoints);
-      this.tmpV.copy(this.universe.position);
-      this.tmpV.multiplyScalar(-1);
-      // this.nebulae.updatePosition(this.tmpV);
-    });
   }
 
   private tmpV = new THREE.Vector3();
@@ -83,7 +90,7 @@ export class Stellar {
   }
 
 
-  private initializeWorld() {
+  private async initializeWorld() {
     // this.scene.add(this.nebulae);
 
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
@@ -92,10 +99,13 @@ export class Stellar {
     this.scene.add(light);
 
     console.log('Initialize World');
-    this.stars = new Stars();
+    const assets = await Assets.load();
+    console.log('Assets loaded.');
+    this.stars = new Stars(assets);
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
     this.allPoints.add(this.stars);
+    return;
   }
 }
 

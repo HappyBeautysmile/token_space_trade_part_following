@@ -1,11 +1,14 @@
 import * as THREE from "three";
 import { Matrix4 } from "three";
+import { Assets } from "./assets";
+import { Construction } from "./construction";
 import { Grid } from "./grid";
 import { PointMapOctoTree } from "./octoTree";
 import { PointSet } from "./pointSet";
 
 
-export class MeshCollection extends THREE.Object3D implements PointSet {
+export class MeshCollection extends THREE.Object3D
+  implements PointSet, Construction {
   private rocks = new PointMapOctoTree<THREE.Vector3>(Grid.zero, 1e3);
 
   private materialMap = new Map<string, THREE.Material>();
@@ -13,16 +16,13 @@ export class MeshCollection extends THREE.Object3D implements PointSet {
   private matrixMap = new Map<string, THREE.Matrix4[]>();
   private meshMap = new Map<string, THREE.InstancedMesh>();
 
-  constructor() {
+  constructor(assets: Assets) {
     super();
-    this.defineItem('cube', new THREE.BoxBufferGeometry(1, 1),
-      new THREE.MeshPhongMaterial(
-        { color: '#88f', shininess: 0.6, emissive: 0.5 }));
-    this.defineItem('sphere', new THREE.IcosahedronBufferGeometry(0.5, 3),
-      new THREE.MeshPhongMaterial(
-        { color: '#88f', shininess: 0.6, emissive: 0.5 }));
+    for (const name of assets.names()) {
+      const mesh = assets.getMesh(name);
+      this.defineItem(name, mesh.geometry, mesh.material as THREE.Material);
+    }
   }
-
 
   private tmpV = new THREE.Vector3();
   getClosestDistance(p: THREE.Vector3): number {
@@ -47,12 +47,26 @@ export class MeshCollection extends THREE.Object3D implements PointSet {
     }
   }
 
-  public addItem(name: string,
+  private cubeMap = new Map<string, string>();
+  private locationKey(v: THREE.Vector3) {
+    return `${[v.x.toFixed(0), v.y.toFixed(0), v.z.toFixed(0)]}`;
+  }
+
+  public addCube(name: string,
     position: THREE.Vector3, rotation: THREE.Quaternion) {
     const m = new Matrix4();
     m.compose(position, rotation, Grid.one);
     this.addOrSet(name, m, this.matrixMap);
     this.rocks.add(position, position);
+    const key = this.locationKey(position);
+    if (this.cubeMap.has(key)) {
+      throw new Error("There is already a cube here.");
+    }
+    this.cubeMap.set(this.locationKey(position), name);
+  }
+
+  public cubeAt(p: THREE.Vector3): boolean {
+    return this.cubeMap.has(this.locationKey(p));
   }
 
   public buildGeometry() {
@@ -97,7 +111,7 @@ export class MeshCollection extends THREE.Object3D implements PointSet {
       }
       for (const p of positions) {
         const v = new THREE.Vector3(p.x, p.y, p.z);
-        this.addItem(name, v, Grid.notRotated);
+        this.addCube(name, v, Grid.notRotated);
       }
     }
     this.buildGeometry();
