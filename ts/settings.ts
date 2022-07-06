@@ -34,6 +34,7 @@ export class S {
     S.setDefault('na', 700, 'Number of asteroids in a belt.');
 
     S.setDefault('ni', 1000, 'Instances Per Mesh');
+    S.setDefault('rs', 20, 'Number of ray steps');
 
     S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.')
     S.setDefault('sa', 1e3, 'Starship Acceleration');

@@ -7,20 +7,18 @@ import { Codeable, File } from "./file";
 import { Grid } from "./grid";
 import { PointCloud } from "./pointCloud";
 import { PointCloudUnion, PointSet } from "./pointSet";
+import { Star } from "./star";
 
 export class System extends THREE.Object3D implements Codeable, PointSet {
   private asteroids = new PointCloud(false);
   private planets = new PointCloud(false);
-  // private star: THREE.Mesh;
+  private star: THREE.Object3D;
   private activeAsteroids = new Map<THREE.Vector3, Asteroid>();
 
   constructor() {
     super();
-    // this.star = new THREE.Mesh(
-    //   new THREE.IcosahedronBufferGeometry(S.float('sr'), 4),
-    //   new THREE.MeshPhongMaterial(
-    //     { color: 'yellow', shininess: 1.0, emissive: 0.8 }));
-    // this.add(this.star);
+    this.star = new Star();
+    this.add(this.star);
     this.add(this.asteroids);
     this.add(this.planets);
   }

@@ -46,7 +46,7 @@ export class Stellar {
       this.stars.handlePops(this.universe, this.allPoints);
       this.tmpV.copy(this.universe.position);
       this.tmpV.multiplyScalar(-1);
-      this.nebulae.updatePosition(this.tmpV);
+      // this.nebulae.updatePosition(this.tmpV);
     });
   }
 
@@ -84,7 +84,7 @@ export class Stellar {
 
 
   private initializeWorld() {
-    this.scene.add(this.nebulae);
+    // this.scene.add(this.nebulae);
 
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
       1.0);

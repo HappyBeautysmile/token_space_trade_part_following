@@ -41,6 +41,7 @@ export class Stars extends PointCloud implements Codeable, PointSet {
       this.remove(oldSystem);
       allPoints.delete(oldSystem);
       this.activeSystems.delete(k);
+      this.setStarAlpha(k, 1);
     }
     for (const k of this.tmpSet) {
       if (!this.activeSystems.has(k)) {
@@ -51,6 +52,7 @@ export class Stars extends PointCloud implements Codeable, PointSet {
         this.add(system);
         system.position.copy(k);
         allPoints.add(system);
+        this.setStarAlpha(k, 0);
       }
     }
     if (previousSize != this.activeSystems.size) {
