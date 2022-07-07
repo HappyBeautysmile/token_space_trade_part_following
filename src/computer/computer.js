@@ -60,6 +60,7 @@ class RowText {
 class Computer extends THREE.Object3D {
     model;
     player;
+    universe;
     canvas = document.createElement('canvas');
     ctx = this.canvas.getContext('2d');
     rowText = new RowText();
@@ -74,10 +75,11 @@ class Computer extends THREE.Object3D {
     currentDisplay = this.showInventory;
     currentParameters = "";
     selectedItemIndex = 0;
-    constructor(model, player) {
+    constructor(model, player, universe) {
         super();
         this.model = model;
         this.player = player;
+        this.universe = universe;
         this.add(model);
         this.canvas.width = 1056;
         this.canvas.height = 544;
@@ -104,9 +106,9 @@ class Computer extends THREE.Object3D {
             }
         }
     }
-    static async make(player) {
+    static async make(player, universe) {
         const model = await assets_1.ModelLoader.loadModel(`Model/flight computer.glb`);
-        return new Computer(model, player);
+        return new Computer(model, player, universe);
     }
     findChildByName(name, model) {
         let retvalue = new THREE.Object3D();
@@ -195,7 +197,7 @@ class Computer extends THREE.Object3D {
     }
     startRow = 0;
     showInventory() {
-        const inv = this.player.inventory.getItemQty();
+        const inv = this.player.inventory.getItemQtyMap();
         const qtys = Array.from(inv.values());
         const items = Array.from(inv.keys());
         this.rowText.empty();
