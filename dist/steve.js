@@ -221,22 +221,22 @@ class Assets extends THREE.Object3D {
             Assets.items.push(i);
             this.itemsByName.set(key, i);
         }
-        ;
-        const producers = ['accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube',
+        const producers = ['accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube', 'ice', 'light-blue',
             'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
             'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer'
         ];
         for (const [key, value] of Assets.meshes.entries()) {
             if (producers.includes(key)) {
-                let m = this.meshes.get(key).clone();
-                let geo = new THREE.BufferGeometry();
-                geo = m.geometry.clone();
-                m.geometry = geo;
+                let originalMesh = this.meshes.get(key);
+                let geo = originalMesh.geometry.clone();
+                geo.scale(originalMesh.scale.x, originalMesh.scale.y, originalMesh.scale.z);
                 geo.scale(0.5, 0.5, 0.5);
-                m.add(this.meshes.get("producer"));
+                const producerMesh = Assets.meshes.get('producer').clone();
+                const prototype = new THREE.Mesh(geo, originalMesh.material);
+                producerMesh.add(prototype);
                 let meshName = key.concat("Producer");
-                this.meshes.set(meshName, m);
-                const i = Item.make(meshName, `Prodcer of ${key}`, 0, meshName);
+                this.meshes.set(meshName, producerMesh);
+                const i = Item.make(meshName, `Producer of ${key}`, 0, meshName);
                 Assets.items.push(i);
                 this.itemsByName.set(meshName, i);
             }
@@ -388,13 +388,58 @@ class AstroGen {
         let index = Math.floor(Math.random() * hat.length);
         return assets_1.Assets.itemsByName.get(hat[index]);
     }
-    addAt(x, y, z) {
+    addAt(x, y, z, item = null) {
         const rotation = new three_1.Matrix4();
         rotation.makeRotationFromEuler(new THREE.Euler(Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2));
         const quaternion = new THREE.Quaternion();
         quaternion.setFromRotationMatrix(rotation);
-        const inWorldItem = new inWorldItem_1.InWorldItem(this.itemFromLocation(x, y, z), new THREE.Vector3(x, y, z), quaternion);
+        if (!item) {
+            item = this.itemFromLocation(x, y, z);
+        }
+        const inWorldItem = new inWorldItem_1.InWorldItem(item, new THREE.Vector3(x, y, z), quaternion);
         this.construction.addCube(inWorldItem);
+    }
+    buildIce() {
+        // initialize
+        let depths = [];
+        for (let x = 0; x < 2; x++) {
+            let row = [];
+            for (let y = 0; y < 2; y++) {
+                row.push(this.getRandomInt(1, 3));
+            }
+            depths.push(row);
+        }
+        for (let i = 0; i < 2; i++) {
+            // double size
+            let newDepths = [];
+            for (let row of depths) {
+                let newRow = [];
+                for (let value of row) {
+                    newRow.push(value);
+                    newRow.push(value);
+                }
+                newDepths.push(newRow);
+                newDepths.push(newRow);
+            }
+            depths = newDepths;
+            // add random
+            newDepths = [];
+            for (let row of depths) {
+                let newRow = [];
+                for (let value of row) {
+                    newRow.push(value * 2 + this.getRandomInt(0, 2));
+                }
+                newDepths.push(newRow);
+            }
+            depths = newDepths;
+        }
+        for (let x = 0; x < depths.length; x++) {
+            for (let z = 0; z < depths[0].length; z++) {
+                for (let y = 0; y < depths[x][z]; y++) {
+                    this.addAt(x, -y, z, assets_1.Assets.itemsByName.get("ice"));
+                }
+            }
+        }
     }
     buildOriginMarker(size) {
         for (let x = 0; x < size; x++) {
@@ -473,6 +518,14 @@ class AstroGen {
                 this.construction.addCube(inWorldItem);
                 n--;
             }
+        }
+    }
+    buildAllItems() {
+        let x = -Math.round(assets_1.Assets.items.length / 2);
+        for (const item of assets_1.Assets.items) {
+            const iwo = new inWorldItem_1.InWorldItem(item, new THREE.Vector3(x, 0, -5), new THREE.Quaternion());
+            this.construction.addCube(iwo);
+            ++x;
         }
     }
     removeFar(dirty, r) {
@@ -590,7 +643,6 @@ const universe_1 = __webpack_require__(670);
 const system_1 = __webpack_require__(855);
 const exchange_1 = __webpack_require__(253);
 const factory_1 = __webpack_require__(211);
-const inWorldItem_1 = __webpack_require__(116);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -619,10 +671,10 @@ class BlockBuild {
     }
     async initialize() {
         await this.setScene();
-        let exchanges = new Map();
+        let exchanges = [];
         for (let i of assets_1.Assets.items) {
             let exchange = new exchange_1.Exchange(i);
-            exchanges.set(i, exchange);
+            exchanges.push(exchange);
         }
         let station = new system_1.Body();
         station.name = "station";
@@ -634,13 +686,19 @@ class BlockBuild {
         this.universe.systems.set(system.getName(), system);
         this.construction = new construction_1.ObjectConstruction(this.place.universeGroup, this.renderer);
         let ab = new astroGen_1.AstroGen(this.construction);
-        ab.buildPlatform(Math.round(settings_1.S.float('ps') * 2 / 3), 10, Math.round(settings_1.S.float('ps')), 0, 0, 0);
-        const inWorldItem = new inWorldItem_1.InWorldItem(assets_1.Assets.itemsByName.get("clayProducer"), new THREE.Vector3(0, 1, -5), new THREE.Quaternion());
-        this.construction.addCube(inWorldItem);
+        ab.buildIce();
+        // if (S.float('bai')) {
+        //   ab.buildAllItems();
+        // } else {
+        //   ab.buildPlatform(
+        //     Math.round(S.float('ps') * 2 / 3),
+        //     10,
+        //     Math.round(S.float('ps')),
+        //     0, 0, 0);
+        // }
         const inputSpec = new Map();
-        const clay = assets_1.Assets.itemsByName.get('clay');
-        inputSpec.set(clay, 1);
-        const factory = new factory_1.Factory(inputSpec, clay, 1, 1.2, 1.2);
+        inputSpec.set(assets_1.Assets.itemsByName.get('clay'), 1);
+        const factory = new factory_1.Factory(inputSpec, 'clay', 1, 1.2, 1.2);
         factory.setHome(this.construction, new THREE.Vector3(0, 1, -5), new THREE.Vector3(0, 0, -1));
         this.factories.push(factory);
         // for (let i = 0; i < 10; i++) {
@@ -654,8 +712,10 @@ class BlockBuild {
         // }
         ab.buildOriginMarker(settings_1.S.float('om'));
         //ab.buildRandomItems(10, 100);
-        this.construction.loadFromLocal();
-        this.construction.saveToLocal();
+        if (!settings_1.S.float('bai')) {
+            this.construction.loadFromLocal();
+            this.construction.saveToLocal();
+        }
         this.getGrips();
         this.dumpScene(this.scene, '');
     }
@@ -1282,7 +1342,7 @@ class Computer extends THREE.Object3D {
     }
     startRow = 0;
     showInventory() {
-        const inv = this.player.inventory.getItemQty();
+        const inv = this.player.inventory.getItemQtyMap();
         const qtys = Array.from(inv.values());
         const items = Array.from(inv.keys());
         this.rowText.empty();
@@ -1388,13 +1448,62 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ObjectConstruction = void 0;
+exports.ObjectConstruction = exports.ReadWriteConstruction = void 0;
 const THREE = __importStar(__webpack_require__(232));
 const codec_1 = __webpack_require__(385);
 const debug_1 = __webpack_require__(756);
 const fileIO_1 = __webpack_require__(3);
 const settings_1 = __webpack_require__(451);
 const unionGeometryContainer_1 = __webpack_require__(614);
+// A construction which writes new blocks to `readWriteConstruction` and
+// reads cubes from either construction.
+// Typical usage is to populate readConstruction with some initial state
+// (e.g. a platform), and pass an empty construction to readWriteConstruction.
+// When mining (i.e. removeCube) it will mine from `readConstruction` if there
+// is something there, otherwise try to mine from `readWriteConstruction`.
+class ReadWriteConstruction {
+    readConstruction;
+    readWriteConstruction;
+    constructor(readConstruction, readWriteConstruction) {
+        this.readConstruction = readConstruction;
+        this.readWriteConstruction = readWriteConstruction;
+    }
+    addCube(o) {
+        this.readWriteConstruction.addCube(o);
+    }
+    removeCube(p) {
+        if (this.readConstruction.cubeAt(p)) {
+            return this.readConstruction.removeCube(p);
+        }
+        else {
+            return this.readWriteConstruction.removeCube(p);
+        }
+    }
+    cubeAt(p) {
+        return this.readConstruction.cubeAt(p) ||
+            this.readWriteConstruction.cubeAt(p);
+    }
+    save() {
+        // TODO: This probably needs some work.
+        this.readConstruction.save();
+        this.readWriteConstruction.save();
+    }
+    saveToLocal() {
+        // TODO: This probably needs some work.
+        this.readConstruction.saveToLocal();
+        this.readWriteConstruction.saveToLocal();
+    }
+    loadFromLocal() {
+        // TODO: This probably needs some work.
+        this.readConstruction.loadFromLocal();
+        this.readWriteConstruction.loadFromLocal();
+    }
+    *cubes() {
+        yield* this.readConstruction.cubes();
+        yield* this.readWriteConstruction.cubes();
+    }
+}
+exports.ReadWriteConstruction = ReadWriteConstruction;
 class GroupContainer {
     container;
     objects = new Map();
@@ -1574,11 +1683,12 @@ exports.Debug = Debug;
 /***/ }),
 
 /***/ 253:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Exchange = exports.SellOrder = exports.BuyOrder = exports.BankAccount = void 0;
+const debug_1 = __webpack_require__(756);
 class BankAccount {
     initialBalance;
     balance;
@@ -1632,7 +1742,7 @@ class Exchange {
     sellOrders = [];
     // If `update` is set to true, cancel the existing order and
     // replace it with this one.
-    placeBuyOrder(buyOrder, update = true) {
+    placeBuyOrder(buyOrder, update = true, bankAccount) {
         if (update) {
             for (let i = 0; i < this.buyOrders.length;) {
                 if (this.buyOrders[i].bankAccount === buyOrder.bankAccount) {
@@ -1643,10 +1753,25 @@ class Exchange {
                 }
             }
         }
-        this.buyOrders.push(buyOrder);
+        let cost = buyOrder.quantity * buyOrder.priceEach;
+        if (bankAccount.getBalance() > cost) {
+            this.buyOrders.push(buyOrder);
+            bankAccount.removeFunds(cost);
+        }
+        else {
+            debug_1.Debug.log(`you don't have ${cost} Credits to cover your buy order.`);
+        }
     }
-    placeSellOrder(sellOrder, update = true) {
-        this.sellOrders.push(sellOrder);
+    placeSellOrder(sellOrder, update = true, inventory) {
+        if (inventory.qtyOfItem(this.item) >= sellOrder.quantity) {
+            this.sellOrders.push(sellOrder);
+            for (let i = 0; i < sellOrder.quantity; i++) {
+                inventory.removeItem(this.item);
+            }
+        }
+        else {
+            debug_1.Debug.log(`you don't have ${sellOrder.quantity} of ${this.item.name} to sell.`);
+        }
     }
     matchOrders() {
         for (let b of this.buyOrders) {
@@ -1679,11 +1804,18 @@ class Exchange {
     // Returns the highest price someone is currently bidding.
     // Returns zero if there are no bids.
     getHighestBuyPrice() {
-        let highest = 0;
+        let highest = null;
         for (const o of this.buyOrders) {
             highest = Math.max(o.priceEach, highest);
         }
         return highest;
+    }
+    getLowestSellPrice() {
+        let lowest = null;
+        for (const o of this.sellOrders) {
+            lowest = Math.min(o.priceEach, lowest);
+        }
+        return lowest;
     }
     sellWithLimit(sell) {
         if (this.buyOrders.length === 0) {
@@ -1768,6 +1900,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Factory = void 0;
 const THREE = __importStar(__webpack_require__(232));
+const assets_1 = __webpack_require__(398);
 const inWorldItem_1 = __webpack_require__(116);
 class Counter {
     m = new Map();
@@ -1789,7 +1922,7 @@ class Counter {
 }
 class Factory {
     inputSpec;
-    outputType;
+    outputName;
     outputQty;
     searchTimeS;
     buildTimeS;
@@ -1799,16 +1932,21 @@ class Factory {
     construction = undefined;
     position = new THREE.Vector3();
     outDriection = new THREE.Vector3();
-    constructor(inputSpec, outputType, outputQty, searchTimeS, buildTimeS) {
+    outputItem;
+    constructor(inputSpec, outputName, outputQty, searchTimeS, buildTimeS) {
         this.inputSpec = inputSpec;
-        this.outputType = outputType;
+        this.outputName = outputName;
         this.outputQty = outputQty;
         this.searchTimeS = searchTimeS;
         this.buildTimeS = buildTimeS;
+        this.outputItem = assets_1.Assets.itemsByName.get(outputName);
     }
     setHome(construction, position, outDirection) {
         this.construction = construction;
         this.position.copy(position);
+        const prod = assets_1.Assets.itemsByName.get(this.outputName.concat("Producer"));
+        const inWorldItem = new inWorldItem_1.InWorldItem(prod, position, new THREE.Quaternion());
+        this.construction.addCube(inWorldItem);
         this.outDriection.copy(outDirection);
     }
     search() {
@@ -1875,7 +2013,7 @@ class Factory {
                     this.addOrthogonal(cursor);
                 }
             }
-            this.construction.addCube(new inWorldItem_1.InWorldItem(this.outputType, cursor, new THREE.Quaternion()));
+            this.construction.addCube(new inWorldItem_1.InWorldItem(this.outputItem, cursor, new THREE.Quaternion()));
         }
     }
     tick(tick) {
@@ -2472,7 +2610,7 @@ class Hand extends THREE.Object3D {
                 this.sendRay();
                 return;
             }
-            const itemQty = this.inventory.getItemQty();
+            const itemQty = this.inventory.getItemQtyMap();
             if (itemQty.has(this.item)) {
                 if (itemQty.get(this.item) > 0) {
                     this.deleteCube();
@@ -3916,43 +4054,46 @@ const settings_1 = __webpack_require__(451);
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
 class Inventory {
-    itemQty = new Map();
+    itemQtyMap = new Map();
     index = 0;
     constructor() {
         if (settings_1.S.float('cr') > 0) {
             for (const item of assets_1.Assets.items) {
-                this.itemQty.set(item, settings_1.S.float('cr'));
+                this.itemQtyMap.set(item, settings_1.S.float('cr'));
             }
         }
     }
     addItem(input) {
         debug_1.Debug.log("adding " + JSON.stringify(input));
-        if (this.itemQty.has(input)) {
-            this.itemQty.set(input, this.itemQty.get(input) + 1);
+        if (this.itemQtyMap.has(input)) {
+            this.itemQtyMap.set(input, this.itemQtyMap.get(input) + 1);
         }
         else {
-            this.itemQty.set(input, 1);
+            this.itemQtyMap.set(input, 1);
         }
     }
     removeItem(input) {
         debug_1.Debug.log("removing " + JSON.stringify(input));
-        if (this.itemQty.has(input)) {
-            this.itemQty.set(input, this.itemQty.get(input) - 1);
-            if (this.itemQty.get(input) < 1) {
-                this.itemQty.delete(input);
+        if (this.itemQtyMap.has(input)) {
+            this.itemQtyMap.set(input, this.itemQtyMap.get(input) - 1);
+            if (this.itemQtyMap.get(input) < 1) {
+                this.itemQtyMap.delete(input);
             }
         }
     }
     nextItem() {
-        const num_elements = this.itemQty.size;
+        const num_elements = this.itemQtyMap.size;
         if (num_elements < 1) {
             return null;
         }
         this.index = (this.index + 1) % num_elements;
-        return Array.from(this.itemQty)[this.index][0];
+        return Array.from(this.itemQtyMap)[this.index][0];
     }
-    getItemQty() {
-        return this.itemQty;
+    getItemQtyMap() {
+        return this.itemQtyMap;
+    }
+    qtyOfItem(i) {
+        return this.itemQtyMap.get(i);
     }
 }
 exports.Inventory = Inventory;
@@ -4530,6 +4671,7 @@ class S {
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('ns', 10e3, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
+        S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
         S.setDefault('m', 1, 'Use merged geometry in Block Build.');
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
@@ -4798,7 +4940,7 @@ exports.StarSystem = StarSystem;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Body = exports.System = void 0;
+exports.Station = exports.Body = exports.System = void 0;
 class System {
     name;
     bodies;
@@ -4821,6 +4963,14 @@ class Body {
     bodyType;
 }
 exports.Body = Body;
+class Station extends Body {
+    constructor() {
+        super();
+        this.bodyType = 'Station';
+    }
+    inventory;
+}
+exports.Station = Station;
 //# sourceMappingURL=system.js.map
 
 /***/ }),
