@@ -54,17 +54,17 @@ export class Star extends THREE.Mesh {
       }
       
       void main() {          
-          vec3 view = vDirection;
+          vec3 view = vDirection * 8.0;
       
           vec4 noise = 0.5 + 0.5 * compound4(
             0.1 * compound4(vec4(view, 0.0)));
           float intensity = length(noise) * 0.7;
+  
+          float red = pow(intensity * 2.5, 1.6);
+          float green = pow(intensity * 2.3, 1.2);
+          float blue = pow(intensity * 1.5, 1.5);
           
-          float red = pow(intensity, 1.1);
-          float green = pow(intensity, 0.3);
-          float blue = 0.5 + 0.1 * noise.b;
-          
-          vec3 col = vec3(red, min(red, green), 0);
+          vec3 col = vec3(red, green, blue);
        
           gl_FragColor = vec4(col.rgb, 1.0) * viewDot;
       }

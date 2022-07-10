@@ -28,7 +28,7 @@ export class S {
     S.setDefault('ar', 1e6, 'Asteroid belt radius');
     S.setDefault('ss', 100e3, 'Radius of a single star')
     S.setDefault('sp', 200e6, 'Star System "Pop" radius');
-    S.setDefault('as', 1e2, 'Radius of a single asteroid');
+    S.setDefault('as', 5, 'Radius of a single asteroid');
     S.setDefault('ps', 30, 'Platform size.');
     S.setDefault('ns', 10e3, 'Number of stars in the VLU');
     S.setDefault('na', 700, 'Number of asteroids in a belt.');

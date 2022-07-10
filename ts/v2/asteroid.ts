@@ -12,7 +12,7 @@ export class Asteroid extends MeshCollection implements Codeable {
   }
   fallback(p: THREE.Vector3) {
     const gen = new AstroGen(this);
-    gen.buildAsteroid(5, 0, 0, 0);
+    gen.buildAsteroid(S.float('as'), 0, 0, 0);
     this.buildGeometry();
     return this;
   }

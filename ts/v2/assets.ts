@@ -17,11 +17,19 @@ export class Assets {
   }
 
   private static findFirstMesh(o: THREE.Object3D): THREE.Mesh {
+    const tmpMatrix = new THREE.Matrix4();
     if (o.type === "Mesh") {
       // console.log(`Mesh found: ${o.name}`);
       const matrix = new THREE.Matrix4();
-      matrix.compose(o.position, o.quaternion, o.scale);
+      matrix.identity();
+      let cursor = o;
+      while (cursor != null) {
+        tmpMatrix.compose(cursor.position, cursor.quaternion, cursor.scale);
+        matrix.premultiply(tmpMatrix);
+        cursor = cursor.parent;
+      }
       o.matrix.copy(matrix);
+      o.matrix.decompose(o.position, o.quaternion, o.scale);
       return o as THREE.Mesh;
     }
     for (const child of o.children) {

@@ -3,6 +3,7 @@ import { Matrix4 } from "three";
 import { Assets } from "./assets";
 import { Construction } from "./construction";
 import { Grid } from "./grid";
+import { NeighborCount } from "./neighborCount";
 import { PointMapOctoTree } from "./octoTree";
 import { PointSet } from "./pointSet";
 
@@ -20,7 +21,18 @@ export class MeshCollection extends THREE.Object3D
     super();
     for (const name of assets.names()) {
       const mesh = assets.getMesh(name);
-      this.defineItem(name, mesh.geometry, mesh.material as THREE.Material);
+      let oldMaterial = mesh.material as THREE.Material;
+      let newMaterial = oldMaterial;
+      if (oldMaterial.type === 'MeshPhysicalMaterial') {
+        let m = oldMaterial as THREE.MeshPhysicalMaterial;
+        console.log(m);
+        newMaterial = new THREE.MeshPhongMaterial({
+          color: m.color,
+          shininess: 1.0,
+          emissive: m.emissive,
+        });
+      }
+      this.defineItem(name, mesh.geometry, newMaterial);
     }
   }
 
@@ -72,15 +84,29 @@ export class MeshCollection extends THREE.Object3D
   public buildGeometry() {
     this.children.splice(0);
     this.meshMap.clear();
+
+    const nc = new NeighborCount<string>();
+
+    // Populate the neighbor mesh
     for (const [name, matricies] of this.matrixMap.entries()) {
       const instancedMesh = new THREE.InstancedMesh(
         this.geometryMap.get(name), this.materialMap.get(name),
         matricies.length);
+      instancedMesh.count = 0;
       for (let i = 0; i < matricies.length; ++i) {
-        instancedMesh.setMatrixAt(i, matricies[i]);
+        // TODO: If it's not a "solid" cube, we shouldn't add it.
+        nc.set(matricies[i], name);
       }
       this.meshMap.set(name, instancedMesh);
       this.add(instancedMesh);
+    }
+
+    for (const mav of nc.externalElements()) {
+      const name = mav.value;
+      const matrix = mav.m;
+      const instancedMesh = this.meshMap.get(name);
+      const i = instancedMesh.count++;
+      instancedMesh.setMatrixAt(i, matrix);
     }
   }
 
