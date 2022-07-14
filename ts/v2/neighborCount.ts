@@ -14,30 +14,42 @@ export class NeighborCount<T> {
   private neighborCount = new Map<string, number>();
   private data = new Map<string, MatrixAnd<T>>();
 
-  private toKey(position: THREE.Vector3) {
-    return `${[position.x, position.y, position.z]}`;
+  private toKey(x: number, y: number, z: number) {
+    return `${[x, y, z]}`;
+  }
+
+  private addOrIncrement(key: string, m: Map<string, number>) {
+    if (m.has(key)) {
+      m.set(key, m.get(key) + 1);
+    } else {
+      m.set(key, 1);
+    }
   }
 
   private tmp = new THREE.Vector3();
   public set(m: THREE.Matrix4, value: T) {
     m.decompose(this.position, this.rotation, this.scale);
-    for (let dx = -1; dx <= 1; ++dx) {
-      for (let dy = -1; dy <= 1; ++dy) {
-        for (let dz = -1; dz <= 1; ++dz) {
-          this.tmp.copy(this.position);
-          this.tmp.x += dx;
-          this.tmp.y += dy;
-          this.tmp.z += dz;
-          const key = this.toKey(this.tmp)
-          if (this.neighborCount.has(key)) {
-            this.neighborCount.set(key, this.neighborCount.get(key) + 1);
-          } else {
-            this.neighborCount.set(key, 1);
-          }
-        }
-      }
-    }
-    this.data.set(this.toKey(this.position),
+    this.addOrIncrement(
+      this.toKey(this.position.x, this.position.y, this.position.z + 1),
+      this.neighborCount);
+    this.addOrIncrement(
+      this.toKey(this.position.x, this.position.y, this.position.z - 1),
+      this.neighborCount);
+    this.addOrIncrement(
+      this.toKey(this.position.x, this.position.y + 1, this.position.z),
+      this.neighborCount);
+    this.addOrIncrement(
+      this.toKey(this.position.x, this.position.y - 1, this.position.z),
+      this.neighborCount);
+    this.addOrIncrement(
+      this.toKey(this.position.x + 1, this.position.y, this.position.z),
+      this.neighborCount);
+    this.addOrIncrement(
+      this.toKey(this.position.x - 1, this.position.y, this.position.z),
+      this.neighborCount);
+
+    this.data.set(this.toKey(
+      this.position.x, this.position.y, this.position.z),
       new MatrixAnd<T>(m, value));
   }
 
@@ -47,7 +59,7 @@ export class NeighborCount<T> {
 
   public *externalElements() {
     for (const [key, matrixAndT] of this.data.entries()) {
-      if (this.neighborCount.get(key) < 27) {
+      if (this.neighborCount.get(key) < 6) {
         yield matrixAndT;
       }
     }
