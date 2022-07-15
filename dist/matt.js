@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 398:
+/***/ 7398:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27,10 +27,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Assets = exports.Item = exports.ModelLoader = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
-const palette_1 = __webpack_require__(812);
-const GLTFLoader_js_1 = __webpack_require__(217);
+const THREE = __importStar(__webpack_require__(5232));
+const debug_1 = __webpack_require__(8756);
+const palette_1 = __webpack_require__(5812);
+const GLTFLoader_js_1 = __webpack_require__(9217);
 class ModelLoader {
     static async loadModel(filename) {
         const loader = new GLTFLoader_js_1.GLTFLoader();
@@ -270,13 +270,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AstroGen = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const three_1 = __webpack_require__(232);
-const assets_1 = __webpack_require__(398);
-const debug_1 = __webpack_require__(756);
-const inWorldItem_1 = __webpack_require__(116);
+const THREE = __importStar(__webpack_require__(5232));
+const three_1 = __webpack_require__(5232);
+const assets_1 = __webpack_require__(7398);
+const debug_1 = __webpack_require__(8756);
+const inWorldItem_1 = __webpack_require__(9116);
 const fileIO_1 = __webpack_require__(3);
-const codec_1 = __webpack_require__(385);
+const codec_1 = __webpack_require__(5385);
 class rarity {
     modelName;
     period;
@@ -563,30 +563,30 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BlockBuild = void 0;
-const THREE = __importStar(__webpack_require__(232));
+const THREE = __importStar(__webpack_require__(5232));
 // import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-const VRButton_js_1 = __webpack_require__(18);
-const tick_1 = __webpack_require__(544);
-const hand_1 = __webpack_require__(673);
-const place_1 = __webpack_require__(151);
-const debug_1 = __webpack_require__(756);
-const assets_1 = __webpack_require__(398);
-const construction_1 = __webpack_require__(844);
+const VRButton_js_1 = __webpack_require__(9018);
+const tick_1 = __webpack_require__(5544);
+const hand_1 = __webpack_require__(7673);
+const place_1 = __webpack_require__(9151);
+const debug_1 = __webpack_require__(8756);
+const assets_1 = __webpack_require__(7398);
+const construction_1 = __webpack_require__(3844);
 const astroGen_1 = __webpack_require__(419);
-const settings_1 = __webpack_require__(451);
-const player_1 = __webpack_require__(507);
-const gripLike_1 = __webpack_require__(875);
+const settings_1 = __webpack_require__(6451);
+const player_1 = __webpack_require__(7507);
+const gripLike_1 = __webpack_require__(8875);
 const computer_1 = __webpack_require__(885);
-const skyBox_1 = __webpack_require__(813);
-const pointCloud_1 = __webpack_require__(996);
-const pointCloud2_1 = __webpack_require__(386);
-const modelCloud_1 = __webpack_require__(879);
-const starSystem_1 = __webpack_require__(445);
+const skyBox_1 = __webpack_require__(4813);
+const pointCloud_1 = __webpack_require__(9996);
+const pointCloud2_1 = __webpack_require__(9386);
+const modelCloud_1 = __webpack_require__(9879);
+const starSystem_1 = __webpack_require__(8445);
 const universe_1 = __webpack_require__(670);
-const system_1 = __webpack_require__(855);
-const exchange_1 = __webpack_require__(253);
-const factory_1 = __webpack_require__(211);
-const inWorldItem_1 = __webpack_require__(116);
+const system_1 = __webpack_require__(1855);
+const exchange_1 = __webpack_require__(1253);
+const factory_1 = __webpack_require__(6211);
+const inWorldItem_1 = __webpack_require__(9116);
 class BlockBuild {
     scene = new THREE.Scene();
     camera;
@@ -877,7 +877,7 @@ exports.BlockBuild = BlockBuild;
 
 /***/ }),
 
-/***/ 770:
+/***/ 9770:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -902,7 +902,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ButtonDispatcher = void 0;
-const THREE = __importStar(__webpack_require__(232));
+const THREE = __importStar(__webpack_require__(5232));
 class Button {
     o;
     localPosition;
@@ -970,7 +970,7 @@ exports.ButtonDispatcher = ButtonDispatcher;
 
 /***/ }),
 
-/***/ 385:
+/***/ 5385:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -995,10 +995,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Codec = exports.Decode = exports.Encode = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const assets_1 = __webpack_require__(398);
-const debug_1 = __webpack_require__(756);
-const inWorldItem_1 = __webpack_require__(116);
+const THREE = __importStar(__webpack_require__(5232));
+const assets_1 = __webpack_require__(7398);
+const debug_1 = __webpack_require__(8756);
+const inWorldItem_1 = __webpack_require__(9116);
 class Encode {
     static inWorldItem(o) {
         const result = {};
@@ -1100,10 +1100,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Computer = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const assets_1 = __webpack_require__(398);
-const buttonDispatcher_1 = __webpack_require__(770);
-const debug_1 = __webpack_require__(756);
+const THREE = __importStar(__webpack_require__(5232));
+const assets_1 = __webpack_require__(7398);
+const buttonDispatcher_1 = __webpack_require__(9770);
+const debug_1 = __webpack_require__(8756);
 class RowText {
     rowText = [];
     dirty;
@@ -1351,7 +1351,7 @@ exports.Computer = Computer;
 
 /***/ }),
 
-/***/ 844:
+/***/ 3844:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1375,13 +1375,62 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ObjectConstruction = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const codec_1 = __webpack_require__(385);
-const debug_1 = __webpack_require__(756);
+exports.ObjectConstruction = exports.ReadWriteConstruction = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+const codec_1 = __webpack_require__(5385);
+const debug_1 = __webpack_require__(8756);
 const fileIO_1 = __webpack_require__(3);
-const settings_1 = __webpack_require__(451);
-const unionGeometryContainer_1 = __webpack_require__(614);
+const settings_1 = __webpack_require__(6451);
+const unionGeometryContainer_1 = __webpack_require__(4614);
+// A construction which writes new blocks to `readWriteConstruction` and
+// reads cubes from either construction.
+// Typical usage is to populate readConstruction with some initial state
+// (e.g. a platform), and pass an empty construction to readWriteConstruction.
+// When mining (i.e. removeCube) it will mine from `readConstruction` if there
+// is something there, otherwise try to mine from `readWriteConstruction`.
+class ReadWriteConstruction {
+    readConstruction;
+    readWriteConstruction;
+    constructor(readConstruction, readWriteConstruction) {
+        this.readConstruction = readConstruction;
+        this.readWriteConstruction = readWriteConstruction;
+    }
+    addCube(o) {
+        this.readWriteConstruction.addCube(o);
+    }
+    removeCube(p) {
+        if (this.readConstruction.cubeAt(p)) {
+            return this.readConstruction.removeCube(p);
+        }
+        else {
+            return this.readWriteConstruction.removeCube(p);
+        }
+    }
+    cubeAt(p) {
+        return this.readConstruction.cubeAt(p) ||
+            this.readWriteConstruction.cubeAt(p);
+    }
+    save() {
+        // TODO: This probably needs some work.
+        this.readConstruction.save();
+        this.readWriteConstruction.save();
+    }
+    saveToLocal() {
+        // TODO: This probably needs some work.
+        this.readConstruction.saveToLocal();
+        this.readWriteConstruction.saveToLocal();
+    }
+    loadFromLocal() {
+        // TODO: This probably needs some work.
+        this.readConstruction.loadFromLocal();
+        this.readWriteConstruction.loadFromLocal();
+    }
+    *cubes() {
+        yield* this.readConstruction.cubes();
+        yield* this.readWriteConstruction.cubes();
+    }
+}
+exports.ReadWriteConstruction = ReadWriteConstruction;
 class GroupContainer {
     container;
     objects = new Map();
@@ -1479,7 +1528,7 @@ exports.ObjectConstruction = ObjectConstruction;
 
 /***/ }),
 
-/***/ 756:
+/***/ 8756:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1504,7 +1553,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Debug = void 0;
-const THREE = __importStar(__webpack_require__(232));
+const THREE = __importStar(__webpack_require__(5232));
 class Debug extends THREE.Object3D {
     static canvas = document.createElement('canvas');
     static messages = [];
@@ -1556,7 +1605,7 @@ exports.Debug = Debug;
 
 /***/ }),
 
-/***/ 253:
+/***/ 1253:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -1721,7 +1770,7 @@ exports.Exchange = Exchange;
 
 /***/ }),
 
-/***/ 211:
+/***/ 6211:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1746,8 +1795,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Factory = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const inWorldItem_1 = __webpack_require__(116);
+const THREE = __importStar(__webpack_require__(5232));
+const inWorldItem_1 = __webpack_require__(9116);
 class Counter {
     m = new Map();
     get(k) {
@@ -1891,7 +1940,7 @@ exports.Factory = Factory;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileIO = void 0;
-const debug_1 = __webpack_require__(756);
+const debug_1 = __webpack_require__(8756);
 class FileIO {
     static saveObjectAsJson(content, fileName) {
         const a = document.createElement("a");
@@ -1931,7 +1980,7 @@ exports.FileIO = FileIO;
 
 /***/ }),
 
-/***/ 417:
+/***/ 1417:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1956,13 +2005,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Game = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const tick_1 = __webpack_require__(544);
-const VRButton_js_1 = __webpack_require__(18);
-const veryLargeUniverse_1 = __webpack_require__(453);
-const settings_1 = __webpack_require__(451);
-const materialExplorer_1 = __webpack_require__(587);
-const assets_1 = __webpack_require__(398);
+const THREE = __importStar(__webpack_require__(5232));
+const tick_1 = __webpack_require__(5544);
+const VRButton_js_1 = __webpack_require__(9018);
+const veryLargeUniverse_1 = __webpack_require__(8453);
+const settings_1 = __webpack_require__(6451);
+const materialExplorer_1 = __webpack_require__(1587);
+const assets_1 = __webpack_require__(7398);
 class Game {
     scene = new THREE.Scene();
     camera;
@@ -2045,7 +2094,7 @@ exports.Game = Game;
 
 /***/ }),
 
-/***/ 875:
+/***/ 8875:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2070,8 +2119,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MouseGrip = exports.GripGrip = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
+const THREE = __importStar(__webpack_require__(5232));
+const debug_1 = __webpack_require__(8756);
 class GripGrip extends THREE.Object3D {
     index;
     xr;
@@ -2194,7 +2243,7 @@ exports.MouseGrip = MouseGrip;
 
 /***/ }),
 
-/***/ 673:
+/***/ 7673:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2219,12 +2268,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Hand = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
-const assets_1 = __webpack_require__(398);
-const inWorldItem_1 = __webpack_require__(116);
-const settings_1 = __webpack_require__(451);
-const buttonDispatcher_1 = __webpack_require__(770);
+const THREE = __importStar(__webpack_require__(5232));
+const debug_1 = __webpack_require__(8756);
+const assets_1 = __webpack_require__(7398);
+const inWorldItem_1 = __webpack_require__(9116);
+const settings_1 = __webpack_require__(6451);
+const buttonDispatcher_1 = __webpack_require__(9770);
 class Hand extends THREE.Object3D {
     grip;
     item;
@@ -2476,7 +2525,7 @@ exports.Hand = Hand;
 
 /***/ }),
 
-/***/ 116:
+/***/ 9116:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2501,9 +2550,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InWorldItem = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const assets_1 = __webpack_require__(398);
-const debug_1 = __webpack_require__(756);
+const THREE = __importStar(__webpack_require__(5232));
+const assets_1 = __webpack_require__(7398);
+const debug_1 = __webpack_require__(8756);
 // Represents an item which exists in the universe.
 class InWorldItem {
     item;
@@ -2544,7 +2593,7 @@ exports.InWorldItem = InWorldItem;
 
 /***/ }),
 
-/***/ 587:
+/***/ 1587:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2569,9 +2618,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MaterialExplorer = void 0;
-const THREE = __importStar(__webpack_require__(232));
+const THREE = __importStar(__webpack_require__(5232));
 const astroGen_1 = __webpack_require__(419);
-const construction_1 = __webpack_require__(844);
+const construction_1 = __webpack_require__(3844);
 class CodeSnippet {
     codeType;
     code;
@@ -3079,7 +3128,7 @@ exports.MaterialExplorer = MaterialExplorer;
 
 /***/ }),
 
-/***/ 529:
+/***/ 3529:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3104,8 +3153,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MergedGeometryContainer = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const three_1 = __webpack_require__(232);
+const THREE = __importStar(__webpack_require__(5232));
+const three_1 = __webpack_require__(5232);
 class MergableSet {
     children = [];
     size = 0;
@@ -3405,7 +3454,7 @@ exports.MergedGeometryContainer = MergedGeometryContainer;
 
 /***/ }),
 
-/***/ 879:
+/***/ 9879:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3430,7 +3479,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ModelCloud = void 0;
-const THREE = __importStar(__webpack_require__(232));
+const THREE = __importStar(__webpack_require__(5232));
 class ModelCloud extends THREE.Object3D {
     factory;
     cloud;
@@ -3494,7 +3543,7 @@ exports.ModelCloud = ModelCloud;
 
 /***/ }),
 
-/***/ 812:
+/***/ 5812:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3519,8 +3568,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PaletteTest = exports.Palette = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const VRButton_js_1 = __webpack_require__(18);
+const THREE = __importStar(__webpack_require__(5232));
+const VRButton_js_1 = __webpack_require__(9018);
 class Palette {
     static primary;
     static secondary;
@@ -3684,7 +3733,7 @@ exports.PaletteTest = PaletteTest;
 
 /***/ }),
 
-/***/ 151:
+/***/ 9151:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3709,7 +3758,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Place = void 0;
-const THREE = __importStar(__webpack_require__(232));
+const THREE = __importStar(__webpack_require__(5232));
 // Groups representing the universe, the player, and the camera.
 // This class is used to control movement of the player through the environment.
 // For now we're implementing it so the player moves through the universe.
@@ -3821,7 +3870,7 @@ exports.Place = Place;
 
 /***/ }),
 
-/***/ 507:
+/***/ 7507:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3846,11 +3895,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Station = exports.Player = exports.Inventory = void 0;
-const exchange_1 = __webpack_require__(253);
-const THREE = __importStar(__webpack_require__(232));
-const assets_1 = __webpack_require__(398);
-const debug_1 = __webpack_require__(756);
-const settings_1 = __webpack_require__(451);
+const exchange_1 = __webpack_require__(1253);
+const THREE = __importStar(__webpack_require__(5232));
+const assets_1 = __webpack_require__(7398);
+const debug_1 = __webpack_require__(8756);
+const settings_1 = __webpack_require__(6451);
 // this class has one instance per item type.
 // Probably don't want to keep it in player.ts, 
 //    or maybe this file contains more that just player classes.
@@ -3920,7 +3969,7 @@ exports.Station = Station;
 
 /***/ }),
 
-/***/ 996:
+/***/ 9996:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3945,8 +3994,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PointCloud1 = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const pointMap_1 = __webpack_require__(228);
+const THREE = __importStar(__webpack_require__(5232));
+const pointMap_1 = __webpack_require__(8228);
 class PointCloud1 extends THREE.Object3D {
     color;
     pointRadius;
@@ -4072,7 +4121,7 @@ exports.PointCloud1 = PointCloud1;
 
 /***/ }),
 
-/***/ 386:
+/***/ 9386:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4097,8 +4146,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PointCloud2 = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const pointMap_1 = __webpack_require__(228);
+const THREE = __importStar(__webpack_require__(5232));
+const pointMap_1 = __webpack_require__(8228);
 class PointCloud2 extends THREE.Object3D {
     color;
     pointRadius;
@@ -4237,7 +4286,7 @@ exports.PointCloud2 = PointCloud2;
 
 /***/ }),
 
-/***/ 228:
+/***/ 8228:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4262,8 +4311,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PointMapOctoTree = exports.AABB = exports.PointMapLinear = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const debug_1 = __webpack_require__(756);
+const THREE = __importStar(__webpack_require__(5232));
+const debug_1 = __webpack_require__(8756);
 class PointKey {
     point;
     value;
@@ -4420,7 +4469,7 @@ exports.PointMapOctoTree = PointMapOctoTree;
 
 /***/ }),
 
-/***/ 451:
+/***/ 6451:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -4452,13 +4501,16 @@ class S {
         S.setDefault('sr', 10e9, 'Universe radius');
         S.setDefault('ar', 1e6, 'Asteroid belt radius');
         S.setDefault('ss', 100e3, 'Radius of a single star');
-        S.setDefault('sp', 50e6, 'Star System "Pop" radius');
-        S.setDefault('as', 1e2, 'Radius of a single asteroid');
+        S.setDefault('sp', 200e6, 'Star System "Pop" radius');
+        S.setDefault('as', 5, 'Radius of a single asteroid');
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('ns', 10e3, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
+        S.setDefault('ni', 1000, 'Instances Per Mesh');
+        S.setDefault('rs', 20, 'Number of ray steps');
         S.setDefault('bai', 0, 'If non-zero, starts with one of everything in the world.');
         S.setDefault('sa', 1e3, 'Starship Acceleration');
+        S.setDefault('rv', 2.0, 'Starship relative velocity');
         S.setDefault('m', 1, 'Use merged geometry in Block Build.');
         S.setDefault('hr', -0.5, 'Distance from eye level to hand resting height.');
         S.setDefault('pbf', 1e7, 'Point brightness factor');
@@ -4489,7 +4541,7 @@ exports.S = S;
 
 /***/ }),
 
-/***/ 813:
+/***/ 4813:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4514,7 +4566,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SkyBox = void 0;
-const THREE = __importStar(__webpack_require__(232));
+const THREE = __importStar(__webpack_require__(5232));
 class SkyBox extends THREE.Object3D {
     constructor() {
         super();
@@ -4556,7 +4608,7 @@ exports.SkyBox = SkyBox;
 
 /***/ }),
 
-/***/ 445:
+/***/ 8445:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4581,9 +4633,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StarSystem = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const pointCloud2_1 = __webpack_require__(386);
-const settings_1 = __webpack_require__(451);
+const THREE = __importStar(__webpack_require__(5232));
+const pointCloud2_1 = __webpack_require__(9386);
+const settings_1 = __webpack_require__(6451);
 class StarSystem extends THREE.Object3D {
     material;
     constructor(camera) {
@@ -4713,7 +4765,7 @@ exports.StarSystem = StarSystem;
 
 /***/ }),
 
-/***/ 855:
+/***/ 1855:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -4745,7 +4797,7 @@ exports.Body = Body;
 
 /***/ }),
 
-/***/ 544:
+/***/ 5544:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -4766,7 +4818,7 @@ exports.Tick = Tick;
 
 /***/ }),
 
-/***/ 614:
+/***/ 4614:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4791,8 +4843,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UnionGeometryContainer = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const mergedGeometryContainer_1 = __webpack_require__(529);
+const THREE = __importStar(__webpack_require__(5232));
+const mergedGeometryContainer_1 = __webpack_require__(3529);
 class UnionGeometryContainer extends THREE.Object3D {
     childContainers = new Map();
     locatedObjects = new Map();
@@ -4842,7 +4894,7 @@ exports.Universe = Universe;
 
 /***/ }),
 
-/***/ 453:
+/***/ 8453:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4867,11 +4919,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VeryLargeUniverse = void 0;
-const THREE = __importStar(__webpack_require__(232));
-const settings_1 = __webpack_require__(451);
-const starSystem_1 = __webpack_require__(445);
-const pointCloud_1 = __webpack_require__(996);
-const modelCloud_1 = __webpack_require__(879);
+const THREE = __importStar(__webpack_require__(5232));
+const settings_1 = __webpack_require__(6451);
+const starSystem_1 = __webpack_require__(8445);
+const pointCloud_1 = __webpack_require__(9996);
+const modelCloud_1 = __webpack_require__(9879);
 // A collection of StarSystems.  We only instantiate the StarSystem object
 // when the world origin is close to it.
 class VeryLargeUniverse extends THREE.Object3D {
@@ -5041,7 +5093,7 @@ exports.VeryLargeUniverse = VeryLargeUniverse;
 
 /***/ }),
 
-/***/ 232:
+/***/ 5232:
 /***/ ((__unused_webpack_module, exports) => {
 
 /**
@@ -41835,7 +41887,7 @@ exports.sRGBEncoding = sRGBEncoding;
 
 /***/ }),
 
-/***/ 217:
+/***/ 9217:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 // ESM COMPAT FLAG
@@ -96926,7 +96978,7 @@ function toTrianglesDrawMode( geometry, drawMode ) {
 
 /***/ }),
 
-/***/ 18:
+/***/ 9018:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -97208,9 +97260,9 @@ var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
 const blockBuild_1 = __webpack_require__(64);
-const debug_1 = __webpack_require__(756);
-const game_1 = __webpack_require__(417);
-const settings_1 = __webpack_require__(451);
+const debug_1 = __webpack_require__(8756);
+const game_1 = __webpack_require__(1417);
+const settings_1 = __webpack_require__(6451);
 debug_1.Debug.log(`Start home: ${settings_1.S.float('sh')}`);
 if (settings_1.S.float('sh') < 2 || !settings_1.S.float('sh')) {
     new blockBuild_1.BlockBuild();
