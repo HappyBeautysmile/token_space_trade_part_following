@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { Item } from "./assets";
+import { Assets, Item } from "./assets";
 import { Construction } from "./construction";
 import { InWorldItem } from "./inWorldItem";
 import { Tick, Ticker } from "./tick";
@@ -36,16 +36,25 @@ export class Factory implements Ticker {
   private construction: Construction = undefined;
   private position: THREE.Vector3 = new THREE.Vector3();
   private outDriection: THREE.Vector3 = new THREE.Vector3();
+  private outputItem: Item;
   constructor(private inputSpec: Specification,
-    private outputType: Item,
+    private outputName: string,
     private outputQty: number,
     private searchTimeS: number,
-    private buildTimeS: number) { }
+    private buildTimeS: number) {
+    this.outputItem = Assets.itemsByName.get(outputName);
+  }
 
   public setHome(construction: Construction,
     position: THREE.Vector3, outDirection: THREE.Vector3) {
     this.construction = construction;
     this.position.copy(position);
+    const prod = Assets.itemsByName.get(this.outputName.concat("Producer"));
+    const inWorldItem = new InWorldItem(
+      prod,
+      position,
+      new THREE.Quaternion());
+    this.construction.addCube(inWorldItem);
     this.outDriection.copy(outDirection);
   }
 
@@ -116,7 +125,7 @@ export class Factory implements Ticker {
         }
       }
       this.construction.addCube(
-        new InWorldItem(this.outputType, cursor, new THREE.Quaternion()));
+        new InWorldItem(this.outputItem, cursor, new THREE.Quaternion()));
     }
   }
 
