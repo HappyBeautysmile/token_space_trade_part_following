@@ -9,48 +9,51 @@ import { S } from "./settings";
 //    or maybe this file contains more that just player classes.
 
 export class Inventory {
-  private itemQty = new Map<Item, number>();
+  private itemQtyMap = new Map<Item, number>();
   private index = 0;
 
   constructor() {
     if (S.float('cr') > 0) {
       for (const item of Assets.items) {
-        this.itemQty.set(item, S.float('cr'));
+        this.itemQtyMap.set(item, S.float('cr'));
       }
     }
   }
 
   addItem(input: Item) {
     Debug.log("adding " + JSON.stringify(input));
-    if (this.itemQty.has(input)) {
-      this.itemQty.set(input, this.itemQty.get(input) + 1);
+    if (this.itemQtyMap.has(input)) {
+      this.itemQtyMap.set(input, this.itemQtyMap.get(input) + 1);
     } else {
-      this.itemQty.set(input, 1);
+      this.itemQtyMap.set(input, 1);
     }
   }
 
   removeItem(input: Item) {
     Debug.log("removing " + JSON.stringify(input));
-    if (this.itemQty.has(input)) {
-      this.itemQty.set(input, this.itemQty.get(input) - 1);
-      if (this.itemQty.get(input) < 1) {
-        this.itemQty.delete(input);
+    if (this.itemQtyMap.has(input)) {
+      this.itemQtyMap.set(input, this.itemQtyMap.get(input) - 1);
+      if (this.itemQtyMap.get(input) < 1) {
+        this.itemQtyMap.delete(input);
       }
     }
 
   }
 
   nextItem() {
-    const num_elements = this.itemQty.size;
+    const num_elements = this.itemQtyMap.size;
     if (num_elements < 1) {
       return null;
     }
     this.index = (this.index + 1) % num_elements;
-    return Array.from(this.itemQty)[this.index][0];
+    return Array.from(this.itemQtyMap)[this.index][0];
   }
 
-  getItemQty() {
-    return this.itemQty;
+  getItemQtyMap() {
+    return this.itemQtyMap;
+  }
+  qtyOfItem(i: Item) {
+    return this.itemQtyMap.get(i);
   }
 }
 
