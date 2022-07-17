@@ -394,11 +394,31 @@ exports.AstroGen = AstroGen;
 /***/ }),
 
 /***/ 5417:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Controls = void 0;
+const THREE = __importStar(__webpack_require__(5232));
 class Controls {
     static keysDown = (() => {
         const km = new Set();
@@ -462,6 +482,29 @@ class Controls {
         }
         return result;
     }
+    static pointer = new THREE.Vector2();
+    static raycaster = new THREE.Raycaster();
+    static initialized = false;
+    static initialize() {
+        const canvas = document.getElementsByTagName('canvas')[0];
+        canvas.addEventListener('mousemove', (ev) => {
+            // calculate pointer position in normalized device coordinates
+            // (-1 to +1) for both components
+            Controls.pointer.x = (ev.clientX / canvas.width) * 2 - 1;
+            Controls.pointer.y = -(ev.clientY / canvas.height) * 2 + 1;
+        });
+    }
+    static setPositions(left, right, camera) {
+        if (!Controls.initialized) {
+            Controls.initialize();
+            Controls.initialized = true;
+        }
+        // TODO: if grips have not been set.
+        Controls.raycaster.setFromCamera(Controls.pointer, camera);
+        left.copy(Controls.raycaster.ray.direction);
+        left.add(Controls.raycaster.ray.origin);
+        right.set(0, 0, 0);
+    }
     static session = undefined;
     static leftSource = undefined;
     static rightSource = undefined;
@@ -484,6 +527,72 @@ class Controls {
 }
 exports.Controls = Controls;
 //# sourceMappingURL=controls.js.map
+
+/***/ }),
+
+/***/ 4217:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Cursor = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class Cursor extends THREE.LineSegments {
+    constructor() {
+        const points = [];
+        // four left to right lines
+        points.push(new THREE.Vector3(-0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, 0.5));
+        // four front to back lines
+        points.push(new THREE.Vector3(-0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, 0.5));
+        // four up and down lines
+        points.push(new THREE.Vector3(-0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, 0.5));
+        const material = new THREE.LineBasicMaterial({ color: "#0f0", linewidth: 1 });
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        super(geometry, material);
+    }
+}
+exports.Cursor = Cursor;
+//# sourceMappingURL=cursor.js.map
 
 /***/ }),
 
@@ -1234,6 +1343,62 @@ exports.PointMapOctoTree = PointMapOctoTree;
 
 /***/ }),
 
+/***/ 5326:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Player = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+const grid_1 = __webpack_require__(3424);
+class Player {
+    position = new THREE.Vector3();
+    rotation = new THREE.Quaternion();
+    serialize() {
+        const o = {};
+        o['position'] =
+            { x: this.position.x, y: this.position.y, z: this.position.z };
+        o['rotation'] = {
+            x: this.rotation.x, y: this.rotation.y,
+            z: this.rotation.z, w: this.rotation.w
+        };
+        return o;
+    }
+    deserialize(o) {
+        this.position.copy(o['position']);
+        this.rotation.copy(o['rotation']);
+        return this;
+    }
+    fallback(p) {
+        this.position.set(0, 0, 0);
+        this.rotation.copy(grid_1.Grid.notRotated);
+        return this;
+    }
+}
+exports.Player = Player;
+//# sourceMappingURL=player.js.map
+
+/***/ }),
+
 /***/ 7273:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1694,9 +1859,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Stellar = void 0;
 const THREE = __importStar(__webpack_require__(5232));
 const VRButton_js_1 = __webpack_require__(9018);
+const player_1 = __webpack_require__(5326);
 const settings_1 = __webpack_require__(6451);
 const assets_1 = __webpack_require__(7253);
 const controls_1 = __webpack_require__(5417);
+const cursor_1 = __webpack_require__(4217);
 const file_1 = __webpack_require__(5013);
 const nebulaSphere_1 = __webpack_require__(5387);
 const pointSet_1 = __webpack_require__(7536);
@@ -1706,12 +1873,16 @@ class Stellar {
     camera;
     renderer;
     universe = new THREE.Group();
-    player = new THREE.Group();
+    playerGroup = new THREE.Group();
+    player = new player_1.Player();
     allPoints = new pointSet_1.PointCloudUnion();
     stars;
     nebulae = new nebulaSphere_1.NebulaSphere();
+    cursor = new cursor_1.Cursor();
+    leftPosition = new THREE.Vector3();
+    rightPosition = new THREE.Vector3();
     constructor() {
-        this.scene.add(this.player);
+        this.scene.add(this.playerGroup);
         this.scene.add(this.universe);
         this.initialize();
     }
@@ -1728,6 +1899,12 @@ class Stellar {
             this.tmpV.copy(this.universe.position);
             this.tmpV.multiplyScalar(-1);
             // this.nebulae.updatePosition(this.tmpV);
+            controls_1.Controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
+            this.leftPosition.sub(this.camera.position);
+            this.leftPosition.multiplyScalar(10);
+            this.leftPosition.add(this.camera.position);
+            this.cursor.position.copy(this.leftPosition);
+            this.playerGroup.worldToLocal(this.cursor.position);
         });
     }
     initializeGraphics() {
@@ -1735,7 +1912,7 @@ class Stellar {
         this.camera = new THREE.PerspectiveCamera(75, 1.0, /*near=*/ 0.1, /*far=*/ 2000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
-        this.player.add(this.camera);
+        this.playerGroup.add(this.camera);
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(512, 512);
         document.body.appendChild(this.renderer.domElement);
@@ -1744,11 +1921,13 @@ class Stellar {
     }
     tmpV = new THREE.Vector3();
     distanceToClosest() {
-        this.tmpV.copy(this.player.position);
+        this.tmpV.copy(this.playerGroup.position);
         this.tmpV.sub(this.universe.position);
         return this.allPoints.getClosestDistance(this.tmpV);
     }
     velocityVector = new THREE.Vector3();
+    q = new THREE.Quaternion();
+    yAxis = new THREE.Vector3(0, 1, 0);
     handleControls(deltaS) {
         if (!controls_1.Controls.hasSession()) {
             const session = this.renderer.xr.getSession();
@@ -1760,13 +1939,17 @@ class Stellar {
         this.velocityVector.set(controls_1.Controls.leftRight(), controls_1.Controls.upDown(), controls_1.Controls.forwardBack());
         if (this.velocityVector.lengthSq() > 0) {
             this.velocityVector.multiplyScalar(velocity * deltaS);
-            this.velocityVector.applyQuaternion(this.player.quaternion);
-            this.universe.position.sub(this.velocityVector);
+            this.velocityVector.applyQuaternion(this.playerGroup.quaternion);
+            this.player.position.add(this.velocityVector);
         }
         const spinRate = controls_1.Controls.spinLeftRight();
         if (spinRate != 0) {
-            this.player.rotateY(deltaS * spinRate * 3);
+            this.q.setFromAxisAngle(this.yAxis, deltaS * spinRate * 3);
+            this.player.rotation.multiply(this.q);
         }
+        this.universe.position.copy(this.player.position);
+        this.universe.position.multiplyScalar(-1);
+        this.playerGroup.quaternion.copy(this.player.rotation);
     }
     async initializeWorld() {
         // this.scene.add(this.nebulae);
@@ -1782,6 +1965,9 @@ class Stellar {
         file_1.File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
         this.universe.add(this.stars);
         this.allPoints.add(this.stars);
+        this.playerGroup.add(this.cursor);
+        file_1.File.load(this.player, 'Player', new THREE.Vector3(0, 0, 0));
+        setInterval(() => { file_1.File.save(this.player, 'Player'); }, 1000);
         return;
     }
 }

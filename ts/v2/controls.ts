@@ -84,6 +84,7 @@ export class Controls {
     camera: THREE.PerspectiveCamera) {
     if (!Controls.initialized) {
       Controls.initialize();
+      Controls.initialized = true;
     }
     // TODO: if grips have not been set.
     Controls.raycaster.setFromCamera(Controls.pointer, camera);

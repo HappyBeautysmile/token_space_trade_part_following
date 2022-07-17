@@ -117,7 +117,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
     return this;
   }
 
-  fallback(p: THREE.Vector3) {
+  fallback(p: THREE.Vector3): this {
     this.asteroids.starPositions.clear();
     this.asteroids.build(Grid.zero,
       S.float('ar'), S.float('ar') / 10.0, S.float('ar') / 30.0,
