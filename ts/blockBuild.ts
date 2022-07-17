@@ -57,7 +57,7 @@ export class BlockBuild {
   private async initialize() {
     await this.setScene();
 
-    let exchanges = new Map();
+    let exchanges = new Map<Item, Exchange>();
     for (let i of Assets.items) {
       let exchange = new Exchange(i);
       exchanges.set(i, exchange);
@@ -98,7 +98,7 @@ export class BlockBuild {
     const inputSpec = new Map<Item, number>();
     const clay = Assets.itemsByName.get('clay');
     inputSpec.set(clay, 1);
-    const factory = new Factory(inputSpec, clay, 1, 1.2, 1.2);
+    const factory = new Factory(inputSpec, clay.name, 1, 1.2, 1.2);
     factory.setHome(this.construction, new THREE.Vector3(0, 1, -5),
       new THREE.Vector3(0, 0, -1));
     this.factories.push(factory);
