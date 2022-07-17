@@ -98,6 +98,9 @@ export class Stellar {
     light.position.set(0, 10, 2);
     this.scene.add(light);
 
+    const ambient = new THREE.AmbientLight('#aaf', 0.2);
+    this.scene.add(ambient);
+
     console.log('Initialize World');
     const assets = await Assets.load();
     console.log('Assets loaded.');

@@ -19,7 +19,7 @@ export class Assets {
   private static findFirstMesh(o: THREE.Object3D): THREE.Mesh {
     const tmpMatrix = new THREE.Matrix4();
     if (o.type === "Mesh") {
-      // console.log(`Mesh found: ${o.name}`);
+      console.log(`Mesh found: ${o.name}`);
       const matrix = new THREE.Matrix4();
       matrix.identity();
       let cursor = o;
