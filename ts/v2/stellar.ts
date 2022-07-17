@@ -3,6 +3,7 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import { S } from "../settings";
 import { Assets } from "./assets";
 import { Controls } from "./controls";
+import { Cursor } from "./cursor";
 import { File } from "./file";
 import { NebulaSphere } from "./nebulaSphere";
 import { PointCloudUnion } from "./pointSet";
@@ -18,6 +19,9 @@ export class Stellar {
   private allPoints = new PointCloudUnion();
   private stars: Stars;
   private nebulae = new NebulaSphere();
+  private cursor = new Cursor();
+  private leftPosition = new THREE.Vector3();
+  private rightPosition = new THREE.Vector3();
 
   constructor() {
     this.scene.add(this.player);
@@ -39,6 +43,12 @@ export class Stellar {
       this.tmpV.copy(this.universe.position);
       this.tmpV.multiplyScalar(-1);
       // this.nebulae.updatePosition(this.tmpV);
+      Controls.setPositions(this.leftPosition, this.rightPosition,
+        this.camera);
+      this.leftPosition.sub(this.camera.position);
+      this.leftPosition.multiplyScalar(10);
+      this.leftPosition.add(this.camera.position);
+      this.cursor.position.copy(this.leftPosition);
     });
   }
 
@@ -108,6 +118,7 @@ export class Stellar {
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
     this.allPoints.add(this.stars);
+    this.player.add(this.cursor);
     return;
   }
 }
