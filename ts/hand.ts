@@ -239,7 +239,7 @@ export class Hand extends THREE.Object3D {
         this.sendRay();
         return;
       }
-      const itemQty = this.inventory.getItemQty();
+      const itemQty = this.inventory.getItemQtyMap();
       if (itemQty.has(this.item)) {
         if (itemQty.get(this.item) > 0) {
           this.deleteCube();

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Item } from "./assets";
 import { Exchange } from "./exchange";
+import { Inventory } from "./player";
 
 export class System {
     public bodies: Map<string, Body>
@@ -20,7 +21,15 @@ type BodyType = 'Asteroid' | 'Station';
 
 export class Body {
     name: string;
-    exchanges: Map<Item, Exchange>
-    position: THREE.Vector3
-    bodyType: BodyType
+    exchanges: Exchange[];
+    position: THREE.Vector3;
+    bodyType: BodyType;
+}
+
+export class Station extends Body {
+    constructor() {
+        super();
+        this.bodyType = 'Station';
+    }
+    inventory: Inventory;
 }

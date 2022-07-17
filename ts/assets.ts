@@ -194,7 +194,7 @@ export class Assets extends THREE.Object3D {
       Assets.items.push(i);
       this.itemsByName.set(key, i);
     }
-    const producers = ['accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube',// 'ice', 'light-blue',
+    const producers = ['accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube', 'ice', 'light-blue',
       'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
       'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer'
     ]

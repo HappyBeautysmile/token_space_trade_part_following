@@ -191,7 +191,7 @@ export class Computer extends THREE.Object3D implements Ticker {
 
   private startRow = 0;
   showInventory() {
-    const inv = this.player.inventory.getItemQty();
+    const inv = this.player.inventory.getItemQtyMap();
     const qtys = Array.from(inv.values());
     const items = Array.from(inv.keys())
     this.rowText.empty()

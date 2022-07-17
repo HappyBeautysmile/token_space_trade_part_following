@@ -115,7 +115,7 @@ export class AstroGen {
     return Assets.itemsByName.get(hat[index]);
   }
 
-  private addAt(x: number, y: number, z: number) {
+  private addAt(x: number, y: number, z: number, item = null) {
     const rotation = new Matrix4();
     rotation.makeRotationFromEuler(new THREE.Euler(
       Math.round(Math.random() * 4) * Math.PI / 2,
@@ -124,11 +124,57 @@ export class AstroGen {
     ));
     const quaternion = new THREE.Quaternion();
     quaternion.setFromRotationMatrix(rotation);
+    if (!item) {
+      item = this.itemFromLocation(x, y, z)
+    }
     const inWorldItem = new InWorldItem(
-      this.itemFromLocation(x, y, z),
+      item,
       new THREE.Vector3(x, y, z),
       quaternion);
     this.construction.addCube(inWorldItem);
+  }
+
+  buildIce() {
+    // initialize
+    let depths = [];
+    for (let x = 0; x < 2; x++) {
+      let row = [];
+      for (let y = 0; y < 2; y++) {
+        row.push(this.getRandomInt(1, 3))
+      }
+      depths.push(row);
+    }
+    for (let i = 0; i < 2; i++) {
+      // double size
+      let newDepths = []
+      for (let row of depths) {
+        let newRow = []
+        for (let value of row) {
+          newRow.push(value);
+          newRow.push(value);
+        }
+        newDepths.push(newRow);
+        newDepths.push(newRow);
+      }
+      depths = newDepths
+      // add random
+      newDepths = []
+      for (let row of depths) {
+        let newRow = []
+        for (let value of row) {
+          newRow.push(value * 2 + this.getRandomInt(0, 2));
+        }
+        newDepths.push(newRow);
+      }
+      depths = newDepths
+    }
+    for (let x = 0; x < depths.length; x++) {
+      for (let z = 0; z < depths[0].length; z++) {
+        for (let y = 0; y < depths[x][z]; y++) {
+          this.addAt(x, -y, z, Assets.itemsByName.get("ice"));
+        }
+      }
+    }
   }
 
   buildOriginMarker(size: number) {
