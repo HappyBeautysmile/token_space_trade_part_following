@@ -17,22 +17,30 @@ export class MeshCollection extends THREE.Object3D
   private matrixMap = new Map<string, THREE.Matrix4[]>();
   private meshMap = new Map<string, THREE.InstancedMesh>();
 
+  private t = new THREE.Vector3();
+  private r = new THREE.Quaternion();
+  private s = new THREE.Vector3();
+
   constructor(assets: Assets) {
     super();
     for (const name of assets.names()) {
       const mesh = assets.getMesh(name);
+      // console.log(`Mesh: ${mesh.name}`);
       let oldMaterial = mesh.material as THREE.Material;
       let newMaterial = oldMaterial;
       if (oldMaterial.type === 'MeshPhysicalMaterial') {
         let m = oldMaterial as THREE.MeshPhysicalMaterial;
-        console.log(m);
+        // console.log(m);
         newMaterial = new THREE.MeshPhongMaterial({
           color: m.color,
           shininess: 1.0,
           emissive: m.emissive,
         });
       }
-      this.defineItem(name, mesh.geometry, newMaterial);
+      const geometry = mesh.geometry.clone();
+      mesh.matrix.decompose(this.t, this.r, this.s);
+      geometry.scale(this.s.x, this.s.y, this.s.z);
+      this.defineItem(name, geometry, newMaterial);
     }
   }
 
@@ -86,6 +94,7 @@ export class MeshCollection extends THREE.Object3D
     this.meshMap.clear();
 
     const nc = new NeighborCount<string>();
+    // console.log('Building mesh collection.');
 
     // Populate the neighbor mesh
     for (const [name, matricies] of this.matrixMap.entries()) {

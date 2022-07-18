@@ -35,7 +35,7 @@ class S {
         S.setDefault('ar', 1e6, 'Asteroid belt radius');
         S.setDefault('ss', 100e3, 'Radius of a single star');
         S.setDefault('sp', 200e6, 'Star System "Pop" radius');
-        S.setDefault('as', 1e2, 'Radius of a single asteroid');
+        S.setDefault('as', 5, 'Radius of a single asteroid');
         S.setDefault('ps', 30, 'Platform size.');
         S.setDefault('ns', 10e3, 'Number of stars in the VLU');
         S.setDefault('na', 700, 'Number of asteroids in a belt.');
@@ -116,11 +116,19 @@ class Assets {
         return this.namedMeshes.get(name);
     }
     static findFirstMesh(o) {
+        const tmpMatrix = new THREE.Matrix4();
         if (o.type === "Mesh") {
-            // console.log(`Mesh found: ${o.name}`);
+            console.log(`Mesh found: ${o.name}`);
             const matrix = new THREE.Matrix4();
-            matrix.compose(o.position, o.quaternion, o.scale);
+            matrix.identity();
+            let cursor = o;
+            while (cursor != null) {
+                tmpMatrix.compose(cursor.position, cursor.quaternion, cursor.scale);
+                matrix.premultiply(tmpMatrix);
+                cursor = cursor.parent;
+            }
             o.matrix.copy(matrix);
+            o.matrix.decompose(o.position, o.quaternion, o.scale);
             return o;
         }
         for (const child of o.children) {
@@ -163,20 +171,55 @@ exports.Assets = Assets;
 /***/ }),
 
 /***/ 4038:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Asteroid = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+const settings_1 = __webpack_require__(6451);
 const astroGen_1 = __webpack_require__(6647);
+const grid_1 = __webpack_require__(3424);
 const meshCollection_1 = __webpack_require__(1090);
 class Asteroid extends meshCollection_1.MeshCollection {
-    constructor(assets) {
+    controls;
+    constructor(assets, controls) {
         super(assets);
+        this.controls = controls;
+        controls.setStartStopCallback((ev) => {
+            if (ev.state == 'start') {
+                const pos = new THREE.Vector3();
+                pos.copy(ev.worldPosition);
+                this.worldToLocal(pos);
+                grid_1.Grid.round(pos);
+                const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.4, 2), new THREE.MeshPhongMaterial({ color: '#ff0', shininess: 1.0 }));
+                mesh.position.copy(pos);
+                this.add(mesh);
+            }
+        });
     }
     fallback(p) {
         const gen = new astroGen_1.AstroGen(this);
-        gen.buildAsteroid(5, 0, 0, 0);
+        gen.buildAsteroid(settings_1.S.float('as'), 0, 0, 0);
         this.buildGeometry();
         return this;
     }
@@ -385,13 +428,50 @@ exports.AstroGen = AstroGen;
 /***/ }),
 
 /***/ 5417:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Controls = void 0;
+exports.Controls = exports.StartStopEvent = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class StartStopEvent {
+    handedness;
+    state;
+    type;
+    worldPosition;
+    constructor(handedness, state, type, worldPosition) {
+        this.handedness = handedness;
+        this.state = state;
+        this.type = type;
+        this.worldPosition = worldPosition;
+    }
+}
+exports.StartStopEvent = StartStopEvent;
 class Controls {
-    static keysDown = (() => {
+    camera;
+    canvas;
+    constructor(camera, canvas) {
+        this.camera = camera;
+        this.canvas = canvas;
         const km = new Set();
         document.body.addEventListener('keydown', (ke) => {
             km.add(ke.code);
@@ -399,82 +479,204 @@ class Controls {
         document.body.addEventListener('keyup', (ke) => {
             km.delete(ke.code);
         });
-        return km;
-    })();
-    static forwardBack() {
+        this.keysDown = km;
+        canvas.addEventListener('mousemove', (ev) => {
+            // calculate pointer position in normalized device coordinates
+            // (-1 to +1) for both components
+            this.pointer.x = (ev.clientX / canvas.width) * 2 - 1;
+            this.pointer.y = -(ev.clientY / canvas.height) * 2 + 1;
+        });
+        const leftPosition = new THREE.Vector3();
+        const rightPosition = new THREE.Vector3();
+        canvas.addEventListener('mousedown', (ev) => {
+            if (!!this.startStopCallback) {
+                this.setPositions(leftPosition, rightPosition, this.camera);
+                this.startStopCallback(new StartStopEvent('left', 'start', 'grip', leftPosition));
+            }
+        });
+        canvas.addEventListener('mouseup', (ev) => {
+            if (!!this.startStopCallback) {
+                this.setPositions(leftPosition, rightPosition, this.camera);
+                this.startStopCallback(new StartStopEvent('left', 'end', 'grip', leftPosition));
+            }
+        });
+    }
+    keysDown;
+    startStopCallback = undefined;
+    setStartStopCallback(cb) {
+        this.startStopCallback = cb;
+    }
+    forwardBack() {
         let result = 0;
-        if (!!Controls.leftSource) {
-            result = Controls.leftSource.gamepad.axes[3];
+        if (!!this.leftSource) {
+            result = this.leftSource.gamepad.axes[3];
         }
-        if (Controls.keysDown.has('KeyW')) {
+        if (this.keysDown.has('KeyW')) {
             result += -1.0;
         }
-        if (Controls.keysDown.has('KeyS')) {
+        if (this.keysDown.has('KeyS')) {
             result += 1.0;
         }
         return result;
     }
-    static leftRight() {
+    leftRight() {
         let result = 0;
-        if (!!Controls.leftSource) {
-            result = Controls.leftSource.gamepad.axes[2];
+        if (!!this.leftSource) {
+            result = this.leftSource.gamepad.axes[2];
         }
-        if (Controls.keysDown.has('KeyD')) {
+        if (this.keysDown.has('KeyD')) {
             result += 1.0;
         }
-        if (Controls.keysDown.has('KeyA')) {
+        if (this.keysDown.has('KeyA')) {
             result += -1.0;
         }
         return result;
     }
-    static upDown() {
+    upDown() {
         let result = 0;
-        if (!!Controls.rightSource) {
-            result = -Controls.rightSource.gamepad.axes[3];
+        if (!!this.rightSource) {
+            result = -this.rightSource.gamepad.axes[3];
         }
-        if (Controls.keysDown.has('ArrowUp')) {
+        if (this.keysDown.has('ArrowUp')) {
             result += 1.0;
         }
-        if (Controls.keysDown.has('ArrowDown')) {
+        if (this.keysDown.has('ArrowDown')) {
             result += -1.0;
         }
         return result;
     }
-    static spinLeftRight() {
+    spinLeftRight() {
         let result = 0;
-        if (!!Controls.rightSource) {
-            result = -Math.pow(Controls.rightSource.gamepad.axes[2], 3);
+        if (!!this.rightSource) {
+            result = -Math.pow(this.rightSource.gamepad.axes[2], 3);
         }
-        if (Controls.keysDown.has('ArrowRight')) {
+        if (this.keysDown.has('ArrowRight')) {
             result += -1.0;
         }
-        if (Controls.keysDown.has('ArrowLeft')) {
+        if (this.keysDown.has('ArrowLeft')) {
             result += 1.0;
         }
         return result;
     }
-    static session = undefined;
-    static leftSource = undefined;
-    static rightSource = undefined;
-    static setSession(session) {
-        Controls.session = session;
+    pointer = new THREE.Vector2();
+    raycaster = new THREE.Raycaster();
+    setPositions(left, right, camera) {
+        // TODO: if grips have not been set.
+        this.raycaster.setFromCamera(this.pointer, camera);
+        left.copy(this.raycaster.ray.direction);
+        left.multiplyScalar(10);
+        left.add(this.raycaster.ray.origin);
+        right.set(0, 0, 0);
+    }
+    session = undefined;
+    leftSource = undefined;
+    rightSource = undefined;
+    leftGrip;
+    rightGrip;
+    tmpVector = new THREE.Vector3();
+    setSession(session, leftGrip, rightGrip) {
+        this.session = session;
+        this.leftGrip = leftGrip;
+        this.rightGrip = rightGrip;
         if (session.inputSources && session.inputSources.length >= 2) {
             for (const source of session.inputSources) {
                 if (source.handedness === 'left') {
-                    Controls.leftSource = source;
+                    this.leftSource = source;
                 }
                 else {
-                    Controls.rightSource = source;
+                    this.rightSource = source;
                 }
             }
         }
+        this.addListeners('left', leftGrip);
+        this.addListeners('right', rightGrip);
     }
-    static hasSession() {
-        return !!Controls.session && !!Controls.leftSource;
+    addListeners(side, grip) {
+        grip.addEventListener('selectstart', (ev) => {
+            if (!!this.startStopCallback) {
+                this.leftGrip.getWorldPosition(this.tmpVector);
+                this.startStopCallback(new StartStopEvent(side, 'start', 'grip', this.tmpVector));
+            }
+        });
+        grip.addEventListener('selectend', (ev) => {
+            if (!!this.startStopCallback) {
+                this.leftGrip.getWorldPosition(this.tmpVector);
+                this.startStopCallback(new StartStopEvent(side, 'end', 'grip', this.tmpVector));
+            }
+        });
+    }
+    hasSession() {
+        return !!this.session && !!this.leftSource;
     }
 }
 exports.Controls = Controls;
 //# sourceMappingURL=controls.js.map
+
+/***/ }),
+
+/***/ 4217:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Cursor = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class Cursor extends THREE.LineSegments {
+    constructor() {
+        const points = [];
+        // four left to right lines
+        points.push(new THREE.Vector3(-0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, 0.5));
+        // four front to back lines
+        points.push(new THREE.Vector3(-0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, 0.5));
+        // four up and down lines
+        points.push(new THREE.Vector3(-0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(-0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(-0.5, 0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, -0.5));
+        points.push(new THREE.Vector3(0.5, -0.5, 0.5));
+        points.push(new THREE.Vector3(0.5, 0.5, 0.5));
+        const material = new THREE.LineBasicMaterial({ color: "#0f0", linewidth: 1 });
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        super(geometry, material);
+    }
+}
+exports.Cursor = Cursor;
+//# sourceMappingURL=cursor.js.map
 
 /***/ }),
 
@@ -539,9 +741,20 @@ class Grid {
     static round(v) {
         v.set(Math.round(v.x), Math.round(v.y), Math.round(v.z));
     }
+    static lerp(a, b, p) {
+        return p * b + (1 - p) * a;
+    }
+    static roundLerp(v, p) {
+        v.set(Grid.lerp(v.x, Math.round(v.x), p), Grid.lerp(v.y, Math.round(v.y), p), Grid.lerp(v.z, Math.round(v.z), p));
+    }
     static zero = new THREE.Vector3(0, 0, 0);
     static one = new THREE.Vector3(1, 1, 1);
     static notRotated = new THREE.Quaternion(0, 0, 0, 1);
+    static makeTranslation(x, y, z) {
+        const m = new THREE.Matrix4();
+        m.makeTranslation(x, y, z);
+        return m;
+    }
 }
 exports.Grid = Grid;
 //# sourceMappingURL=grid.js.map
@@ -576,6 +789,7 @@ exports.MeshCollection = void 0;
 const THREE = __importStar(__webpack_require__(5232));
 const three_1 = __webpack_require__(5232);
 const grid_1 = __webpack_require__(3424);
+const neighborCount_1 = __webpack_require__(6516);
 const octoTree_1 = __webpack_require__(9343);
 class MeshCollection extends THREE.Object3D {
     rocks = new octoTree_1.PointMapOctoTree(grid_1.Grid.zero, 1e3);
@@ -583,11 +797,29 @@ class MeshCollection extends THREE.Object3D {
     geometryMap = new Map();
     matrixMap = new Map();
     meshMap = new Map();
+    t = new THREE.Vector3();
+    r = new THREE.Quaternion();
+    s = new THREE.Vector3();
     constructor(assets) {
         super();
         for (const name of assets.names()) {
             const mesh = assets.getMesh(name);
-            this.defineItem(name, mesh.geometry, mesh.material);
+            // console.log(`Mesh: ${mesh.name}`);
+            let oldMaterial = mesh.material;
+            let newMaterial = oldMaterial;
+            if (oldMaterial.type === 'MeshPhysicalMaterial') {
+                let m = oldMaterial;
+                // console.log(m);
+                newMaterial = new THREE.MeshPhongMaterial({
+                    color: m.color,
+                    shininess: 1.0,
+                    emissive: m.emissive,
+                });
+            }
+            const geometry = mesh.geometry.clone();
+            mesh.matrix.decompose(this.t, this.r, this.s);
+            geometry.scale(this.s.x, this.s.y, this.s.z);
+            this.defineItem(name, geometry, newMaterial);
         }
     }
     tmpV = new THREE.Vector3();
@@ -632,13 +864,25 @@ class MeshCollection extends THREE.Object3D {
     buildGeometry() {
         this.children.splice(0);
         this.meshMap.clear();
+        const nc = new neighborCount_1.NeighborCount();
+        // console.log('Building mesh collection.');
+        // Populate the neighbor mesh
         for (const [name, matricies] of this.matrixMap.entries()) {
             const instancedMesh = new THREE.InstancedMesh(this.geometryMap.get(name), this.materialMap.get(name), matricies.length);
+            instancedMesh.count = 0;
             for (let i = 0; i < matricies.length; ++i) {
-                instancedMesh.setMatrixAt(i, matricies[i]);
+                // TODO: If it's not a "solid" cube, we shouldn't add it.
+                nc.set(matricies[i], name);
             }
             this.meshMap.set(name, instancedMesh);
             this.add(instancedMesh);
+        }
+        for (const mav of nc.externalElements()) {
+            const name = mav.value;
+            const matrix = mav.m;
+            const instancedMesh = this.meshMap.get(name);
+            const i = instancedMesh.count++;
+            instancedMesh.setMatrixAt(i, matrix);
         }
     }
     serialize() {
@@ -797,6 +1041,90 @@ void main()
 }
 exports.NebulaSphere = NebulaSphere;
 //# sourceMappingURL=nebulaSphere.js.map
+
+/***/ }),
+
+/***/ 6516:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NeighborCount = exports.MatrixAnd = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class MatrixAnd {
+    m;
+    value;
+    constructor(m, value) {
+        this.m = m;
+        this.value = value;
+    }
+}
+exports.MatrixAnd = MatrixAnd;
+class NeighborCount {
+    constructor() { }
+    position = new THREE.Vector3();
+    rotation = new THREE.Quaternion();
+    scale = new THREE.Vector3();
+    neighborCount = new Map();
+    data = new Map();
+    toKey(x, y, z) {
+        return `${[x, y, z]}`;
+    }
+    addOrIncrement(key, m) {
+        if (m.has(key)) {
+            m.set(key, m.get(key) + 1);
+        }
+        else {
+            m.set(key, 1);
+        }
+    }
+    tmp = new THREE.Vector3();
+    set(m, value) {
+        m.decompose(this.position, this.rotation, this.scale);
+        const key = this.toKey(this.position.x, this.position.y, this.position.z);
+        if (this.data.has(key)) {
+            throw new Error(`Already counted: ${key}`);
+        }
+        this.data.set(key, new MatrixAnd(m, value));
+        this.addOrIncrement(this.toKey(this.position.x, this.position.y, this.position.z + 1), this.neighborCount);
+        this.addOrIncrement(this.toKey(this.position.x, this.position.y, this.position.z - 1), this.neighborCount);
+        this.addOrIncrement(this.toKey(this.position.x, this.position.y + 1, this.position.z), this.neighborCount);
+        this.addOrIncrement(this.toKey(this.position.x, this.position.y - 1, this.position.z), this.neighborCount);
+        this.addOrIncrement(this.toKey(this.position.x + 1, this.position.y, this.position.z), this.neighborCount);
+        this.addOrIncrement(this.toKey(this.position.x - 1, this.position.y, this.position.z), this.neighborCount);
+    }
+    *allElements() {
+        yield* this.data.values();
+    }
+    *externalElements() {
+        for (const [key, matrixAndT] of this.data.entries()) {
+            if (this.neighborCount.get(key) < 6) {
+                yield matrixAndT;
+            }
+        }
+    }
+}
+exports.NeighborCount = NeighborCount;
+//# sourceMappingURL=neighborCount.js.map
 
 /***/ }),
 
@@ -1105,6 +1433,62 @@ exports.PointMapOctoTree = PointMapOctoTree;
 
 /***/ }),
 
+/***/ 5326:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Player = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+const grid_1 = __webpack_require__(3424);
+class Player {
+    position = new THREE.Vector3();
+    rotation = new THREE.Quaternion();
+    serialize() {
+        const o = {};
+        o['position'] =
+            { x: this.position.x, y: this.position.y, z: this.position.z };
+        o['rotation'] = {
+            x: this.rotation.x, y: this.rotation.y,
+            z: this.rotation.z, w: this.rotation.w
+        };
+        return o;
+    }
+    deserialize(o) {
+        this.position.copy(o['position']);
+        this.rotation.copy(o['rotation']);
+        return this;
+    }
+    fallback(p) {
+        this.position.set(0, 0, 0);
+        this.rotation.copy(grid_1.Grid.notRotated);
+        return this;
+    }
+}
+exports.Player = Player;
+//# sourceMappingURL=player.js.map
+
+/***/ }),
+
 /***/ 7273:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1394,17 +1778,17 @@ class Star extends THREE.Mesh {
       }
       
       void main() {          
-          vec3 view = vDirection;
+          vec3 view = vDirection * 8.0;
       
           vec4 noise = 0.5 + 0.5 * compound4(
             0.1 * compound4(vec4(view, 0.0)));
           float intensity = length(noise) * 0.7;
+  
+          float red = pow(intensity * 2.5, 1.6);
+          float green = pow(intensity * 2.3, 1.2);
+          float blue = pow(intensity * 1.5, 1.5);
           
-          float red = pow(intensity, 1.1);
-          float green = pow(intensity, 0.3);
-          float blue = 0.5 + 0.1 * noise.b;
-          
-          vec3 col = vec3(red, min(red, green), 0);
+          vec3 col = vec3(red, green, blue);
        
           gl_FragColor = vec4(col.rgb, 1.0) * viewDot;
       }
@@ -1454,10 +1838,12 @@ const pointCloud_1 = __webpack_require__(7273);
 const system_1 = __webpack_require__(1404);
 class Stars extends pointCloud_1.PointCloud {
     assets;
+    controls;
     activeSystems = new Map();
-    constructor(assets) {
+    constructor(assets, controls) {
         super(true);
         this.assets = assets;
+        this.controls = controls;
     }
     tmpV = new THREE.Vector3();
     getClosestDistance(p) {
@@ -1489,7 +1875,7 @@ class Stars extends pointCloud_1.PointCloud {
         }
         for (const k of this.tmpSet) {
             if (!this.activeSystems.has(k)) {
-                const system = new system_1.System(this.assets);
+                const system = new system_1.System(this.assets, this.controls);
                 const name = `System:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(system, name, k);
                 this.activeSystems.set(k, system);
@@ -1565,24 +1951,32 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Stellar = void 0;
 const THREE = __importStar(__webpack_require__(5232));
 const VRButton_js_1 = __webpack_require__(9018);
+const player_1 = __webpack_require__(5326);
 const settings_1 = __webpack_require__(6451);
 const assets_1 = __webpack_require__(7253);
 const controls_1 = __webpack_require__(5417);
+const cursor_1 = __webpack_require__(4217);
 const file_1 = __webpack_require__(5013);
 const nebulaSphere_1 = __webpack_require__(5387);
 const pointSet_1 = __webpack_require__(7536);
 const stars_1 = __webpack_require__(1652);
+const grid_1 = __webpack_require__(3424);
 class Stellar {
     scene = new THREE.Scene();
     camera;
     renderer;
     universe = new THREE.Group();
-    player = new THREE.Group();
+    playerGroup = new THREE.Group();
+    player = new player_1.Player();
     allPoints = new pointSet_1.PointCloudUnion();
     stars;
     nebulae = new nebulaSphere_1.NebulaSphere();
+    cursor = new cursor_1.Cursor();
+    leftPosition = new THREE.Vector3();
+    rightPosition = new THREE.Vector3();
+    controls = undefined;
     constructor() {
-        this.scene.add(this.player);
+        this.scene.add(this.playerGroup);
         this.scene.add(this.universe);
         this.initialize();
     }
@@ -1599,6 +1993,12 @@ class Stellar {
             this.tmpV.copy(this.universe.position);
             this.tmpV.multiplyScalar(-1);
             // this.nebulae.updatePosition(this.tmpV);
+            if (!!this.controls) {
+                this.controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
+                this.cursor.position.copy(this.leftPosition);
+                this.playerGroup.worldToLocal(this.cursor.position);
+                grid_1.Grid.roundLerp(this.cursor.position, 0.5);
+            }
         });
     }
     initializeGraphics() {
@@ -1606,7 +2006,7 @@ class Stellar {
         this.camera = new THREE.PerspectiveCamera(75, 1.0, /*near=*/ 0.1, /*far=*/ 2000);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
-        this.player.add(this.camera);
+        this.playerGroup.add(this.camera);
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(512, 512);
         document.body.appendChild(this.renderer.domElement);
@@ -1615,42 +2015,56 @@ class Stellar {
     }
     tmpV = new THREE.Vector3();
     distanceToClosest() {
-        this.tmpV.copy(this.player.position);
+        this.tmpV.copy(this.playerGroup.position);
         this.tmpV.sub(this.universe.position);
         return this.allPoints.getClosestDistance(this.tmpV);
     }
     velocityVector = new THREE.Vector3();
+    q = new THREE.Quaternion();
+    yAxis = new THREE.Vector3(0, 1, 0);
     handleControls(deltaS) {
-        if (!controls_1.Controls.hasSession()) {
+        if (!this.controls.hasSession()) {
             const session = this.renderer.xr.getSession();
             if (session) {
-                controls_1.Controls.setSession(session);
+                // TODO: Figure out handedness.
+                this.controls.setSession(session, this.renderer.xr.getControllerGrip(0), this.renderer.xr.getControllerGrip(1));
             }
         }
         const velocity = settings_1.S.float('rv') * this.distanceToClosest();
-        this.velocityVector.set(controls_1.Controls.leftRight(), controls_1.Controls.upDown(), controls_1.Controls.forwardBack());
+        this.velocityVector.set(this.controls.leftRight(), this.controls.upDown(), this.controls.forwardBack());
         if (this.velocityVector.lengthSq() > 0) {
             this.velocityVector.multiplyScalar(velocity * deltaS);
-            this.velocityVector.applyQuaternion(this.player.quaternion);
-            this.universe.position.sub(this.velocityVector);
+            this.velocityVector.applyQuaternion(this.playerGroup.quaternion);
+            this.player.position.add(this.velocityVector);
         }
-        const spinRate = controls_1.Controls.spinLeftRight();
+        const spinRate = this.controls.spinLeftRight();
         if (spinRate != 0) {
-            this.player.rotateY(deltaS * spinRate * 3);
+            this.q.setFromAxisAngle(this.yAxis, deltaS * spinRate * 3);
+            this.player.rotation.multiply(this.q);
         }
+        this.universe.position.copy(this.player.position);
+        this.universe.position.multiplyScalar(-1);
+        this.playerGroup.quaternion.copy(this.player.rotation);
     }
     async initializeWorld() {
         // this.scene.add(this.nebulae);
+        const canvas = document.getElementsByTagName('canvas')[0];
+        this.controls = new controls_1.Controls(this.camera, canvas);
         const light = new THREE.DirectionalLight(new THREE.Color('#fff'), 1.0);
         light.position.set(0, 10, 2);
         this.scene.add(light);
+        const ambient = new THREE.AmbientLight('#aaf', 0.2);
+        this.scene.add(ambient);
         console.log('Initialize World');
         const assets = await assets_1.Assets.load();
         console.log('Assets loaded.');
-        this.stars = new stars_1.Stars(assets);
+        this.stars = new stars_1.Stars(assets, this.controls);
         file_1.File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
         this.universe.add(this.stars);
         this.allPoints.add(this.stars);
+        this.playerGroup.add(this.cursor);
+        file_1.File.load(this.player, 'Player', new THREE.Vector3(0, 0, 0));
+        setInterval(() => { file_1.File.save(this.player, 'Player'); }, 1000);
         return;
     }
 }
@@ -1699,13 +2113,15 @@ const pointCloud_1 = __webpack_require__(7273);
 const star_1 = __webpack_require__(4477);
 class System extends THREE.Object3D {
     assets;
+    controls;
     asteroids = new pointCloud_1.PointCloud(false);
     planets = new pointCloud_1.PointCloud(false);
     star;
     activeAsteroids = new Map();
-    constructor(assets) {
+    constructor(assets, controls) {
         super();
         this.assets = assets;
+        this.controls = controls;
         this.star = new star_1.Star();
         this.add(this.star);
         this.add(this.asteroids);
@@ -1755,7 +2171,7 @@ class System extends THREE.Object3D {
             if (!this.activeAsteroids.has(k)) {
                 console.log(`Asteroid ${k.x}; Universe: ${universe.position.x}; v: ${this.tmpV.x}`);
                 console.log('Pop asteroid.');
-                const asteroid = new asteroid_1.Asteroid(this.assets);
+                const asteroid = new asteroid_1.Asteroid(this.assets, this.controls);
                 const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(asteroid, name, k);
                 this.activeAsteroids.set(k, asteroid);
@@ -1787,23 +2203,23 @@ class System extends THREE.Object3D {
             this.asteroids.starPositions.add(v, v);
         }
         this.asteroids.addStars(new THREE.Color('#44f'), settings_1.S.float('as'), 
-        /*initialIntensity=*/ 50);
+        /*initialIntensity=*/ 500);
         this.planets.starPositions.clear();
         for (const p of o['planetPositions']) {
             const v = new THREE.Vector3(p.x, p.y, p.z);
             this.planets.starPositions.add(v, v);
         }
         this.planets.addStars(new THREE.Color('#0ff'), settings_1.S.float('as'), 
-        /*initialIntensity=*/ 50);
+        /*initialIntensity=*/ 500);
         return this;
     }
     fallback(p) {
         this.asteroids.starPositions.clear();
         this.asteroids.build(grid_1.Grid.zero, settings_1.S.float('ar'), settings_1.S.float('ar') / 10.0, settings_1.S.float('ar') / 30.0, settings_1.S.float('na'), new THREE.Color('#44f'), settings_1.S.float('as'), 
-        /*includeOrigin=*/ false, /*initialIntensity=*/ 50);
+        /*includeOrigin=*/ false, /*initialIntensity=*/ 500);
         this.planets.starPositions.clear();
         this.planets.build(grid_1.Grid.zero, settings_1.S.float('ar') * 2, settings_1.S.float('ar'), settings_1.S.float('ar') / 50.0, 10 /*planets*/, new THREE.Color('#0ff'), settings_1.S.float('as'), 
-        /*includeOrigin=*/ false, /*initialIntensity=*/ 50);
+        /*includeOrigin=*/ false, /*initialIntensity=*/ 500);
         return this;
     }
 }

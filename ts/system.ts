@@ -4,32 +4,32 @@ import { Exchange } from "./exchange";
 import { Inventory } from "./player";
 
 export class System {
-    public bodies: Map<string, Body>
+  public bodies: Map<string, Body>
 
-    constructor(private name: string) {
-        this.bodies = new Map<string, Body>();
-    }
-    getName() {
-        return this.name;
-    }
-    public addBody(body: Body) {
-        this.bodies.set(body.name, body);
-    }
+  constructor(private name: string) {
+    this.bodies = new Map<string, Body>();
+  }
+  getName() {
+    return this.name;
+  }
+  public addBody(body: Body) {
+    this.bodies.set(body.name, body);
+  }
 }
 
 type BodyType = 'Asteroid' | 'Station';
 
 export class Body {
-    name: string;
-    exchanges: Exchange[];
-    position: THREE.Vector3;
-    bodyType: BodyType;
+  name: string;
+  exchanges: Map<Item, Exchange>;
+  position: THREE.Vector3;
+  bodyType: BodyType;
 }
 
 export class Station extends Body {
-    constructor() {
-        super();
-        this.bodyType = 'Station';
-    }
-    inventory: Inventory;
+  constructor() {
+    super();
+    this.bodyType = 'Station';
+  }
+  inventory: Inventory;
 }

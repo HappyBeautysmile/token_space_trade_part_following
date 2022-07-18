@@ -1,26 +1,34 @@
 import * as THREE from "three";
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { Player } from "./player";
 import { S } from "../settings";
 import { Assets } from "./assets";
 import { Controls } from "./controls";
+import { Cursor } from "./cursor";
 import { File } from "./file";
 import { NebulaSphere } from "./nebulaSphere";
 import { PointCloudUnion } from "./pointSet";
 import { Stars } from "./stars";
+import { Grid } from "./grid";
 
 export class Stellar {
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
   private universe = new THREE.Group();
-  private player = new THREE.Group();
+  private playerGroup = new THREE.Group();
+  private player = new Player();
 
   private allPoints = new PointCloudUnion();
   private stars: Stars;
   private nebulae = new NebulaSphere();
+  private cursor = new Cursor();
+  private leftPosition = new THREE.Vector3();
+  private rightPosition = new THREE.Vector3();
+  private controls: Controls = undefined;
 
   constructor() {
-    this.scene.add(this.player);
+    this.scene.add(this.playerGroup);
     this.scene.add(this.universe);
     this.initialize();
   }
@@ -39,6 +47,13 @@ export class Stellar {
       this.tmpV.copy(this.universe.position);
       this.tmpV.multiplyScalar(-1);
       // this.nebulae.updatePosition(this.tmpV);
+      if (!!this.controls) {
+        this.controls.setPositions(this.leftPosition, this.rightPosition,
+          this.camera);
+        this.cursor.position.copy(this.leftPosition);
+        this.playerGroup.worldToLocal(this.cursor.position);
+        Grid.roundLerp(this.cursor.position, 0.5);
+      }
     });
   }
 
@@ -48,7 +63,7 @@ export class Stellar {
       1.0, /*near=*/0.1, /*far=*/2000);
     this.camera.position.set(0, 1.7, 0);
     this.camera.lookAt(0, 1.7, -1.5);
-    this.player.add(this.camera);
+    this.playerGroup.add(this.camera);
 
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(512, 512);
@@ -59,52 +74,70 @@ export class Stellar {
 
   private tmpV = new THREE.Vector3();
   private distanceToClosest(): number {
-    this.tmpV.copy(this.player.position);
+    this.tmpV.copy(this.playerGroup.position);
     this.tmpV.sub(this.universe.position);
     return this.allPoints.getClosestDistance(this.tmpV);
   }
 
   private velocityVector = new THREE.Vector3();
+  private q = new THREE.Quaternion();
+  private yAxis = new THREE.Vector3(0, 1, 0);
   private handleControls(deltaS: number) {
-    if (!Controls.hasSession()) {
+    if (!this.controls.hasSession()) {
       const session = this.renderer.xr.getSession();
       if (session) {
-        Controls.setSession(session);
+        // TODO: Figure out handedness.
+        this.controls.setSession(
+          session, this.renderer.xr.getControllerGrip(0),
+          this.renderer.xr.getControllerGrip(1));
       }
     }
     const velocity = S.float('rv') * this.distanceToClosest();
     this.velocityVector.set(
-      Controls.leftRight(),
-      Controls.upDown(),
-      Controls.forwardBack());
+      this.controls.leftRight(),
+      this.controls.upDown(),
+      this.controls.forwardBack());
     if (this.velocityVector.lengthSq() > 0) {
       this.velocityVector.multiplyScalar(velocity * deltaS);
-      this.velocityVector.applyQuaternion(this.player.quaternion);
-      this.universe.position.sub(this.velocityVector);
+      this.velocityVector.applyQuaternion(this.playerGroup.quaternion);
+      this.player.position.add(this.velocityVector);
     }
 
-    const spinRate = Controls.spinLeftRight();
+    const spinRate = this.controls.spinLeftRight();
     if (spinRate != 0) {
-      this.player.rotateY(deltaS * spinRate * 3);
+      this.q.setFromAxisAngle(this.yAxis, deltaS * spinRate * 3);
+      this.player.rotation.multiply(this.q);
     }
-  }
 
+    this.universe.position.copy(this.player.position);
+    this.universe.position.multiplyScalar(-1);
+    this.playerGroup.quaternion.copy(this.player.rotation);
+  }
 
   private async initializeWorld() {
     // this.scene.add(this.nebulae);
+    const canvas = document.getElementsByTagName('canvas')[0];
+    this.controls = new Controls(this.camera, canvas);
 
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
       1.0);
     light.position.set(0, 10, 2);
     this.scene.add(light);
 
+    const ambient = new THREE.AmbientLight('#aaf', 0.2);
+    this.scene.add(ambient);
+
     console.log('Initialize World');
     const assets = await Assets.load();
     console.log('Assets loaded.');
-    this.stars = new Stars(assets);
+    this.stars = new Stars(assets, this.controls);
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
     this.allPoints.add(this.stars);
+    this.playerGroup.add(this.cursor);
+
+    File.load(this.player, 'Player', new THREE.Vector3(0, 0, 0));
+    setInterval(() => { File.save(this.player, 'Player') }, 1000);
     return;
   }
 }

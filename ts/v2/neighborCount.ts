@@ -29,6 +29,12 @@ export class NeighborCount<T> {
   private tmp = new THREE.Vector3();
   public set(m: THREE.Matrix4, value: T) {
     m.decompose(this.position, this.rotation, this.scale);
+    const key = this.toKey(
+      this.position.x, this.position.y, this.position.z);
+    if (this.data.has(key)) {
+      throw new Error(`Already counted: ${key}`);
+    }
+    this.data.set(key, new MatrixAnd<T>(m, value));
     this.addOrIncrement(
       this.toKey(this.position.x, this.position.y, this.position.z + 1),
       this.neighborCount);
@@ -47,10 +53,6 @@ export class NeighborCount<T> {
     this.addOrIncrement(
       this.toKey(this.position.x - 1, this.position.y, this.position.z),
       this.neighborCount);
-
-    this.data.set(this.toKey(
-      this.position.x, this.position.y, this.position.z),
-      new MatrixAnd<T>(m, value));
   }
 
   public *allElements() {
