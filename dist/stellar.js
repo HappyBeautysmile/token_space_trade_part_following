@@ -592,15 +592,17 @@ class Controls {
         this.addListeners('right', rightGrip);
     }
     addListeners(side, grip) {
+        const gripLocation = new THREE.Object3D();
+        grip.add(gripLocation);
         grip.addEventListener('selectstart', (ev) => {
             if (!!this.startStopCallback) {
-                this.leftGrip.getWorldPosition(this.tmpVector);
+                gripLocation.getWorldPosition(this.tmpVector);
                 this.startStopCallback(new StartStopEvent(side, 'start', 'grip', this.tmpVector));
             }
         });
         grip.addEventListener('selectend', (ev) => {
             if (!!this.startStopCallback) {
-                this.leftGrip.getWorldPosition(this.tmpVector);
+                gripLocation.getWorldPosition(this.tmpVector);
                 this.startStopCallback(new StartStopEvent(side, 'end', 'grip', this.tmpVector));
             }
         });

@@ -153,16 +153,18 @@ export class Controls {
   }
 
   private addListeners(side: XRHandedness, grip: THREE.Object3D) {
+    const gripLocation = new THREE.Object3D();
+    grip.add(gripLocation);
     grip.addEventListener('selectstart', (ev) => {
       if (!!this.startStopCallback) {
-        this.leftGrip.getWorldPosition(this.tmpVector);
+        gripLocation.getWorldPosition(this.tmpVector);
         this.startStopCallback(
           new StartStopEvent(side, 'start', 'grip', this.tmpVector));
       }
     });
     grip.addEventListener('selectend', (ev) => {
       if (!!this.startStopCallback) {
-        this.leftGrip.getWorldPosition(this.tmpVector);
+        gripLocation.getWorldPosition(this.tmpVector);
         this.startStopCallback(
           new StartStopEvent(side, 'end', 'grip', this.tmpVector));
       }
