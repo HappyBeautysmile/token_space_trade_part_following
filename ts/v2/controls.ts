@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { XRHandedness } from "three";
 
 export class StartStopEvent {
   constructor(
@@ -147,20 +148,26 @@ export class Controls {
         }
       }
     }
-    this.leftGrip.addEventListener('selectstart', (ev) => {
+    this.addListeners('left', leftGrip);
+    this.addListeners('right', rightGrip);
+  }
+
+  private addListeners(side: XRHandedness, grip: THREE.Object3D) {
+    grip.addEventListener('selectstart', (ev) => {
       if (!!this.startStopCallback) {
         this.leftGrip.getWorldPosition(this.tmpVector);
         this.startStopCallback(
-          new StartStopEvent('left', 'start', 'grip', this.tmpVector));
+          new StartStopEvent(side, 'start', 'grip', this.tmpVector));
       }
     });
-    this.leftGrip.addEventListener('selectend', (ev) => {
+    grip.addEventListener('selectend', (ev) => {
       if (!!this.startStopCallback) {
         this.leftGrip.getWorldPosition(this.tmpVector);
         this.startStopCallback(
-          new StartStopEvent('left', 'end', 'grip', this.tmpVector));
+          new StartStopEvent(side, 'end', 'grip', this.tmpVector));
       }
     });
+
   }
 
   public hasSession(): boolean {

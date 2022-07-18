@@ -171,17 +171,51 @@ exports.Assets = Assets;
 /***/ }),
 
 /***/ 4038:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Asteroid = void 0;
+const THREE = __importStar(__webpack_require__(5232));
 const settings_1 = __webpack_require__(6451);
 const astroGen_1 = __webpack_require__(6647);
+const grid_1 = __webpack_require__(3424);
 const meshCollection_1 = __webpack_require__(1090);
 class Asteroid extends meshCollection_1.MeshCollection {
-    constructor(assets) {
+    controls;
+    constructor(assets, controls) {
         super(assets);
+        this.controls = controls;
+        controls.setStartStopCallback((ev) => {
+            if (ev.state == 'start') {
+                const pos = new THREE.Vector3();
+                pos.copy(ev.worldPosition);
+                this.worldToLocal(pos);
+                grid_1.Grid.round(pos);
+                const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.4, 2), new THREE.MeshPhongMaterial({ color: '#ff0', shininess: 1.0 }));
+                mesh.position.copy(pos);
+                this.add(mesh);
+            }
+        });
     }
     fallback(p) {
         const gen = new astroGen_1.AstroGen(this);
@@ -417,10 +451,27 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Controls = void 0;
+exports.Controls = exports.StartStopEvent = void 0;
 const THREE = __importStar(__webpack_require__(5232));
+class StartStopEvent {
+    handedness;
+    state;
+    type;
+    worldPosition;
+    constructor(handedness, state, type, worldPosition) {
+        this.handedness = handedness;
+        this.state = state;
+        this.type = type;
+        this.worldPosition = worldPosition;
+    }
+}
+exports.StartStopEvent = StartStopEvent;
 class Controls {
-    static keysDown = (() => {
+    camera;
+    canvas;
+    constructor(camera, canvas) {
+        this.camera = camera;
+        this.canvas = canvas;
         const km = new Set();
         document.body.addEventListener('keydown', (ke) => {
             km.add(ke.code);
@@ -428,101 +479,134 @@ class Controls {
         document.body.addEventListener('keyup', (ke) => {
             km.delete(ke.code);
         });
-        return km;
-    })();
-    static forwardBack() {
-        let result = 0;
-        if (!!Controls.leftSource) {
-            result = Controls.leftSource.gamepad.axes[3];
-        }
-        if (Controls.keysDown.has('KeyW')) {
-            result += -1.0;
-        }
-        if (Controls.keysDown.has('KeyS')) {
-            result += 1.0;
-        }
-        return result;
-    }
-    static leftRight() {
-        let result = 0;
-        if (!!Controls.leftSource) {
-            result = Controls.leftSource.gamepad.axes[2];
-        }
-        if (Controls.keysDown.has('KeyD')) {
-            result += 1.0;
-        }
-        if (Controls.keysDown.has('KeyA')) {
-            result += -1.0;
-        }
-        return result;
-    }
-    static upDown() {
-        let result = 0;
-        if (!!Controls.rightSource) {
-            result = -Controls.rightSource.gamepad.axes[3];
-        }
-        if (Controls.keysDown.has('ArrowUp')) {
-            result += 1.0;
-        }
-        if (Controls.keysDown.has('ArrowDown')) {
-            result += -1.0;
-        }
-        return result;
-    }
-    static spinLeftRight() {
-        let result = 0;
-        if (!!Controls.rightSource) {
-            result = -Math.pow(Controls.rightSource.gamepad.axes[2], 3);
-        }
-        if (Controls.keysDown.has('ArrowRight')) {
-            result += -1.0;
-        }
-        if (Controls.keysDown.has('ArrowLeft')) {
-            result += 1.0;
-        }
-        return result;
-    }
-    static pointer = new THREE.Vector2();
-    static raycaster = new THREE.Raycaster();
-    static initialized = false;
-    static initialize() {
-        const canvas = document.getElementsByTagName('canvas')[0];
+        this.keysDown = km;
         canvas.addEventListener('mousemove', (ev) => {
             // calculate pointer position in normalized device coordinates
             // (-1 to +1) for both components
-            Controls.pointer.x = (ev.clientX / canvas.width) * 2 - 1;
-            Controls.pointer.y = -(ev.clientY / canvas.height) * 2 + 1;
+            this.pointer.x = (ev.clientX / canvas.width) * 2 - 1;
+            this.pointer.y = -(ev.clientY / canvas.height) * 2 + 1;
+        });
+        const leftPosition = new THREE.Vector3();
+        const rightPosition = new THREE.Vector3();
+        canvas.addEventListener('mousedown', (ev) => {
+            if (!!this.startStopCallback) {
+                this.setPositions(leftPosition, rightPosition, this.camera);
+                this.startStopCallback(new StartStopEvent('left', 'start', 'grip', leftPosition));
+            }
+        });
+        canvas.addEventListener('mouseup', (ev) => {
+            if (!!this.startStopCallback) {
+                this.setPositions(leftPosition, rightPosition, this.camera);
+                this.startStopCallback(new StartStopEvent('left', 'end', 'grip', leftPosition));
+            }
         });
     }
-    static setPositions(left, right, camera) {
-        if (!Controls.initialized) {
-            Controls.initialize();
-            Controls.initialized = true;
+    keysDown;
+    startStopCallback = undefined;
+    setStartStopCallback(cb) {
+        this.startStopCallback = cb;
+    }
+    forwardBack() {
+        let result = 0;
+        if (!!this.leftSource) {
+            result = this.leftSource.gamepad.axes[3];
         }
+        if (this.keysDown.has('KeyW')) {
+            result += -1.0;
+        }
+        if (this.keysDown.has('KeyS')) {
+            result += 1.0;
+        }
+        return result;
+    }
+    leftRight() {
+        let result = 0;
+        if (!!this.leftSource) {
+            result = this.leftSource.gamepad.axes[2];
+        }
+        if (this.keysDown.has('KeyD')) {
+            result += 1.0;
+        }
+        if (this.keysDown.has('KeyA')) {
+            result += -1.0;
+        }
+        return result;
+    }
+    upDown() {
+        let result = 0;
+        if (!!this.rightSource) {
+            result = -this.rightSource.gamepad.axes[3];
+        }
+        if (this.keysDown.has('ArrowUp')) {
+            result += 1.0;
+        }
+        if (this.keysDown.has('ArrowDown')) {
+            result += -1.0;
+        }
+        return result;
+    }
+    spinLeftRight() {
+        let result = 0;
+        if (!!this.rightSource) {
+            result = -Math.pow(this.rightSource.gamepad.axes[2], 3);
+        }
+        if (this.keysDown.has('ArrowRight')) {
+            result += -1.0;
+        }
+        if (this.keysDown.has('ArrowLeft')) {
+            result += 1.0;
+        }
+        return result;
+    }
+    pointer = new THREE.Vector2();
+    raycaster = new THREE.Raycaster();
+    setPositions(left, right, camera) {
         // TODO: if grips have not been set.
-        Controls.raycaster.setFromCamera(Controls.pointer, camera);
-        left.copy(Controls.raycaster.ray.direction);
-        left.add(Controls.raycaster.ray.origin);
+        this.raycaster.setFromCamera(this.pointer, camera);
+        left.copy(this.raycaster.ray.direction);
+        left.multiplyScalar(10);
+        left.add(this.raycaster.ray.origin);
         right.set(0, 0, 0);
     }
-    static session = undefined;
-    static leftSource = undefined;
-    static rightSource = undefined;
-    static setSession(session) {
-        Controls.session = session;
+    session = undefined;
+    leftSource = undefined;
+    rightSource = undefined;
+    leftGrip;
+    rightGrip;
+    tmpVector = new THREE.Vector3();
+    setSession(session, leftGrip, rightGrip) {
+        this.session = session;
+        this.leftGrip = leftGrip;
+        this.rightGrip = rightGrip;
         if (session.inputSources && session.inputSources.length >= 2) {
             for (const source of session.inputSources) {
                 if (source.handedness === 'left') {
-                    Controls.leftSource = source;
+                    this.leftSource = source;
                 }
                 else {
-                    Controls.rightSource = source;
+                    this.rightSource = source;
                 }
             }
         }
+        this.addListeners('left', leftGrip);
+        this.addListeners('right', rightGrip);
     }
-    static hasSession() {
-        return !!Controls.session && !!Controls.leftSource;
+    addListeners(side, grip) {
+        grip.addEventListener('selectstart', (ev) => {
+            if (!!this.startStopCallback) {
+                this.leftGrip.getWorldPosition(this.tmpVector);
+                this.startStopCallback(new StartStopEvent(side, 'start', 'grip', this.tmpVector));
+            }
+        });
+        grip.addEventListener('selectend', (ev) => {
+            if (!!this.startStopCallback) {
+                this.leftGrip.getWorldPosition(this.tmpVector);
+                this.startStopCallback(new StartStopEvent(side, 'end', 'grip', this.tmpVector));
+            }
+        });
+    }
+    hasSession() {
+        return !!this.session && !!this.leftSource;
     }
 }
 exports.Controls = Controls;
@@ -656,6 +740,12 @@ const THREE = __importStar(__webpack_require__(5232));
 class Grid {
     static round(v) {
         v.set(Math.round(v.x), Math.round(v.y), Math.round(v.z));
+    }
+    static lerp(a, b, p) {
+        return p * b + (1 - p) * a;
+    }
+    static roundLerp(v, p) {
+        v.set(Grid.lerp(v.x, Math.round(v.x), p), Grid.lerp(v.y, Math.round(v.y), p), Grid.lerp(v.z, Math.round(v.z), p));
     }
     static zero = new THREE.Vector3(0, 0, 0);
     static one = new THREE.Vector3(1, 1, 1);
@@ -1748,10 +1838,12 @@ const pointCloud_1 = __webpack_require__(7273);
 const system_1 = __webpack_require__(1404);
 class Stars extends pointCloud_1.PointCloud {
     assets;
+    controls;
     activeSystems = new Map();
-    constructor(assets) {
+    constructor(assets, controls) {
         super(true);
         this.assets = assets;
+        this.controls = controls;
     }
     tmpV = new THREE.Vector3();
     getClosestDistance(p) {
@@ -1783,7 +1875,7 @@ class Stars extends pointCloud_1.PointCloud {
         }
         for (const k of this.tmpSet) {
             if (!this.activeSystems.has(k)) {
-                const system = new system_1.System(this.assets);
+                const system = new system_1.System(this.assets, this.controls);
                 const name = `System:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(system, name, k);
                 this.activeSystems.set(k, system);
@@ -1868,6 +1960,7 @@ const file_1 = __webpack_require__(5013);
 const nebulaSphere_1 = __webpack_require__(5387);
 const pointSet_1 = __webpack_require__(7536);
 const stars_1 = __webpack_require__(1652);
+const grid_1 = __webpack_require__(3424);
 class Stellar {
     scene = new THREE.Scene();
     camera;
@@ -1881,6 +1974,7 @@ class Stellar {
     cursor = new cursor_1.Cursor();
     leftPosition = new THREE.Vector3();
     rightPosition = new THREE.Vector3();
+    controls = undefined;
     constructor() {
         this.scene.add(this.playerGroup);
         this.scene.add(this.universe);
@@ -1899,12 +1993,12 @@ class Stellar {
             this.tmpV.copy(this.universe.position);
             this.tmpV.multiplyScalar(-1);
             // this.nebulae.updatePosition(this.tmpV);
-            controls_1.Controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
-            this.leftPosition.sub(this.camera.position);
-            this.leftPosition.multiplyScalar(10);
-            this.leftPosition.add(this.camera.position);
-            this.cursor.position.copy(this.leftPosition);
-            this.playerGroup.worldToLocal(this.cursor.position);
+            if (!!this.controls) {
+                this.controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
+                this.cursor.position.copy(this.leftPosition);
+                this.playerGroup.worldToLocal(this.cursor.position);
+                grid_1.Grid.roundLerp(this.cursor.position, 0.5);
+            }
         });
     }
     initializeGraphics() {
@@ -1929,20 +2023,21 @@ class Stellar {
     q = new THREE.Quaternion();
     yAxis = new THREE.Vector3(0, 1, 0);
     handleControls(deltaS) {
-        if (!controls_1.Controls.hasSession()) {
+        if (!this.controls.hasSession()) {
             const session = this.renderer.xr.getSession();
             if (session) {
-                controls_1.Controls.setSession(session);
+                // TODO: Figure out handedness.
+                this.controls.setSession(session, this.renderer.xr.getControllerGrip(0), this.renderer.xr.getControllerGrip(1));
             }
         }
         const velocity = settings_1.S.float('rv') * this.distanceToClosest();
-        this.velocityVector.set(controls_1.Controls.leftRight(), controls_1.Controls.upDown(), controls_1.Controls.forwardBack());
+        this.velocityVector.set(this.controls.leftRight(), this.controls.upDown(), this.controls.forwardBack());
         if (this.velocityVector.lengthSq() > 0) {
             this.velocityVector.multiplyScalar(velocity * deltaS);
             this.velocityVector.applyQuaternion(this.playerGroup.quaternion);
             this.player.position.add(this.velocityVector);
         }
-        const spinRate = controls_1.Controls.spinLeftRight();
+        const spinRate = this.controls.spinLeftRight();
         if (spinRate != 0) {
             this.q.setFromAxisAngle(this.yAxis, deltaS * spinRate * 3);
             this.player.rotation.multiply(this.q);
@@ -1953,6 +2048,8 @@ class Stellar {
     }
     async initializeWorld() {
         // this.scene.add(this.nebulae);
+        const canvas = document.getElementsByTagName('canvas')[0];
+        this.controls = new controls_1.Controls(this.camera, canvas);
         const light = new THREE.DirectionalLight(new THREE.Color('#fff'), 1.0);
         light.position.set(0, 10, 2);
         this.scene.add(light);
@@ -1961,7 +2058,7 @@ class Stellar {
         console.log('Initialize World');
         const assets = await assets_1.Assets.load();
         console.log('Assets loaded.');
-        this.stars = new stars_1.Stars(assets);
+        this.stars = new stars_1.Stars(assets, this.controls);
         file_1.File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
         this.universe.add(this.stars);
         this.allPoints.add(this.stars);
@@ -2016,13 +2113,15 @@ const pointCloud_1 = __webpack_require__(7273);
 const star_1 = __webpack_require__(4477);
 class System extends THREE.Object3D {
     assets;
+    controls;
     asteroids = new pointCloud_1.PointCloud(false);
     planets = new pointCloud_1.PointCloud(false);
     star;
     activeAsteroids = new Map();
-    constructor(assets) {
+    constructor(assets, controls) {
         super();
         this.assets = assets;
+        this.controls = controls;
         this.star = new star_1.Star();
         this.add(this.star);
         this.add(this.asteroids);
@@ -2072,7 +2171,7 @@ class System extends THREE.Object3D {
             if (!this.activeAsteroids.has(k)) {
                 console.log(`Asteroid ${k.x}; Universe: ${universe.position.x}; v: ${this.tmpV.x}`);
                 console.log('Pop asteroid.');
-                const asteroid = new asteroid_1.Asteroid(this.assets);
+                const asteroid = new asteroid_1.Asteroid(this.assets, this.controls);
                 const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(asteroid, name, k);
                 this.activeAsteroids.set(k, asteroid);
