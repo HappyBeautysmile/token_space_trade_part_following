@@ -9,6 +9,7 @@ import { File } from "./file";
 import { NebulaSphere } from "./nebulaSphere";
 import { PointCloudUnion } from "./pointSet";
 import { Stars } from "./stars";
+import { Grid } from "./grid";
 
 export class Stellar {
   private scene = new THREE.Scene();
@@ -49,11 +50,9 @@ export class Stellar {
       if (!!this.controls) {
         this.controls.setPositions(this.leftPosition, this.rightPosition,
           this.camera);
-        this.leftPosition.sub(this.camera.position);
-        this.leftPosition.multiplyScalar(10);
-        this.leftPosition.add(this.camera.position);
         this.cursor.position.copy(this.leftPosition);
         this.playerGroup.worldToLocal(this.cursor.position);
+        Grid.roundLerp(this.cursor.position, 0.5);
       }
     });
   }
@@ -131,7 +130,7 @@ export class Stellar {
     console.log('Initialize World');
     const assets = await Assets.load();
     console.log('Assets loaded.');
-    this.stars = new Stars(assets);
+    this.stars = new Stars(assets, this.controls);
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
     this.allPoints.add(this.stars);

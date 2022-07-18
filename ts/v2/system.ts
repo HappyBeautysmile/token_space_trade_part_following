@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { S } from "../settings";
 import { Assets } from "./assets";
 import { Asteroid } from "./asteroid";
+import { Controls } from "./controls";
 
 import { Codeable, File } from "./file";
 import { Grid } from "./grid";
@@ -15,7 +16,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
   private star: THREE.Object3D;
   private activeAsteroids = new Map<THREE.Vector3, Asteroid>();
 
-  constructor(private assets: Assets) {
+  constructor(private assets: Assets, private controls: Controls) {
     super();
     this.star = new Star();
     this.add(this.star);
@@ -69,7 +70,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
       if (!this.activeAsteroids.has(k)) {
         console.log(`Asteroid ${k.x}; Universe: ${universe.position.x}; v: ${this.tmpV.x}`);
         console.log('Pop asteroid.');
-        const asteroid = new Asteroid(this.assets);
+        const asteroid = new Asteroid(this.assets, this.controls);
         const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
         File.load(asteroid, name, k);
         this.activeAsteroids.set(k, asteroid);

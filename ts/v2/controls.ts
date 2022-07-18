@@ -121,7 +121,9 @@ export class Controls {
     // TODO: if grips have not been set.
     this.raycaster.setFromCamera(this.pointer, camera);
     left.copy(this.raycaster.ray.direction);
+    left.multiplyScalar(10);
     left.add(this.raycaster.ray.origin);
+
     right.set(0, 0, 0);
   }
 
