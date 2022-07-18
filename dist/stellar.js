@@ -560,24 +560,43 @@ class Controls {
     }
     pointer = new THREE.Vector2();
     raycaster = new THREE.Raycaster();
+    tmp = new THREE.Vector3();
+    setFromGrip(source, target) {
+        source.getWorldPosition(target);
+        this.camera.getWorldPosition(this.tmp);
+        target.sub(this.tmp);
+        target.multiplyScalar(10);
+        target.add(this.tmp);
+    }
     setPositions(left, right, camera) {
-        // TODO: if grips have not been set.
-        this.raycaster.setFromCamera(this.pointer, camera);
-        left.copy(this.raycaster.ray.direction);
-        left.multiplyScalar(10);
-        left.add(this.raycaster.ray.origin);
-        right.set(0, 0, 0);
+        if (this.leftGrip && this.rightGrip) {
+            this.setFromGrip(this.leftGripLocation, left);
+            this.setFromGrip(this.rightGripLocation, right);
+        }
+        else {
+            this.raycaster.setFromCamera(this.pointer, camera);
+            left.copy(this.raycaster.ray.direction);
+            left.multiplyScalar(10);
+            left.add(this.raycaster.ray.origin);
+            right.set(0, 0, 0);
+        }
     }
     session = undefined;
     leftSource = undefined;
     rightSource = undefined;
     leftGrip;
     rightGrip;
+    leftGripLocation;
+    rightGripLocation;
     tmpVector = new THREE.Vector3();
     setSession(session, leftGrip, rightGrip) {
         this.session = session;
         this.leftGrip = leftGrip;
+        this.leftGripLocation = new THREE.Object3D();
+        this.leftGrip.add(this.leftGripLocation);
         this.rightGrip = rightGrip;
+        this.rightGripLocation = new THREE.Object3D();
+        this.rightGrip.add(this.rightGripLocation);
         if (session.inputSources && session.inputSources.length >= 2) {
             for (const source of session.inputSources) {
                 if (source.handedness === 'left') {
@@ -588,12 +607,10 @@ class Controls {
                 }
             }
         }
-        this.addListeners('left', leftGrip);
-        this.addListeners('right', rightGrip);
+        this.addListeners('left', leftGrip, this.leftGripLocation);
+        this.addListeners('right', rightGrip, this.rightGripLocation);
     }
-    addListeners(side, grip) {
-        const gripLocation = new THREE.Object3D();
-        grip.add(gripLocation);
+    addListeners(side, grip, gripLocation) {
         grip.addEventListener('selectstart', (ev) => {
             if (!!this.startStopCallback) {
                 gripLocation.getWorldPosition(this.tmpVector);
