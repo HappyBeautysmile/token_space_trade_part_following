@@ -18,7 +18,7 @@ export class Controls {
     private camera: THREE.PerspectiveCamera,
     private canvas: HTMLCanvasElement,
     private xr: THREE.WebXRManager,
-    private scene: THREE.Object3D) {
+    private player: THREE.Object3D) {
     const km = new Set<string>();
     document.body.addEventListener('keydown', (ke: KeyboardEvent) => {
       km.add(ke.code);
@@ -58,7 +58,7 @@ export class Controls {
   }
 
   private async initialize() {
-    this.twoHands = await TwoHands.make(this.xr, this.scene);
+    this.twoHands = await TwoHands.make(this.xr, this.player);
     return;
   }
 
@@ -127,11 +127,22 @@ export class Controls {
   private pointer = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
 
+  private scaleTen(v: THREE.Vector3, o: THREE.Vector3) {
+    v.sub(o);
+    v.multiplyScalar(10);
+    v.add(o);
+  }
+
+  private tmp = new THREE.Vector3();
   public setPositions(left: THREE.Vector3, right: THREE.Vector3,
     camera: THREE.PerspectiveCamera) {
     if (this.twoHands) {
+      camera.getWorldPosition(this.tmp);
+      this.tmp.y -= 0.15;  // Shoulders 15cm below eyes.
       this.twoHands.getLeftPosition(left);
+      this.scaleTen(left, this.tmp);
       this.twoHands.getRightPosition(right);
+      this.scaleTen(right, this.tmp);
     } else {
       this.raycaster.setFromCamera(this.pointer, camera);
       left.copy(this.raycaster.ray.direction);

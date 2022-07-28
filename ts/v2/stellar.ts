@@ -10,7 +10,6 @@ import { NebulaSphere } from "./nebulaSphere";
 import { PointCloudUnion } from "./pointSet";
 import { Stars } from "./stars";
 import { Grid } from "./grid";
-import { TwoHands } from "./twoHands";
 
 export class Stellar {
   private scene = new THREE.Scene();
@@ -115,7 +114,8 @@ export class Stellar {
   private async initializeWorld() {
     // this.scene.add(this.nebulae);
     const canvas = document.getElementsByTagName('canvas')[0];
-    this.controls = new Controls(this.camera, canvas, this.renderer.xr, this.scene);
+    this.controls = new Controls(this.camera, canvas,
+      this.renderer.xr, this.playerGroup);
 
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
       1.0);
