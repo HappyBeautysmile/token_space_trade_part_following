@@ -7,20 +7,23 @@ export class TwoHands {
   private rightSource: THREE.XRInputSource;
   private numHands = 0;
 
-  public static async make(xr: THREE.WebXRManager): Promise<TwoHands> {
+  public static async make(xr: THREE.WebXRManager, scene: THREE.Object3D): Promise<TwoHands> {
     return new Promise<TwoHands>((resolve) => {
-      const th = new TwoHands(xr, resolve);
+      const th = new TwoHands(xr, scene, resolve);
     });
   }
 
   private constructor(xr: THREE.WebXRManager,
+    scene: THREE.Object3D,
     doneCallback: (o: TwoHands) => void) {
-    this.registerConnection(xr.getControllerGrip(0), doneCallback);
-    this.registerConnection(xr.getControllerGrip(1), doneCallback);
+    this.registerConnection(xr.getControllerGrip(0), scene, doneCallback);
+    this.registerConnection(xr.getControllerGrip(1), scene, doneCallback);
   }
 
   private registerConnection(grip: THREE.Object3D,
+    scene: THREE.Object3D,
     doneCallback: (o: TwoHands) => void) {
+    scene.add(grip);
     grip.addEventListener('connected', (ev) => {
       const data: THREE.XRInputSource = ev.data;
       if (data.handedness == 'left') {
@@ -43,10 +46,6 @@ export class TwoHands {
         }
       }
     });
-  }
-
-  public isInitialized() {
-    return this.numHands === 2;
   }
 
   public getLeftPosition(target: THREE.Vector3) {

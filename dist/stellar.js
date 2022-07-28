@@ -471,10 +471,12 @@ class Controls {
     camera;
     canvas;
     xr;
-    constructor(camera, canvas, xr) {
+    scene;
+    constructor(camera, canvas, xr, scene) {
         this.camera = camera;
         this.canvas = canvas;
         this.xr = xr;
+        this.scene = scene;
         const km = new Set();
         document.body.addEventListener('keydown', (ke) => {
             km.add(ke.code);
@@ -506,7 +508,7 @@ class Controls {
         this.initialize();
     }
     async initialize() {
-        this.twoHands = await twoHands_1.TwoHands.make(this.xr);
+        this.twoHands = await twoHands_1.TwoHands.make(this.xr, this.scene);
         return;
     }
     keysDown;
@@ -2058,7 +2060,7 @@ class Stellar {
     async initializeWorld() {
         // this.scene.add(this.nebulae);
         const canvas = document.getElementsByTagName('canvas')[0];
-        this.controls = new controls_1.Controls(this.camera, canvas, this.renderer.xr);
+        this.controls = new controls_1.Controls(this.camera, canvas, this.renderer.xr, this.scene);
         const light = new THREE.DirectionalLight(new THREE.Color('#fff'), 1.0);
         light.position.set(0, 10, 2);
         this.scene.add(light);
@@ -2269,16 +2271,17 @@ class TwoHands {
     leftSource;
     rightSource;
     numHands = 0;
-    static async make(xr) {
+    static async make(xr, scene) {
         return new Promise((resolve) => {
-            const th = new TwoHands(xr, resolve);
+            const th = new TwoHands(xr, scene, resolve);
         });
     }
-    constructor(xr, doneCallback) {
-        this.registerConnection(xr.getControllerGrip(0), doneCallback);
-        this.registerConnection(xr.getControllerGrip(1), doneCallback);
+    constructor(xr, scene, doneCallback) {
+        this.registerConnection(xr.getControllerGrip(0), scene, doneCallback);
+        this.registerConnection(xr.getControllerGrip(1), scene, doneCallback);
     }
-    registerConnection(grip, doneCallback) {
+    registerConnection(grip, scene, doneCallback) {
+        scene.add(grip);
         grip.addEventListener('connected', (ev) => {
             const data = ev.data;
             if (data.handedness == 'left') {
@@ -2300,9 +2303,6 @@ class TwoHands {
                 }
             }
         });
-    }
-    isInitialized() {
-        return this.numHands === 2;
     }
     getLeftPosition(target) {
         if (this.leftGrip) {

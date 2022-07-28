@@ -17,7 +17,8 @@ export class Controls {
   constructor(
     private camera: THREE.PerspectiveCamera,
     private canvas: HTMLCanvasElement,
-    private xr: THREE.WebXRManager) {
+    private xr: THREE.WebXRManager,
+    private scene: THREE.Object3D) {
     const km = new Set<string>();
     document.body.addEventListener('keydown', (ke: KeyboardEvent) => {
       km.add(ke.code);
@@ -57,7 +58,7 @@ export class Controls {
   }
 
   private async initialize() {
-    this.twoHands = await TwoHands.make(this.xr);
+    this.twoHands = await TwoHands.make(this.xr, this.scene);
     return;
   }
 
