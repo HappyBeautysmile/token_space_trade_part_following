@@ -53,10 +53,8 @@ export class Stellar {
           this.camera);
         this.cursorL.position.copy(this.leftPosition);
         this.playerGroup.worldToLocal(this.cursorL.position);
-        Grid.roundLerp(this.cursorL.position, 0.5);
         this.cursorR.position.copy(this.rightPosition);
         this.playerGroup.worldToLocal(this.cursorR.position);
-        Grid.roundLerp(this.cursorR.position, 0.5);
       }
     });
   }
