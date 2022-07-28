@@ -86,10 +86,7 @@ export class Stellar {
     if (!this.controls.hasSession()) {
       const session = this.renderer.xr.getSession();
       if (session) {
-        // TODO: Figure out handedness.
-        this.controls.setSession(
-          session, this.renderer.xr.getControllerGrip(0),
-          this.renderer.xr.getControllerGrip(1));
+        this.controls.setSession(session);
       }
     }
     const velocity = S.float('rv') * this.distanceToClosest();
@@ -117,7 +114,7 @@ export class Stellar {
   private async initializeWorld() {
     // this.scene.add(this.nebulae);
     const canvas = document.getElementsByTagName('canvas')[0];
-    this.controls = new Controls(this.camera, canvas);
+    this.controls = new Controls(this.camera, canvas, this.renderer.xr);
 
     const light = new THREE.DirectionalLight(new THREE.Color('#fff'),
       1.0);

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { XRHandedness } from "three";
+import { TwoHands } from "./twoHands";
 
 export class StartStopEvent {
   constructor(
@@ -15,7 +16,8 @@ export type StartStopEventHandler = (ev: StartStopEvent) => void;
 export class Controls {
   constructor(
     private camera: THREE.PerspectiveCamera,
-    private canvas: HTMLCanvasElement) {
+    private canvas: HTMLCanvasElement,
+    private xr: THREE.WebXRManager) {
     const km = new Set<string>();
     document.body.addEventListener('keydown', (ke: KeyboardEvent) => {
       km.add(ke.code);
@@ -51,9 +53,16 @@ export class Controls {
           new StartStopEvent('left', 'end', 'grip', leftPosition));
       }
     });
+    this.initialize();
+  }
+
+  private async initialize() {
+    this.twoHands = await TwoHands.make(this.xr);
+    return;
   }
 
   readonly keysDown: Set<string>
+  private twoHands: TwoHands;
 
   private startStopCallback: StartStopEventHandler = undefined;
   public setStartStopCallback(cb: StartStopEventHandler) {
@@ -116,20 +125,12 @@ export class Controls {
 
   private pointer = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
-  private tmp = new THREE.Vector3();
-  private setFromGrip(source: THREE.Object3D, target: THREE.Vector3) {
-    source.getWorldPosition(target);
-    this.camera.getWorldPosition(this.tmp);
-    target.sub(this.tmp);
-    target.multiplyScalar(10);
-    target.add(this.tmp);
-  }
 
   public setPositions(left: THREE.Vector3, right: THREE.Vector3,
     camera: THREE.PerspectiveCamera) {
-    if (this.leftGrip && this.rightGrip) {
-      this.setFromGrip(this.leftGripLocation, left);
-      this.setFromGrip(this.rightGripLocation, right);
+    if (this.twoHands) {
+      this.twoHands.getLeftPosition(left);
+      this.twoHands.getRightPosition(right);
     } else {
       this.raycaster.setFromCamera(this.pointer, camera);
       left.copy(this.raycaster.ray.direction);
@@ -142,21 +143,10 @@ export class Controls {
   private session: THREE.XRSession = undefined;
   private leftSource: THREE.XRInputSource = undefined;
   private rightSource: THREE.XRInputSource = undefined;
-  private leftGrip: THREE.Group;
-  private rightGrip: THREE.Group;
-  private leftGripLocation: THREE.Object3D;
-  private rightGripLocation: THREE.Object3D;
 
   private tmpVector = new THREE.Vector3();
-  public setSession(session: THREE.XRSession,
-    leftGrip: THREE.Group, rightGrip: THREE.Group) {
+  public setSession(session: THREE.XRSession) {
     this.session = session;
-    this.leftGrip = leftGrip;
-    this.leftGripLocation = new THREE.Object3D();
-    this.leftGrip.add(this.leftGripLocation);
-    this.rightGrip = rightGrip;
-    this.rightGripLocation = new THREE.Object3D();
-    this.rightGrip.add(this.rightGripLocation);
     if (session.inputSources && session.inputSources.length >= 2) {
       for (const source of session.inputSources) {
         if (source.handedness === 'left') {
@@ -166,8 +156,8 @@ export class Controls {
         }
       }
     }
-    this.addListeners('left', leftGrip, this.leftGripLocation);
-    this.addListeners('right', rightGrip, this.rightGripLocation);
+    // this.addListeners('left', leftGrip, this.leftGripLocation);
+    // this.addListeners('right', rightGrip, this.rightGripLocation);
   }
 
   private addListeners(side: XRHandedness,

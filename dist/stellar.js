@@ -453,6 +453,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Controls = exports.StartStopEvent = void 0;
 const THREE = __importStar(__webpack_require__(5232));
+const twoHands_1 = __webpack_require__(1837);
 class StartStopEvent {
     handedness;
     state;
@@ -469,9 +470,11 @@ exports.StartStopEvent = StartStopEvent;
 class Controls {
     camera;
     canvas;
-    constructor(camera, canvas) {
+    xr;
+    constructor(camera, canvas, xr) {
         this.camera = camera;
         this.canvas = canvas;
+        this.xr = xr;
         const km = new Set();
         document.body.addEventListener('keydown', (ke) => {
             km.add(ke.code);
@@ -500,8 +503,14 @@ class Controls {
                 this.startStopCallback(new StartStopEvent('left', 'end', 'grip', leftPosition));
             }
         });
+        this.initialize();
+    }
+    async initialize() {
+        this.twoHands = await twoHands_1.TwoHands.make(this.xr);
+        return;
     }
     keysDown;
+    twoHands;
     startStopCallback = undefined;
     setStartStopCallback(cb) {
         this.startStopCallback = cb;
@@ -560,18 +569,10 @@ class Controls {
     }
     pointer = new THREE.Vector2();
     raycaster = new THREE.Raycaster();
-    tmp = new THREE.Vector3();
-    setFromGrip(source, target) {
-        source.getWorldPosition(target);
-        this.camera.getWorldPosition(this.tmp);
-        target.sub(this.tmp);
-        target.multiplyScalar(10);
-        target.add(this.tmp);
-    }
     setPositions(left, right, camera) {
-        if (this.leftGrip && this.rightGrip) {
-            this.setFromGrip(this.leftGripLocation, left);
-            this.setFromGrip(this.rightGripLocation, right);
+        if (this.twoHands) {
+            this.twoHands.getLeftPosition(left);
+            this.twoHands.getRightPosition(right);
         }
         else {
             this.raycaster.setFromCamera(this.pointer, camera);
@@ -584,19 +585,9 @@ class Controls {
     session = undefined;
     leftSource = undefined;
     rightSource = undefined;
-    leftGrip;
-    rightGrip;
-    leftGripLocation;
-    rightGripLocation;
     tmpVector = new THREE.Vector3();
-    setSession(session, leftGrip, rightGrip) {
+    setSession(session) {
         this.session = session;
-        this.leftGrip = leftGrip;
-        this.leftGripLocation = new THREE.Object3D();
-        this.leftGrip.add(this.leftGripLocation);
-        this.rightGrip = rightGrip;
-        this.rightGripLocation = new THREE.Object3D();
-        this.rightGrip.add(this.rightGripLocation);
         if (session.inputSources && session.inputSources.length >= 2) {
             for (const source of session.inputSources) {
                 if (source.handedness === 'left') {
@@ -607,8 +598,8 @@ class Controls {
                 }
             }
         }
-        this.addListeners('left', leftGrip, this.leftGripLocation);
-        this.addListeners('right', rightGrip, this.rightGripLocation);
+        // this.addListeners('left', leftGrip, this.leftGripLocation);
+        // this.addListeners('right', rightGrip, this.rightGripLocation);
     }
     addListeners(side, grip, gripLocation) {
         grip.addEventListener('selectstart', (ev) => {
@@ -2045,8 +2036,7 @@ class Stellar {
         if (!this.controls.hasSession()) {
             const session = this.renderer.xr.getSession();
             if (session) {
-                // TODO: Figure out handedness.
-                this.controls.setSession(session, this.renderer.xr.getControllerGrip(0), this.renderer.xr.getControllerGrip(1));
+                this.controls.setSession(session);
             }
         }
         const velocity = settings_1.S.float('rv') * this.distanceToClosest();
@@ -2068,7 +2058,7 @@ class Stellar {
     async initializeWorld() {
         // this.scene.add(this.nebulae);
         const canvas = document.getElementsByTagName('canvas')[0];
-        this.controls = new controls_1.Controls(this.camera, canvas);
+        this.controls = new controls_1.Controls(this.camera, canvas, this.renderer.xr);
         const light = new THREE.DirectionalLight(new THREE.Color('#fff'), 1.0);
         light.position.set(0, 10, 2);
         this.scene.add(light);
@@ -2244,6 +2234,89 @@ class System extends THREE.Object3D {
 }
 exports.System = System;
 //# sourceMappingURL=system.js.map
+
+/***/ }),
+
+/***/ 1837:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TwoHands = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class TwoHands {
+    leftGrip;
+    rightGrip;
+    leftSource;
+    rightSource;
+    numHands = 0;
+    static async make(xr) {
+        return new Promise((resolve) => {
+            const th = new TwoHands(xr, resolve);
+        });
+    }
+    constructor(xr, doneCallback) {
+        this.registerConnection(xr.getControllerGrip(0), doneCallback);
+        this.registerConnection(xr.getControllerGrip(1), doneCallback);
+    }
+    registerConnection(grip, doneCallback) {
+        grip.addEventListener('connected', (ev) => {
+            const data = ev.data;
+            if (data.handedness == 'left') {
+                this.leftGrip = grip;
+                this.leftSource = data;
+                this.leftGrip.add(new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.05, 3), new THREE.MeshPhongMaterial({ color: '#88f' })));
+                ++this.numHands;
+                if (this.numHands == 2) {
+                    doneCallback(this);
+                }
+            }
+            else {
+                this.rightGrip = grip;
+                this.rightSource = data;
+                this.rightGrip.add(new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.05, 3), new THREE.MeshPhongMaterial({ color: '#f88' })));
+                ++this.numHands;
+                if (this.numHands == 2) {
+                    doneCallback(this);
+                }
+            }
+        });
+    }
+    isInitialized() {
+        return this.numHands === 2;
+    }
+    getLeftPosition(target) {
+        if (this.leftGrip) {
+            this.leftGrip.getWorldPosition(target);
+        }
+    }
+    getRightPosition(target) {
+        if (this.rightGrip) {
+            this.rightGrip.getWorldPosition(target);
+        }
+    }
+}
+exports.TwoHands = TwoHands;
+//# sourceMappingURL=twoHands.js.map
 
 /***/ }),
 
