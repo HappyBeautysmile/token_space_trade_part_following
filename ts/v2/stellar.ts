@@ -22,7 +22,8 @@ export class Stellar {
   private allPoints = new PointCloudUnion();
   private stars: Stars;
   private nebulae = new NebulaSphere();
-  private cursor = new Cursor();
+  private cursorL = new Cursor();
+  private cursorR = new Cursor();
   private leftPosition = new THREE.Vector3();
   private rightPosition = new THREE.Vector3();
   private controls: Controls = undefined;
@@ -50,9 +51,12 @@ export class Stellar {
       if (!!this.controls) {
         this.controls.setPositions(this.leftPosition, this.rightPosition,
           this.camera);
-        this.cursor.position.copy(this.leftPosition);
-        this.playerGroup.worldToLocal(this.cursor.position);
-        Grid.roundLerp(this.cursor.position, 0.5);
+        this.cursorL.position.copy(this.leftPosition);
+        this.playerGroup.worldToLocal(this.cursorL.position);
+        Grid.roundLerp(this.cursorL.position, 0.5);
+        this.cursorR.position.copy(this.rightPosition);
+        this.playerGroup.worldToLocal(this.cursorR.position);
+        Grid.roundLerp(this.cursorR.position, 0.5);
       }
     });
   }
@@ -132,7 +136,8 @@ export class Stellar {
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
     this.allPoints.add(this.stars);
-    this.playerGroup.add(this.cursor);
+    this.playerGroup.add(this.cursorL);
+    this.playerGroup.add(this.cursorR);
 
     File.load(this.player, 'Player', new THREE.Vector3(0, 0, 0));
     setInterval(() => { File.save(this.player, 'Player') }, 1000);

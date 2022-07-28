@@ -471,12 +471,12 @@ class Controls {
     camera;
     canvas;
     xr;
-    scene;
-    constructor(camera, canvas, xr, scene) {
+    player;
+    constructor(camera, canvas, xr, player) {
         this.camera = camera;
         this.canvas = canvas;
         this.xr = xr;
-        this.scene = scene;
+        this.player = player;
         const km = new Set();
         document.body.addEventListener('keydown', (ke) => {
             km.add(ke.code);
@@ -508,7 +508,7 @@ class Controls {
         this.initialize();
     }
     async initialize() {
-        this.twoHands = await twoHands_1.TwoHands.make(this.xr, this.scene);
+        this.twoHands = await twoHands_1.TwoHands.make(this.xr, this.player);
         return;
     }
     keysDown;
@@ -571,10 +571,20 @@ class Controls {
     }
     pointer = new THREE.Vector2();
     raycaster = new THREE.Raycaster();
+    scaleTen(v, o) {
+        v.sub(o);
+        v.multiplyScalar(10);
+        v.add(o);
+    }
+    tmp = new THREE.Vector3();
     setPositions(left, right, camera) {
         if (this.twoHands) {
+            camera.getWorldPosition(this.tmp);
+            this.tmp.y -= 0.15; // Shoulders 15cm below eyes.
             this.twoHands.getLeftPosition(left);
+            this.scaleTen(left, this.tmp);
             this.twoHands.getRightPosition(right);
+            this.scaleTen(right, this.tmp);
         }
         else {
             this.raycaster.setFromCamera(this.pointer, camera);
@@ -1983,7 +1993,8 @@ class Stellar {
     allPoints = new pointSet_1.PointCloudUnion();
     stars;
     nebulae = new nebulaSphere_1.NebulaSphere();
-    cursor = new cursor_1.Cursor();
+    cursorL = new cursor_1.Cursor();
+    cursorR = new cursor_1.Cursor();
     leftPosition = new THREE.Vector3();
     rightPosition = new THREE.Vector3();
     controls = undefined;
@@ -2007,9 +2018,12 @@ class Stellar {
             // this.nebulae.updatePosition(this.tmpV);
             if (!!this.controls) {
                 this.controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
-                this.cursor.position.copy(this.leftPosition);
-                this.playerGroup.worldToLocal(this.cursor.position);
-                grid_1.Grid.roundLerp(this.cursor.position, 0.5);
+                this.cursorL.position.copy(this.leftPosition);
+                this.playerGroup.worldToLocal(this.cursorL.position);
+                grid_1.Grid.roundLerp(this.cursorL.position, 0.5);
+                this.cursorR.position.copy(this.rightPosition);
+                this.playerGroup.worldToLocal(this.cursorR.position);
+                grid_1.Grid.roundLerp(this.cursorR.position, 0.5);
             }
         });
     }
@@ -2060,7 +2074,7 @@ class Stellar {
     async initializeWorld() {
         // this.scene.add(this.nebulae);
         const canvas = document.getElementsByTagName('canvas')[0];
-        this.controls = new controls_1.Controls(this.camera, canvas, this.renderer.xr, this.scene);
+        this.controls = new controls_1.Controls(this.camera, canvas, this.renderer.xr, this.playerGroup);
         const light = new THREE.DirectionalLight(new THREE.Color('#fff'), 1.0);
         light.position.set(0, 10, 2);
         this.scene.add(light);
@@ -2073,7 +2087,8 @@ class Stellar {
         file_1.File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
         this.universe.add(this.stars);
         this.allPoints.add(this.stars);
-        this.playerGroup.add(this.cursor);
+        this.playerGroup.add(this.cursorL);
+        this.playerGroup.add(this.cursorR);
         file_1.File.load(this.player, 'Player', new THREE.Vector3(0, 0, 0));
         setInterval(() => { file_1.File.save(this.player, 'Player'); }, 1000);
         return;
