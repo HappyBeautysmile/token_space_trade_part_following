@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Object3D } from "three";
 
 export class TwoHands {
   private leftGrip: THREE.Object3D;
@@ -58,6 +59,14 @@ export class TwoHands {
     if (this.rightGrip) {
       this.rightGrip.getWorldPosition(target);
     }
+  }
+
+  public getLeftGrip(): THREE.Object3D {
+    return this.leftGrip;
+  }
+
+  public getRightGrip(): THREE.Object3D {
+    return this.rightGrip;
   }
 
 }

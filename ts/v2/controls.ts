@@ -59,6 +59,8 @@ export class Controls {
 
   private async initialize() {
     this.twoHands = await TwoHands.make(this.xr, this.player);
+    this.addListeners('left', this.twoHands.getLeftGrip(), this.twoHands.getLeftGrip());
+    this.addListeners('right', this.twoHands.getRightGrip(), this.twoHands.getRightGrip());
     return;
   }
 
@@ -133,16 +135,20 @@ export class Controls {
     v.add(o);
   }
 
+  private setCursorPosition(physicalPosition: THREE.Vector3) {
+    this.camera.getWorldPosition(this.tmp);
+    this.tmp.y -= 0.15;  // Shoulders 15cm below eyes.
+    this.scaleTen(physicalPosition, this.tmp);
+  }
+
   private tmp = new THREE.Vector3();
   public setPositions(left: THREE.Vector3, right: THREE.Vector3,
     camera: THREE.PerspectiveCamera) {
     if (this.twoHands) {
-      camera.getWorldPosition(this.tmp);
-      this.tmp.y -= 0.15;  // Shoulders 15cm below eyes.
       this.twoHands.getLeftPosition(left);
-      this.scaleTen(left, this.tmp);
+      this.setCursorPosition(left);
       this.twoHands.getRightPosition(right);
-      this.scaleTen(right, this.tmp);
+      this.setCursorPosition(right);
     } else {
       this.raycaster.setFromCamera(this.pointer, camera);
       left.copy(this.raycaster.ray.direction);
@@ -168,28 +174,28 @@ export class Controls {
         }
       }
     }
-    // this.addListeners('left', leftGrip, this.leftGripLocation);
-    // this.addListeners('right', rightGrip, this.rightGripLocation);
   }
 
   private addListeners(side: XRHandedness,
     grip: THREE.Object3D, gripLocation: THREE.Object3D) {
+    const p = new THREE.Vector3();
 
     grip.addEventListener('selectstart', (ev) => {
       if (!!this.startStopCallback) {
-        gripLocation.getWorldPosition(this.tmpVector);
+        gripLocation.getWorldPosition(p);
+        this.setCursorPosition(p);
         this.startStopCallback(
-          new StartStopEvent(side, 'start', 'grip', this.tmpVector));
+          new StartStopEvent(side, 'start', 'grip', p));
       }
     });
     grip.addEventListener('selectend', (ev) => {
       if (!!this.startStopCallback) {
-        gripLocation.getWorldPosition(this.tmpVector);
+        gripLocation.getWorldPosition(p);
+        this.setCursorPosition(p);
         this.startStopCallback(
-          new StartStopEvent(side, 'end', 'grip', this.tmpVector));
+          new StartStopEvent(side, 'end', 'grip', p));
       }
     });
-
   }
 
   public hasSession(): boolean {

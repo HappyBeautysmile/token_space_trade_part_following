@@ -74,6 +74,27 @@ exports.S = S;
 
 /***/ }),
 
+/***/ 5544:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Tick = void 0;
+class Tick {
+    elapsedS;
+    deltaS;
+    frameCount;
+    constructor(elapsedS, deltaS, frameCount) {
+        this.elapsedS = elapsedS;
+        this.deltaS = deltaS;
+        this.frameCount = frameCount;
+    }
+}
+exports.Tick = Tick;
+//# sourceMappingURL=tick.js.map
+
+/***/ }),
+
 /***/ 7253:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -509,6 +530,8 @@ class Controls {
     }
     async initialize() {
         this.twoHands = await twoHands_1.TwoHands.make(this.xr, this.player);
+        this.addListeners('left', this.twoHands.getLeftGrip(), this.twoHands.getLeftGrip());
+        this.addListeners('right', this.twoHands.getRightGrip(), this.twoHands.getRightGrip());
         return;
     }
     keysDown;
@@ -576,15 +599,18 @@ class Controls {
         v.multiplyScalar(10);
         v.add(o);
     }
+    setCursorPosition(physicalPosition) {
+        this.camera.getWorldPosition(this.tmp);
+        this.tmp.y -= 0.15; // Shoulders 15cm below eyes.
+        this.scaleTen(physicalPosition, this.tmp);
+    }
     tmp = new THREE.Vector3();
     setPositions(left, right, camera) {
         if (this.twoHands) {
-            camera.getWorldPosition(this.tmp);
-            this.tmp.y -= 0.15; // Shoulders 15cm below eyes.
             this.twoHands.getLeftPosition(left);
-            this.scaleTen(left, this.tmp);
+            this.setCursorPosition(left);
             this.twoHands.getRightPosition(right);
-            this.scaleTen(right, this.tmp);
+            this.setCursorPosition(right);
         }
         else {
             this.raycaster.setFromCamera(this.pointer, camera);
@@ -610,20 +636,21 @@ class Controls {
                 }
             }
         }
-        // this.addListeners('left', leftGrip, this.leftGripLocation);
-        // this.addListeners('right', rightGrip, this.rightGripLocation);
     }
     addListeners(side, grip, gripLocation) {
+        const p = new THREE.Vector3();
         grip.addEventListener('selectstart', (ev) => {
             if (!!this.startStopCallback) {
-                gripLocation.getWorldPosition(this.tmpVector);
-                this.startStopCallback(new StartStopEvent(side, 'start', 'grip', this.tmpVector));
+                gripLocation.getWorldPosition(p);
+                this.setCursorPosition(p);
+                this.startStopCallback(new StartStopEvent(side, 'start', 'grip', p));
             }
         });
         grip.addEventListener('selectend', (ev) => {
             if (!!this.startStopCallback) {
-                gripLocation.getWorldPosition(this.tmpVector);
-                this.startStopCallback(new StartStopEvent(side, 'end', 'grip', this.tmpVector));
+                gripLocation.getWorldPosition(p);
+                this.setCursorPosition(p);
+                this.startStopCallback(new StartStopEvent(side, 'end', 'grip', p));
             }
         });
     }
@@ -1652,10 +1679,10 @@ class PointCloud extends THREE.Object3D {
             sizeScale *= distance / (500.0 * r);
             vIntensity *= 1.0 / sizeScale;
           }
-          if (distance > 800.0) {
-            worldPosition.xyz *= 800.0 / distance;
-            sizeScale *= 800.0 / distance;
-          }
+          // if (distance > 800.0) {
+          //   worldPosition.xyz *= 800.0 / distance;
+          //   sizeScale *= 800.0 / distance;
+          // }
           vec4 mvPosition = viewMatrix * worldPosition;
           mvPosition += sizeScale * r * vec4(dxy, 0.0, 0.0);
 
@@ -1751,9 +1778,12 @@ exports.Star = void 0;
 const THREE = __importStar(__webpack_require__(5232));
 const settings_1 = __webpack_require__(6451);
 class Star extends THREE.Mesh {
+    shaderMaterial;
     constructor() {
-        super(new THREE.IcosahedronBufferGeometry(settings_1.S.float('ss'), 4), Star.makeMaterial());
+        const shaderMaterial = Star.makeMaterial();
+        super(new THREE.IcosahedronBufferGeometry(settings_1.S.float('ss'), 4), shaderMaterial);
         this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e30);
+        this.shaderMaterial = shaderMaterial;
     }
     static makeMaterial() {
         const material = new THREE.ShaderMaterial({
@@ -1763,9 +1793,6 @@ class Star extends THREE.Mesh {
       void main() {
         vec4 worldPosition = modelMatrix * vec4(position, 1.0);
         float distance = length(worldPosition.xyz / worldPosition.w);
-        if (distance > 700.0) {
-          worldPosition.xyz *= 700.0 / distance;
-        }
         vec4 mvPosition = viewMatrix * worldPosition;
         gl_Position = projectionMatrix * mvPosition;
 
@@ -1777,6 +1804,7 @@ class Star extends THREE.Mesh {
             fragmentShader: `
       varying vec3 vDirection;
       varying float viewDot;
+      uniform float iTime;
       float wave(in vec4 x, in vec4 dir, in float freq, in float offset) {
         return sin(offset + dot(x, dir) * freq);
       }
@@ -1802,8 +1830,8 @@ class Star extends THREE.Mesh {
       void main() {          
           vec3 view = vDirection * 8.0;
       
-          vec4 noise = 0.5 + 0.5 * compound4(
-            0.1 * compound4(vec4(view, 0.0)));
+          vec4 noise = 0.5 + 0.5 * 
+            compound4(0.1 * compound4(vec4(view, iTime * 0.3)));
           float intensity = length(noise) * 0.7;
   
           float red = pow(intensity * 2.5, 1.6);
@@ -1819,8 +1847,15 @@ class Star extends THREE.Mesh {
             depthTest: true,
             blending: THREE.NormalBlending,
             side: THREE.FrontSide,
+            uniforms: {
+                iTime: { value: 0 }
+            },
         });
         return material;
+    }
+    tick(t) {
+        this.shaderMaterial.uniforms['iTime'].value = t.elapsedS;
+        this.shaderMaterial.uniformsNeedUpdate = true;
     }
 }
 exports.Star = Star;
@@ -1982,7 +2017,7 @@ const file_1 = __webpack_require__(5013);
 const nebulaSphere_1 = __webpack_require__(5387);
 const pointSet_1 = __webpack_require__(7536);
 const stars_1 = __webpack_require__(1652);
-const grid_1 = __webpack_require__(3424);
+const tick_1 = __webpack_require__(5544);
 class Stellar {
     scene = new THREE.Scene();
     camera;
@@ -2008,8 +2043,12 @@ class Stellar {
         await this.initializeWorld();
         // Set up animation loop last - after everything is loaded.
         const clock = new THREE.Clock();
+        let elapsedS = 0;
+        let frameCount = 0;
         this.renderer.setAnimationLoop(() => {
             const deltaS = Math.min(clock.getDelta(), 0.1);
+            elapsedS += deltaS;
+            ++frameCount;
             this.renderer.render(this.scene, this.camera);
             this.handleControls(deltaS);
             this.stars.handlePops(this.universe, this.allPoints);
@@ -2020,20 +2059,23 @@ class Stellar {
                 this.controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
                 this.cursorL.position.copy(this.leftPosition);
                 this.playerGroup.worldToLocal(this.cursorL.position);
-                grid_1.Grid.roundLerp(this.cursorL.position, 0.5);
                 this.cursorR.position.copy(this.rightPosition);
                 this.playerGroup.worldToLocal(this.cursorR.position);
-                grid_1.Grid.roundLerp(this.cursorR.position, 0.5);
             }
+            this.scene.traverseVisible((o) => {
+                if (o['tick']) {
+                    o.tick(new tick_1.Tick(elapsedS, deltaS, frameCount));
+                }
+            });
         });
     }
     initializeGraphics() {
         document.body.innerHTML = '';
-        this.camera = new THREE.PerspectiveCamera(75, 1.0, /*near=*/ 0.1, /*far=*/ 2000);
+        this.camera = new THREE.PerspectiveCamera(75, 1.0, /*near=*/ 0.1, /*far=*/ 20e9);
         this.camera.position.set(0, 1.7, 0);
         this.camera.lookAt(0, 1.7, -1.5);
         this.playerGroup.add(this.camera);
-        this.renderer = new THREE.WebGLRenderer();
+        this.renderer = new THREE.WebGLRenderer({ logarithmicDepthBuffer: true });
         this.renderer.setSize(512, 512);
         document.body.appendChild(this.renderer.domElement);
         document.body.appendChild(VRButton_js_1.VRButton.createButton(this.renderer));
@@ -2078,7 +2120,7 @@ class Stellar {
         const light = new THREE.DirectionalLight(new THREE.Color('#fff'), 1.0);
         light.position.set(0, 10, 2);
         this.scene.add(light);
-        const ambient = new THREE.AmbientLight('#aaf', 0.2);
+        const ambient = new THREE.AmbientLight('#def', 0.5);
         this.scene.add(ambient);
         console.log('Initialize World');
         const assets = await assets_1.Assets.load();
@@ -2328,6 +2370,12 @@ class TwoHands {
         if (this.rightGrip) {
             this.rightGrip.getWorldPosition(target);
         }
+    }
+    getLeftGrip() {
+        return this.leftGrip;
+    }
+    getRightGrip() {
+        return this.rightGrip;
     }
 }
 exports.TwoHands = TwoHands;
