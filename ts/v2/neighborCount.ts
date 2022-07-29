@@ -18,41 +18,49 @@ export class NeighborCount<T> {
     return `${[x, y, z]}`;
   }
 
-  private addOrIncrement(key: string, m: Map<string, number>) {
+  private addOrChange(key: string, m: Map<string, number>, delta: number) {
     if (m.has(key)) {
-      m.set(key, m.get(key) + 1);
+      m.set(key, m.get(key) + delta);
     } else {
-      m.set(key, 1);
+      m.set(key, Math.max(0, delta));
     }
   }
 
-  private tmp = new THREE.Vector3();
+  private applyDelta(delta: number) {
+    this.addOrChange(
+      this.toKey(this.position.x, this.position.y, this.position.z + 1),
+      this.neighborCount, delta);
+    this.addOrChange(
+      this.toKey(this.position.x, this.position.y, this.position.z - 1),
+      this.neighborCount, delta);
+    this.addOrChange(
+      this.toKey(this.position.x, this.position.y + 1, this.position.z),
+      this.neighborCount, delta);
+    this.addOrChange(
+      this.toKey(this.position.x, this.position.y - 1, this.position.z),
+      this.neighborCount, delta);
+    this.addOrChange(
+      this.toKey(this.position.x + 1, this.position.y, this.position.z),
+      this.neighborCount, delta);
+    this.addOrChange(
+      this.toKey(this.position.x - 1, this.position.y, this.position.z),
+      this.neighborCount, delta);
+  }
+
   public set(m: THREE.Matrix4, value: T) {
     m.decompose(this.position, this.rotation, this.scale);
     const key = this.toKey(
       this.position.x, this.position.y, this.position.z);
-    if (this.data.has(key)) {
-      throw new Error(`Already counted: ${key}`);
-    }
+    const hasKey = this.data.has(key);
     this.data.set(key, new MatrixAnd<T>(m, value));
-    this.addOrIncrement(
-      this.toKey(this.position.x, this.position.y, this.position.z + 1),
-      this.neighborCount);
-    this.addOrIncrement(
-      this.toKey(this.position.x, this.position.y, this.position.z - 1),
-      this.neighborCount);
-    this.addOrIncrement(
-      this.toKey(this.position.x, this.position.y + 1, this.position.z),
-      this.neighborCount);
-    this.addOrIncrement(
-      this.toKey(this.position.x, this.position.y - 1, this.position.z),
-      this.neighborCount);
-    this.addOrIncrement(
-      this.toKey(this.position.x + 1, this.position.y, this.position.z),
-      this.neighborCount);
-    this.addOrIncrement(
-      this.toKey(this.position.x - 1, this.position.y, this.position.z),
-      this.neighborCount);
+    if (!hasKey) this.applyDelta(1);
+  }
+
+  public reset(m: THREE.Matrix4, value: T) {
+    m.decompose(this.position, this.rotation, this.scale);
+    const key = this.toKey(
+      this.position.x, this.position.y, this.position.z);
+    if (this.data.delete(key)) this.applyDelta(-1);
   }
 
   public *allElements() {
