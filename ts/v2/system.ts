@@ -68,8 +68,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
     }
     for (const k of this.tmpSet) {
       if (!this.activeAsteroids.has(k)) {
-        console.log(`Asteroid ${k.x}; Universe: ${universe.position.x}; v: ${this.tmpV.x}`);
-        console.log('Pop asteroid.');
+        console.log(`Asteroid count: ${this.activeAsteroids.size}`);
         const asteroid = new Asteroid(this.assets, this.controls);
         const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
         File.load(asteroid, name, k);

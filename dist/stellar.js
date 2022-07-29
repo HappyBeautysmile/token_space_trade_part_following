@@ -32,8 +32,8 @@ class S {
         S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
         S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
         S.setDefault('sr', 10e9, 'Universe radius');
-        S.setDefault('ar', 100e3, 'Asteroid belt radius');
-        S.setDefault('ss', 10e3, 'Radius of a single star');
+        S.setDefault('ar', 1e6, 'Asteroid belt radius');
+        S.setDefault('ss', 100e3, 'Radius of a single star');
         S.setDefault('sp', 200e6, 'Star System "Pop" radius');
         S.setDefault('as', 5, 'Radius of a single asteroid');
         S.setDefault('ps', 30, 'Platform size.');
@@ -2237,8 +2237,7 @@ class System extends THREE.Object3D {
         }
         for (const k of this.tmpSet) {
             if (!this.activeAsteroids.has(k)) {
-                console.log(`Asteroid ${k.x}; Universe: ${universe.position.x}; v: ${this.tmpV.x}`);
-                console.log('Pop asteroid.');
+                console.log(`Asteroid count: ${this.activeAsteroids.size}`);
                 const asteroid = new asteroid_1.Asteroid(this.assets, this.controls);
                 const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(asteroid, name, k);
