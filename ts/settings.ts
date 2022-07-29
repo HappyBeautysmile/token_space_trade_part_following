@@ -25,13 +25,13 @@ export class S {
     S.setDefault('fru', 0, 'If set, log FPS every `fru` seconds.');
     S.setDefault('sh', 1, 'Start location 1 = block build, 2 = VLU');
     S.setDefault('sr', 10e9, 'Universe radius');
-    S.setDefault('ar', 1e6, 'Asteroid belt radius');
-    S.setDefault('ss', 100e3, 'Radius of a single star')
+    S.setDefault('ar', 100e3, 'Asteroid belt radius');
+    S.setDefault('ss', 10e3, 'Radius of a single star')
     S.setDefault('sp', 200e6, 'Star System "Pop" radius');
     S.setDefault('as', 5, 'Radius of a single asteroid');
     S.setDefault('ps', 30, 'Platform size.');
     S.setDefault('ns', 10e3, 'Number of stars in the VLU');
-    S.setDefault('na', 700, 'Number of asteroids in a belt.');
+    S.setDefault('na', 1000, 'Number of asteroids in a belt.');
 
     S.setDefault('ni', 1000, 'Instances Per Mesh');
     S.setDefault('rs', 20, 'Number of ray steps');
