@@ -10,6 +10,7 @@ import { NebulaSphere } from "./nebulaSphere";
 import { PointCloudUnion } from "./pointSet";
 import { Stars } from "./stars";
 import { Grid } from "./grid";
+import { Tick, Ticker } from "../tick";
 
 export class Stellar {
   private scene = new THREE.Scene();
@@ -40,8 +41,12 @@ export class Stellar {
 
     // Set up animation loop last - after everything is loaded.
     const clock = new THREE.Clock();
+    let elapsedS = 0;
+    let frameCount = 0;
     this.renderer.setAnimationLoop(() => {
       const deltaS = Math.min(clock.getDelta(), 0.1);
+      elapsedS += deltaS;
+      ++frameCount;
       this.renderer.render(this.scene, this.camera);
       this.handleControls(deltaS);
       this.stars.handlePops(this.universe, this.allPoints);
@@ -56,18 +61,23 @@ export class Stellar {
         this.cursorR.position.copy(this.rightPosition);
         this.playerGroup.worldToLocal(this.cursorR.position);
       }
+      this.scene.traverseVisible((o) => {
+        if (o['tick']) {
+          (o as any as Ticker).tick(new Tick(elapsedS, deltaS, frameCount));
+        }
+      })
     });
   }
 
   private initializeGraphics() {
     document.body.innerHTML = '';
     this.camera = new THREE.PerspectiveCamera(75,
-      1.0, /*near=*/0.1, /*far=*/2000);
+      1.0, /*near=*/0.1, /*far=*/20e9);
     this.camera.position.set(0, 1.7, 0);
     this.camera.lookAt(0, 1.7, -1.5);
     this.playerGroup.add(this.camera);
 
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new THREE.WebGLRenderer({ logarithmicDepthBuffer: true });
     this.renderer.setSize(512, 512);
     document.body.appendChild(this.renderer.domElement);
     document.body.appendChild(VRButton.createButton(this.renderer));
@@ -124,7 +134,7 @@ export class Stellar {
     light.position.set(0, 10, 2);
     this.scene.add(light);
 
-    const ambient = new THREE.AmbientLight('#aaf', 0.2);
+    const ambient = new THREE.AmbientLight('#def', 0.5);
     this.scene.add(ambient);
 
     console.log('Initialize World');

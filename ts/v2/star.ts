@@ -1,12 +1,16 @@
 import * as THREE from "three";
 import { S } from "../settings";
+import { Tick, Ticker } from "../tick";
 
 
-export class Star extends THREE.Mesh {
+export class Star extends THREE.Mesh implements Ticker {
+  private shaderMaterial: THREE.ShaderMaterial;
   constructor() {
+    const shaderMaterial = Star.makeMaterial();
     super(new THREE.IcosahedronBufferGeometry(S.float('ss'), 4),
-      Star.makeMaterial());
+      shaderMaterial);
     this.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e30);
+    this.shaderMaterial = shaderMaterial;
   }
 
   private static makeMaterial(): THREE.ShaderMaterial {
@@ -17,9 +21,6 @@ export class Star extends THREE.Mesh {
       void main() {
         vec4 worldPosition = modelMatrix * vec4(position, 1.0);
         float distance = length(worldPosition.xyz / worldPosition.w);
-        if (distance > 700.0) {
-          worldPosition.xyz *= 700.0 / distance;
-        }
         vec4 mvPosition = viewMatrix * worldPosition;
         gl_Position = projectionMatrix * mvPosition;
 
@@ -31,6 +32,7 @@ export class Star extends THREE.Mesh {
       fragmentShader: `
       varying vec3 vDirection;
       varying float viewDot;
+      uniform float iTime;
       float wave(in vec4 x, in vec4 dir, in float freq, in float offset) {
         return sin(offset + dot(x, dir) * freq);
       }
@@ -56,8 +58,8 @@ export class Star extends THREE.Mesh {
       void main() {          
           vec3 view = vDirection * 8.0;
       
-          vec4 noise = 0.5 + 0.5 * compound4(
-            0.1 * compound4(vec4(view, 0.0)));
+          vec4 noise = 0.5 + 0.5 * 
+            compound4(0.1 * compound4(vec4(view, iTime * 0.3)));
           float intensity = length(noise) * 0.7;
   
           float red = pow(intensity * 2.5, 1.6);
@@ -74,9 +76,17 @@ export class Star extends THREE.Mesh {
       depthTest: true,
       blending: THREE.NormalBlending,
       side: THREE.FrontSide,
+      uniforms: {
+        iTime: { value: 0 }
+      },
     });
 
     return material;
+  }
+
+  tick(t: Tick) {
+    this.shaderMaterial.uniforms['iTime'].value = t.elapsedS;
+    this.shaderMaterial.uniformsNeedUpdate = true;
   }
 
 }

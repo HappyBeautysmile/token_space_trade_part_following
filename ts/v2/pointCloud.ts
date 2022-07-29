@@ -159,10 +159,10 @@ export class PointCloud extends THREE.Object3D {
             sizeScale *= distance / (500.0 * r);
             vIntensity *= 1.0 / sizeScale;
           }
-          if (distance > 800.0) {
-            worldPosition.xyz *= 800.0 / distance;
-            sizeScale *= 800.0 / distance;
-          }
+          // if (distance > 800.0) {
+          //   worldPosition.xyz *= 800.0 / distance;
+          //   sizeScale *= 800.0 / distance;
+          // }
           vec4 mvPosition = viewMatrix * worldPosition;
           mvPosition += sizeScale * r * vec4(dxy, 0.0, 0.0);
 
