@@ -5,6 +5,13 @@ export class Latice<T> {
   private codeToKey = new Map<number, T>();
   readonly origin = new THREE.Vector3();
   private data: Uint8Array;
+
+  // `origin` is the lower left corner of the region in space.
+  // `edgeSize` is the number of buckets.  So, if you want a cube 
+  // centered at the origin with a radius of 10, you would specify:
+  // new Latice<YourType>(new THRE.Vector3(-10, -10, -10), 21);
+  // This allows for positions from -10 to +10 (inclusive) which
+  // is a total of 21 positions.
   constructor(origin: THREE.Vector3, private edgeSize: number) {
     this.origin.copy(origin);
     this.data = new Uint8Array(edgeSize * edgeSize * edgeSize);
