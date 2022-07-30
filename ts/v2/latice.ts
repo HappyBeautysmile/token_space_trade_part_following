@@ -22,11 +22,14 @@ export class Latice<T> {
     return x + y * this.edgeSize + z * this.edgeSize * this.edgeSize;
   }
 
+  private getIndexFromVector(v: THREE.Vector3) {
+    return this.getIndex(
+      Math.round(v.x), Math.round(v.y), Math.round(v.z));
+  }
+
   Get(pos: THREE.Vector3): T {
-    const x = Math.round(pos.x - this.origin.x);
-    const y = Math.round(pos.y - this.origin.y);
-    const z = Math.round(pos.z - this.origin.z);
-    return this.codeToKey.get(this.data[this.getIndex(x, y, z)]);
+    const index = this.getIndexFromVector(pos);
+    return this.codeToKey.get(this.data[index]);
   }
 
   Set(pos: THREE.Vector3, value: T) {
@@ -38,6 +41,7 @@ export class Latice<T> {
     } else {
       code = this.keyToCode.get(value);
     }
-
+    const index = this.getIndexFromVector(pos);
+    this.data[index] = code;
   }
 }
