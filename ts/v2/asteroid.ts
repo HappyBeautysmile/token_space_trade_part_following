@@ -10,7 +10,7 @@ import { MeshCollection } from "./meshCollection";
 
 export class Asteroid extends MeshCollection implements Codeable {
   constructor(assets: Assets, private controls: Controls) {
-    super(assets);
+    super(assets, S.float('as') * 1.2);
 
     controls.setStartStopCallback((ev: StartStopEvent) => {
       if (ev.state == 'start') {
