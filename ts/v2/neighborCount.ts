@@ -47,13 +47,21 @@ export class NeighborCount<T> {
       this.neighborCount, delta);
   }
 
-  public set(m: THREE.Matrix4, value: T) {
-    m.decompose(this.position, this.rotation, this.scale);
-    const key = this.toKey(
-      this.position.x, this.position.y, this.position.z);
+  public setVector(pos: THREE.Vector3, value: T, matrix: THREE.Matrix4) {
+    let m = matrix;
+    if (!m) {
+      m = new THREE.Matrix4();
+      m.makeTranslation(pos.x, pos.y, pos.z);
+    }
+    const key = this.toKey(pos.x, pos.y, pos.z);
     const hasKey = this.data.has(key);
     this.data.set(key, new MatrixAnd<T>(m, value));
     if (!hasKey) this.applyDelta(1);
+  }
+
+  public set(m: THREE.Matrix4, value: T) {
+    m.decompose(this.position, this.rotation, this.scale);
+    this.setVector(this.position, value, m);
   }
 
   public reset(m: THREE.Matrix4, value: T) {

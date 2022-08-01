@@ -105,12 +105,8 @@ export class MeshCollection extends THREE.Object3D
     for (const [name, material] of this.materialMap.entries()) {
       const instancedMesh = new THREE.InstancedMesh(
         this.geometryMap.get(name), this.materialMap.get(name),
-        matricies.length);
+        this.cubes.GetCount(name));
       instancedMesh.count = 0;
-      for (let i = 0; i < matricies.length; ++i) {
-        // TODO: If it's not a "solid" cube, we shouldn't add it.
-        nc.set(matricies[i], name);
-      }
       this.meshMap.set(name, instancedMesh);
       this.add(instancedMesh);
     }
@@ -132,16 +128,14 @@ export class MeshCollection extends THREE.Object3D
 
   serialize(): Object {
     const o = {};
-    const p = new THREE.Vector3();
-    const q = new THREE.Quaternion();
-    const s = new THREE.Vector3();
-    for (const [name, matricies] of this.matrixMap.entries()) {
-      const rockPositions = [];
-      for (const matrix of matricies) {
-        matrix.decompose(p, q, s);
-        rockPositions.push({ x: p.x, y: p.y, z: p.z });
-
-      }
+    const positionMap = new Map<string, Object[]>();
+    for (const laticeEntry of this.cubes.Entries()) {
+      const name = laticeEntry.value;
+      const p = laticeEntry.position;
+      if (!positionMap.has(name)) positionMap.set(name, []);
+      positionMap.get(name).push({ x: p.x, y: p.y, z: p.z });
+    }
+    for (const [name, rockPositions] of positionMap.entries()) {
       o[`${name}Positions`] = rockPositions;
     }
     return o;

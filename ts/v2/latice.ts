@@ -56,7 +56,15 @@ export class Latice<T> {
     this.data[index] = code;
   }
 
-  * Entries(): Iterable<LaticeEntry<T>> {
+  GetCount(value: T): number {
+    if (this.keyCount.has(value)) {
+      return this.keyCount.get(value);
+    } else {
+      return 0;
+    }
+  }
+
+  *Entries(): Iterable<LaticeEntry<T>> {
     for (let z = 0; z < this.edgeSize; ++z) {
       for (let y = 0; y < this.edgeSize; ++y) {
         let index = this.getIndex(0, y, z);
