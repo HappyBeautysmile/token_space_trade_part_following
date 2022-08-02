@@ -30,7 +30,9 @@ export class Latice<T> {
 
   private getIndexFromVector(v: THREE.Vector3) {
     return this.getIndex(
-      Math.round(v.x), Math.round(v.y), Math.round(v.z));
+      Math.round(v.x - this.origin.x),
+      Math.round(v.y - this.origin.y),
+      Math.round(v.z - this.origin.z));
   }
 
   Get(pos: THREE.Vector3): T {

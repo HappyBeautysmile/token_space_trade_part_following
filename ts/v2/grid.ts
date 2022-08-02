@@ -59,6 +59,11 @@ export class Grid {
     Grid.U3, Grid.F3, Grid.B3, Grid.L3, Grid.R3, Grid.D3,
   ];
 
+  public static randomRotation(): THREE.Quaternion {
+    return Grid.allRotations[
+      Math.floor(Math.random() * Grid.allRotations.length)];
+  }
+
   public static makeTranslation(x: number, y: number, z: number)
     : THREE.Matrix4 {
     const m = new THREE.Matrix4();

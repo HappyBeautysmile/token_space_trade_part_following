@@ -224,7 +224,7 @@ const meshCollection_1 = __webpack_require__(1090);
 class Asteroid extends meshCollection_1.MeshCollection {
     controls;
     constructor(assets, controls) {
-        super(assets);
+        super(assets, settings_1.S.float('as') * 1.2);
         this.controls = controls;
         controls.setStartStopCallback((ev) => {
             if (ev.state == 'start') {
@@ -786,6 +786,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Grid = void 0;
 const THREE = __importStar(__webpack_require__(5232));
+const three_1 = __webpack_require__(5232);
 class Grid {
     static round(v) {
         v.set(Math.round(v.x), Math.round(v.y), Math.round(v.z));
@@ -799,6 +800,39 @@ class Grid {
     static zero = new THREE.Vector3(0, 0, 0);
     static one = new THREE.Vector3(1, 1, 1);
     static notRotated = new THREE.Quaternion(0, 0, 0, 1);
+    static U0 = new THREE.Quaternion().copy(Grid.notRotated);
+    static U1 = new THREE.Quaternion().setFromEuler(new three_1.Euler(0, Math.PI / 2, 0));
+    static U2 = new THREE.Quaternion().setFromEuler(new three_1.Euler(0, Math.PI, 0));
+    static U3 = new THREE.Quaternion().setFromEuler(new three_1.Euler(0, -Math.PI / 2, 0));
+    static F0 = new THREE.Quaternion().setFromEuler(new three_1.Euler(Math.PI / 2, 0, 0));
+    static B0 = new THREE.Quaternion().setFromEuler(new three_1.Euler(-Math.PI / 2, 0, 0));
+    static L0 = new THREE.Quaternion().setFromEuler(new three_1.Euler(0, 0, Math.PI / 2));
+    static R0 = new THREE.Quaternion().setFromEuler(new three_1.Euler(0, 0, -Math.PI / 2));
+    static D0 = new THREE.Quaternion().setFromEuler(new three_1.Euler(0, 0, Math.PI));
+    static F1 = new THREE.Quaternion().copy(Grid.U1).multiply(Grid.F0);
+    static F2 = new THREE.Quaternion().copy(Grid.U2).multiply(Grid.F0);
+    static F3 = new THREE.Quaternion().copy(Grid.U3).multiply(Grid.F0);
+    static B1 = new THREE.Quaternion().copy(Grid.U1).multiply(Grid.B0);
+    static B2 = new THREE.Quaternion().copy(Grid.U2).multiply(Grid.B0);
+    static B3 = new THREE.Quaternion().copy(Grid.U3).multiply(Grid.B0);
+    static L1 = new THREE.Quaternion().copy(Grid.U1).multiply(Grid.L0);
+    static L2 = new THREE.Quaternion().copy(Grid.U2).multiply(Grid.L0);
+    static L3 = new THREE.Quaternion().copy(Grid.U3).multiply(Grid.L0);
+    static R1 = new THREE.Quaternion().copy(Grid.U1).multiply(Grid.R0);
+    static R2 = new THREE.Quaternion().copy(Grid.U2).multiply(Grid.R0);
+    static R3 = new THREE.Quaternion().copy(Grid.U3).multiply(Grid.R0);
+    static D1 = new THREE.Quaternion().copy(Grid.U1).multiply(Grid.D0);
+    static D2 = new THREE.Quaternion().copy(Grid.U2).multiply(Grid.D0);
+    static D3 = new THREE.Quaternion().copy(Grid.U3).multiply(Grid.D0);
+    static allRotations = [
+        Grid.U0, Grid.F0, Grid.B0, Grid.L0, Grid.R0, Grid.D0,
+        Grid.U1, Grid.F1, Grid.B1, Grid.L1, Grid.R1, Grid.D1,
+        Grid.U2, Grid.F2, Grid.B2, Grid.L2, Grid.R2, Grid.D2,
+        Grid.U3, Grid.F3, Grid.B3, Grid.L3, Grid.R3, Grid.D3,
+    ];
+    static randomRotation() {
+        return Grid.allRotations[Math.floor(Math.random() * Grid.allRotations.length)];
+    }
     static makeTranslation(x, y, z) {
         const m = new THREE.Matrix4();
         m.makeTranslation(x, y, z);
@@ -807,6 +841,118 @@ class Grid {
 }
 exports.Grid = Grid;
 //# sourceMappingURL=grid.js.map
+
+/***/ }),
+
+/***/ 7231:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Latice = exports.LaticeEntry = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class LaticeEntry {
+    position;
+    value;
+    constructor(position, value) {
+        this.position = position;
+        this.value = value;
+    }
+}
+exports.LaticeEntry = LaticeEntry;
+class Latice {
+    edgeSize;
+    keyToCode = new Map();
+    codeToKey = new Map();
+    keyCount = new Map();
+    origin = new THREE.Vector3();
+    data;
+    // `origin` is the lower left corner of the region in space.
+    // `edgeSize` is the number of buckets.  So, if you want a cube 
+    // centered at the origin with a radius of 10, you would specify:
+    // new Latice<YourType>(new THRE.Vector3(-10, -10, -10), 21);
+    // This allows for positions from -10 to +10 (inclusive) which
+    // is a total of 21 positions.
+    constructor(origin, edgeSize) {
+        this.edgeSize = edgeSize;
+        this.origin.copy(origin);
+        this.data = new Uint8Array(edgeSize * edgeSize * edgeSize);
+        this.codeToKey.set(0, null);
+    }
+    getIndex(x, y, z) {
+        return x + y * this.edgeSize + z * this.edgeSize * this.edgeSize;
+    }
+    getIndexFromVector(v) {
+        return this.getIndex(Math.round(v.x - this.origin.x), Math.round(v.y - this.origin.y), Math.round(v.z - this.origin.z));
+    }
+    Get(pos) {
+        const index = this.getIndexFromVector(pos);
+        return this.codeToKey.get(this.data[index]);
+    }
+    Set(pos, value) {
+        let code;
+        const index = this.getIndexFromVector(pos);
+        if (this.data[index] > 0) {
+            // TODO: decrement counter.
+        }
+        if (!this.keyToCode.has(value)) {
+            code = this.codeToKey.size;
+            this.keyToCode.set(value, code);
+            this.codeToKey.set(code, value);
+            this.keyCount.set(value, 1);
+        }
+        else {
+            code = this.keyToCode.get(value);
+            this.keyCount.set(value, this.keyCount.get(value) + 1);
+        }
+        this.data[index] = code;
+    }
+    GetCount(value) {
+        if (this.keyCount.has(value)) {
+            return this.keyCount.get(value);
+        }
+        else {
+            return 0;
+        }
+    }
+    *Entries() {
+        for (let z = 0; z < this.edgeSize; ++z) {
+            for (let y = 0; y < this.edgeSize; ++y) {
+                let index = this.getIndex(0, y, z);
+                for (let x = 0; x < this.edgeSize; ++x) {
+                    const code = this.data[index];
+                    if (code != 0) {
+                        const pos = new THREE.Vector3(x, y, z);
+                        pos.add(this.origin);
+                        yield new LaticeEntry(pos, this.codeToKey.get(code));
+                    }
+                    ++index;
+                }
+            }
+        }
+    }
+}
+exports.Latice = Latice;
+//# sourceMappingURL=latice.js.map
 
 /***/ }),
 
@@ -838,19 +984,25 @@ exports.MeshCollection = void 0;
 const THREE = __importStar(__webpack_require__(5232));
 const three_1 = __webpack_require__(5232);
 const grid_1 = __webpack_require__(3424);
+const latice_1 = __webpack_require__(7231);
 const neighborCount_1 = __webpack_require__(6516);
 const octoTree_1 = __webpack_require__(9343);
 class MeshCollection extends THREE.Object3D {
     rocks = new octoTree_1.PointMapOctoTree(grid_1.Grid.zero, 1e3);
+    // Maps item names to corresponding materials and geometry.
+    // This is used to create the appropriate Instanced Meshes.
     materialMap = new Map();
     geometryMap = new Map();
-    matrixMap = new Map();
+    // The instances of InstancedMesh created for each item.
     meshMap = new Map();
+    cubes;
     t = new THREE.Vector3();
     r = new THREE.Quaternion();
     s = new THREE.Vector3();
-    constructor(assets) {
+    constructor(assets, radius) {
         super();
+        const r = Math.ceil(radius);
+        this.cubes = new latice_1.Latice(new THREE.Vector3(-r, -r, -r), 2 * r + 1);
         for (const name of assets.names()) {
             const mesh = assets.getMesh(name);
             // console.log(`Mesh: ${mesh.name}`);
@@ -879,6 +1031,95 @@ class MeshCollection extends THREE.Object3D {
         const distance = this.rocks.getClosestDistance(this.tmpV);
         return distance;
     }
+    dirty = false;
+    addCube(name, position, rotation) {
+        const m = new three_1.Matrix4();
+        m.compose(position, rotation, grid_1.Grid.one);
+        this.cubes.Set(position, name);
+        this.rocks.add(position, position);
+        const key = this.locationKey(position);
+        if (this.cubeMap.has(key)) {
+            throw new Error("There is already a cube here.");
+        }
+        this.cubeMap.set(this.locationKey(position), name);
+        this.dirty = true;
+    }
+    removeCube(position) {
+        const key = this.locationKey(position);
+        if (this.cubeMap.has(key)) {
+            this.cubes.Set(position, null);
+            const name = this.cubeMap.get(key);
+            this.cubeMap.delete(key);
+            this.dirty = true;
+            return name;
+        }
+    }
+    cubeAt(p) {
+        return this.cubeMap.has(this.locationKey(p));
+    }
+    buildGeometry() {
+        this.children.splice(0);
+        this.meshMap.clear();
+        const nc = new neighborCount_1.NeighborCount();
+        // console.log('Building mesh collection.');
+        // Populate the neighbor mesh
+        for (const [name, material] of this.materialMap.entries()) {
+            const instancedMesh = new THREE.InstancedMesh(this.geometryMap.get(name), this.materialMap.get(name), this.cubes.GetCount(name));
+            instancedMesh.count = 0;
+            this.meshMap.set(name, instancedMesh);
+            this.add(instancedMesh);
+        }
+        for (const cubeEntry of this.cubes.Entries()) {
+            const m = new THREE.Matrix4();
+            m.makeRotationFromQuaternion(grid_1.Grid.randomRotation());
+            m.setPosition(cubeEntry.position);
+            nc.set(m, cubeEntry.value);
+        }
+        for (const mav of nc.externalElements()) {
+            const name = mav.value;
+            const matrix = mav.m;
+            const instancedMesh = this.meshMap.get(name);
+            const i = instancedMesh.count++;
+            instancedMesh.setMatrixAt(i, matrix);
+        }
+    }
+    tick(t) {
+        if (this.dirty) {
+            this.buildGeometry();
+            this.dirty = false;
+        }
+    }
+    serialize() {
+        const o = {};
+        const positionMap = new Map();
+        for (const laticeEntry of this.cubes.Entries()) {
+            const name = laticeEntry.value;
+            const p = laticeEntry.position;
+            if (!positionMap.has(name))
+                positionMap.set(name, []);
+            positionMap.get(name).push({ x: p.x, y: p.y, z: p.z });
+        }
+        for (const [name, rockPositions] of positionMap.entries()) {
+            o[`${name}Positions`] = rockPositions;
+        }
+        return o;
+    }
+    deserialize(o) {
+        this.rocks.clear();
+        for (const name of this.geometryMap.keys()) {
+            const key = `${name}Positions`;
+            const positions = o[key];
+            if (!positions) {
+                continue;
+            }
+            for (const p of positions) {
+                const v = new THREE.Vector3(p.x, p.y, p.z);
+                this.addCube(name, v, grid_1.Grid.randomRotation());
+            }
+        }
+        this.buildGeometry();
+        return this;
+    }
     defineItem(name, geometry, material) {
         this.geometryMap.set(name, geometry);
         this.materialMap.set(name, material);
@@ -895,75 +1136,6 @@ class MeshCollection extends THREE.Object3D {
     cubeMap = new Map();
     locationKey(v) {
         return `${[v.x.toFixed(0), v.y.toFixed(0), v.z.toFixed(0)]}`;
-    }
-    addCube(name, position, rotation) {
-        const m = new three_1.Matrix4();
-        m.compose(position, rotation, grid_1.Grid.one);
-        this.addOrSet(name, m, this.matrixMap);
-        this.rocks.add(position, position);
-        const key = this.locationKey(position);
-        if (this.cubeMap.has(key)) {
-            throw new Error("There is already a cube here.");
-        }
-        this.cubeMap.set(this.locationKey(position), name);
-    }
-    cubeAt(p) {
-        return this.cubeMap.has(this.locationKey(p));
-    }
-    buildGeometry() {
-        this.children.splice(0);
-        this.meshMap.clear();
-        const nc = new neighborCount_1.NeighborCount();
-        // console.log('Building mesh collection.');
-        // Populate the neighbor mesh
-        for (const [name, matricies] of this.matrixMap.entries()) {
-            const instancedMesh = new THREE.InstancedMesh(this.geometryMap.get(name), this.materialMap.get(name), matricies.length);
-            instancedMesh.count = 0;
-            for (let i = 0; i < matricies.length; ++i) {
-                // TODO: If it's not a "solid" cube, we shouldn't add it.
-                nc.set(matricies[i], name);
-            }
-            this.meshMap.set(name, instancedMesh);
-            this.add(instancedMesh);
-        }
-        for (const mav of nc.externalElements()) {
-            const name = mav.value;
-            const matrix = mav.m;
-            const instancedMesh = this.meshMap.get(name);
-            const i = instancedMesh.count++;
-            instancedMesh.setMatrixAt(i, matrix);
-        }
-    }
-    serialize() {
-        const o = {};
-        const p = new THREE.Vector3();
-        const q = new THREE.Quaternion();
-        const s = new THREE.Vector3();
-        for (const [name, matricies] of this.matrixMap.entries()) {
-            const rockPositions = [];
-            for (const matrix of matricies) {
-                matrix.decompose(p, q, s);
-                rockPositions.push({ x: p.x, y: p.y, z: p.z });
-            }
-            o[`${name}Positions`] = rockPositions;
-        }
-        return o;
-    }
-    deserialize(o) {
-        this.rocks.clear();
-        for (const name of this.geometryMap.keys()) {
-            const key = `${name}Positions`;
-            const positions = o[key];
-            if (!positions) {
-                continue;
-            }
-            for (const p of positions) {
-                const v = new THREE.Vector3(p.x, p.y, p.z);
-                this.addCube(name, v, grid_1.Grid.notRotated);
-            }
-        }
-        this.buildGeometry();
-        return this;
     }
 }
 exports.MeshCollection = MeshCollection;
@@ -1138,33 +1310,49 @@ class NeighborCount {
     toKey(x, y, z) {
         return `${[x, y, z]}`;
     }
-    addOrIncrement(key, m) {
+    addOrChange(key, m, delta) {
         if (m.has(key)) {
-            m.set(key, m.get(key) + 1);
+            m.set(key, m.get(key) + delta);
         }
         else {
-            m.set(key, 1);
+            m.set(key, Math.max(0, delta));
         }
     }
-    tmp = new THREE.Vector3();
+    applyDelta(delta) {
+        this.addOrChange(this.toKey(this.position.x, this.position.y, this.position.z + 1), this.neighborCount, delta);
+        this.addOrChange(this.toKey(this.position.x, this.position.y, this.position.z - 1), this.neighborCount, delta);
+        this.addOrChange(this.toKey(this.position.x, this.position.y + 1, this.position.z), this.neighborCount, delta);
+        this.addOrChange(this.toKey(this.position.x, this.position.y - 1, this.position.z), this.neighborCount, delta);
+        this.addOrChange(this.toKey(this.position.x + 1, this.position.y, this.position.z), this.neighborCount, delta);
+        this.addOrChange(this.toKey(this.position.x - 1, this.position.y, this.position.z), this.neighborCount, delta);
+    }
+    setVector(pos, value, matrix) {
+        let m = matrix;
+        if (!m) {
+            m = new THREE.Matrix4();
+            m.makeTranslation(pos.x, pos.y, pos.z);
+        }
+        const key = this.toKey(pos.x, pos.y, pos.z);
+        const hasKey = this.data.has(key);
+        this.data.set(key, new MatrixAnd(m, value));
+        if (!hasKey)
+            this.applyDelta(1);
+    }
     set(m, value) {
         m.decompose(this.position, this.rotation, this.scale);
+        this.setVector(this.position, value, m);
+    }
+    reset(m, value) {
+        m.decompose(this.position, this.rotation, this.scale);
         const key = this.toKey(this.position.x, this.position.y, this.position.z);
-        if (this.data.has(key)) {
-            throw new Error(`Already counted: ${key}`);
-        }
-        this.data.set(key, new MatrixAnd(m, value));
-        this.addOrIncrement(this.toKey(this.position.x, this.position.y, this.position.z + 1), this.neighborCount);
-        this.addOrIncrement(this.toKey(this.position.x, this.position.y, this.position.z - 1), this.neighborCount);
-        this.addOrIncrement(this.toKey(this.position.x, this.position.y + 1, this.position.z), this.neighborCount);
-        this.addOrIncrement(this.toKey(this.position.x, this.position.y - 1, this.position.z), this.neighborCount);
-        this.addOrIncrement(this.toKey(this.position.x + 1, this.position.y, this.position.z), this.neighborCount);
-        this.addOrIncrement(this.toKey(this.position.x - 1, this.position.y, this.position.z), this.neighborCount);
+        if (this.data.delete(key))
+            this.applyDelta(-1);
     }
     *allElements() {
         yield* this.data.values();
     }
     *externalElements() {
+        console.log(`Enumerating neighbor count...`);
         for (const [key, matrixAndT] of this.data.entries()) {
             if (this.neighborCount.get(key) < 6) {
                 yield matrixAndT;

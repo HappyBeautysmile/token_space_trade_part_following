@@ -76,6 +76,7 @@ export class NeighborCount<T> {
   }
 
   public *externalElements() {
+    console.log(`Enumerating neighbor count...`);
     for (const [key, matrixAndT] of this.data.entries()) {
       if (this.neighborCount.get(key) < 6) {
         yield matrixAndT;

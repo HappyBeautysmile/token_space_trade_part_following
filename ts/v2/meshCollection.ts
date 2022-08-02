@@ -26,13 +26,11 @@ export class MeshCollection extends THREE.Object3D
   private r = new THREE.Quaternion();
   private s = new THREE.Vector3();
 
-  private origin = new THREE.Vector3;
-
   constructor(assets: Assets, radius: number) {
     super();
     const r = Math.ceil(radius);
-    this.origin.set(-r, -r, -r);
-    this.cubes = new Latice<string>(this.origin, r);
+    this.cubes = new Latice<string>(
+      new THREE.Vector3(-r, -r, -r), 2 * r + 1);
 
     for (const name of assets.names()) {
       const mesh = assets.getMesh(name);
@@ -111,6 +109,13 @@ export class MeshCollection extends THREE.Object3D
       this.add(instancedMesh);
     }
 
+    for (const cubeEntry of this.cubes.Entries()) {
+      const m = new THREE.Matrix4();
+      m.makeRotationFromQuaternion(Grid.randomRotation());
+      m.setPosition(cubeEntry.position);
+      nc.set(m, cubeEntry.value);
+    }
+
     for (const mav of nc.externalElements()) {
       const name = mav.value;
       const matrix = mav.m;
@@ -123,6 +128,7 @@ export class MeshCollection extends THREE.Object3D
   tick(t: Tick) {
     if (this.dirty) {
       this.buildGeometry();
+      this.dirty = false;
     }
   }
 
@@ -151,7 +157,7 @@ export class MeshCollection extends THREE.Object3D
       }
       for (const p of positions) {
         const v = new THREE.Vector3(p.x, p.y, p.z);
-        this.addCube(name, v, Grid.notRotated);
+        this.addCube(name, v, Grid.randomRotation());
       }
     }
     this.buildGeometry();
