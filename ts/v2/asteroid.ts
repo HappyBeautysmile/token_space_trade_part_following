@@ -3,29 +3,34 @@ import { S } from "../settings";
 import { Assets } from "./assets";
 import { AstroGen } from "./astroGen";
 import { Controls, StartStopEvent, StartStopEventHandler } from "./controls";
+import { Cursor } from "./cursor";
 
 import { Codeable } from "./file";
 import { Grid } from "./grid";
 import { MeshCollection } from "./meshCollection";
 
 export class Asteroid extends MeshCollection implements Codeable {
-  constructor(assets: Assets, private controls: Controls) {
+  constructor(assets: Assets, controls: Controls,
+    cursors: Map<THREE.XRHandedness, Cursor>) {
     super(assets, S.float('as') * 1.2);
 
     controls.setStartStopCallback((ev: StartStopEvent) => {
       if (ev.state == 'start') {
         const pos = new THREE.Vector3();
         pos.copy(ev.worldPosition);
-
         this.worldToLocal(pos);
         Grid.round(pos);
-        console.log(`Cube?: ${this.removeCube(pos)}`);
-        const mesh = new THREE.Mesh(
-          new THREE.IcosahedronBufferGeometry(0.4, 2),
-          new THREE.MeshPhongMaterial({ color: '#ff0', shininess: 1.0 })
-        );
-        mesh.position.copy(pos);
-        this.add(mesh);
+
+        const cursor = cursors.get(ev.handedness);
+        if (cursor.isHolding()) {
+          if (!this.cubeAt(pos)) {
+            this.addCube(cursor.getHold(), pos, Grid.randomRotation());
+            cursor.setHold(null);
+          }
+        } else {
+          const removed = this.removeCube(pos);
+          cursor.setHold(removed);
+        }
       }
     });
 

@@ -37,6 +37,9 @@ export class Latice<T> {
 
   Get(pos: THREE.Vector3): T {
     const index = this.getIndexFromVector(pos);
+    if (index < 0 || index >= this.data.length) {
+      return null;
+    }
     return this.codeToKey.get(this.data[index]);
   }
 
@@ -55,6 +58,9 @@ export class Latice<T> {
 
   Set(pos: THREE.Vector3, value: T) {
     const index = this.getIndexFromVector(pos);
+    if (index < 0 || index >= this.data.length) {
+      return;
+    }
     this.RemoveWithIndex(index);
     if (value === null) {
       return;

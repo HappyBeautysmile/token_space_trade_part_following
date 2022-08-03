@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { S } from "../settings";
 import { Assets } from "./assets";
 import { Controls } from "./controls";
+import { Cursor } from "./cursor";
 
 import { Codeable, File } from "./file";
 import { PointCloud } from "./pointCloud";
@@ -11,7 +12,8 @@ import { System } from "./system";
 export class Stars extends PointCloud implements Codeable, PointSet {
   private activeSystems = new Map<THREE.Vector3, System>();
 
-  constructor(private assets: Assets, private controls: Controls) {
+  constructor(private assets: Assets, private controls: Controls,
+    private cursors: Map<THREE.XRHandedness, Cursor>) {
     super(true);
   }
 
@@ -47,7 +49,7 @@ export class Stars extends PointCloud implements Codeable, PointSet {
     }
     for (const k of this.tmpSet) {
       if (!this.activeSystems.has(k)) {
-        const system = new System(this.assets, this.controls);
+        const system = new System(this.assets, this.controls, this.cursors);
         const name = `System:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
         File.load(system, name, k);
         this.activeSystems.set(k, system);

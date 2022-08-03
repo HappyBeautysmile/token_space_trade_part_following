@@ -222,19 +222,25 @@ const astroGen_1 = __webpack_require__(6647);
 const grid_1 = __webpack_require__(3424);
 const meshCollection_1 = __webpack_require__(1090);
 class Asteroid extends meshCollection_1.MeshCollection {
-    controls;
-    constructor(assets, controls) {
+    constructor(assets, controls, cursors) {
         super(assets, settings_1.S.float('as') * 1.2);
-        this.controls = controls;
         controls.setStartStopCallback((ev) => {
             if (ev.state == 'start') {
                 const pos = new THREE.Vector3();
                 pos.copy(ev.worldPosition);
                 this.worldToLocal(pos);
                 grid_1.Grid.round(pos);
-                const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(0.4, 2), new THREE.MeshPhongMaterial({ color: '#ff0', shininess: 1.0 }));
-                mesh.position.copy(pos);
-                this.add(mesh);
+                const cursor = cursors.get(ev.handedness);
+                if (cursor.isHolding()) {
+                    if (!this.cubeAt(pos)) {
+                        this.addCube(cursor.getHold(), pos, grid_1.Grid.randomRotation());
+                        cursor.setHold(null);
+                    }
+                }
+                else {
+                    const removed = this.removeCube(pos);
+                    cursor.setHold(removed);
+                }
             }
         });
     }
@@ -690,6 +696,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Cursor = void 0;
 const THREE = __importStar(__webpack_require__(5232));
 class Cursor extends THREE.LineSegments {
+    hold;
     constructor() {
         const points = [];
         // four left to right lines
@@ -722,6 +729,15 @@ class Cursor extends THREE.LineSegments {
         const material = new THREE.LineBasicMaterial({ color: "#0f0", linewidth: 1 });
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         super(geometry, material);
+    }
+    isHolding() {
+        return !!this.hold;
+    }
+    getHold() {
+        return this.hold;
+    }
+    setHold(item) {
+        this.hold = item;
     }
 }
 exports.Cursor = Cursor;
@@ -906,14 +922,32 @@ class Latice {
     }
     Get(pos) {
         const index = this.getIndexFromVector(pos);
+        if (index < 0 || index >= this.data.length) {
+            return null;
+        }
         return this.codeToKey.get(this.data[index]);
     }
-    Set(pos, value) {
-        let code;
-        const index = this.getIndexFromVector(pos);
-        if (this.data[index] > 0) {
-            // TODO: decrement counter.
+    RemoveWithIndex(index) {
+        const oldCode = this.data[index];
+        if (oldCode > 0) {
+            const oldValue = this.codeToKey.get(oldCode);
+            this.keyCount.set(oldValue, this.keyCount.get(oldValue) - 1);
+            this.data[index] = 0;
         }
+    }
+    Remove(pos) {
+        this.RemoveWithIndex(this.getIndexFromVector(pos));
+    }
+    Set(pos, value) {
+        const index = this.getIndexFromVector(pos);
+        if (index < 0 || index >= this.data.length) {
+            return;
+        }
+        this.RemoveWithIndex(index);
+        if (value === null) {
+            return;
+        }
+        let code;
         if (!this.keyToCode.has(value)) {
             code = this.codeToKey.size;
             this.keyToCode.set(value, code);
@@ -1002,7 +1036,10 @@ class MeshCollection extends THREE.Object3D {
     constructor(assets, radius) {
         super();
         const r = Math.ceil(radius);
-        this.cubes = new latice_1.Latice(new THREE.Vector3(-r, -r, -r), 2 * r + 1);
+        // Add a 5-cell padding.
+        const origin = new THREE.Vector3(-r - 5, -r - 5, -r - 5);
+        const edgeSize = 2 * r + 1 + 10;
+        this.cubes = new latice_1.Latice(origin, edgeSize);
         for (const name of assets.names()) {
             const mesh = assets.getMesh(name);
             // console.log(`Mesh: ${mesh.name}`);
@@ -1037,25 +1074,19 @@ class MeshCollection extends THREE.Object3D {
         m.compose(position, rotation, grid_1.Grid.one);
         this.cubes.Set(position, name);
         this.rocks.add(position, position);
-        const key = this.locationKey(position);
-        if (this.cubeMap.has(key)) {
-            throw new Error("There is already a cube here.");
-        }
-        this.cubeMap.set(this.locationKey(position), name);
         this.dirty = true;
     }
     removeCube(position) {
-        const key = this.locationKey(position);
-        if (this.cubeMap.has(key)) {
+        const name = this.cubes.Get(position);
+        if (!!name) {
             this.cubes.Set(position, null);
-            const name = this.cubeMap.get(key);
-            this.cubeMap.delete(key);
             this.dirty = true;
             return name;
         }
+        return null;
     }
     cubeAt(p) {
-        return this.cubeMap.has(this.locationKey(p));
+        return !!this.cubes.Get(p);
     }
     buildGeometry() {
         this.children.splice(0);
@@ -1079,13 +1110,20 @@ class MeshCollection extends THREE.Object3D {
             const name = mav.value;
             const matrix = mav.m;
             const instancedMesh = this.meshMap.get(name);
-            const i = instancedMesh.count++;
-            instancedMesh.setMatrixAt(i, matrix);
+            if (instancedMesh) {
+                const i = instancedMesh.count++;
+                instancedMesh.setMatrixAt(i, matrix);
+            }
+            else {
+                console.log(`Error: no mesh for ${name}`);
+            }
         }
     }
     tick(t) {
         if (this.dirty) {
+            console.time(`Rebuilding`);
             this.buildGeometry();
+            console.timeEnd(`Rebuilding`);
             this.dirty = false;
         }
     }
@@ -1125,143 +1163,9 @@ class MeshCollection extends THREE.Object3D {
         this.materialMap.set(name, material);
     }
     ;
-    addOrSet(key, value, map) {
-        if (map.has(key)) {
-            map.get(key).push(value);
-        }
-        else {
-            map.set(key, [value]);
-        }
-    }
-    cubeMap = new Map();
-    locationKey(v) {
-        return `${[v.x.toFixed(0), v.y.toFixed(0), v.z.toFixed(0)]}`;
-    }
 }
 exports.MeshCollection = MeshCollection;
 //# sourceMappingURL=meshCollection.js.map
-
-/***/ }),
-
-/***/ 5387:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NebulaSphere = void 0;
-const THREE = __importStar(__webpack_require__(5232));
-const settings_1 = __webpack_require__(6451);
-class NebulaSphere extends THREE.Object3D {
-    material;
-    constructor() {
-        super();
-        this.material = this.makeMaterial();
-        const mesh = new THREE.Mesh(new THREE.IcosahedronBufferGeometry(1000, 3), this.material);
-        this.add(mesh);
-    }
-    updatePosition(pos) {
-        this.material.uniforms['pos'].value.copy(pos);
-        this.material.uniformsNeedUpdate = true;
-    }
-    makeMaterial() {
-        const material = new THREE.ShaderMaterial({
-            vertexShader: `
-        varying vec3 vDirection;
-        void main() {
-          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-          vec4 mvPosition = viewMatrix * worldPosition;
-          gl_Position = projectionMatrix * mvPosition;
-          vDirection = worldPosition.xyz / length(worldPosition.xyz);
-        }`,
-            fragmentShader: `
-#define kDistanceToScreen 1.0
-#define kRaySteps ${settings_1.S.float('rs').toFixed(0)}
-#define kRayLength 10.0
-#define kOrbitRadius 3.0
-
-varying vec3 vDirection;
-
-float noise3to1(in vec3 p) {
-  const mat3 m = mat3(
-    1.0, 0.0, 0.0,
-    0.5, 1.2, 0.0,
-    0.0, 0.0, 1.0);
-
-  vec3 s = m * p;
-
-  return sin(s.x) * sin(s.y) * sin(s.z);
-}
-
-vec3 noise3to3(in vec3 p) {
-  return vec3(
-    noise3to1(p.xyz + vec3(1, 2, 3) * vec3(0.9, 0.7, 1.3)),
-    noise3to1(p.zyx + vec3(7, 9, 8) * vec3(0.5, 1.2, 1.1)),
-    noise3to1(p.yxz + vec3(3, 2, 5) * vec3(0.8, 0.3, 1.5)));
-}
-
-vec3 brown(in vec3 p) {
-  return 0.5 * noise3to3(p) + 0.2 * noise3to3(p * 3.0) + 0.1 * noise3to3(p * 5.0);
-
-}
-
-vec3 grey(in vec3 p) {
-  return brown(brown(p * 0.1) * 5.0);
-}
-
-vec3 noise(in vec3 x) {
-  float thickness2 = 25.0;
-  float p = smoothstep(0.0, thickness2, thickness2 - (x.y * x.y));
-  float radius = length(x);
-  float q = smoothstep(8.0, 7.0, radius);
-  return grey(x) * p * q;
-}
-
-uniform vec3 pos;
-void main()
-{
-    vec3 step = vDirection * kRayLength / float(kRaySteps);
-    vec3 col = vec3(0.0,0.0,0.0);
-    vec3 scaledPos = pos * ${(8.0 / settings_1.S.float('sr'))};
-    for (int i = 0; i <= kRaySteps; ++i) {
-      col += noise(scaledPos + step * float(i + 1));
-    }
-    col = smoothstep(0.0, 1.0, 5.0 * col / float(kRaySteps));
-    gl_FragColor = vec4(col,1.0);
-}`,
-            uniforms: {
-                pos: {
-                    value: new THREE.Vector3()
-                }
-            },
-            depthWrite: false,
-            depthTest: true,
-            blending: THREE.AdditiveBlending,
-            side: THREE.BackSide,
-        });
-        return material;
-    }
-}
-exports.NebulaSphere = NebulaSphere;
-//# sourceMappingURL=nebulaSphere.js.map
 
 /***/ }),
 
@@ -1308,7 +1212,7 @@ class NeighborCount {
     neighborCount = new Map();
     data = new Map();
     toKey(x, y, z) {
-        return `${[x, y, z]}`;
+        return x.toFixed(0) + "," + y.toFixed(0) + "," + z.toFixed(0);
     }
     addOrChange(key, m, delta) {
         if (m.has(key)) {
@@ -2084,11 +1988,13 @@ const system_1 = __webpack_require__(1404);
 class Stars extends pointCloud_1.PointCloud {
     assets;
     controls;
+    cursors;
     activeSystems = new Map();
-    constructor(assets, controls) {
+    constructor(assets, controls, cursors) {
         super(true);
         this.assets = assets;
         this.controls = controls;
+        this.cursors = cursors;
     }
     tmpV = new THREE.Vector3();
     getClosestDistance(p) {
@@ -2120,7 +2026,7 @@ class Stars extends pointCloud_1.PointCloud {
         }
         for (const k of this.tmpSet) {
             if (!this.activeSystems.has(k)) {
-                const system = new system_1.System(this.assets, this.controls);
+                const system = new system_1.System(this.assets, this.controls, this.cursors);
                 const name = `System:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(system, name, k);
                 this.activeSystems.set(k, system);
@@ -2202,7 +2108,6 @@ const assets_1 = __webpack_require__(7253);
 const controls_1 = __webpack_require__(5417);
 const cursor_1 = __webpack_require__(4217);
 const file_1 = __webpack_require__(5013);
-const nebulaSphere_1 = __webpack_require__(5387);
 const pointSet_1 = __webpack_require__(7536);
 const stars_1 = __webpack_require__(1652);
 const tick_1 = __webpack_require__(5544);
@@ -2215,9 +2120,7 @@ class Stellar {
     player = new player_1.Player();
     allPoints = new pointSet_1.PointCloudUnion();
     stars;
-    nebulae = new nebulaSphere_1.NebulaSphere();
-    cursorL = new cursor_1.Cursor();
-    cursorR = new cursor_1.Cursor();
+    cursors = new Map();
     leftPosition = new THREE.Vector3();
     rightPosition = new THREE.Vector3();
     controls = undefined;
@@ -2245,10 +2148,8 @@ class Stellar {
             // this.nebulae.updatePosition(this.tmpV);
             if (!!this.controls) {
                 this.controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
-                this.cursorL.position.copy(this.leftPosition);
-                this.playerGroup.worldToLocal(this.cursorL.position);
-                this.cursorR.position.copy(this.rightPosition);
-                this.playerGroup.worldToLocal(this.cursorR.position);
+                this.setWorldToPlayer(this.leftPosition, this.cursors.get('left').position);
+                this.setWorldToPlayer(this.rightPosition, this.cursors.get('right').position);
             }
             this.scene.traverseVisible((o) => {
                 if (o['tick']) {
@@ -2256,6 +2157,10 @@ class Stellar {
                 }
             });
         });
+    }
+    setWorldToPlayer(pos, target) {
+        target.copy(pos);
+        this.playerGroup.worldToLocal(target);
     }
     initializeGraphics() {
         document.body.innerHTML = '';
@@ -2313,12 +2218,14 @@ class Stellar {
         console.log('Initialize World');
         const assets = await assets_1.Assets.load();
         console.log('Assets loaded.');
-        this.stars = new stars_1.Stars(assets, this.controls);
+        this.stars = new stars_1.Stars(assets, this.controls, this.cursors);
         file_1.File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
         this.universe.add(this.stars);
         this.allPoints.add(this.stars);
-        this.playerGroup.add(this.cursorL);
-        this.playerGroup.add(this.cursorR);
+        this.cursors.set('left', new cursor_1.Cursor());
+        this.cursors.set('right', new cursor_1.Cursor());
+        this.playerGroup.add(this.cursors.get('left'));
+        this.playerGroup.add(this.cursors.get('right'));
         file_1.File.load(this.player, 'Player', new THREE.Vector3(0, 0, 0));
         setInterval(() => { file_1.File.save(this.player, 'Player'); }, 1000);
         return;
@@ -2370,14 +2277,16 @@ const star_1 = __webpack_require__(4477);
 class System extends THREE.Object3D {
     assets;
     controls;
+    cursors;
     asteroids = new pointCloud_1.PointCloud(false);
     planets = new pointCloud_1.PointCloud(false);
     star;
     activeAsteroids = new Map();
-    constructor(assets, controls) {
+    constructor(assets, controls, cursors) {
         super();
         this.assets = assets;
         this.controls = controls;
+        this.cursors = cursors;
         this.star = new star_1.Star();
         this.add(this.star);
         this.add(this.asteroids);
@@ -2426,7 +2335,7 @@ class System extends THREE.Object3D {
         for (const k of this.tmpSet) {
             if (!this.activeAsteroids.has(k)) {
                 console.log(`Asteroid count: ${this.activeAsteroids.size}`);
-                const asteroid = new asteroid_1.Asteroid(this.assets, this.controls);
+                const asteroid = new asteroid_1.Asteroid(this.assets, this.controls, this.cursors);
                 const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
                 file_1.File.load(asteroid, name, k);
                 this.activeAsteroids.set(k, asteroid);

@@ -29,8 +29,10 @@ export class MeshCollection extends THREE.Object3D
   constructor(assets: Assets, radius: number) {
     super();
     const r = Math.ceil(radius);
-    this.cubes = new Latice<string>(
-      new THREE.Vector3(-r, -r, -r), 2 * r + 1);
+    // Add a 5-cell padding.
+    const origin = new THREE.Vector3(-r - 5, -r - 5, -r - 5);
+    const edgeSize = 2 * r + 1 + 10;
+    this.cubes = new Latice<string>(origin, edgeSize);
 
     for (const name of assets.names()) {
       const mesh = assets.getMesh(name);
@@ -69,20 +71,13 @@ export class MeshCollection extends THREE.Object3D
     m.compose(position, rotation, Grid.one);
     this.cubes.Set(position, name);
     this.rocks.add(position, position);
-    const key = this.locationKey(position);
-    if (this.cubeMap.has(key)) {
-      throw new Error("There is already a cube here.");
-    }
-    this.cubeMap.set(this.locationKey(position), name);
     this.dirty = true;
   }
 
   public removeCube(position: THREE.Vector3): string {
-    const key = this.locationKey(position);
-    if (this.cubeMap.has(key)) {
+    const name = this.cubes.Get(position);
+    if (!!name) {
       this.cubes.Set(position, null);
-      const name = this.cubeMap.get(key);
-      this.cubeMap.delete(key);
       this.dirty = true;
       return name;
     }
@@ -90,7 +85,7 @@ export class MeshCollection extends THREE.Object3D
   }
 
   public cubeAt(p: THREE.Vector3): boolean {
-    return this.cubeMap.has(this.locationKey(p));
+    return !!this.cubes.Get(p);
   }
 
   public buildGeometry() {
@@ -176,10 +171,4 @@ export class MeshCollection extends THREE.Object3D
     this.geometryMap.set(name, geometry);
     this.materialMap.set(name, material);
   };
-
-  private cubeMap = new Map<string, string>();
-  private locationKey(v: THREE.Vector3) {
-    return `${[v.x.toFixed(0), v.y.toFixed(0), v.z.toFixed(0)]}`;
-  }
-
 }

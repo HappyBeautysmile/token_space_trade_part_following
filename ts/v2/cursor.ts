@@ -1,6 +1,9 @@
 import * as THREE from "three";
 
 export class Cursor extends THREE.LineSegments {
+
+  private hold: string;
+
   constructor() {
     const points = [];
     // four left to right lines
@@ -35,5 +38,17 @@ export class Cursor extends THREE.LineSegments {
       { color: "#0f0", linewidth: 1 });
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     super(geometry, material);
+  }
+
+  public isHolding(): boolean {
+    return !!this.hold;
+  }
+
+  public getHold(): string {
+    return this.hold;
+  }
+
+  public setHold(item: string) {
+    this.hold = item;
   }
 }

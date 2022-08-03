@@ -143,7 +143,7 @@ export class Stellar {
     console.log('Initialize World');
     const assets = await Assets.load();
     console.log('Assets loaded.');
-    this.stars = new Stars(assets, this.controls);
+    this.stars = new Stars(assets, this.controls, this.cursors);
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
     this.allPoints.add(this.stars);

@@ -3,6 +3,7 @@ import { S } from "../settings";
 import { Assets } from "./assets";
 import { Asteroid } from "./asteroid";
 import { Controls } from "./controls";
+import { Cursor } from "./cursor";
 
 import { Codeable, File } from "./file";
 import { Grid } from "./grid";
@@ -16,7 +17,8 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
   private star: THREE.Object3D;
   private activeAsteroids = new Map<THREE.Vector3, Asteroid>();
 
-  constructor(private assets: Assets, private controls: Controls) {
+  constructor(private assets: Assets, private controls: Controls,
+    private cursors: Map<THREE.XRHandedness, Cursor>) {
     super();
     this.star = new Star();
     this.add(this.star);
@@ -69,7 +71,7 @@ export class System extends THREE.Object3D implements Codeable, PointSet {
     for (const k of this.tmpSet) {
       if (!this.activeAsteroids.has(k)) {
         console.log(`Asteroid count: ${this.activeAsteroids.size}`);
-        const asteroid = new Asteroid(this.assets, this.controls);
+        const asteroid = new Asteroid(this.assets, this.controls, this.cursors);
         const name = `Asteroid:${Math.round(k.x)},${Math.round(k.y)},${Math.round(k.z)}`;
         File.load(asteroid, name, k);
         this.activeAsteroids.set(k, asteroid);
