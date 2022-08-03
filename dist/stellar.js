@@ -1209,7 +1209,9 @@ class NeighborCount {
     position = new THREE.Vector3();
     rotation = new THREE.Quaternion();
     scale = new THREE.Vector3();
+    // TODO: Change this to a latice of numbers ???
     neighborCount = new Map();
+    // TODO: Change this to a latice of MatrixAnd<T> ???
     data = new Map();
     toKey(x, y, z) {
         return x.toFixed(0) + "," + y.toFixed(0) + "," + z.toFixed(0);
@@ -1258,7 +1260,8 @@ class NeighborCount {
     *externalElements() {
         console.log(`Enumerating neighbor count...`);
         for (const [key, matrixAndT] of this.data.entries()) {
-            if (this.neighborCount.get(key) < 6) {
+            const count = this.neighborCount.get(key);
+            if (!count || count < 6) {
                 yield matrixAndT;
             }
         }

@@ -11,7 +11,9 @@ export class NeighborCount<T> {
   private rotation = new THREE.Quaternion();
   private scale = new THREE.Vector3();
 
+  // TODO: Change this to a latice of numbers ???
   private neighborCount = new Map<string, number>();
+  // TODO: Change this to a latice of MatrixAnd<T> ???
   private data = new Map<string, MatrixAnd<T>>();
 
   private toKey(x: number, y: number, z: number) {
@@ -78,7 +80,8 @@ export class NeighborCount<T> {
   public *externalElements() {
     console.log(`Enumerating neighbor count...`);
     for (const [key, matrixAndT] of this.data.entries()) {
-      if (this.neighborCount.get(key) < 6) {
+      const count = this.neighborCount.get(key);
+      if (!count || count < 6) {
         yield matrixAndT;
       }
     }
