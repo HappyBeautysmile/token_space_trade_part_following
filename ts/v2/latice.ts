@@ -40,12 +40,26 @@ export class Latice<T> {
     return this.codeToKey.get(this.data[index]);
   }
 
-  Set(pos: THREE.Vector3, value: T) {
-    let code: number;
-    const index = this.getIndexFromVector(pos);
-    if (this.data[index] > 0) {
-      // TODO: decrement counter.
+  private RemoveWithIndex(index: number) {
+    const oldCode = this.data[index];
+    if (oldCode > 0) {
+      const oldValue = this.codeToKey.get(oldCode);
+      this.keyCount.set(oldValue, this.keyCount.get(oldValue) - 1);
+      this.data[index] = 0;
     }
+  }
+
+  Remove(pos: THREE.Vector3) {
+    this.RemoveWithIndex(this.getIndexFromVector(pos));
+  }
+
+  Set(pos: THREE.Vector3, value: T) {
+    const index = this.getIndexFromVector(pos);
+    this.RemoveWithIndex(index);
+    if (value === null) {
+      return;
+    }
+    let code: number;
     if (!this.keyToCode.has(value)) {
       code = this.codeToKey.size;
       this.keyToCode.set(value, code);

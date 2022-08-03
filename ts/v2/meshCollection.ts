@@ -86,6 +86,7 @@ export class MeshCollection extends THREE.Object3D
       this.dirty = true;
       return name;
     }
+    return null;
   }
 
   public cubeAt(p: THREE.Vector3): boolean {
@@ -120,14 +121,20 @@ export class MeshCollection extends THREE.Object3D
       const name = mav.value;
       const matrix = mav.m;
       const instancedMesh = this.meshMap.get(name);
-      const i = instancedMesh.count++;
-      instancedMesh.setMatrixAt(i, matrix);
+      if (instancedMesh) {
+        const i = instancedMesh.count++;
+        instancedMesh.setMatrixAt(i, matrix);
+      } else {
+        console.log(`Error: no mesh for ${name}`);
+      }
     }
   }
 
   tick(t: Tick) {
     if (this.dirty) {
+      console.time(`Rebuilding`);
       this.buildGeometry();
+      console.timeEnd(`Rebuilding`);
       this.dirty = false;
     }
   }
@@ -169,14 +176,6 @@ export class MeshCollection extends THREE.Object3D
     this.geometryMap.set(name, geometry);
     this.materialMap.set(name, material);
   };
-
-  private addOrSet<T>(key: string, value: T, map: Map<string, T[]>) {
-    if (map.has(key)) {
-      map.get(key).push(value);
-    } else {
-      map.set(key, [value]);
-    }
-  }
 
   private cubeMap = new Map<string, string>();
   private locationKey(v: THREE.Vector3) {

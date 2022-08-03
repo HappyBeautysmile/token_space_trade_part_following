@@ -15,7 +15,7 @@ export class NeighborCount<T> {
   private data = new Map<string, MatrixAnd<T>>();
 
   private toKey(x: number, y: number, z: number) {
-    return `${[x, y, z]}`;
+    return x.toFixed(0) + "," + y.toFixed(0) + "," + z.toFixed(0);
   }
 
   private addOrChange(key: string, m: Map<string, number>, delta: number) {

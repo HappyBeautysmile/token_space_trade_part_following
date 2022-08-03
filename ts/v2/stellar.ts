@@ -22,9 +22,7 @@ export class Stellar {
 
   private allPoints = new PointCloudUnion();
   private stars: Stars;
-  private nebulae = new NebulaSphere();
-  private cursorL = new Cursor();
-  private cursorR = new Cursor();
+  private cursors = new Map<THREE.XRHandedness, Cursor>();
   private leftPosition = new THREE.Vector3();
   private rightPosition = new THREE.Vector3();
   private controls: Controls = undefined;
@@ -56,10 +54,10 @@ export class Stellar {
       if (!!this.controls) {
         this.controls.setPositions(this.leftPosition, this.rightPosition,
           this.camera);
-        this.cursorL.position.copy(this.leftPosition);
-        this.playerGroup.worldToLocal(this.cursorL.position);
-        this.cursorR.position.copy(this.rightPosition);
-        this.playerGroup.worldToLocal(this.cursorR.position);
+        this.setWorldToPlayer(
+          this.leftPosition, this.cursors.get('left').position)
+        this.setWorldToPlayer(
+          this.rightPosition, this.cursors.get('right').position)
       }
       this.scene.traverseVisible((o) => {
         if (o['tick']) {
@@ -67,6 +65,11 @@ export class Stellar {
         }
       })
     });
+  }
+
+  private setWorldToPlayer(pos: THREE.Vector3, target: THREE.Vector3) {
+    target.copy(pos);
+    this.playerGroup.worldToLocal(target);
   }
 
   private initializeGraphics() {
@@ -144,8 +147,10 @@ export class Stellar {
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
     this.allPoints.add(this.stars);
-    this.playerGroup.add(this.cursorL);
-    this.playerGroup.add(this.cursorR);
+    this.cursors.set('left', new Cursor());
+    this.cursors.set('right', new Cursor());
+    this.playerGroup.add(this.cursors.get('left'));
+    this.playerGroup.add(this.cursors.get('right'));
 
     File.load(this.player, 'Player', new THREE.Vector3(0, 0, 0));
     setInterval(() => { File.save(this.player, 'Player') }, 1000);

@@ -16,8 +16,10 @@ export class Asteroid extends MeshCollection implements Codeable {
       if (ev.state == 'start') {
         const pos = new THREE.Vector3();
         pos.copy(ev.worldPosition);
+
         this.worldToLocal(pos);
         Grid.round(pos);
+        console.log(`Cube?: ${this.removeCube(pos)}`);
         const mesh = new THREE.Mesh(
           new THREE.IcosahedronBufferGeometry(0.4, 2),
           new THREE.MeshPhongMaterial({ color: '#ff0', shininess: 1.0 })
