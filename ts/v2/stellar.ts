@@ -147,8 +147,8 @@ export class Stellar {
     File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
     this.universe.add(this.stars);
     this.allPoints.add(this.stars);
-    this.cursors.set('left', new Cursor());
-    this.cursors.set('right', new Cursor());
+    this.cursors.set('left', new Cursor(assets));
+    this.cursors.set('right', new Cursor(assets));
     this.playerGroup.add(this.cursors.get('left'));
     this.playerGroup.add(this.cursors.get('right'));
 

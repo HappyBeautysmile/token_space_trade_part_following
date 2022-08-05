@@ -1,10 +1,14 @@
 import * as THREE from "three";
+import { LineSegments } from "three";
+import { Assets } from "./assets";
 
-export class Cursor extends THREE.LineSegments {
-
+export class Cursor extends THREE.Object3D {
   private hold: string;
+  private heldObject: THREE.Object3D;
+  private lineSegments: THREE.LineSegments;
 
-  constructor() {
+  constructor(private assets: Assets) {
+    super();
     const points = [];
     // four left to right lines
     points.push(new THREE.Vector3(-0.5, -0.5, -0.5));
@@ -37,7 +41,8 @@ export class Cursor extends THREE.LineSegments {
     const material = new THREE.LineBasicMaterial(
       { color: "#0f0", linewidth: 1 });
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    super(geometry, material);
+    this.lineSegments = new LineSegments(geometry, material);
+    this.add(this.lineSegments);
   }
 
   public isHolding(): boolean {
@@ -49,6 +54,15 @@ export class Cursor extends THREE.LineSegments {
   }
 
   public setHold(item: string) {
+    if (this.heldObject) {
+      this.remove(this.heldObject);
+    }
+    if (item) {
+      this.heldObject = this.assets.getMesh(item);
+      if (this.heldObject) {
+        this.add(this.heldObject);
+      }
+    }
     this.hold = item;
   }
 }
