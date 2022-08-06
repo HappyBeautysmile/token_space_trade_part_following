@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { Object3D } from "three";
+import { IsoTransform } from "./isoTransform";
 
 export class TwoHands {
   private leftGrip: THREE.Object3D;
@@ -49,15 +50,17 @@ export class TwoHands {
     });
   }
 
-  public getLeftPosition(target: THREE.Vector3) {
+  public getLeftPosition(target: IsoTransform) {
     if (this.leftGrip) {
-      this.leftGrip.getWorldPosition(target);
+      this.leftGrip.getWorldPosition(target.position);
+      this.leftGrip.getWorldQuaternion(target.quaternion);
     }
   }
 
-  public getRightPosition(target: THREE.Vector3) {
+  public getRightPosition(target: IsoTransform) {
     if (this.rightGrip) {
-      this.rightGrip.getWorldPosition(target);
+      this.rightGrip.getWorldPosition(target.position);
+      this.rightGrip.getWorldQuaternion(target.quaternion);
     }
   }
 

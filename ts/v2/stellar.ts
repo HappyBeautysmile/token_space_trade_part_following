@@ -11,6 +11,7 @@ import { PointCloudUnion } from "./pointSet";
 import { Stars } from "./stars";
 import { Grid } from "./grid";
 import { Tick, Ticker } from "../tick";
+import { IsoTransform } from "./isoTransform";
 
 export class Stellar {
   private scene = new THREE.Scene();
@@ -23,8 +24,8 @@ export class Stellar {
   private allPoints = new PointCloudUnion();
   private stars: Stars;
   private cursors = new Map<THREE.XRHandedness, Cursor>();
-  private leftPosition = new THREE.Vector3();
-  private rightPosition = new THREE.Vector3();
+  private leftPosition = new IsoTransform;
+  private rightPosition = new IsoTransform;
   private controls: Controls = undefined;
 
   constructor() {
@@ -55,9 +56,9 @@ export class Stellar {
         this.controls.setPositions(this.leftPosition, this.rightPosition,
           this.camera);
         this.setWorldToPlayer(
-          this.leftPosition, this.cursors.get('left').position)
+          this.leftPosition.position, this.cursors.get('left').position)
         this.setWorldToPlayer(
-          this.rightPosition, this.cursors.get('right').position)
+          this.rightPosition.position, this.cursors.get('right').position)
       }
       this.scene.traverseVisible((o) => {
         if (o['tick']) {

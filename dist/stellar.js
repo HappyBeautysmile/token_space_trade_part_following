@@ -192,53 +192,34 @@ exports.Assets = Assets;
 /***/ }),
 
 /***/ 4038:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Asteroid = void 0;
-const THREE = __importStar(__webpack_require__(5232));
 const settings_1 = __webpack_require__(6451);
 const astroGen_1 = __webpack_require__(6647);
 const grid_1 = __webpack_require__(3424);
+const isoTransform_1 = __webpack_require__(3265);
 const meshCollection_1 = __webpack_require__(1090);
 class Asteroid extends meshCollection_1.MeshCollection {
     constructor(assets, controls, cursors) {
         super(assets, settings_1.S.float('as') * 1.2);
         controls.setStartStopCallback((ev) => {
             if (ev.state == 'start') {
-                const pos = new THREE.Vector3();
+                const pos = new isoTransform_1.IsoTransform();
                 pos.copy(ev.worldPosition);
-                this.worldToLocal(pos);
-                grid_1.Grid.round(pos);
+                this.worldToLocal(pos.position);
+                grid_1.Grid.round(pos.position);
                 const cursor = cursors.get(ev.handedness);
                 if (cursor.isHolding()) {
-                    if (!this.cubeAt(pos)) {
-                        this.addCube(cursor.getHold(), pos, grid_1.Grid.randomRotation());
+                    if (!this.cubeAt(pos.position)) {
+                        this.addCube(cursor.getHold(), pos);
                         cursor.setHold(null);
                     }
                 }
                 else {
-                    const removed = this.removeCube(pos);
+                    const removed = this.removeCube(pos.position);
                     cursor.setHold(removed);
                 }
             }
@@ -283,6 +264,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AstroGen = void 0;
 const THREE = __importStar(__webpack_require__(5232));
 const grid_1 = __webpack_require__(3424);
+const isoTransform_1 = __webpack_require__(3265);
 class rarity {
     modelName;
     period;
@@ -344,7 +326,7 @@ class AstroGen {
         for (let x = -r; x < r; x++) {
             for (let z = -r; z < r; z++) {
                 if (Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)) < r) {
-                    this.construction.addCube('cube', new THREE.Vector3(x + xOffset, yOffset, z + zOffset), grid_1.Grid.notRotated);
+                    this.construction.addCube('cube', new isoTransform_1.IsoTransform(new THREE.Vector3(x + xOffset, yOffset, z + zOffset), grid_1.Grid.randomRotation()));
                 }
             }
         }
@@ -384,17 +366,14 @@ class AstroGen {
         return hat[index];
     }
     addAt(x, y, z) {
-        const rotation = new THREE.Matrix4();
-        rotation.makeRotationFromEuler(new THREE.Euler(Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2, Math.round(Math.random() * 4) * Math.PI / 2));
-        const quaternion = new THREE.Quaternion();
-        quaternion.setFromRotationMatrix(rotation);
-        this.construction.addCube(this.itemFromLocation(x, y, z), new THREE.Vector3(x, y, z), quaternion);
+        const quaternion = grid_1.Grid.randomRotation();
+        this.construction.addCube(this.itemFromLocation(x, y, z), new isoTransform_1.IsoTransform(new THREE.Vector3(x, y, z), quaternion));
     }
     buildOriginMarker(size) {
         for (let x = 0; x < size; x++) {
             for (let z = 0; z < size; z++) {
-                const quaternion = new THREE.Quaternion();
-                this.construction.addCube('cube', new THREE.Vector3(x, 0, z), quaternion);
+                const quaternion = grid_1.Grid.randomRotation();
+                this.construction.addCube('cube', new isoTransform_1.IsoTransform(new THREE.Vector3(x, 0, z), quaternion));
             }
         }
     }
@@ -480,6 +459,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Controls = exports.StartStopEvent = void 0;
 const THREE = __importStar(__webpack_require__(5232));
+const grid_1 = __webpack_require__(3424);
+const isoTransform_1 = __webpack_require__(3265);
 const twoHands_1 = __webpack_require__(1837);
 class StartStopEvent {
     handedness;
@@ -518,8 +499,8 @@ class Controls {
             this.pointer.x = (ev.clientX / canvas.width) * 2 - 1;
             this.pointer.y = -(ev.clientY / canvas.height) * 2 + 1;
         });
-        const leftPosition = new THREE.Vector3();
-        const rightPosition = new THREE.Vector3();
+        const leftPosition = new isoTransform_1.IsoTransform();
+        const rightPosition = new isoTransform_1.IsoTransform();
         canvas.addEventListener('mousedown', (ev) => {
             if (!!this.startStopCallback) {
                 this.setPositions(leftPosition, rightPosition, this.camera);
@@ -608,7 +589,7 @@ class Controls {
     setCursorPosition(physicalPosition) {
         this.camera.getWorldPosition(this.tmp);
         this.tmp.y -= 0.15; // Shoulders 15cm below eyes.
-        this.scaleTen(physicalPosition, this.tmp);
+        this.scaleTen(physicalPosition.position, this.tmp);
     }
     tmp = new THREE.Vector3();
     setPositions(left, right, camera) {
@@ -620,10 +601,11 @@ class Controls {
         }
         else {
             this.raycaster.setFromCamera(this.pointer, camera);
-            left.copy(this.raycaster.ray.direction);
-            left.multiplyScalar(10);
-            left.add(this.raycaster.ray.origin);
-            right.set(0, 0, 0);
+            left.position.copy(this.raycaster.ray.direction);
+            left.position.multiplyScalar(10);
+            left.position.add(this.raycaster.ray.origin);
+            right.position.set(0, 0, 0);
+            right.quaternion.copy(grid_1.Grid.notRotated);
         }
     }
     session = undefined;
@@ -644,17 +626,19 @@ class Controls {
         }
     }
     addListeners(side, grip, gripLocation) {
-        const p = new THREE.Vector3();
+        const p = new isoTransform_1.IsoTransform();
         grip.addEventListener('selectstart', (ev) => {
             if (!!this.startStopCallback) {
-                gripLocation.getWorldPosition(p);
+                gripLocation.getWorldPosition(p.position);
+                gripLocation.getWorldQuaternion(p.quaternion);
                 this.setCursorPosition(p);
                 this.startStopCallback(new StartStopEvent(side, 'start', 'grip', p));
             }
         });
         grip.addEventListener('selectend', (ev) => {
             if (!!this.startStopCallback) {
-                gripLocation.getWorldPosition(p);
+                gripLocation.getWorldPosition(p.position);
+                gripLocation.getWorldQuaternion(p.quaternion);
                 this.setCursorPosition(p);
                 this.startStopCallback(new StartStopEvent(side, 'end', 'grip', p));
             }
@@ -695,9 +679,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Cursor = void 0;
 const THREE = __importStar(__webpack_require__(5232));
-class Cursor extends THREE.LineSegments {
+const three_1 = __webpack_require__(5232);
+class Cursor extends THREE.Object3D {
+    assets;
     hold;
-    constructor() {
+    heldObject;
+    lineSegments;
+    constructor(assets) {
+        super();
+        this.assets = assets;
         const points = [];
         // four left to right lines
         points.push(new THREE.Vector3(-0.5, -0.5, -0.5));
@@ -728,7 +718,8 @@ class Cursor extends THREE.LineSegments {
         points.push(new THREE.Vector3(0.5, 0.5, 0.5));
         const material = new THREE.LineBasicMaterial({ color: "#0f0", linewidth: 1 });
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        super(geometry, material);
+        this.lineSegments = new three_1.LineSegments(geometry, material);
+        this.add(this.lineSegments);
     }
     isHolding() {
         return !!this.hold;
@@ -737,6 +728,15 @@ class Cursor extends THREE.LineSegments {
         return this.hold;
     }
     setHold(item) {
+        if (this.heldObject) {
+            this.remove(this.heldObject);
+        }
+        if (item) {
+            this.heldObject = this.assets.getMesh(item);
+            if (this.heldObject) {
+                this.add(this.heldObject);
+            }
+        }
         this.hold = item;
     }
 }
@@ -857,6 +857,52 @@ class Grid {
 }
 exports.Grid = Grid;
 //# sourceMappingURL=grid.js.map
+
+/***/ }),
+
+/***/ 3265:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.IsoTransform = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class IsoTransform {
+    static scale = new THREE.Vector3(1, 1, 1);
+    position = new THREE.Vector3();
+    quaternion = new THREE.Quaternion();
+    constructor(position = undefined, quaternion = undefined) {
+        if (!!position)
+            this.position.copy(position);
+        if (!!quaternion)
+            this.quaternion.copy(quaternion);
+    }
+    copy(other) {
+        this.position.copy(other.position);
+        this.quaternion.copy(other.quaternion);
+    }
+}
+exports.IsoTransform = IsoTransform;
+//# sourceMappingURL=isoTransform.js.map
 
 /***/ }),
 
@@ -1018,6 +1064,7 @@ exports.MeshCollection = void 0;
 const THREE = __importStar(__webpack_require__(5232));
 const three_1 = __webpack_require__(5232);
 const grid_1 = __webpack_require__(3424);
+const isoTransform_1 = __webpack_require__(3265);
 const latice_1 = __webpack_require__(7231);
 const neighborCount_1 = __webpack_require__(6516);
 const octoTree_1 = __webpack_require__(9343);
@@ -1054,6 +1101,7 @@ class MeshCollection extends THREE.Object3D {
                     emissive: m.emissive,
                 });
             }
+            // TODO: Consider MeshToonMaterial
             const geometry = mesh.geometry.clone();
             mesh.matrix.decompose(this.t, this.r, this.s);
             geometry.scale(this.s.x, this.s.y, this.s.z);
@@ -1069,11 +1117,11 @@ class MeshCollection extends THREE.Object3D {
         return distance;
     }
     dirty = false;
-    addCube(name, position, rotation) {
+    addCube(name, tx) {
         const m = new three_1.Matrix4();
-        m.compose(position, rotation, grid_1.Grid.one);
-        this.cubes.Set(position, name);
-        this.rocks.add(position, position);
+        m.compose(tx.position, tx.quaternion, grid_1.Grid.one);
+        this.cubes.Set(tx.position, name);
+        this.rocks.add(tx.position, tx);
         this.dirty = true;
     }
     removeCube(position) {
@@ -1152,7 +1200,7 @@ class MeshCollection extends THREE.Object3D {
             }
             for (const p of positions) {
                 const v = new THREE.Vector3(p.x, p.y, p.z);
-                this.addCube(name, v, grid_1.Grid.randomRotation());
+                this.addCube(name, new isoTransform_1.IsoTransform(v, grid_1.Grid.randomRotation()));
             }
         }
         this.buildGeometry();
@@ -2114,6 +2162,7 @@ const file_1 = __webpack_require__(5013);
 const pointSet_1 = __webpack_require__(7536);
 const stars_1 = __webpack_require__(1652);
 const tick_1 = __webpack_require__(5544);
+const isoTransform_1 = __webpack_require__(3265);
 class Stellar {
     scene = new THREE.Scene();
     camera;
@@ -2124,8 +2173,8 @@ class Stellar {
     allPoints = new pointSet_1.PointCloudUnion();
     stars;
     cursors = new Map();
-    leftPosition = new THREE.Vector3();
-    rightPosition = new THREE.Vector3();
+    leftPosition = new isoTransform_1.IsoTransform;
+    rightPosition = new isoTransform_1.IsoTransform;
     controls = undefined;
     constructor() {
         this.scene.add(this.playerGroup);
@@ -2151,8 +2200,8 @@ class Stellar {
             // this.nebulae.updatePosition(this.tmpV);
             if (!!this.controls) {
                 this.controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
-                this.setWorldToPlayer(this.leftPosition, this.cursors.get('left').position);
-                this.setWorldToPlayer(this.rightPosition, this.cursors.get('right').position);
+                this.setWorldToPlayer(this.leftPosition.position, this.cursors.get('left').position);
+                this.setWorldToPlayer(this.rightPosition.position, this.cursors.get('right').position);
             }
             this.scene.traverseVisible((o) => {
                 if (o['tick']) {
@@ -2225,8 +2274,8 @@ class Stellar {
         file_1.File.load(this.stars, 'Stellar', new THREE.Vector3(0, 0, 0));
         this.universe.add(this.stars);
         this.allPoints.add(this.stars);
-        this.cursors.set('left', new cursor_1.Cursor());
-        this.cursors.set('right', new cursor_1.Cursor());
+        this.cursors.set('left', new cursor_1.Cursor(assets));
+        this.cursors.set('right', new cursor_1.Cursor(assets));
         this.playerGroup.add(this.cursors.get('left'));
         this.playerGroup.add(this.cursors.get('right'));
         file_1.File.load(this.player, 'Player', new THREE.Vector3(0, 0, 0));
@@ -2462,12 +2511,14 @@ class TwoHands {
     }
     getLeftPosition(target) {
         if (this.leftGrip) {
-            this.leftGrip.getWorldPosition(target);
+            this.leftGrip.getWorldPosition(target.position);
+            this.leftGrip.getWorldQuaternion(target.quaternion);
         }
     }
     getRightPosition(target) {
         if (this.rightGrip) {
-            this.rightGrip.getWorldPosition(target);
+            this.rightGrip.getWorldPosition(target.position);
+            this.rightGrip.getWorldQuaternion(target.quaternion);
         }
     }
     getLeftGrip() {

@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { XRHandedness } from "three";
+import { Grid } from "./grid";
+import { IsoTransform } from "./isoTransform";
 import { TwoHands } from "./twoHands";
 
 export class StartStopEvent {
@@ -7,7 +9,7 @@ export class StartStopEvent {
     readonly handedness: THREE.XRHandedness,
     readonly state: 'start' | 'end',
     readonly type: 'squeeze' | 'grip',
-    readonly worldPosition: THREE.Vector3) { }
+    readonly worldPosition: IsoTransform) { }
 }
 
 export type StartStopEventHandler = (ev: StartStopEvent) => void;
@@ -35,8 +37,8 @@ export class Controls {
       this.pointer.y = - (ev.clientY / canvas.height) * 2 + 1;
     });
 
-    const leftPosition = new THREE.Vector3();
-    const rightPosition = new THREE.Vector3();
+    const leftPosition = new IsoTransform();
+    const rightPosition = new IsoTransform();
 
     canvas.addEventListener('mousedown', (ev: MouseEvent) => {
       if (!!this.startStopCallback) {
@@ -135,14 +137,14 @@ export class Controls {
     v.add(o);
   }
 
-  private setCursorPosition(physicalPosition: THREE.Vector3) {
+  private setCursorPosition(physicalPosition: IsoTransform) {
     this.camera.getWorldPosition(this.tmp);
     this.tmp.y -= 0.15;  // Shoulders 15cm below eyes.
-    this.scaleTen(physicalPosition, this.tmp);
+    this.scaleTen(physicalPosition.position, this.tmp);
   }
 
   private tmp = new THREE.Vector3();
-  public setPositions(left: THREE.Vector3, right: THREE.Vector3,
+  public setPositions(left: IsoTransform, right: IsoTransform,
     camera: THREE.PerspectiveCamera) {
     if (this.twoHands) {
       this.twoHands.getLeftPosition(left);
@@ -151,10 +153,11 @@ export class Controls {
       this.setCursorPosition(right);
     } else {
       this.raycaster.setFromCamera(this.pointer, camera);
-      left.copy(this.raycaster.ray.direction);
-      left.multiplyScalar(10);
-      left.add(this.raycaster.ray.origin);
-      right.set(0, 0, 0);
+      left.position.copy(this.raycaster.ray.direction);
+      left.position.multiplyScalar(10);
+      left.position.add(this.raycaster.ray.origin);
+      right.position.set(0, 0, 0);
+      right.quaternion.copy(Grid.notRotated);
     }
   }
 
@@ -178,11 +181,12 @@ export class Controls {
 
   private addListeners(side: XRHandedness,
     grip: THREE.Object3D, gripLocation: THREE.Object3D) {
-    const p = new THREE.Vector3();
+    const p = new IsoTransform();
 
     grip.addEventListener('selectstart', (ev) => {
       if (!!this.startStopCallback) {
-        gripLocation.getWorldPosition(p);
+        gripLocation.getWorldPosition(p.position);
+        gripLocation.getWorldQuaternion(p.quaternion);
         this.setCursorPosition(p);
         this.startStopCallback(
           new StartStopEvent(side, 'start', 'grip', p));
@@ -190,7 +194,8 @@ export class Controls {
     });
     grip.addEventListener('selectend', (ev) => {
       if (!!this.startStopCallback) {
-        gripLocation.getWorldPosition(p);
+        gripLocation.getWorldPosition(p.position);
+        gripLocation.getWorldQuaternion(p.quaternion);
         this.setCursorPosition(p);
         this.startStopCallback(
           new StartStopEvent(side, 'end', 'grip', p));

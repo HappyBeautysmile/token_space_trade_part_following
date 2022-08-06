@@ -4,6 +4,7 @@ import { Tick, Ticker } from "../tick";
 import { Assets } from "./assets";
 import { Construction } from "./construction";
 import { Grid } from "./grid";
+import { IsoTransform } from "./isoTransform";
 import { Latice } from "./latice";
 import { NeighborCount } from "./neighborCount";
 import { PointMapOctoTree } from "./octoTree";
@@ -11,7 +12,7 @@ import { PointSet } from "./pointSet";
 
 export class MeshCollection extends THREE.Object3D
   implements PointSet, Construction, Ticker {
-  private rocks = new PointMapOctoTree<THREE.Vector3>(Grid.zero, 1e3);
+  private rocks = new PointMapOctoTree<IsoTransform>(Grid.zero, 1e3);
 
   // Maps item names to corresponding materials and geometry.
   // This is used to create the appropriate Instanced Meshes.
@@ -48,6 +49,9 @@ export class MeshCollection extends THREE.Object3D
           emissive: m.emissive,
         });
       }
+
+      // TODO: Consider MeshToonMaterial
+
       const geometry = mesh.geometry.clone();
       mesh.matrix.decompose(this.t, this.r, this.s);
       geometry.scale(this.s.x, this.s.y, this.s.z);
@@ -65,12 +69,11 @@ export class MeshCollection extends THREE.Object3D
   }
 
   private dirty = false;
-  public addCube(name: string,
-    position: THREE.Vector3, rotation: THREE.Quaternion) {
+  public addCube(name: string, tx: IsoTransform) {
     const m = new Matrix4();
-    m.compose(position, rotation, Grid.one);
-    this.cubes.Set(position, name);
-    this.rocks.add(position, position);
+    m.compose(tx.position, tx.quaternion, Grid.one);
+    this.cubes.Set(tx.position, name);
+    this.rocks.add(tx.position, tx);
     this.dirty = true;
   }
 
@@ -159,7 +162,7 @@ export class MeshCollection extends THREE.Object3D
       }
       for (const p of positions) {
         const v = new THREE.Vector3(p.x, p.y, p.z);
-        this.addCube(name, v, Grid.randomRotation());
+        this.addCube(name, new IsoTransform(v, Grid.randomRotation()));
       }
     }
     this.buildGeometry();

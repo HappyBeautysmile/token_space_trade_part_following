@@ -7,6 +7,7 @@ import { Cursor } from "./cursor";
 
 import { Codeable } from "./file";
 import { Grid } from "./grid";
+import { IsoTransform } from "./isoTransform";
 import { MeshCollection } from "./meshCollection";
 
 export class Asteroid extends MeshCollection implements Codeable {
@@ -16,19 +17,19 @@ export class Asteroid extends MeshCollection implements Codeable {
 
     controls.setStartStopCallback((ev: StartStopEvent) => {
       if (ev.state == 'start') {
-        const pos = new THREE.Vector3();
+        const pos = new IsoTransform();
         pos.copy(ev.worldPosition);
-        this.worldToLocal(pos);
-        Grid.round(pos);
+        this.worldToLocal(pos.position);
+        Grid.round(pos.position);
 
         const cursor = cursors.get(ev.handedness);
         if (cursor.isHolding()) {
-          if (!this.cubeAt(pos)) {
-            this.addCube(cursor.getHold(), pos, Grid.randomRotation());
+          if (!this.cubeAt(pos.position)) {
+            this.addCube(cursor.getHold(), pos);
             cursor.setHold(null);
           }
         } else {
-          const removed = this.removeCube(pos);
+          const removed = this.removeCube(pos.position);
           cursor.setHold(removed);
         }
       }

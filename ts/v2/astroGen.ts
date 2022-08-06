@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Construction } from "./construction";
 import { Grid } from "./grid";
+import { IsoTransform } from "./isoTransform";
 
 class rarity {
   // pattern repeats every n meters
@@ -60,8 +61,9 @@ export class AstroGen {
       for (let z = -r; z < r; z++) {
         if (Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)) < r) {
           this.construction.addCube('cube',
-            new THREE.Vector3(x + xOffset, yOffset, z + zOffset),
-            Grid.notRotated);
+            new IsoTransform(
+              new THREE.Vector3(x + xOffset, yOffset, z + zOffset),
+              Grid.randomRotation()));
         }
       }
     }
@@ -105,28 +107,23 @@ export class AstroGen {
   }
 
   private addAt(x: number, y: number, z: number) {
-    const rotation = new THREE.Matrix4();
-    rotation.makeRotationFromEuler(new THREE.Euler(
-      Math.round(Math.random() * 4) * Math.PI / 2,
-      Math.round(Math.random() * 4) * Math.PI / 2,
-      Math.round(Math.random() * 4) * Math.PI / 2
-    ));
-    const quaternion = new THREE.Quaternion();
-    quaternion.setFromRotationMatrix(rotation);
+    const quaternion = Grid.randomRotation();
     this.construction.addCube(
       this.itemFromLocation(x, y, z),
-      new THREE.Vector3(x, y, z),
-      quaternion);
+      new IsoTransform(
+        new THREE.Vector3(x, y, z),
+        quaternion));
   }
 
   buildOriginMarker(size: number) {
     for (let x = 0; x < size; x++) {
       for (let z = 0; z < size; z++) {
-        const quaternion = new THREE.Quaternion();
+        const quaternion = Grid.randomRotation();
         this.construction.addCube(
           'cube',
-          new THREE.Vector3(x, 0, z),
-          quaternion);
+          new IsoTransform(
+            new THREE.Vector3(x, 0, z),
+            quaternion));
       }
     }
   }
