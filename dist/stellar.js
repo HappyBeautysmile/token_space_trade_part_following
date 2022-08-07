@@ -139,7 +139,7 @@ class Assets {
     static findFirstMesh(o) {
         const tmpMatrix = new THREE.Matrix4();
         if (o.type === "Mesh") {
-            console.log(`Mesh found: ${o.name}`);
+            // console.log(`Mesh found: ${o.name}`);
             const matrix = new THREE.Matrix4();
             matrix.identity();
             let cursor = o;
@@ -753,13 +753,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.File = void 0;
 class File {
     static save(value, target) {
+        // console.log(`Saving file: ${target}`);
         const o = value.serialize();
         window.localStorage.setItem(target, JSON.stringify(o));
     }
     static load(target, source, p) {
         const saved = window.localStorage.getItem(source);
         if (saved) {
-            console.log('Loading saved file.');
+            console.log(`Loading saved file: ${source}`);
             const o = JSON.parse(saved);
             return target.deserialize(o);
         }
@@ -900,6 +901,12 @@ class IsoTransform {
         this.position.copy(other.position);
         this.quaternion.copy(other.quaternion);
     }
+    MakeMatrix() {
+        const m = new THREE.Matrix4();
+        m.makeRotationFromQuaternion(this.quaternion);
+        m.setPosition(this.position);
+        return m;
+    }
 }
 exports.IsoTransform = IsoTransform;
 //# sourceMappingURL=isoTransform.js.map
@@ -1036,6 +1043,96 @@ exports.Latice = Latice;
 
 /***/ }),
 
+/***/ 4679:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LocationMap = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class LocationMap {
+    vectors = new Map();
+    data = new Map();
+    constructor() { }
+    // Perhaps premature, but we cache the previous key for the somewhat
+    // common case of calling "has" and then "delete"
+    previousV = new THREE.Vector3();
+    previousKey = this.toKey3(0, 0, 0);
+    toKey(position) {
+        if (position.equals(this.previousV)) {
+            return this.previousKey;
+        }
+        this.previousV.copy(position);
+        this.previousKey = this.toKey3(position.x, position.y, position.z);
+        return this.previousKey;
+    }
+    toKey3(x, y, z) {
+        return x.toFixed(0) + "," + y.toFixed(0) + "," + z.toFixed(0);
+    }
+    has(position) {
+        return this.data.has(this.toKey(position));
+    }
+    has3(x, y, z) {
+        return this.data.has(this.toKey3(x, y, z));
+    }
+    set(position, value) {
+        const key = this.toKey(position);
+        this.data.set(key, value);
+        if (!this.vectors.has(key)) {
+            const v = new THREE.Vector3(position.x, position.y, position.z);
+            this.vectors.set(key, v);
+        }
+    }
+    set3(x, y, z, value) {
+        const key = this.toKey3(x, y, z);
+        this.data.set(key, value);
+        if (!this.vectors.has(key)) {
+            const v = new THREE.Vector3(x, y, z);
+            this.vectors.set(key, v);
+        }
+    }
+    get(position) {
+        return this.data.get(this.toKey(position));
+    }
+    get3(x, y, z) {
+        return this.data.get(this.toKey3(x, y, z));
+    }
+    delete(position) {
+        return this.data.delete(this.toKey(position));
+    }
+    *values() {
+        yield* this.data.values();
+    }
+    *entries() {
+        for (const [key, value] of this.data.entries()) {
+            yield [this.vectors.get(key), value];
+        }
+    }
+}
+exports.LocationMap = LocationMap;
+//# sourceMappingURL=locationMap.js.map
+
+/***/ }),
+
 /***/ 1090:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1062,12 +1159,20 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MeshCollection = void 0;
 const THREE = __importStar(__webpack_require__(5232));
-const three_1 = __webpack_require__(5232);
 const grid_1 = __webpack_require__(3424);
 const isoTransform_1 = __webpack_require__(3265);
 const latice_1 = __webpack_require__(7231);
+const locationMap_1 = __webpack_require__(4679);
 const neighborCount_1 = __webpack_require__(6516);
 const octoTree_1 = __webpack_require__(9343);
+class NameAndRotation {
+    name;
+    quaternion;
+    constructor(name, quaternion) {
+        this.name = name;
+        this.quaternion = quaternion;
+    }
+}
 class MeshCollection extends THREE.Object3D {
     rocks = new octoTree_1.PointMapOctoTree(grid_1.Grid.zero, 1e3);
     // Maps item names to corresponding materials and geometry.
@@ -1077,6 +1182,7 @@ class MeshCollection extends THREE.Object3D {
     // The instances of InstancedMesh created for each item.
     meshMap = new Map();
     cubes;
+    quaternions = new locationMap_1.LocationMap();
     t = new THREE.Vector3();
     r = new THREE.Quaternion();
     s = new THREE.Vector3();
@@ -1118,8 +1224,6 @@ class MeshCollection extends THREE.Object3D {
     }
     dirty = false;
     addCube(name, tx) {
-        const m = new three_1.Matrix4();
-        m.compose(tx.position, tx.quaternion, grid_1.Grid.one);
         this.cubes.Set(tx.position, name);
         this.rocks.add(tx.position, tx);
         this.dirty = true;
@@ -1141,26 +1245,24 @@ class MeshCollection extends THREE.Object3D {
         this.meshMap.clear();
         const nc = new neighborCount_1.NeighborCount();
         // console.log('Building mesh collection.');
+        for (const cubeEntry of this.cubes.Entries()) {
+            let tx = new isoTransform_1.IsoTransform(cubeEntry.position, this.quaternions.get(cubeEntry.position));
+            nc.set(tx, cubeEntry.value);
+        }
         // Populate the neighbor mesh
         for (const [name, material] of this.materialMap.entries()) {
-            const instancedMesh = new THREE.InstancedMesh(this.geometryMap.get(name), this.materialMap.get(name), this.cubes.GetCount(name));
+            const instancedMesh = new THREE.InstancedMesh(this.geometryMap.get(name), this.materialMap.get(name), nc.getCount(name));
             instancedMesh.count = 0;
             this.meshMap.set(name, instancedMesh);
             this.add(instancedMesh);
         }
-        for (const cubeEntry of this.cubes.Entries()) {
-            const m = new THREE.Matrix4();
-            m.makeRotationFromQuaternion(grid_1.Grid.randomRotation());
-            m.setPosition(cubeEntry.position);
-            nc.set(m, cubeEntry.value);
-        }
         for (const mav of nc.externalElements()) {
             const name = mav.value;
-            const matrix = mav.m;
+            const tx = mav.tx;
             const instancedMesh = this.meshMap.get(name);
             if (instancedMesh) {
                 const i = instancedMesh.count++;
-                instancedMesh.setMatrixAt(i, matrix);
+                instancedMesh.setMatrixAt(i, tx.MakeMatrix());
             }
             else {
                 console.log(`Error: no mesh for ${name}`);
@@ -1218,51 +1320,35 @@ exports.MeshCollection = MeshCollection;
 /***/ }),
 
 /***/ 6516:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NeighborCount = exports.MatrixAnd = void 0;
-const THREE = __importStar(__webpack_require__(5232));
-class MatrixAnd {
-    m;
+exports.NeighborCount = exports.TxAnd = void 0;
+const locationMap_1 = __webpack_require__(4679);
+class TxAnd {
+    tx;
     value;
-    constructor(m, value) {
-        this.m = m;
+    constructor(tx, value) {
+        this.tx = tx;
         this.value = value;
     }
 }
-exports.MatrixAnd = MatrixAnd;
+exports.TxAnd = TxAnd;
 class NeighborCount {
     constructor() { }
-    position = new THREE.Vector3();
-    rotation = new THREE.Quaternion();
-    scale = new THREE.Vector3();
     // TODO: Change this to a latice of numbers ???
-    neighborCount = new Map();
-    // TODO: Change this to a latice of MatrixAnd<T> ???
-    data = new Map();
-    toKey(x, y, z) {
-        return x.toFixed(0) + "," + y.toFixed(0) + "," + z.toFixed(0);
+    neighborCount = new locationMap_1.LocationMap();
+    data = new locationMap_1.LocationMap();
+    // The number of this value in the map.  E.g. number of 'salt' blocks.
+    valueCount = new Map();
+    addOrChange3(x, y, z, m, delta) {
+        if (m.has3(x, y, z)) {
+            m.set3(x, y, z, m.get3(x, y, z) + delta);
+        }
+        else {
+            m.set3(x, y, z, Math.max(0, delta));
+        }
     }
     addOrChange(key, m, delta) {
         if (m.has(key)) {
@@ -1272,35 +1358,33 @@ class NeighborCount {
             m.set(key, Math.max(0, delta));
         }
     }
-    applyDelta(delta) {
-        this.addOrChange(this.toKey(this.position.x, this.position.y, this.position.z + 1), this.neighborCount, delta);
-        this.addOrChange(this.toKey(this.position.x, this.position.y, this.position.z - 1), this.neighborCount, delta);
-        this.addOrChange(this.toKey(this.position.x, this.position.y + 1, this.position.z), this.neighborCount, delta);
-        this.addOrChange(this.toKey(this.position.x, this.position.y - 1, this.position.z), this.neighborCount, delta);
-        this.addOrChange(this.toKey(this.position.x + 1, this.position.y, this.position.z), this.neighborCount, delta);
-        this.addOrChange(this.toKey(this.position.x - 1, this.position.y, this.position.z), this.neighborCount, delta);
+    applyDelta(tx, delta) {
+        this.addOrChange3(tx.position.x, tx.position.y, tx.position.z + 1, this.neighborCount, delta);
+        this.addOrChange3(tx.position.x, tx.position.y, tx.position.z - 1, this.neighborCount, delta);
+        this.addOrChange3(tx.position.x, tx.position.y + 1, tx.position.z, this.neighborCount, delta);
+        this.addOrChange3(tx.position.x, tx.position.y - 1, tx.position.z, this.neighborCount, delta);
+        this.addOrChange3(tx.position.x + 1, tx.position.y, tx.position.z, this.neighborCount, delta);
+        this.addOrChange3(tx.position.x - 1, tx.position.y, tx.position.z, this.neighborCount, delta);
     }
-    setVector(pos, value, matrix) {
-        let m = matrix;
-        if (!m) {
-            m = new THREE.Matrix4();
-            m.makeTranslation(pos.x, pos.y, pos.z);
+    set(tx, value) {
+        const pos = tx.position;
+        const hasKey = this.data.has(pos);
+        this.data.set(pos, new TxAnd(tx, value));
+        if (hasKey) {
+            const prevValue = this.data.get(pos).value;
+            this.addOrChange(prevValue, this.valueCount, -1);
         }
-        const key = this.toKey(pos.x, pos.y, pos.z);
-        const hasKey = this.data.has(key);
-        this.data.set(key, new MatrixAnd(m, value));
-        if (!hasKey)
-            this.applyDelta(1);
+        else {
+            this.applyDelta(tx, 1);
+        }
+        this.addOrChange(value, this.valueCount, 1);
     }
-    set(m, value) {
-        m.decompose(this.position, this.rotation, this.scale);
-        this.setVector(this.position, value, m);
+    delete(tx) {
+        if (this.data.delete(tx.position))
+            this.applyDelta(tx, -1);
     }
-    reset(m, value) {
-        m.decompose(this.position, this.rotation, this.scale);
-        const key = this.toKey(this.position.x, this.position.y, this.position.z);
-        if (this.data.delete(key))
-            this.applyDelta(-1);
+    getCount(value) {
+        return this.valueCount.get(value) || 0;
     }
     *allElements() {
         yield* this.data.values();
@@ -2201,7 +2285,9 @@ class Stellar {
             if (!!this.controls) {
                 this.controls.setPositions(this.leftPosition, this.rightPosition, this.camera);
                 this.setWorldToPlayer(this.leftPosition.position, this.cursors.get('left').position);
+                this.setWorldToPlayerQ(this.leftPosition.quaternion, this.cursors.get('left').quaternion);
                 this.setWorldToPlayer(this.rightPosition.position, this.cursors.get('right').position);
+                this.setWorldToPlayerQ(this.rightPosition.quaternion, this.cursors.get('right').quaternion);
             }
             this.scene.traverseVisible((o) => {
                 if (o['tick']) {
@@ -2213,6 +2299,13 @@ class Stellar {
     setWorldToPlayer(pos, target) {
         target.copy(pos);
         this.playerGroup.worldToLocal(target);
+    }
+    setWorldToPlayerQ(q, target) {
+        // We need to "subtract" the playerGroup quaternion from q.
+        // q - pgq = q + (-pgq)
+        target.copy(this.playerGroup.quaternion);
+        target.invert();
+        target.premultiply(q);
     }
     initializeGraphics() {
         document.body.innerHTML = '';

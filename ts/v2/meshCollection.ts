@@ -6,9 +6,15 @@ import { Construction } from "./construction";
 import { Grid } from "./grid";
 import { IsoTransform } from "./isoTransform";
 import { Latice } from "./latice";
+import { LocationMap } from "./locationMap";
 import { NeighborCount } from "./neighborCount";
 import { PointMapOctoTree } from "./octoTree";
 import { PointSet } from "./pointSet";
+
+class NameAndRotation {
+  constructor(readonly name: string, readonly quaternion: THREE.Quaternion) {
+  }
+}
 
 export class MeshCollection extends THREE.Object3D
   implements PointSet, Construction, Ticker {
@@ -22,6 +28,7 @@ export class MeshCollection extends THREE.Object3D
   private meshMap = new Map<string, THREE.InstancedMesh>();
 
   private cubes: Latice<string>;
+  private quaternions = new LocationMap<THREE.Quaternion>();
 
   private t = new THREE.Vector3();
   private r = new THREE.Quaternion();
@@ -70,8 +77,6 @@ export class MeshCollection extends THREE.Object3D
 
   private dirty = false;
   public addCube(name: string, tx: IsoTransform) {
-    const m = new Matrix4();
-    m.compose(tx.position, tx.quaternion, Grid.one);
     this.cubes.Set(tx.position, name);
     this.rocks.add(tx.position, tx);
     this.dirty = true;
@@ -95,33 +100,31 @@ export class MeshCollection extends THREE.Object3D
     this.children.splice(0);
     this.meshMap.clear();
 
-    const nc = new NeighborCount<string>();
+    const nc = new NeighborCount();
     // console.log('Building mesh collection.');
+    for (const cubeEntry of this.cubes.Entries()) {
+      let tx: IsoTransform = new IsoTransform(
+        cubeEntry.position, this.quaternions.get(cubeEntry.position));
+      nc.set(tx, cubeEntry.value);
+    }
 
     // Populate the neighbor mesh
     for (const [name, material] of this.materialMap.entries()) {
       const instancedMesh = new THREE.InstancedMesh(
         this.geometryMap.get(name), this.materialMap.get(name),
-        this.cubes.GetCount(name));
+        nc.getCount(name));
       instancedMesh.count = 0;
       this.meshMap.set(name, instancedMesh);
       this.add(instancedMesh);
     }
 
-    for (const cubeEntry of this.cubes.Entries()) {
-      const m = new THREE.Matrix4();
-      m.makeRotationFromQuaternion(Grid.randomRotation());
-      m.setPosition(cubeEntry.position);
-      nc.set(m, cubeEntry.value);
-    }
-
     for (const mav of nc.externalElements()) {
       const name = mav.value;
-      const matrix = mav.m;
+      const tx = mav.tx;
       const instancedMesh = this.meshMap.get(name);
       if (instancedMesh) {
         const i = instancedMesh.count++;
-        instancedMesh.setMatrixAt(i, matrix);
+        instancedMesh.setMatrixAt(i, tx.MakeMatrix());
       } else {
         console.log(`Error: no mesh for ${name}`);
       }

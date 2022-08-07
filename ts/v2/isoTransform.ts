@@ -14,4 +14,11 @@ export class IsoTransform {
     this.position.copy(other.position);
     this.quaternion.copy(other.quaternion);
   }
+
+  MakeMatrix(): THREE.Matrix4 {
+    const m = new THREE.Matrix4();
+    m.makeRotationFromQuaternion(this.quaternion);
+    m.setPosition(this.position);
+    return m;
+  }
 }

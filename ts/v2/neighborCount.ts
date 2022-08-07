@@ -1,23 +1,28 @@
 import * as THREE from "three";
+import { IsoTransform } from "./isoTransform";
+import { LocationMap } from "./locationMap";
 
-export class MatrixAnd<T> {
-  constructor(readonly m: THREE.Matrix4, readonly value: T) { }
+export class TxAnd<T> {
+  constructor(readonly tx: IsoTransform, readonly value: T) { }
 }
 
-export class NeighborCount<T> {
+export class NeighborCount {
   constructor() { }
 
-  private position = new THREE.Vector3();
-  private rotation = new THREE.Quaternion();
-  private scale = new THREE.Vector3();
-
   // TODO: Change this to a latice of numbers ???
-  private neighborCount = new Map<string, number>();
-  // TODO: Change this to a latice of MatrixAnd<T> ???
-  private data = new Map<string, MatrixAnd<T>>();
+  private neighborCount = new LocationMap<number>();
+  private data = new LocationMap<TxAnd<string>>();
 
-  private toKey(x: number, y: number, z: number) {
-    return x.toFixed(0) + "," + y.toFixed(0) + "," + z.toFixed(0);
+  // The number of this value in the map.  E.g. number of 'salt' blocks.
+  private valueCount = new Map<string, number>();
+
+  private addOrChange3(x: number, y: number, z: number,
+    m: LocationMap<number>, delta: number) {
+    if (m.has3(x, y, z)) {
+      m.set3(x, y, z, m.get3(x, y, z) + delta);
+    } else {
+      m.set3(x, y, z, Math.max(0, delta));
+    }
   }
 
   private addOrChange(key: string, m: Map<string, number>, delta: number) {
@@ -28,56 +33,53 @@ export class NeighborCount<T> {
     }
   }
 
-  private applyDelta(delta: number) {
-    this.addOrChange(
-      this.toKey(this.position.x, this.position.y, this.position.z + 1),
+  private applyDelta(tx: IsoTransform, delta: number) {
+    this.addOrChange3(
+      tx.position.x, tx.position.y, tx.position.z + 1,
       this.neighborCount, delta);
-    this.addOrChange(
-      this.toKey(this.position.x, this.position.y, this.position.z - 1),
+    this.addOrChange3(
+      tx.position.x, tx.position.y, tx.position.z - 1,
       this.neighborCount, delta);
-    this.addOrChange(
-      this.toKey(this.position.x, this.position.y + 1, this.position.z),
+    this.addOrChange3(
+      tx.position.x, tx.position.y + 1, tx.position.z,
       this.neighborCount, delta);
-    this.addOrChange(
-      this.toKey(this.position.x, this.position.y - 1, this.position.z),
+    this.addOrChange3(
+      tx.position.x, tx.position.y - 1, tx.position.z,
       this.neighborCount, delta);
-    this.addOrChange(
-      this.toKey(this.position.x + 1, this.position.y, this.position.z),
+    this.addOrChange3(
+      tx.position.x + 1, tx.position.y, tx.position.z,
       this.neighborCount, delta);
-    this.addOrChange(
-      this.toKey(this.position.x - 1, this.position.y, this.position.z),
+    this.addOrChange3(
+      tx.position.x - 1, tx.position.y, tx.position.z,
       this.neighborCount, delta);
   }
 
-  public setVector(pos: THREE.Vector3, value: T, matrix: THREE.Matrix4) {
-    let m = matrix;
-    if (!m) {
-      m = new THREE.Matrix4();
-      m.makeTranslation(pos.x, pos.y, pos.z);
+  public set(tx: IsoTransform, value: string) {
+    const pos = tx.position;
+    const hasKey = this.data.has(pos);
+    this.data.set(pos, new TxAnd<string>(tx, value));
+    if (hasKey) {
+      const prevValue = this.data.get(pos).value;
+      this.addOrChange(prevValue, this.valueCount, -1);
+    } else {
+      this.applyDelta(tx, 1);
     }
-    const key = this.toKey(pos.x, pos.y, pos.z);
-    const hasKey = this.data.has(key);
-    this.data.set(key, new MatrixAnd<T>(m, value));
-    if (!hasKey) this.applyDelta(1);
+    this.addOrChange(value, this.valueCount, 1);
   }
 
-  public set(m: THREE.Matrix4, value: T) {
-    m.decompose(this.position, this.rotation, this.scale);
-    this.setVector(this.position, value, m);
+  public delete(tx: IsoTransform) {
+    if (this.data.delete(tx.position)) this.applyDelta(tx, -1);
   }
 
-  public reset(m: THREE.Matrix4, value: T) {
-    m.decompose(this.position, this.rotation, this.scale);
-    const key = this.toKey(
-      this.position.x, this.position.y, this.position.z);
-    if (this.data.delete(key)) this.applyDelta(-1);
+  public getCount(value: string): number {
+    return this.valueCount.get(value) || 0;
   }
 
-  public *allElements() {
+  public * allElements() {
     yield* this.data.values();
   }
 
-  public *externalElements() {
+  public * externalElements() {
     console.log(`Enumerating neighbor count...`);
     for (const [key, matrixAndT] of this.data.entries()) {
       const count = this.neighborCount.get(key);

@@ -6,6 +6,7 @@ export interface Codeable {
 
 export class File {
   static save(value: Codeable, target: string) {
+    // console.log(`Saving file: ${target}`);
     const o = value.serialize();
     window.localStorage.setItem(target, JSON.stringify(o));
   }
@@ -13,7 +14,7 @@ export class File {
   static load(target: Codeable, source: string, p: THREE.Vector3) {
     const saved = window.localStorage.getItem(source);
     if (saved) {
-      console.log('Loading saved file.');
+      console.log(`Loading saved file: ${source}`);
       const o = JSON.parse(saved);
       return target.deserialize(o);
     } else {

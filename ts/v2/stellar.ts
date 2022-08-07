@@ -57,8 +57,12 @@ export class Stellar {
           this.camera);
         this.setWorldToPlayer(
           this.leftPosition.position, this.cursors.get('left').position)
+        this.setWorldToPlayerQ(
+          this.leftPosition.quaternion, this.cursors.get('left').quaternion)
         this.setWorldToPlayer(
           this.rightPosition.position, this.cursors.get('right').position)
+        this.setWorldToPlayerQ(
+          this.rightPosition.quaternion, this.cursors.get('right').quaternion)
       }
       this.scene.traverseVisible((o) => {
         if (o['tick']) {
@@ -71,6 +75,14 @@ export class Stellar {
   private setWorldToPlayer(pos: THREE.Vector3, target: THREE.Vector3) {
     target.copy(pos);
     this.playerGroup.worldToLocal(target);
+  }
+
+  private setWorldToPlayerQ(q: THREE.Quaternion, target: THREE.Quaternion) {
+    // We need to "subtract" the playerGroup quaternion from q.
+    // q - pgq = q + (-pgq)
+    target.copy(this.playerGroup.quaternion);
+    target.invert();
+    target.premultiply(q)
   }
 
   private initializeGraphics() {
