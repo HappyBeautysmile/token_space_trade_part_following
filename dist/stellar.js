@@ -199,6 +199,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Asteroid = void 0;
 const settings_1 = __webpack_require__(6451);
 const astroGen_1 = __webpack_require__(6647);
+const compounds_1 = __webpack_require__(6772);
 const grid_1 = __webpack_require__(3424);
 const isoTransform_1 = __webpack_require__(3265);
 const meshCollection_1 = __webpack_require__(1090);
@@ -213,10 +214,7 @@ class Asteroid extends meshCollection_1.MeshCollection {
                 grid_1.Grid.round(pos.position);
                 const cursor = cursors.get(ev.handedness);
                 if (cursor.isHolding()) {
-                    if (!this.cubeAt(pos.position)) {
-                        this.addCube(cursor.getHold(), pos);
-                        cursor.setHold(null);
-                    }
+                    this.handleDrop(pos, cursor);
                 }
                 else {
                     const removed = this.removeCube(pos.position);
@@ -224,6 +222,22 @@ class Asteroid extends meshCollection_1.MeshCollection {
                 }
             }
         });
+    }
+    compounds = new compounds_1.Compounds();
+    handleDrop(pos, cursor) {
+        if (!this.cubeAt(pos.position)) {
+            this.addCube(cursor.getHold(), pos);
+            cursor.setHold(null);
+        }
+        else {
+            const existingCube = this.get(pos.position);
+            const combo = this.compounds.combine(existingCube, cursor.getHold());
+            if (!!combo) {
+                this.removeCube(pos.position);
+                this.addCube(combo, pos);
+                cursor.setHold(null);
+            }
+        }
     }
     fallback(p) {
         const gen = new astroGen_1.AstroGen(this);
@@ -430,6 +444,44 @@ class AstroGen {
 }
 exports.AstroGen = AstroGen;
 //# sourceMappingURL=astroGen.js.map
+
+/***/ }),
+
+/***/ 6772:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Compounds = void 0;
+class Compounds {
+    constructor() {
+        this.add("clay", "clay", "wedge");
+        this.add("wedge", "wedge", "cube");
+    }
+    combinations = new Map();
+    comboKey(a, b) {
+        if (a < b) {
+            return a + '+' + b;
+        }
+        else {
+            return b + '+' + a;
+        }
+    }
+    add(a, b, combined) {
+        this.combinations.set(this.comboKey(a, b), combined);
+    }
+    combine(a, b) {
+        const key = this.comboKey(a, b);
+        if (this.combinations.has(key)) {
+            return this.combinations.get(key);
+        }
+        else {
+            return undefined;
+        }
+    }
+}
+exports.Compounds = Compounds;
+//# sourceMappingURL=compounds.js.map
 
 /***/ }),
 
@@ -1239,6 +1291,9 @@ class MeshCollection extends THREE.Object3D {
     }
     cubeAt(p) {
         return !!this.cubes.Get(p);
+    }
+    get(p) {
+        return this.cubes.Get(p);
     }
     buildGeometry() {
         this.children.splice(0);

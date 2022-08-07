@@ -96,6 +96,10 @@ export class MeshCollection extends THREE.Object3D
     return !!this.cubes.Get(p);
   }
 
+  public get(p: THREE.Vector3): string {
+    return this.cubes.Get(p);
+  }
+
   public buildGeometry() {
     this.children.splice(0);
     this.meshMap.clear();
