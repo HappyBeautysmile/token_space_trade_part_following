@@ -6,7 +6,6 @@ export class Content {
 
 
 export class OctoMass {
-
   private children: OctoMass[] = null;
 
   constructor(
@@ -24,7 +23,7 @@ export class OctoMass {
     const childCapacity = this.capacity() / 8;
     let remainingMass = this.content.mass;
 
-    const numPidgeons = 2; // 8 * (1 + Math.log2(this.radius));
+    const numPidgeons = Math.round(2 + 6 * Math.random()); // 8 * (1 + Math.log2(this.radius));
     const massPerPidgeon = Math.ceil(this.content.mass / numPidgeons);
 
     while (remainingMass > 0) {
