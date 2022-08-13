@@ -24,6 +24,7 @@ import { System, Body } from "./system";
 import { Exchange } from "./exchange";
 import { Factory } from "./factory";
 import { InWorldItem } from "./inWorldItem";
+import { AstroGenWFC } from "./v2/astroGenWFC";
 
 export class BlockBuild {
   private scene = new THREE.Scene();
@@ -76,32 +77,37 @@ export class BlockBuild {
 
     this.construction = new ObjectConstruction(
       this.place.universeGroup, this.renderer);
-    let ab = new AstroGen(this.construction);
+    //let ag = new AstroGen(this.construction);
 
-    if (S.float('bai')) {
-      ab.buildAllItems();
-    } else {
-      ab.buildPlatform(
-        Math.round(S.float('ps') * 2 / 3),
-        10,
-        Math.round(S.float('ps')),
-        0, 0, 0);
-    }
+    let agwfc = new AstroGenWFC();
+    agwfc.makeExample();
+    agwfc.makeRules();
+    agwfc.build();
+
+    // if (S.float('bai')) {
+    //   ag.buildAllItems();
+    // } else {
+    //   ag.buildPlatform(
+    //     Math.round(S.float('ps') * 2 / 3),
+    //     10,
+    //     Math.round(S.float('ps')),
+    //     0, 0, 0);
+    // }
 
 
-    const inWorldItem = new InWorldItem(
-      Assets.itemsByName.get("clayProducer"),
-      new THREE.Vector3(0, 1, -5),
-      new THREE.Quaternion());
-    this.construction.addCube(inWorldItem);
+    // const inWorldItem = new InWorldItem(
+    //   Assets.itemsByName.get("clayProducer"),
+    //   new THREE.Vector3(0, 1, -5),
+    //   new THREE.Quaternion());
+    // this.construction.addCube(inWorldItem);
 
-    const inputSpec = new Map<Item, number>();
-    const clay = Assets.itemsByName.get('clay');
-    inputSpec.set(clay, 1);
-    const factory = new Factory(inputSpec, clay.name, 1, 1.2, 1.2);
-    factory.setHome(this.construction, new THREE.Vector3(0, 1, -5),
-      new THREE.Vector3(0, 0, -1));
-    this.factories.push(factory);
+    // const inputSpec = new Map<Item, number>();
+    // const clay = Assets.itemsByName.get('clay');
+    // inputSpec.set(clay, 1);
+    // const factory = new Factory(inputSpec, clay.name, 1, 1.2, 1.2);
+    // factory.setHome(this.construction, new THREE.Vector3(0, 1, -5),
+    //   new THREE.Vector3(0, 0, -1));
+    // this.factories.push(factory);
 
     // for (let i = 0; i < 10; i++) {
     //   ab.buildPlatform(
@@ -114,7 +120,9 @@ export class BlockBuild {
     // }
 
 
-    ab.buildOriginMarker(S.float('om'));
+    // ag.buildOriginMarker(S.float('om'));
+
+    // ag.buildTest();
 
     //ab.buildRandomItems(10, 100);
 
