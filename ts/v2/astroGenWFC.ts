@@ -73,20 +73,49 @@ export class AstroGenWFC {
         return newItems;
     }
 
+    private randomItemFromExample() {
+        return 1;
+    }
+
     public build() {
-        const index = this.getRandomInt(this.rules.keys.length);
-        let item: number = this.rules.keys()[index];
+        // start with one block at the origin
+        let item: number = this.randomItemFromExample();
         let pos = new THREE.Vector3(0, 0, 0);
-        this.is.set(pos, item);
-        for (const offset of this.ruleOffset) {
-            const setPos = new THREE.Vector3()
-            setPos.add(pos)
-            setPos.add(offset)
-            let cellCanBe: number[] = this.rules.get(item).get(offset);
-            if (this.canBe.has(setPos)) {
-                cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe)
+        this.addAndUpdateRules(pos, item);
+
+        while (this.canBe.values.length > 0) {
+            // find the lowest entropy
+            let minPos: THREE.Vector3;
+            let minItems: number[];
+            let minLength = 999;
+            for (const [pos, items] of this.canBe.entries()) {
+                if (items.length < minLength) {
+                    minPos = pos;
+                    minItems = items;
+                    minLength = items.length;
+                }
             }
-            this.canBe.set(setPos, cellCanBe);
+            item = minItems[this.getRandomInt(minItems.length)]
+            this.addAndUpdateRules(minPos, item);
+        }
+    }
+
+    private addAndUpdateRules(pos: THREE.Vector3, item: number) {
+        this.is.set(pos, item);
+        this.canBe.delete(pos);
+        if (this.rules.has(item)) {
+            for (const offset of this.ruleOffset) {
+                const setPos = new THREE.Vector3();
+                setPos.add(pos);
+                setPos.add(offset);
+                if (!this.is.has(setPos)) {
+                    let cellCanBe: number[] = this.rules.get(item).get(offset);
+                    if (this.canBe.has(setPos)) {
+                        cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe);
+                    }
+                    this.canBe.set(setPos, cellCanBe);
+                }
+            }
         }
     }
 }
