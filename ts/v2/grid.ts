@@ -70,4 +70,10 @@ export class Grid {
     m.makeTranslation(x, y, z);
     return m;
   }
+
+  public static zeroMatrix = new THREE.Matrix4().set(
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0);
 }
