@@ -83,7 +83,7 @@ export class AstroGenWFC {
         let pos = new THREE.Vector3(0, 0, 0);
         this.addAndUpdateRules(pos, item);
 
-        while (this.canBe.values.length > 0) {
+        while (true) {
             // find the lowest entropy
             let minPos: THREE.Vector3;
             let minItems: number[];
@@ -95,8 +95,13 @@ export class AstroGenWFC {
                     minLength = items.length;
                 }
             }
-            item = minItems[this.getRandomInt(minItems.length)]
-            this.addAndUpdateRules(minPos, item);
+            if (!!minItems) {
+                item = minItems[this.getRandomInt(minItems.length)]
+                this.addAndUpdateRules(minPos, item);
+            }
+            else {
+                break;
+            }
         }
     }
 
