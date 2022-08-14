@@ -1,8 +1,8 @@
 // import * as THREE from "three";
 
 import { Index } from ".";
-import { AstroGenWFC } from "./astroGenWFC";
 import { AllRuleBuilder, RuleBuilder } from "./ruleBuilder";
+import { WFCGen } from "./wfcGen";
 
 class WFC2D {
   private static readonly kInputSize = 32;
@@ -141,7 +141,7 @@ class WFC2D {
       this.addRule(i, j, 0, 1, allRules);
     }
 
-    const wfc = new AstroGenWFC(WFC2D.kInputSize / 2 + 1);
+    const wfc = new WFCGen(WFC2D.kInputSize / 2 + 1);
     let numRules = 0;
     for (const [center, possibilities] of allRules.buildRules()) {
       wfc.rules.set(center, possibilities);
@@ -154,7 +154,7 @@ class WFC2D {
     this.paintGenCanvas(wfc, tileIndex);
   }
 
-  private paintGenCanvas(wfc: AstroGenWFC,
+  private paintGenCanvas(wfc: WFCGen,
     tileIndex: Index<string>) {
     const ctx = this.genCanvas.getContext('2d');
     ctx.clearRect(0, 0, this.genCanvas.width, this.genCanvas.height);

@@ -2,151 +2,6 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 9394:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AstroGenWFC = void 0;
-const THREE = __importStar(__webpack_require__(5232));
-const locationMap_1 = __webpack_require__(4679);
-// class Rule {
-//     cnt: number = 1;
-//     constructor(public location: THREE.Vector3, public item: number) {
-//     }
-// }
-class AstroGenWFC {
-    maxRadius;
-    // is: Map<THREE.Vector3, number> = new Map();
-    // canBe: Map<THREE.Vector3, number[]> = new Map();
-    // rules: Map<number, Rule[]> = new Map();
-    // example: Map<THREE.Vector3, number> = new Map();
-    is = new locationMap_1.LocationMap();
-    canBe = new locationMap_1.LocationMap();
-    rules = new Map();
-    example = new locationMap_1.LocationMap();
-    ruleOffset = [];
-    constructor(maxRadius) {
-        this.maxRadius = maxRadius;
-        this.ruleOffset.push(new THREE.Vector3(0, 0, 1));
-        this.ruleOffset.push(new THREE.Vector3(0, 0, -1));
-        this.ruleOffset.push(new THREE.Vector3(0, 1, 0));
-        this.ruleOffset.push(new THREE.Vector3(0, -1, 0));
-        this.ruleOffset.push(new THREE.Vector3(1, 0, 0));
-        this.ruleOffset.push(new THREE.Vector3(-1, 0, 0));
-    }
-    makeExample() {
-        this.example.set(new THREE.Vector3(0, 0, 0), 1);
-        this.example.set(new THREE.Vector3(0, 1, 0), 1);
-    }
-    getRandomInt(max) {
-        return Math.floor(Math.random() * max);
-    }
-    makeRules() {
-        for (const [pos, item] of this.example.entries()) {
-            if (!this.rules.has(item)) {
-                this.rules.set(item, new locationMap_1.LocationMap());
-            }
-            for (const offset of this.ruleOffset) {
-                const checkPos = new THREE.Vector3();
-                checkPos.add(pos);
-                checkPos.add(offset);
-                let ruleItem = 0;
-                if (this.example.has(checkPos)) {
-                    ruleItem = this.example.get(checkPos);
-                }
-                if (!this.rules.get(item).has(offset)) {
-                    this.rules.get(item).set(offset, []);
-                }
-                let items = this.rules.get(item).get(offset);
-                if (!items.includes(ruleItem)) {
-                    items.push(ruleItem);
-                }
-                this.rules.get(item)?.set(offset, items);
-            }
-        }
-    }
-    mergeItems(a, b) {
-        let newItems = [];
-        for (const item of a) {
-            if (b.includes(item)) {
-                newItems.push(item);
-            }
-        }
-        return newItems;
-    }
-    randomItemFromExample() {
-        return 1;
-    }
-    build() {
-        // start with one block at the origin
-        let item = this.randomItemFromExample();
-        let pos = new THREE.Vector3(0, 0, 0);
-        this.addAndUpdateRules(pos, item);
-        while (true) {
-            // find the lowest entropy
-            let minPos;
-            let minItems;
-            let minLength = 999;
-            for (const [pos, items] of this.canBe.entries()) {
-                if (items.length < minLength) {
-                    minPos = pos;
-                    minItems = items;
-                    minLength = items.length;
-                }
-            }
-            if (!!minItems) {
-                item = minItems[this.getRandomInt(minItems.length)];
-                this.addAndUpdateRules(minPos, item);
-            }
-            else {
-                break;
-            }
-        }
-    }
-    addAndUpdateRules(pos, item) {
-        this.is.set(pos, item);
-        this.canBe.delete(pos);
-        if (this.rules.has(item)) {
-            for (let [offset, cellCanBe] of this.rules.get(item).entries()) {
-                const setPos = new THREE.Vector3();
-                setPos.add(pos);
-                setPos.add(offset);
-                if (setPos.manhattanLength() <= this.maxRadius &&
-                    !this.is.has(setPos)) {
-                    if (this.canBe.has(setPos)) {
-                        cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe);
-                    }
-                    this.canBe.set(setPos, cellCanBe);
-                }
-            }
-        }
-    }
-}
-exports.AstroGenWFC = AstroGenWFC;
-//# sourceMappingURL=astroGenWFC.js.map
-
-/***/ }),
-
 /***/ 4576:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -277,6 +132,7 @@ exports.LocationMap = LocationMap;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AllRuleBuilder = exports.RuleBuilder = void 0;
 const locationMap_1 = __webpack_require__(4679);
+const wfcGen_1 = __webpack_require__(5137);
 class RuleBuilder {
     base;
     possibilities = new locationMap_1.LocationMap();
@@ -287,19 +143,26 @@ class RuleBuilder {
         if (possibility == undefined) {
             throw new Error('Undefined!');
         }
+        let m;
         if (!this.possibilities.has3(dx, dy, dz)) {
-            this.possibilities.set3(dx, dy, dz, new Set());
+            m = new Map();
+            this.possibilities.set3(dx, dy, dz, m);
         }
-        this.possibilities.get3(dx, dy, dz).add(possibility);
+        else {
+            m = this.possibilities.get3(dx, dy, dz);
+        }
+        if (!m.has(possibility)) {
+            m.set(possibility, 1);
+        }
+        else {
+            m.set(possibility, m.get(possibility) + 1);
+        }
     }
     build() {
         const lm = new locationMap_1.LocationMap();
         for (const [k, v] of this.possibilities.entries()) {
-            const a = [];
-            for (const n of v.values()) {
-                a.push(n);
-            }
-            lm.set(k, a);
+            const p = new wfcGen_1.Possibilities(v);
+            lm.set(k, p);
         }
         return [this.base, lm];
     }
@@ -322,6 +185,144 @@ class AllRuleBuilder {
 }
 exports.AllRuleBuilder = AllRuleBuilder;
 //# sourceMappingURL=ruleBuilder.js.map
+
+/***/ }),
+
+/***/ 5137:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WFCGen = exports.Possibilities = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+const locationMap_1 = __webpack_require__(4679);
+class Possibilities {
+    possibilities;
+    total = 0;
+    constructor(possibilities) {
+        this.possibilities = possibilities;
+    }
+    clone() {
+        const result = new Possibilities(new Map());
+        for (const [possibility, count] of this.possibilities) {
+            result.possibilities.set(possibility, count);
+            result.total = this.total;
+        }
+        return result;
+    }
+    entropy() {
+        let ent = 0;
+        for (const num of this.possibilities.values()) {
+            ent -= Math.log2(num / this.total);
+        }
+        return ent;
+    }
+    getRandomItem() {
+        let randomIndex = Math.floor(Math.random() * this.total);
+        for (const [possibility, count] of this.possibilities.entries()) {
+            randomIndex -= count;
+            if (count <= 0) {
+                return possibility;
+            }
+        }
+        throw new Error("Should never get here.");
+    }
+    intersectWith(other) {
+        for (const [possibility, count] of other.possibilities.entries()) {
+            if (!this.possibilities.has(possibility)) {
+                this.possibilities.delete(possibility);
+            }
+            else {
+                this.possibilities.set(possibility, Math.min(this.possibilities.get(possibility), count));
+            }
+        }
+    }
+}
+exports.Possibilities = Possibilities;
+class WFCGen {
+    maxRadius;
+    is = new locationMap_1.LocationMap();
+    canBe = new locationMap_1.LocationMap();
+    rules = new Map();
+    example = new locationMap_1.LocationMap();
+    constructor(maxRadius) {
+        this.maxRadius = maxRadius;
+    }
+    randomItemFromExample() {
+        return 1;
+    }
+    getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+    }
+    build() {
+        // start with one block at the origin
+        let item = this.randomItemFromExample();
+        let pos = new THREE.Vector3(0, 0, 0);
+        this.addAndUpdateRules(pos, item);
+        while (true) {
+            // find the lowest entropy
+            let minPos;
+            let minItems;
+            let minEntropy = Infinity;
+            for (const [pos, items] of this.canBe.entries()) {
+                const entropy = items.entropy();
+                if (entropy < minEntropy) {
+                    minPos = pos;
+                    minItems = items;
+                    minEntropy = entropy;
+                }
+            }
+            if (!!minItems) {
+                item = minItems.getRandomItem();
+                this.addAndUpdateRules(minPos, item);
+            }
+            else {
+                break;
+            }
+        }
+    }
+    addAndUpdateRules(pos, item) {
+        this.is.set(pos, item);
+        this.canBe.delete(pos);
+        if (this.rules.has(item)) {
+            for (let [offset, cellCanBe] of this.rules.get(item).entries()) {
+                const setPos = new THREE.Vector3();
+                setPos.add(pos);
+                setPos.add(offset);
+                if (setPos.manhattanLength() <= this.maxRadius &&
+                    !this.is.has(setPos)) {
+                    if (!this.canBe.has(setPos)) {
+                        this.canBe.set(setPos, cellCanBe.clone());
+                    }
+                    else {
+                        this.canBe.get(setPos).intersectWith(cellCanBe);
+                    }
+                }
+            }
+        }
+    }
+}
+exports.WFCGen = WFCGen;
+//# sourceMappingURL=wfcGen.js.map
 
 /***/ }),
 
@@ -37155,8 +37156,8 @@ var __webpack_unused_export__;
 // import * as THREE from "three";
 __webpack_unused_export__ = ({ value: true });
 const _1 = __webpack_require__(4576);
-const astroGenWFC_1 = __webpack_require__(9394);
 const ruleBuilder_1 = __webpack_require__(5325);
+const wfcGen_1 = __webpack_require__(5137);
 class WFC2D {
     static kInputSize = 32;
     static kPixelSize = 16;
@@ -37277,7 +37278,7 @@ class WFC2D {
             this.addRule(i, j, 0, -1, allRules);
             this.addRule(i, j, 0, 1, allRules);
         }
-        const wfc = new astroGenWFC_1.AstroGenWFC(WFC2D.kInputSize / 2 + 1);
+        const wfc = new wfcGen_1.WFCGen(WFC2D.kInputSize / 2 + 1);
         let numRules = 0;
         for (const [center, possibilities] of allRules.buildRules()) {
             wfc.rules.set(center, possibilities);
