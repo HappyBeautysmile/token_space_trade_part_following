@@ -56,9 +56,6 @@ class AstroGenWFC {
         this.example.set(new THREE.Vector3(0, 0, 0), 1);
         this.example.set(new THREE.Vector3(0, 1, 0), 1);
     }
-    addRule(center, possibilities) {
-        this.rules.set(center, possibilities);
-    }
     getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
@@ -103,11 +100,11 @@ class AstroGenWFC {
         let item = this.randomItemFromExample();
         let pos = new THREE.Vector3(0, 0, 0);
         this.addAndUpdateRules(pos, item);
-        while (this.canBe.values.length > 0) {
+        while (true) {
             // find the lowest entropy
             let minPos;
             let minItems;
-            let minLength = Infinity;
+            let minLength = 999;
             for (const [pos, items] of this.canBe.entries()) {
                 if (items.length < minLength) {
                     minPos = pos;
@@ -115,21 +112,24 @@ class AstroGenWFC {
                     minLength = items.length;
                 }
             }
-            item = minItems[this.getRandomInt(minItems.length)];
-            this.addAndUpdateRules(minPos, item);
+            if (!!minItems) {
+                item = minItems[this.getRandomInt(minItems.length)];
+                this.addAndUpdateRules(minPos, item);
+            }
+            else {
+                break;
+            }
         }
     }
     addAndUpdateRules(pos, item) {
         this.is.set(pos, item);
         this.canBe.delete(pos);
         if (this.rules.has(item)) {
-            for (const offset of this.ruleOffset) {
-                // console.log(`${item} + Offset: ${[offset.x, offset.y, offset.z]}`);
+            for (let [offset, cellCanBe] of this.rules.get(item).entries()) {
                 const setPos = new THREE.Vector3();
                 setPos.add(pos);
                 setPos.add(offset);
                 if (!this.is.has(setPos)) {
-                    let cellCanBe = this.rules.get(item).get(offset);
                     if (this.canBe.has(setPos)) {
                         cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe);
                     }
@@ -281,13 +281,24 @@ class RuleBuilder {
         this.base = base;
     }
     add3(dx, dy, dz, possibility) {
-        if (!this.possibilities.has3(dx, dy, dz)) {
-            this.possibilities.set3(dx, dy, dz, []);
+        if (possibility == undefined) {
+            throw new Error('Undefined!');
         }
-        this.possibilities.get3(dx, dy, dz).push(possibility);
+        if (!this.possibilities.has3(dx, dy, dz)) {
+            this.possibilities.set3(dx, dy, dz, new Set());
+        }
+        this.possibilities.get3(dx, dy, dz).add(possibility);
     }
     build() {
-        return [this.base, this.possibilities];
+        const lm = new locationMap_1.LocationMap();
+        for (const [k, v] of this.possibilities.entries()) {
+            const a = [];
+            for (const n of v.values()) {
+                a.push(n);
+            }
+            lm.set(k, a);
+        }
+        return [this.base, lm];
     }
 }
 exports.RuleBuilder = RuleBuilder;
@@ -37228,7 +37239,14 @@ class WFC2D {
         }
     }
     addRule(i, j, di, dj, builder) {
+        if (i + di < 0 || j + dj < 0 ||
+            i + di >= WFC2D.kInputSize || j + dj >= WFC2D.kInputSize) {
+            return;
+        }
         const thisTile = this.tileData[j * WFC2D.kInputSize + i];
+        if (thisTile == 0) {
+            return;
+        }
         const thatTile = this.tileData[(j + dj) * WFC2D.kInputSize + i + di];
         builder.add3(thisTile, di, dj, 0, thatTile);
     }
@@ -37250,7 +37268,7 @@ class WFC2D {
         const wfc = new astroGenWFC_1.AstroGenWFC();
         let numRules = 0;
         for (const [center, possibilities] of allRules.buildRules()) {
-            wfc.addRule(center, possibilities);
+            wfc.rules.set(center, possibilities);
             numRules += possibilities.getSize();
         }
         console.log(`Number of rules: ${numRules}`);

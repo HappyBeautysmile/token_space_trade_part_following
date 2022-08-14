@@ -103,7 +103,14 @@ class WFC2D {
   }
 
   private addRule(i: number, j: number, di: number, dj: number, builder: AllRuleBuilder) {
+    if (i + di < 0 || j + dj < 0 ||
+      i + di >= WFC2D.kInputSize || j + dj >= WFC2D.kInputSize) {
+      return;
+    }
     const thisTile = this.tileData[j * WFC2D.kInputSize + i];
+    if (thisTile == 0) {
+      return;
+    }
     const thatTile = this.tileData[(j + dj) * WFC2D.kInputSize + i + di];
     builder.add3(thisTile, di, dj, 0, thatTile);
   }
@@ -127,7 +134,7 @@ class WFC2D {
     const wfc = new AstroGenWFC();
     let numRules = 0;
     for (const [center, possibilities] of allRules.buildRules()) {
-      wfc.addRule(center, possibilities);
+      wfc.rules.set(center, possibilities);
       numRules += possibilities.getSize();
     }
     console.log(`Number of rules: ${numRules}`);

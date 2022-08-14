@@ -1,18 +1,29 @@
 import { LocationMap } from "./locationMap";
 
 export class RuleBuilder {
-  private possibilities = new LocationMap<number[]>();
+  private possibilities = new LocationMap<Set<number>>();
   constructor(private base: number) { }
 
   add3(dx: number, dy: number, dz: number, possibility: number) {
-    if (!this.possibilities.has3(dx, dy, dz)) {
-      this.possibilities.set3(dx, dy, dz, []);
+    if (possibility == undefined) {
+      throw new Error('Undefined!');
     }
-    this.possibilities.get3(dx, dy, dz).push(possibility);
+    if (!this.possibilities.has3(dx, dy, dz)) {
+      this.possibilities.set3(dx, dy, dz, new Set<number>());
+    }
+    this.possibilities.get3(dx, dy, dz).add(possibility);
   }
 
   build(): [number, LocationMap<number[]>] {
-    return [this.base, this.possibilities];
+    const lm = new LocationMap<number[]>();
+    for (const [k, v] of this.possibilities.entries()) {
+      const a: number[] = [];
+      for (const n of v.values()) {
+        a.push(n);
+      }
+      lm.set(k, a);
+    }
+    return [this.base, lm];
   }
 }
 
