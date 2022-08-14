@@ -8,6 +8,7 @@ module.exports = {
     colorTest: "./src/colorTest.js",
     stellar: "./src/v2/stellar.js",
     octo: "./src/u2/scene.js",
+    wfc2d: "./src/v2/wfc2d.js",
   },
   output: {
     path: __dirname + "/dist",
@@ -52,6 +53,12 @@ module.exports = {
       template: "./src/index.html",
       filename: "octo.html",
       chunks: ['octo']
+    }),
+    new HtmlWebPackPlugin({
+      name: "wfc2d",
+      template: "./src/index.html",
+      filename: "wfc2d.html",
+      chunks: ['wfc2d']
     }),
   ],
   devtool: "source-map",

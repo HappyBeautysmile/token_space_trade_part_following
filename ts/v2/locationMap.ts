@@ -69,4 +69,8 @@ export class LocationMap<T> {
       yield [this.vectors.get(key), value];
     }
   }
+
+  public getSize(): number {
+    return this.data.size;
+  }
 }
