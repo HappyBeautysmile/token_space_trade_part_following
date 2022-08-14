@@ -109,12 +109,11 @@ export class AstroGenWFC {
         this.is.set(pos, item);
         this.canBe.delete(pos);
         if (this.rules.has(item)) {
-            for (const offset of this.ruleOffset) {
+            for (let [offset, cellCanBe] of this.rules.get(item).entries()) {
                 const setPos = new THREE.Vector3();
                 setPos.add(pos);
                 setPos.add(offset);
                 if (!this.is.has(setPos)) {
-                    let cellCanBe: number[] = this.rules.get(item).get(offset);
                     if (this.canBe.has(setPos)) {
                         cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe);
                     }
