@@ -157,6 +157,7 @@ class WFC2D {
   private paintGenCanvas(wfc: AstroGenWFC,
     tileIndex: Index<string>) {
     const ctx = this.genCanvas.getContext('2d');
+    ctx.clearRect(0, 0, this.genCanvas.width, this.genCanvas.height);
     for (const [pos, n] of wfc.is.entries()) {
       if (pos.z != 0 || !n) {
         continue;
