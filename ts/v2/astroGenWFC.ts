@@ -14,10 +14,10 @@ export class AstroGenWFC {
   // rules: Map<number, Rule[]> = new Map();
   // example: Map<THREE.Vector3, number> = new Map();
 
-  is = new LocationMap<number>();
-  canBe = new LocationMap<number[]>();
-  rules = new Map<number, LocationMap<number[]>>();
-  example = new LocationMap<number>();
+  is: LocationMap<number> = new LocationMap<number>();
+  canBe: LocationMap<number[]> = new LocationMap<number[]>();
+  rules: Map<number, LocationMap<number[]>> = new Map();
+  example: LocationMap<number> = new LocationMap<number>();
   private ruleOffset: THREE.Vector3[] = [];
 
   constructor() {
@@ -32,10 +32,6 @@ export class AstroGenWFC {
   public makeExample() {
     this.example.set(new THREE.Vector3(0, 0, 0), 1);
     this.example.set(new THREE.Vector3(0, 1, 0), 1);
-  }
-
-  public addRule(center: number, possibilities: LocationMap<number[]>) {
-    this.rules.set(center, possibilities);
   }
 
   private getRandomInt(max) {
@@ -108,28 +104,22 @@ export class AstroGenWFC {
       }
     }
   }
-  item = minItems[this.getRandomInt(minItems.length)]
-      this.addAndUpdateRules(minPos, item);
-    }
-  }
 
-    private addAndUpdateRules(pos: THREE.Vector3, item: number) {
-  this.is.set(pos, item);
-  this.canBe.delete(pos);
-  if (this.rules.has(item)) {
-    for (let [offset, cellCanBe] of this.rules.get(item).entries()) {
-      const setPos = new THREE.Vector3();
-      setPos.add(pos);
-      setPos.add(offset);
-      if (!this.is.has(setPos)) {
-        if (this.canBe.has(setPos)) {
-          cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe);
+  private addAndUpdateRules(pos: THREE.Vector3, item: number) {
+    this.is.set(pos, item);
+    this.canBe.delete(pos);
+    if (this.rules.has(item)) {
+      for (let [offset, cellCanBe] of this.rules.get(item).entries()) {
+        const setPos = new THREE.Vector3();
+        setPos.add(pos);
+        setPos.add(offset);
+        if (!this.is.has(setPos)) {
+          if (this.canBe.has(setPos)) {
+            cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe);
+          }
+          this.canBe.set(setPos, cellCanBe);
         }
-        this.canBe.set(setPos, cellCanBe);
       }
-    }
-  }
-}
     }
   }
 }
