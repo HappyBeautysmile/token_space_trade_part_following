@@ -220,6 +220,9 @@ class Possibilities {
     total = 0;
     constructor(possibilities) {
         this.possibilities = possibilities;
+        for (const count of possibilities.values()) {
+            this.total += count;
+        }
     }
     clone() {
         const result = new Possibilities(new Map());
@@ -240,7 +243,7 @@ class Possibilities {
         let randomIndex = Math.floor(Math.random() * this.total);
         for (const [possibility, count] of this.possibilities.entries()) {
             randomIndex -= count;
-            if (count <= 0) {
+            if (randomIndex <= 0) {
                 return possibility;
             }
         }
@@ -254,6 +257,12 @@ class Possibilities {
             else {
                 this.possibilities.set(possibility, Math.min(this.possibilities.get(possibility), count));
             }
+        }
+        // Recompute total. Sure it would be more efficient to do this in the loop
+        // above. Maybe come back here to improve performance later.
+        this.total = 0;
+        for (const count of this.possibilities.values()) {
+            this.total += count;
         }
     }
 }
