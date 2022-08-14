@@ -11,6 +11,7 @@ class WFC2D {
 
   private drawCanvas: HTMLCanvasElement;
   private currentColor: string = 'White';
+  private genCanvas: HTMLCanvasElement;
 
   private colorIndex = new Index<string>();
   private exampleData = new Int32Array(WFC2D.kInputSize * WFC2D.kInputSize);
@@ -22,6 +23,7 @@ class WFC2D {
     this.addDrawCanvas();
     this.addColorButtons();
     this.addRenderButton();
+    this.addGenCanvas();
   }
 
   private setPixel(i: number, j: number) {
@@ -66,6 +68,14 @@ class WFC2D {
         setPix(me);
       }
     });
+  }
+
+  private addGenCanvas() {
+    this.genCanvas = document.createElement('canvas');
+    this.genCanvas.width = WFC2D.kPixelSize * WFC2D.kInputSize;
+    this.genCanvas.height = WFC2D.kPixelSize * WFC2D.kInputSize;
+    this.genCanvas.style.cursor = 'crosshair';
+    document.body.appendChild(this.genCanvas);
   }
 
   private addColorButtons() {
@@ -131,7 +141,7 @@ class WFC2D {
       this.addRule(i, j, 0, 1, allRules);
     }
 
-    const wfc = new AstroGenWFC();
+    const wfc = new AstroGenWFC(WFC2D.kInputSize / 2 + 1);
     let numRules = 0;
     for (const [center, possibilities] of allRules.buildRules()) {
       wfc.rules.set(center, possibilities);
@@ -140,6 +150,23 @@ class WFC2D {
     console.log(`Number of rules: ${numRules}`);
     wfc.build();
     console.log(`Generated: ${wfc.is.getSize()}`);
+
+    this.paintGenCanvas(wfc, tileIndex);
+  }
+
+  private paintGenCanvas(wfc: AstroGenWFC,
+    tileIndex: Index<string>) {
+    const ctx = this.genCanvas.getContext('2d');
+    for (const [pos, n] of wfc.is.entries()) {
+      if (pos.z != 0 || !n) {
+        continue;
+      }
+      const i = Math.round(pos.x + WFC2D.kInputSize / 2);
+      const j = Math.round(pos.y + WFC2D.kInputSize / 2);
+      ctx.fillStyle = this.getTileColor(tileIndex.getValue(n));
+      ctx.fillRect(i * WFC2D.kPixelSize, j * WFC2D.kPixelSize, WFC2D.kPixelSize, WFC2D.kPixelSize);
+      const c = this.colorIndex.getIndex(this.currentColor);
+    }
   }
 
   private makeTile(i: number, j: number): string {
@@ -150,6 +177,11 @@ class WFC2D {
     tileChars.push(String.fromCharCode(65 + this.getPixel(i + 1, j)));
     tileChars.push(String.fromCharCode(65 + this.getPixel(i, j + 1)));
     return tileChars.join('');
+  }
+
+  private getTileColor(tile: string): string {
+    const colorNumber = tile.charCodeAt(0) - 65;
+    return this.colorIndex.getValue(colorNumber);
   }
 }
 

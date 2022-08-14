@@ -35,6 +35,7 @@ const locationMap_1 = __webpack_require__(4679);
 //     }
 // }
 class AstroGenWFC {
+    maxRadius;
     // is: Map<THREE.Vector3, number> = new Map();
     // canBe: Map<THREE.Vector3, number[]> = new Map();
     // rules: Map<number, Rule[]> = new Map();
@@ -44,7 +45,8 @@ class AstroGenWFC {
     rules = new Map();
     example = new locationMap_1.LocationMap();
     ruleOffset = [];
-    constructor() {
+    constructor(maxRadius) {
+        this.maxRadius = maxRadius;
         this.ruleOffset.push(new THREE.Vector3(0, 0, 1));
         this.ruleOffset.push(new THREE.Vector3(0, 0, -1));
         this.ruleOffset.push(new THREE.Vector3(0, 1, 0));
@@ -129,7 +131,8 @@ class AstroGenWFC {
                 const setPos = new THREE.Vector3();
                 setPos.add(pos);
                 setPos.add(offset);
-                if (!this.is.has(setPos)) {
+                if (setPos.manhattanLength() <= this.maxRadius &&
+                    !this.is.has(setPos)) {
                     if (this.canBe.has(setPos)) {
                         cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe);
                     }
@@ -37160,6 +37163,7 @@ class WFC2D {
     static kBackgroundColor = 'Black';
     drawCanvas;
     currentColor = 'White';
+    genCanvas;
     colorIndex = new _1.Index();
     exampleData = new Int32Array(WFC2D.kInputSize * WFC2D.kInputSize);
     tileData = new Int32Array(WFC2D.kInputSize * WFC2D.kInputSize);
@@ -37169,6 +37173,7 @@ class WFC2D {
         this.addDrawCanvas();
         this.addColorButtons();
         this.addRenderButton();
+        this.addGenCanvas();
     }
     setPixel(i, j) {
         const ctx = this.drawCanvas.getContext('2d');
@@ -37208,6 +37213,13 @@ class WFC2D {
                 setPix(me);
             }
         });
+    }
+    addGenCanvas() {
+        this.genCanvas = document.createElement('canvas');
+        this.genCanvas.width = WFC2D.kPixelSize * WFC2D.kInputSize;
+        this.genCanvas.height = WFC2D.kPixelSize * WFC2D.kInputSize;
+        this.genCanvas.style.cursor = 'crosshair';
+        document.body.appendChild(this.genCanvas);
     }
     addColorButtons() {
         for (const c of [WFC2D.kBackgroundColor, 'PaleTurquoise', 'SaddleBrown', 'Gray', 'White', 'DarkGreen']) {
@@ -37265,7 +37277,7 @@ class WFC2D {
             this.addRule(i, j, 0, -1, allRules);
             this.addRule(i, j, 0, 1, allRules);
         }
-        const wfc = new astroGenWFC_1.AstroGenWFC();
+        const wfc = new astroGenWFC_1.AstroGenWFC(WFC2D.kInputSize / 2 + 1);
         let numRules = 0;
         for (const [center, possibilities] of allRules.buildRules()) {
             wfc.rules.set(center, possibilities);
@@ -37274,6 +37286,20 @@ class WFC2D {
         console.log(`Number of rules: ${numRules}`);
         wfc.build();
         console.log(`Generated: ${wfc.is.getSize()}`);
+        this.paintGenCanvas(wfc, tileIndex);
+    }
+    paintGenCanvas(wfc, tileIndex) {
+        const ctx = this.genCanvas.getContext('2d');
+        for (const [pos, n] of wfc.is.entries()) {
+            if (pos.z != 0 || !n) {
+                continue;
+            }
+            const i = Math.round(pos.x + WFC2D.kInputSize / 2);
+            const j = Math.round(pos.y + WFC2D.kInputSize / 2);
+            ctx.fillStyle = this.getTileColor(tileIndex.getValue(n));
+            ctx.fillRect(i * WFC2D.kPixelSize, j * WFC2D.kPixelSize, WFC2D.kPixelSize, WFC2D.kPixelSize);
+            const c = this.colorIndex.getIndex(this.currentColor);
+        }
     }
     makeTile(i, j) {
         let tileChars = [];
@@ -37283,6 +37309,10 @@ class WFC2D {
         tileChars.push(String.fromCharCode(65 + this.getPixel(i + 1, j)));
         tileChars.push(String.fromCharCode(65 + this.getPixel(i, j + 1)));
         return tileChars.join('');
+    }
+    getTileColor(tile) {
+        const colorNumber = tile.charCodeAt(0) - 65;
+        return this.colorIndex.getValue(colorNumber);
     }
 }
 console.log('Starting...');

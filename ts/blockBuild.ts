@@ -79,7 +79,7 @@ export class BlockBuild {
       this.place.universeGroup, this.renderer);
     //let ag = new AstroGen(this.construction);
 
-    let agwfc = new AstroGenWFC();
+    let agwfc = new AstroGenWFC(1000);
     agwfc.makeExample();
     agwfc.makeRules();
     agwfc.build();

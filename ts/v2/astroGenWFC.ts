@@ -20,7 +20,7 @@ export class AstroGenWFC {
   example: LocationMap<number> = new LocationMap<number>();
   private ruleOffset: THREE.Vector3[] = [];
 
-  constructor() {
+  constructor(private maxRadius) {
     this.ruleOffset.push(new THREE.Vector3(0, 0, 1));
     this.ruleOffset.push(new THREE.Vector3(0, 0, -1));
     this.ruleOffset.push(new THREE.Vector3(0, 1, 0));
@@ -113,7 +113,8 @@ export class AstroGenWFC {
         const setPos = new THREE.Vector3();
         setPos.add(pos);
         setPos.add(offset);
-        if (!this.is.has(setPos)) {
+        if (setPos.manhattanLength() <= this.maxRadius &&
+          !this.is.has(setPos)) {
           if (this.canBe.has(setPos)) {
             cellCanBe = this.mergeItems(this.canBe.get(setPos), cellCanBe);
           }
