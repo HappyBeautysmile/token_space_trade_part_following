@@ -1,5 +1,5 @@
 import { LocationMap } from "./locationMap";
-import { Possibilities } from "./wfcGen";
+import { Possibilities } from "./possibilities";
 
 export class RuleBuilder {
   private possibilities = new LocationMap<Map<number, number>>();
