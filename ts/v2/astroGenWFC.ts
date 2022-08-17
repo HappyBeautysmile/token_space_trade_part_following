@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Construction } from "./construction";
 import { LocationMap } from "./locationMap";
+import { SimpleLocationMap } from "./simpleLocationMap";
 
 // class Rule {
 //     cnt: number = 1;
@@ -14,10 +15,10 @@ export class AstroGenWFC {
   // rules: Map<number, Rule[]> = new Map();
   // example: Map<THREE.Vector3, number> = new Map();
 
-  is: LocationMap<number> = new LocationMap<number>();
-  canBe: LocationMap<number[]> = new LocationMap<number[]>();
+  is: LocationMap<number> = new SimpleLocationMap<number>();
+  canBe: LocationMap<number[]> = new SimpleLocationMap<number[]>();
   rules: Map<number, LocationMap<number[]>> = new Map();
-  example: LocationMap<number> = new LocationMap<number>();
+  example: LocationMap<number> = new SimpleLocationMap<number>();
   private ruleOffset: THREE.Vector3[] = [];
 
   constructor(private maxRadius) {
@@ -41,7 +42,7 @@ export class AstroGenWFC {
   public makeRules() {
     for (const [pos, item] of this.example.entries()) {
       if (!this.rules.has(item)) {
-        this.rules.set(item, new LocationMap<number[]>());
+        this.rules.set(item, new SimpleLocationMap<number[]>());
       }
       for (const offset of this.ruleOffset) {
         const checkPos = new THREE.Vector3()

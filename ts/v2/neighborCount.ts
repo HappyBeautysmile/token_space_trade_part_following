@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { IsoTransform } from "./isoTransform";
 import { LocationMap } from "./locationMap";
+import { SimpleLocationMap } from "./simpleLocationMap";
 
 export class TxAnd<T> {
   constructor(readonly tx: IsoTransform, readonly value: T) { }
@@ -10,8 +11,8 @@ export class NeighborCount {
   constructor() { }
 
   // TODO: Change this to a latice of numbers ???
-  private neighborCount = new LocationMap<number>();
-  private data = new LocationMap<TxAnd<string>>();
+  private neighborCount = new SimpleLocationMap<number>();
+  private data = new SimpleLocationMap<TxAnd<string>>();
 
   // The number of this value in the map.  E.g. number of 'salt' blocks.
   private valueCount = new Map<string, number>();

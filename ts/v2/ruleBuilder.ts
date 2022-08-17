@@ -1,8 +1,9 @@
 import { LocationMap } from "./locationMap";
 import { Possibilities } from "./possibilities";
+import { SimpleLocationMap } from "./simpleLocationMap";
 
 export class RuleBuilder {
-  private possibilities = new LocationMap<Map<number, number>>();
+  private possibilities = new SimpleLocationMap<Map<number, number>>();
   constructor(private base: number) { }
 
   add3(dx: number, dy: number, dz: number, possibility: number) {
@@ -24,7 +25,7 @@ export class RuleBuilder {
   }
 
   build(): [number, LocationMap<Possibilities>] {
-    const lm = new LocationMap<Possibilities>();
+    const lm = new SimpleLocationMap<Possibilities>();
     for (const [k, v] of this.possibilities.entries()) {
       const p = new Possibilities(v);
       lm.set(k, p);

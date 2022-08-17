@@ -1,12 +1,13 @@
 import * as THREE from "three";
 import { LocationMap } from "./locationMap";
 import { Possibilities } from "./possibilities";
+import { SimpleLocationMap } from "./simpleLocationMap";
 
 export class WFCGen {
-  is: LocationMap<number> = new LocationMap<number>();
-  canBe = new LocationMap<Possibilities>();
+  is: LocationMap<number> = new SimpleLocationMap<number>();
+  canBe = new SimpleLocationMap<Possibilities>();
   rules = new Map<number, LocationMap<Possibilities>>();
-  example: LocationMap<number> = new LocationMap<number>();
+  example: LocationMap<number> = new SimpleLocationMap<number>();
 
   constructor(private maxRadius: number) {
   }

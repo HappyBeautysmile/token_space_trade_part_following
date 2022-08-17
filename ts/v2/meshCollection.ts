@@ -10,6 +10,7 @@ import { LocationMap } from "./locationMap";
 import { NeighborCount } from "./neighborCount";
 import { PointMapOctoTree } from "./octoTree";
 import { PointSet } from "./pointSet";
+import { SimpleLocationMap } from "./simpleLocationMap";
 
 class NameAndRotation {
   constructor(readonly name: string, readonly quaternion: THREE.Quaternion) {
@@ -28,7 +29,7 @@ export class MeshCollection extends THREE.Object3D
   private meshMap = new Map<string, THREE.InstancedMesh>();
 
   private cubes: Latice<string>;
-  private quaternions = new LocationMap<THREE.Quaternion>();
+  private quaternions = new SimpleLocationMap<THREE.Quaternion>();
 
   private t = new THREE.Vector3();
   private r = new THREE.Quaternion();
