@@ -33,7 +33,7 @@ export class Possibilities {
       }
     }
 
-    let randomIndex = Math.floor(Math.random() * this.total);
+    let randomIndex = Math.floor(Math.random() * total);
     for (const [possibility, count] of this.possibilities.entries()) {
       if (exclude.has(possibility)) continue;
       randomIndex -= count;
