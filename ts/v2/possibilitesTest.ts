@@ -22,3 +22,12 @@ for (const v1 of p.allItemsInRandomOrder()) {
     console.log(`${v1} -- ${v2}`);
   }
 }
+
+const m2 = new Map<number, number>();
+m2.set(5, 2);
+const p2 = new Possibilities(m2);
+console.log(`${p.impossible()} == false`);
+console.log(`${p2.impossible()} == false`);
+p2.intersectWith(p);
+console.log(`${p.impossible()} == false`);
+console.log(`${p2.impossible()} == true`);

@@ -59,12 +59,12 @@ export class Possibilities {
   }
 
   intersectWith(other: Possibilities) {
-    for (const [possibility, count] of other.possibilities.entries()) {
-      if (!this.possibilities.has(possibility)) {
+    for (const [possibility, count] of this.possibilities.entries()) {
+      if (!other.possibilities.has(possibility)) {
         this.possibilities.delete(possibility);
       } else {
         this.possibilities.set(possibility,
-          Math.min(this.possibilities.get(possibility), count));
+          Math.min(other.possibilities.get(possibility), count));
       }
     }
     // Recompute total. Sure it would be more efficient to do this in the loop
@@ -73,5 +73,9 @@ export class Possibilities {
     for (const count of this.possibilities.values()) {
       this.total += count;
     }
+  }
+
+  impossible(): boolean {
+    return this.total == 0;
   }
 }
