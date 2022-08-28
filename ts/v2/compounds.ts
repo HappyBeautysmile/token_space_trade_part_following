@@ -1,5 +1,4 @@
-
-
+import { Assets } from "./assets";
 
 export class Compounds {
   constructor() {
@@ -10,7 +9,7 @@ export class Compounds {
     // Class-S
     this.addUpgrade(['lithium-silicate', 'lithium', 'doping']);
     this.add('lithium-silicate', 'borosilicate', 'silicon');
-    this.add('borosilicate', 'borosilicate', 'glass-rod');
+    this.addUpgrade(['borosilicate', 'borosilicate']);
     this.addUpgrade(['silicon', 'refined-silicon']);
     this.add('doping', 'refined-silicon', 'doped-silicon');
     this.addUpgrade(['glass-rod', 'glass-cone']);
@@ -81,6 +80,16 @@ export class Compounds {
       return this.breaks.get(a);
     } else {
       return undefined;
+    }
+  }
+
+  validate(assets: Assets) {
+    for (const [a, [b, c]] of this.breaks.entries()) {
+      for (const item of [a, b, c]) {
+        if (!assets.getMesh(a)) {
+          throw new Error(`Could not find model for ${item}.`);
+        }
+      }
     }
   }
 }
