@@ -1,11 +1,10 @@
-import { Assets } from "./assets";
 import { Compounds } from "./compounds";
-
 
 async function test() {
   const compounds = new Compounds();
-  const assets = await Assets.load();
-  compounds.validate(assets);
+  for (const name of compounds.allCompoundNames()) {
+    console.log(name);
+  }
 }
 
 test();

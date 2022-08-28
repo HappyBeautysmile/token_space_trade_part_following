@@ -83,13 +83,13 @@ export class Compounds {
     }
   }
 
-  validate(assets: Assets) {
+  allCompoundNames(): Iterable<string> {
+    const names = new Set<string>();
     for (const [a, [b, c]] of this.breaks.entries()) {
       for (const item of [a, b, c]) {
-        if (!assets.getMesh(a)) {
-          throw new Error(`Could not find model for ${item}.`);
-        }
+        names.add(item);
       }
     }
+    return names.values();
   }
 }
