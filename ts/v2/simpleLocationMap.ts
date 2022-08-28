@@ -74,4 +74,12 @@ export class SimpleLocationMap<T> implements LocationMap<T> {
   public getSize(): number {
     return this.data.size;
   }
+
+  public clone(): SimpleLocationMap<T> {
+    const result = new SimpleLocationMap<T>();
+    for (const [pos, value] of this.entries()) {
+      result.set(pos, value);
+    }
+    return result;
+  }
 }
