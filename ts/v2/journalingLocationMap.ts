@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import { LocationMap } from "./locationMap";
+import { Log } from "./log";
 import { SimpleLocationMap } from "./simpleLocationMap";
 
 class Action<T> {
@@ -39,6 +40,13 @@ class Action<T> {
       m.set(this.position, this.value);
     }
   }
+  toString() {
+    if (this.value) {
+      return `Set ${JSON.stringify(this.value)}@${[this.position.x, this.position.y]}`;
+    } else {
+      return `Delete ${[this.position.x, this.position.y]}`;
+    }
+  }
 }
 
 
@@ -53,7 +61,7 @@ export class JournalingLocationMap<T> implements LocationMap<T> {
 
   // Reverts the underlying state to the previous mark and deletes that
   // mark. 
-  undoToMark(): void {
+  undoToMark(verbose = false): void {
     if (this.undoActions.length === 0) {
       throw new Error("Nothing to undo!");
     }
@@ -62,8 +70,20 @@ export class JournalingLocationMap<T> implements LocationMap<T> {
       if (a.isMark()) {
         return;
       }
+      if (verbose) {
+        Log.info(`Undoing ${a.toString()}`);
+      }
       a.apply(this.data);
     } while (true);
+  }
+
+  clearLastMark(): void {
+    for (let i = this.undoActions.length - 1; i >= 0; --i) {
+      if (this.undoActions[i].isMark()) {
+        this.undoActions.splice(i, 1);
+        return;
+      }
+    }
   }
 
   has(position: THREE.Vector3): boolean {

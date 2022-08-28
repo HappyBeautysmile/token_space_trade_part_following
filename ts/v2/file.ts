@@ -1,3 +1,5 @@
+// import { Storage } from "@google-cloud/storage";
+
 export interface Codeable {
   serialize(): Object;
   deserialize(serialized: Object): this;
@@ -6,9 +8,10 @@ export interface Codeable {
 
 export class File {
   static save(value: Codeable, target: string) {
-    // console.log(`Saving file: ${target}`);
     const o = value.serialize();
     window.localStorage.setItem(target, JSON.stringify(o));
+
+    // File.saveToCloud(value, target);
   }
 
   static load(target: Codeable, source: string, p: THREE.Vector3) {
@@ -24,4 +27,12 @@ export class File {
       return result;
     }
   }
+
+  // static async saveToCloud(value: Codeable, target: string) {
+  //   const storage = new Storage();
+  //   const bucket = storage.bucket('space-trade-dev');
+  //   const o = value.serialize();
+  //   bucket.file(target).save(JSON.stringify(o));
+  //   return;
+  // }
 }

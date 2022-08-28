@@ -1,8 +1,10 @@
 // import * as THREE from "three";
 
 import { Index } from ".";
-import { AllRuleBuilder, RuleBuilder } from "./ruleBuilder";
-import { WFCGen } from "./wfcGen";
+import { LocationMap } from "./locationMap";
+import { Log } from "./log";
+import { AllRuleBuilder } from "./ruleBuilder";
+import { WfcBuild } from "./wfcBuild";
 
 class WFC2D {
   private static readonly kInputSize = 32;
@@ -27,11 +29,16 @@ class WFC2D {
   }
 
   private setPixel(i: number, j: number) {
-    const ctx = this.drawCanvas.getContext('2d');
-    ctx.fillStyle = this.currentColor;
-    ctx.fillRect(i * WFC2D.kPixelSize, j * WFC2D.kPixelSize, WFC2D.kPixelSize, WFC2D.kPixelSize);
     const c = this.colorIndex.getIndex(this.currentColor);
     this.exampleData[j * WFC2D.kInputSize + i] = c;
+    this.updatePixel(i, j);
+  }
+
+  private updatePixel(i: number, j: number) {
+    const ctx = this.drawCanvas.getContext('2d');
+    const c = this.exampleData[j * WFC2D.kInputSize + i];
+    ctx.fillStyle = this.colorIndex.getValue(c);
+    ctx.fillRect(i * WFC2D.kPixelSize, j * WFC2D.kPixelSize, WFC2D.kPixelSize, WFC2D.kPixelSize);
   }
 
   private getPixel(i: number, j: number): number {
@@ -118,21 +125,31 @@ class WFC2D {
       return;
     }
     const thisTile = this.tileData[j * WFC2D.kInputSize + i];
-    if (thisTile == 0) {
-      return;
-    }
+    // if (thisTile == 0) {
+    //   return;
+    // }
     const thatTile = this.tileData[(j + dj) * WFC2D.kInputSize + i + di];
     builder.add3(thisTile, di, dj, 0, thatTile);
   }
 
   private generateRules() {
-    console.log('Generating tiles');
+    Log.clear();
+    Log.info('Generating tiles');
     const tileIndex = new Index<string>();
+
+    const ctx = this.drawCanvas.getContext('2d');
+    ctx.clearRect(0, 0, this.drawCanvas.width, this.drawCanvas.height);
     for (const [i, j] of this.allInputIJs()) {
-      const tile = tileIndex.getIndex(this.makeTile(i, j));
+      this.updatePixel(i, j);
+    }
+    ctx.fillStyle = 'blue';
+
+    for (const [i, j] of this.allInputIJs()) {
+      const tile = tileIndex.getIndex(this.makeTile5(i, j));
+      ctx.fillText(tile.toFixed(0), i * WFC2D.kPixelSize, (j + 0.6) * WFC2D.kPixelSize);
       this.tileData[j * WFC2D.kInputSize + i] = tile;
     }
-    console.log(`Found ${tileIndex.getSize()} tiles.`);
+    Log.info(`Found ${tileIndex.getSize()} tiles.`);
     const allRules = new AllRuleBuilder();
     for (const [i, j] of this.allInputIJs()) {
       this.addRule(i, j, -1, 0, allRules);
@@ -141,36 +158,38 @@ class WFC2D {
       this.addRule(i, j, 0, 1, allRules);
     }
 
-    const wfc = new WFCGen(WFC2D.kInputSize / 2 + 1);
-    let numRules = 0;
-    for (const [center, possibilities] of allRules.buildRules()) {
-      wfc.rules.set(center, possibilities);
-      numRules += possibilities.getSize();
-    }
-    console.log(`Number of rules: ${numRules}`);
-    wfc.build();
-    console.log(`Generated: ${wfc.is.getSize()}`);
-
-    this.paintGenCanvas(wfc, tileIndex);
+    const wfc = new WfcBuild(allRules, 5); // WFC2D.kInputSize / 2 + 1);
+    this.paintGenCanvas(wfc.build(), tileIndex);
   }
 
-  private paintGenCanvas(wfc: WFCGen,
+  private paintGenCanvas(state: LocationMap<number>,
     tileIndex: Index<string>) {
     const ctx = this.genCanvas.getContext('2d');
     ctx.clearRect(0, 0, this.genCanvas.width, this.genCanvas.height);
-    for (const [pos, n] of wfc.is.entries()) {
-      if (pos.z != 0 || !n) {
+
+    for (let x = 0; x < this.genCanvas.width; x += 11) {
+      for (let y = 0; y < this.genCanvas.height; y += 11) {
+        ctx.fillStyle = ((x + y) & 0x1) === 0x1 ? '#777' : '#888';
+        ctx.fillRect(x, y, 11, 11);
+      }
+    }
+
+    for (const [pos, n] of state.entries()) {
+      if (pos.z != 0) {
         continue;
       }
       const i = Math.round(pos.x + WFC2D.kInputSize / 2);
       const j = Math.round(pos.y + WFC2D.kInputSize / 2);
       ctx.fillStyle = this.getTileColor(tileIndex.getValue(n));
       ctx.fillRect(i * WFC2D.kPixelSize, j * WFC2D.kPixelSize, WFC2D.kPixelSize, WFC2D.kPixelSize);
+      ctx.fillStyle = 'blue';
+      ctx.fillText(n.toFixed(0), i * WFC2D.kPixelSize, (j + 0.6) * WFC2D.kPixelSize);
+
       const c = this.colorIndex.getIndex(this.currentColor);
     }
   }
 
-  private makeTile(i: number, j: number): string {
+  private makeTile5(i: number, j: number): string {
     let tileChars: string[] = [];
     tileChars.push(String.fromCharCode(65 + this.getPixel(i, j)));
     tileChars.push(String.fromCharCode(65 + this.getPixel(i, j - 1)));
@@ -180,9 +199,15 @@ class WFC2D {
     return tileChars.join('');
   }
 
+  private makeTile1(i: number, j: number): string {
+    return String.fromCharCode(65 + this.getPixel(i, j));
+  }
+
   private getTileColor(tile: string): string {
     const colorNumber = tile.charCodeAt(0) - 65;
-    return this.colorIndex.getValue(colorNumber);
+    const color = this.colorIndex.getValue(colorNumber);
+    // Log.info(`${tile} = ${color}`);
+    return color;
   }
 }
 

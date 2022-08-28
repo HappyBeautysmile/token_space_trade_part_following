@@ -20,6 +20,8 @@ npm -D install three@0.140.0              //Version 0.141.0 is not working with 
 npm -D install --save-dev @types/three
 npm -g install webpack
 npm install html-webpack-plugin
+npm install @google-cloud/storage
+npm install multer
 ```
 
 Start an HTTP server from python (you can leave this running):

@@ -6,6 +6,12 @@ export class Possibilities {
     }
   }
 
+  static makeSinglePossibility(value: number) {
+    const m = new Map<number, number>();
+    m.set(value, 1);
+    return new Possibilities(m);
+  }
+
   clone(): Possibilities {
     const result = new Possibilities(new Map<number, number>());
     for (const [possibility, count] of this.possibilities) {
@@ -37,7 +43,7 @@ export class Possibilities {
     for (const [possibility, count] of this.possibilities.entries()) {
       if (exclude.has(possibility)) continue;
       randomIndex -= count;
-      if (randomIndex <= 0) {
+      if (randomIndex < 0) {
         return possibility;
       }
     }
@@ -77,5 +83,18 @@ export class Possibilities {
 
   impossible(): boolean {
     return this.total == 0;
+  }
+
+  obvious(): number {
+    if (this.possibilities.size == 1) {
+      for (const p of this.possibilities.keys()) {
+        return p;
+      }
+    }
+    return undefined;
+  }
+
+  getSize(): number {
+    return this.possibilities.size;
   }
 }
