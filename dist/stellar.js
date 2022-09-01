@@ -171,9 +171,15 @@ class Assets {
     static async load() {
         const namedMeshes = new Map();
         const modelNames = [
-            'accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube', 'guide', 'ice', 'light-blue',
-            'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
-            'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer'
+            'borosilicate', 'carbon-chondrite', 'carbon-fiber', 'carbon-fiber-cube',
+            'carbon-fiber-wedge', 'chrome-corner', 'chrome-cube', 'chrome-wedge',
+            'chromium', 'chromium-ore', 'clay', 'cluster-jet', 'computer',
+            'conveyer', 'cube', 'doped-silicon', 'doping', 'factory', 'food',
+            'fuel', 'fuel-tank', 'glass-cone', 'glass-rod', 'habitat',
+            'ht-steel-cylinder', 'ice', 'iron', 'iron-chondrite', 'lithium',
+            'lithium-silicate', 'organics', 'refined-silicon', 'silicon',
+            'solar-panel', 'steel-corner', 'steel-cylinder', 'steel-wedge',
+            'thruster-jet', 'wedge'
         ];
         for (const modelName of modelNames) {
             // console.log(`Loading ${modelName}`);
@@ -381,7 +387,7 @@ class AstroGen {
     }
     addAt(x, y, z) {
         const quaternion = grid_1.Grid.randomRotation();
-        this.construction.addCube(this.itemFromLocation(x, y, z), new isoTransform_1.IsoTransform(new THREE.Vector3(x, y, z), quaternion));
+        this.construction.addCube(Math.random() < 0.5 ? 'iron-chondrite' : 'carbon-chondrite', new isoTransform_1.IsoTransform(new THREE.Vector3(x, y, z), quaternion));
     }
     buildOriginMarker(size) {
         for (let x = 0; x < size; x++) {
@@ -455,10 +461,41 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Compounds = void 0;
 class Compounds {
     constructor() {
+        // Legacy (delete)
         this.add("clay", "clay", "wedge");
         this.add("wedge", "wedge", "cube");
+        // Class-S
+        this.addUpgrade(['lithium-silicate', 'lithium', 'doping']);
+        this.add('lithium-silicate', 'borosilicate', 'silicon');
+        this.addUpgrade(['borosilicate', 'borosilicate']);
+        this.addUpgrade(['silicon', 'refined-silicon']);
+        this.add('doping', 'refined-silicon', 'doped-silicon');
+        this.addUpgrade(['glass-rod', 'glass-cone']);
+        // Class-M
+        this.addUpgrade(['chromium-ore', 'chromium', 'chrome-corner',
+            'chrome-wedge', 'chrome-cube']);
+        // Class-C
+        this.addUpgrade(['iron-chondrite', 'iron']);
+        this.addUpgrade(['carbon-chondrite', 'organics', 'carbon-fiber',
+            'carbon-fiber-wedge', 'carbon-fiber-cube']);
+        this.addUpgrade(['ice', 'fuel']);
+        this.add('iron-chondrite', 'carbon-chondrite', 'chromium-ore');
+        this.add('iron', 'organics', 'steel-corner');
+        this.addUpgrade(['steel-corner', 'steel-wedge', 'steel-cylinder']);
+        this.add('ice', 'organics', 'food');
+        this.add('carbon-fiber-wedge', 'steel-wedge', 'cluster-jet');
+        this.add('chrome-wedge', 'carbon-fiber-cube', 'fuel-tank');
+        this.add('steel-cylinder', 'chromium', 'ht-steel-cylinder');
+        // Cross-Class
+        this.add('ht-steel-cylinder', 'glass-cone', 'thruster-jet');
+        this.add('steel-cylinder', 'computer', 'habitat');
+        this.add('doped-silicon', 'steel-wedge', 'computer');
+        this.add('computer', 'ht-steel-cylinder', 'factory');
+        this.add('solar-panel', 'steel-wedge', 'conveyer');
+        this.add('silicon', 'steel-wedge', 'solar-panel');
     }
     combinations = new Map();
+    breaks = new Map();
     comboKey(a, b) {
         if (a < b) {
             return a + '+' + b;
@@ -467,8 +504,14 @@ class Compounds {
             return b + '+' + a;
         }
     }
+    addUpgrade(sequence) {
+        for (let i = 0; i < sequence.length - 1; ++i) {
+            this.add(sequence[i], sequence[i], sequence[i + 1]);
+        }
+    }
     add(a, b, combined) {
         this.combinations.set(this.comboKey(a, b), combined);
+        this.breaks.set(combined, [a, b]);
     }
     combine(a, b) {
         const key = this.comboKey(a, b);
@@ -478,6 +521,23 @@ class Compounds {
         else {
             return undefined;
         }
+    }
+    break(a) {
+        if (this.breaks.has(a)) {
+            return this.breaks.get(a);
+        }
+        else {
+            return undefined;
+        }
+    }
+    allCompoundNames() {
+        const names = new Set();
+        for (const [a, [b, c]] of this.breaks.entries()) {
+            for (const item of [a, b, c]) {
+                names.add(item);
+            }
+        }
+        return names.values();
     }
 }
 exports.Compounds = Compounds;
@@ -801,13 +861,14 @@ exports.Cursor = Cursor;
 /***/ ((__unused_webpack_module, exports) => {
 
 
+// import { Storage } from "@google-cloud/storage";
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.File = void 0;
 class File {
     static save(value, target) {
-        // console.log(`Saving file: ${target}`);
         const o = value.serialize();
         window.localStorage.setItem(target, JSON.stringify(o));
+        // File.saveToCloud(value, target);
     }
     static load(target, source, p) {
         const saved = window.localStorage.getItem(source);
@@ -907,6 +968,7 @@ class Grid {
         m.makeTranslation(x, y, z);
         return m;
     }
+    static zeroMatrix = new THREE.Matrix4().set(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 exports.Grid = Grid;
 //# sourceMappingURL=grid.js.map
@@ -1095,96 +1157,6 @@ exports.Latice = Latice;
 
 /***/ }),
 
-/***/ 4679:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LocationMap = void 0;
-const THREE = __importStar(__webpack_require__(5232));
-class LocationMap {
-    vectors = new Map();
-    data = new Map();
-    constructor() { }
-    // Perhaps premature, but we cache the previous key for the somewhat
-    // common case of calling "has" and then "delete"
-    previousV = new THREE.Vector3();
-    previousKey = this.toKey3(0, 0, 0);
-    toKey(position) {
-        if (position.equals(this.previousV)) {
-            return this.previousKey;
-        }
-        this.previousV.copy(position);
-        this.previousKey = this.toKey3(position.x, position.y, position.z);
-        return this.previousKey;
-    }
-    toKey3(x, y, z) {
-        return x.toFixed(0) + "," + y.toFixed(0) + "," + z.toFixed(0);
-    }
-    has(position) {
-        return this.data.has(this.toKey(position));
-    }
-    has3(x, y, z) {
-        return this.data.has(this.toKey3(x, y, z));
-    }
-    set(position, value) {
-        const key = this.toKey(position);
-        this.data.set(key, value);
-        if (!this.vectors.has(key)) {
-            const v = new THREE.Vector3(position.x, position.y, position.z);
-            this.vectors.set(key, v);
-        }
-    }
-    set3(x, y, z, value) {
-        const key = this.toKey3(x, y, z);
-        this.data.set(key, value);
-        if (!this.vectors.has(key)) {
-            const v = new THREE.Vector3(x, y, z);
-            this.vectors.set(key, v);
-        }
-    }
-    get(position) {
-        return this.data.get(this.toKey(position));
-    }
-    get3(x, y, z) {
-        return this.data.get(this.toKey3(x, y, z));
-    }
-    delete(position) {
-        return this.data.delete(this.toKey(position));
-    }
-    *values() {
-        yield* this.data.values();
-    }
-    *entries() {
-        for (const [key, value] of this.data.entries()) {
-            yield [this.vectors.get(key), value];
-        }
-    }
-}
-exports.LocationMap = LocationMap;
-//# sourceMappingURL=locationMap.js.map
-
-/***/ }),
-
 /***/ 1090:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1214,9 +1186,9 @@ const THREE = __importStar(__webpack_require__(5232));
 const grid_1 = __webpack_require__(3424);
 const isoTransform_1 = __webpack_require__(3265);
 const latice_1 = __webpack_require__(7231);
-const locationMap_1 = __webpack_require__(4679);
 const neighborCount_1 = __webpack_require__(6516);
 const octoTree_1 = __webpack_require__(9343);
+const simpleLocationMap_1 = __webpack_require__(6125);
 class NameAndRotation {
     name;
     quaternion;
@@ -1234,7 +1206,7 @@ class MeshCollection extends THREE.Object3D {
     // The instances of InstancedMesh created for each item.
     meshMap = new Map();
     cubes;
-    quaternions = new locationMap_1.LocationMap();
+    quaternions = new simpleLocationMap_1.SimpleLocationMap();
     t = new THREE.Vector3();
     r = new THREE.Quaternion();
     s = new THREE.Vector3();
@@ -1380,7 +1352,7 @@ exports.MeshCollection = MeshCollection;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NeighborCount = exports.TxAnd = void 0;
-const locationMap_1 = __webpack_require__(4679);
+const simpleLocationMap_1 = __webpack_require__(6125);
 class TxAnd {
     tx;
     value;
@@ -1393,8 +1365,8 @@ exports.TxAnd = TxAnd;
 class NeighborCount {
     constructor() { }
     // TODO: Change this to a latice of numbers ???
-    neighborCount = new locationMap_1.LocationMap();
-    data = new locationMap_1.LocationMap();
+    neighborCount = new simpleLocationMap_1.SimpleLocationMap();
+    data = new simpleLocationMap_1.SimpleLocationMap();
     // The number of this value in the map.  E.g. number of 'salt' blocks.
     valueCount = new Map();
     addOrChange3(x, y, z, m, delta) {
@@ -2029,6 +2001,106 @@ class PointCloudUnion {
 }
 exports.PointCloudUnion = PointCloudUnion;
 //# sourceMappingURL=pointSet.js.map
+
+/***/ }),
+
+/***/ 6125:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SimpleLocationMap = void 0;
+const THREE = __importStar(__webpack_require__(5232));
+class SimpleLocationMap {
+    vectors = new Map();
+    data = new Map();
+    constructor() { }
+    // Perhaps premature, but we cache the previous key for the somewhat
+    // common case of calling "has" and then "delete"
+    previousV = new THREE.Vector3();
+    previousKey = this.toKey3(0, 0, 0);
+    toKey(position) {
+        if (position.equals(this.previousV)) {
+            return this.previousKey;
+        }
+        this.previousV.copy(position);
+        this.previousKey = this.toKey3(position.x, position.y, position.z);
+        return this.previousKey;
+    }
+    toKey3(x, y, z) {
+        return x.toFixed(0) + "," + y.toFixed(0) + "," + z.toFixed(0);
+    }
+    has(position) {
+        return this.data.has(this.toKey(position));
+    }
+    has3(x, y, z) {
+        return this.data.has(this.toKey3(x, y, z));
+    }
+    set(position, value) {
+        const key = this.toKey(position);
+        this.data.set(key, value);
+        if (!this.vectors.has(key)) {
+            const v = new THREE.Vector3(position.x, position.y, position.z);
+            this.vectors.set(key, v);
+        }
+    }
+    set3(x, y, z, value) {
+        const key = this.toKey3(x, y, z);
+        this.data.set(key, value);
+        if (!this.vectors.has(key)) {
+            const v = new THREE.Vector3(x, y, z);
+            this.vectors.set(key, v);
+        }
+    }
+    get(position) {
+        return this.data.get(this.toKey(position));
+    }
+    get3(x, y, z) {
+        return this.data.get(this.toKey3(x, y, z));
+    }
+    delete(position) {
+        return this.data.delete(this.toKey(position));
+    }
+    *values() {
+        yield* this.data.values();
+    }
+    *entries() {
+        for (const [key, value] of this.data.entries()) {
+            yield [this.vectors.get(key), value];
+        }
+    }
+    getSize() {
+        return this.data.size;
+    }
+    clone() {
+        const result = new SimpleLocationMap();
+        for (const [pos, value] of this.entries()) {
+            result.set(pos, value);
+        }
+        return result;
+    }
+}
+exports.SimpleLocationMap = SimpleLocationMap;
+//# sourceMappingURL=simpleLocationMap.js.map
 
 /***/ }),
 
