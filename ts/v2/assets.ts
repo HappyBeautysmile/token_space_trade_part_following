@@ -51,9 +51,15 @@ export class Assets {
   public static async load(): Promise<Assets> {
     const namedMeshes = new Map<string, THREE.Mesh>();
     const modelNames = [
-      'accordion', 'arm', 'clay', 'cluster-jet', 'corner', 'cube', 'guide', 'ice', 'light-blue',
-      'metal-common', 'metal-rare', 'port', 'salt-common', 'salt-rare', 'scaffold', 'silicate-rock',
-      'silicon-crystalized', 'tank', 'thruster', 'wedge', 'producer']
+      'borosilicate', 'carbon-chondrite', 'carbon-fiber', 'carbon-fiber-cube',
+      'carbon-fiber-wedge', 'chrome-corner', 'chrome-cube', 'chrome-wedge',
+      'chromium', 'chromium-ore', 'clay', 'cluster-jet', 'computer',
+      'conveyer', 'cube', 'doped-silicon', 'doping', 'factory', 'food',
+      'fuel', 'fuel-tank', 'glass-cone', 'glass-rod', 'habitat',
+      'ht-steel-cylinder', 'ice', 'iron', 'iron-chondrite', 'lithium',
+      'lithium-silicate', 'organics', 'refined-silicon', 'silicon',
+      'solar-panel', 'steel-corner', 'steel-cylinder', 'steel-wedge',
+      'thruster-jet', 'wedge'];
     for (const modelName of modelNames) {
       // console.log(`Loading ${modelName}`);
       const m = await Assets.loadMeshFromModel(`Model/${modelName}.glb`);

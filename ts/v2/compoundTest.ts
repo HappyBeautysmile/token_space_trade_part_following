@@ -1,11 +1,14 @@
 import { Compounds } from "./compounds";
 
-async function test() {
-  const compounds = new Compounds();
-  for (const name of compounds.allCompoundNames()) {
-    console.log(name);
-  }
+const compounds = new Compounds();
+for (const name of compounds.allCompoundNames()) {
+  console.log(name);
 }
 
-test();
+console.log(`${compounds.combine('iron-chondrite', 'iron-chondrite')} = iron`);
+console.log(`${compounds.combine('iron-chondrite', 'carbon-chondrite')} = chromium-ore`);
+console.log(`${compounds.combine('carbon-chondrite', 'iron-chondrite')} = chromium-ore`);
 
+console.log(`${compounds.combine('steel-corner', 'steel-corner')} = steel-wedge`);
+
+console.log(`${compounds.combine('steel-wedge', 'carbon-fiber-wedge')} = cluster-jet`);

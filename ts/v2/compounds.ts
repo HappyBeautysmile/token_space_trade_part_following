@@ -19,14 +19,16 @@ export class Compounds {
       'chrome-wedge', 'chrome-cube']);
 
     // Class-C
-    this.add('iron-chondrite', 'iron-chondrite', 'iron');
+    this.addUpgrade(['iron-chondrite', 'iron']);
     this.addUpgrade(['carbon-chondrite', 'organics', 'carbon-fiber',
       'carbon-fiber-wedge', 'carbon-fiber-cube']);
     this.addUpgrade(['ice', 'fuel']);
 
+    this.add('iron-chondrite', 'carbon-chondrite', 'chromium-ore');
+
+
     this.add('iron', 'organics', 'steel-corner');
-    this.add('steel-corner', 'steel-corner', 'steel-wedge');
-    this.add('steel-wedge', 'steel-wedge', 'steel-cylinder');
+    this.addUpgrade(['steel-corner', 'steel-wedge', 'steel-cylinder']);
     this.add('ice', 'organics', 'food');
 
     this.add('carbon-fiber-wedge', 'steel-wedge', 'cluster-jet');
