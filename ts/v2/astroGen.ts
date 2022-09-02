@@ -8,7 +8,12 @@ class rarity {
   // phase from 0 to 2 Pi
   // 1-100 where 1 is scarce and 100 is common.
   // offset is added to the sine before magnitude is appled.  1 = 0 to 2x magnitude.  more means there is always a chance.  less means sometimes there is no chance of occurance.
-  public constructor(public modelName, public period, public phase, public magnitude, public offset) {
+  public constructor(
+    public modelName: string,
+    public period,
+    public phase,
+    public magnitude,
+    public offset) {
 
   }
 
@@ -109,7 +114,7 @@ export class AstroGen {
   private addAt(x: number, y: number, z: number) {
     const quaternion = Grid.randomRotation();
     this.construction.addCube(
-      this.itemFromLocation(x, y, z),
+      Math.random() < 0.5 ? 'iron-chondrite' : 'carbon-chondrite',
       new IsoTransform(
         new THREE.Vector3(x, y, z),
         quaternion));
